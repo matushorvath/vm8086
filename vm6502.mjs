@@ -55,7 +55,7 @@ class Vm6502 {
 
     relative() {
         const rel = this.mem[this.pc++];
-        return this.pc + signed(rel);
+        return this.pc + this.signed(rel);
     }
 
     signed(val) {
@@ -184,89 +184,87 @@ class Vm6502 {
             const op = this.mem[this.pc++];
 
             switch (op) {
-                case 0x69: this.adc(this.immediate()); break;
-                case 0x65: this.adc(this.zeropage()); break;
-                case 0x75: this.adc(this.zeropageIndexed(this.x)); break;
-                case 0x6d: this.adc(this.absolute()); break;
-                case 0x7d: this.adc(this.absoluteIndexed(this.x)); break;
-                case 0x79: this.adc(this.absoluteIndexed(this.y)); break;
-                case 0x61: this.adc(this.indirectPreIndexed(this.x)); break;
-                case 0x71: this.adc(this.indirectPostIndexed(this.y)); break;
+            case 0x69: this.adc(this.immediate()); break;
+            case 0x65: this.adc(this.zeropage()); break;
+            case 0x75: this.adc(this.zeropageIndexed(this.x)); break;
+            case 0x6d: this.adc(this.absolute()); break;
+            case 0x7d: this.adc(this.absoluteIndexed(this.x)); break;
+            case 0x79: this.adc(this.absoluteIndexed(this.y)); break;
+            case 0x61: this.adc(this.indirectPreIndexed(this.x)); break;
+            case 0x71: this.adc(this.indirectPostIndexed(this.y)); break;
 
-                case 0x29: this.add(this.immediate()); break;
-                case 0x25: this.add(this.zeropage()); break;
-                case 0x35: this.add(this.zeropageIndexed(this.x)); break;
-                case 0x2d: this.add(this.absolute()); break;
-                case 0x3d: this.add(this.absoluteIndexed(this.x)); break;
-                case 0x39: this.add(this.absoluteIndexed(this.y)); break;
-                case 0x21: this.add(this.indirectPreIndexed(this.x)); break;
-                case 0x31: this.add(this.indirectPostIndexed(this.y)); break;
+            case 0x29: this.add(this.immediate()); break;
+            case 0x25: this.add(this.zeropage()); break;
+            case 0x35: this.add(this.zeropageIndexed(this.x)); break;
+            case 0x2d: this.add(this.absolute()); break;
+            case 0x3d: this.add(this.absoluteIndexed(this.x)); break;
+            case 0x39: this.add(this.absoluteIndexed(this.y)); break;
+            case 0x21: this.add(this.indirectPreIndexed(this.x)); break;
+            case 0x31: this.add(this.indirectPostIndexed(this.y)); break;
 
-                case 0x0a: this.asl(); break;
-                case 0x06: this.asl(this.zeropage()); break;
-                case 0x16: this.asl(this.zeropageIndexed(this.x)); break;
-                case 0x0e: this.asl(this.absolute()); break;
-                case 0x1e: this.asl(this.absoluteIndexed(this.x)); break;
+            case 0x0a: this.asl(); break;
+            case 0x06: this.asl(this.zeropage()); break;
+            case 0x16: this.asl(this.zeropageIndexed(this.x)); break;
+            case 0x0e: this.asl(this.absolute()); break;
+            case 0x1e: this.asl(this.absoluteIndexed(this.x)); break;
 
-                case 0x24: this.bit(this.zeropage()); break;
-                case 0x2c: this.bit(this.absolute()); break;
+            case 0x24: this.bit(this.zeropage()); break;
+            case 0x2c: this.bit(this.absolute()); break;
 
-                case 0x10: this.branch(!this.negative, this.relative()); break;     // BPL (Branch on PLus)
-                case 0x30: this.branch(this.negative, this.relative()); break;      // BMI (Branch on MInus)
-                case 0x50: this.branch(!this.overflow, this.relative()); break;     // BVC (Branch on oVerflow Clear)
-                case 0x70: this.branch(this.overflow, this.relative()); break;      // BVS (Branch on oVerflow Set)
-                case 0x90: this.branch(!this.carry, this.relative()); break;        // BCC (Branch on Carry Clear)
-                case 0xb0: this.branch(this.carry, this.relative()); break;         // BCS (Branch on Carry Set)
-                case 0xd0: this.branch(!this.zero, this.relative()); break;         // BNE (Branch on Not Equal)
-                case 0xf0: this.branch(this.zero, this.relative()); break;          // BEQ (Branch on EQual)
+            case 0x10: this.branch(!this.negative, this.relative()); break;     // BPL (Branch on PLus)
+            case 0x30: this.branch(this.negative, this.relative()); break;      // BMI (Branch on MInus)
+            case 0x50: this.branch(!this.overflow, this.relative()); break;     // BVC (Branch on oVerflow Clear)
+            case 0x70: this.branch(this.overflow, this.relative()); break;      // BVS (Branch on oVerflow Set)
+            case 0x90: this.branch(!this.carry, this.relative()); break;        // BCC (Branch on Carry Clear)
+            case 0xb0: this.branch(this.carry, this.relative()); break;         // BCS (Branch on Carry Set)
+            case 0xd0: this.branch(!this.zero, this.relative()); break;         // BNE (Branch on Not Equal)
+            case 0xf0: this.branch(this.zero, this.relative()); break;          // BEQ (Branch on EQual)
 
-                case 0x00: this.brk(); break;
+            case 0x00: this.brk(); break;
 
-                case 0xc9: this.cmp(this.a, this.immediate()); break;
-                case 0xc5: this.cmp(this.a, this.zeropage()); break;
-                case 0xd5: this.cmp(this.a, this.zeropageIndexed(this.x)); break;
-                case 0xcd: this.cmp(this.a, this.absolute()); break;
-                case 0xdd: this.cmp(this.a, this.absoluteIndexed(this.x)); break;
-                case 0xd9: this.cmp(this.a, this.absoluteIndexed(this.y)); break;
-                case 0xc1: this.cmp(this.a, this.indirectPreIndexed(this.x)); break;
-                case 0xd1: this.cmp(this.a, this.indirectPostIndexed(this.y)); break;
+            case 0xc9: this.cmp(this.a, this.immediate()); break;
+            case 0xc5: this.cmp(this.a, this.zeropage()); break;
+            case 0xd5: this.cmp(this.a, this.zeropageIndexed(this.x)); break;
+            case 0xcd: this.cmp(this.a, this.absolute()); break;
+            case 0xdd: this.cmp(this.a, this.absoluteIndexed(this.x)); break;
+            case 0xd9: this.cmp(this.a, this.absoluteIndexed(this.y)); break;
+            case 0xc1: this.cmp(this.a, this.indirectPreIndexed(this.x)); break;
+            case 0xd1: this.cmp(this.a, this.indirectPostIndexed(this.y)); break;
 
-                case 0xe0: this.cmp(this.x, this.immediate()); break;           // CPX
-                case 0xe4: this.cmp(this.x, this.zeropage()); break;            // CPX
-                case 0xec: this.cmp(this.x, this.absolute()); break;            // CPX
-                case 0xc0: this.cmp(this.y, this.immediate()); break;           // CPY
-                case 0xc4: this.cmp(this.y, this.zeropage()); break;            // CPY
-                case 0xcc: this.cmp(this.y, this.absolute()); break;            // CPY
+            case 0xe0: this.cmp(this.x, this.immediate()); break;           // CPX
+            case 0xe4: this.cmp(this.x, this.zeropage()); break;            // CPX
+            case 0xec: this.cmp(this.x, this.absolute()); break;            // CPX
+            case 0xc0: this.cmp(this.y, this.immediate()); break;           // CPY
+            case 0xc4: this.cmp(this.y, this.zeropage()); break;            // CPY
+            case 0xcc: this.cmp(this.y, this.absolute()); break;            // CPY
 
-                case 0xc6: this.dec(this.zeropage()); break;
-                case 0xd6: this.dec(this.zeropageIndexed(reg.x)); break;
-                case 0xce: this.dec(this.absolute()); break;
-                case 0xde: this.dec(this.absoluteIndexed(reg.x)); break;
+            case 0xc6: this.dec(this.zeropage()); break;
+            case 0xd6: this.dec(this.zeropageIndexed(this.x)); break;
+            case 0xce: this.dec(this.absolute()); break;
+            case 0xde: this.dec(this.absoluteIndexed(this.x)); break;
 
-                case 0x49: this.eor(this.immediate()); break;
-                case 0x45: this.eor(this.zeropage()); break;
-                case 0x55: this.eor(this.zeropageIndexed(reg.x)); break;
-                case 0x4D: this.eor(this.absolute()); break;
-                case 0x5D: this.eor(this.absoluteIndexed(reg.x)); break;
-                case 0x59: this.eor(this.absoluteIndexed(reg.y)); break;
-                case 0x41: this.eor(this.indirectPreIndexed(reg.x)); break;
-                case 0x51: this.eor(this.indirectPostIndexed(reg.y)); break;
+            case 0x49: this.eor(this.immediate()); break;
+            case 0x45: this.eor(this.zeropage()); break;
+            case 0x55: this.eor(this.zeropageIndexed(this.x)); break;
+            case 0x4D: this.eor(this.absolute()); break;
+            case 0x5D: this.eor(this.absoluteIndexed(this.x)); break;
+            case 0x59: this.eor(this.absoluteIndexed(this.y)); break;
+            case 0x41: this.eor(this.indirectPreIndexed(this.x)); break;
+            case 0x51: this.eor(this.indirectPostIndexed(this.y)); break;
 
-                case 0x18: this.carry = false;              // CLC (CLear Carry)
-                case 0x38: this.carry = true;               // SEC (SEt Carry)
-                case 0x58: this.interrupt = false;          // CLI (CLear Interrupt)
-                case 0x78: this.interrupt = true;           // SEI (SEt Interrupt)
-                case 0xb8: this.overflow = false;           // CLV (CLear oVerflow)
-                case 0xd8: this.decimal = false;            // CLD (CLear Decimal)
-                case 0xf8: this.decimal = true;             // SED (SEt Decimal)
-
+            case 0x18: this.carry = false; break;           // CLC (CLear Carry)
+            case 0x38: this.carry = true; break;            // SEC (SEt Carry)
+            case 0x58: this.interrupt = false; break;       // CLI (CLear Interrupt)
+            case 0x78: this.interrupt = true; break;        // SEI (SEt Interrupt)
+            case 0xb8: this.overflow = false; break;        // CLV (CLear oVerflow)
+            case 0xd8: this.decimal = false; break;         // CLD (CLear Decimal)
+            case 0xf8: this.decimal = true; break;          // SED (SEt Decimal)
             }
         }
     }
 }
 
-
- 
+/* eslint-disable max-len */
 // INC (INCrement memory)
 
 // Affects Flags: N Z
@@ -582,14 +580,12 @@ class Vm6502 {
 // Absolute      STY $4400     $8C  3   4
 
 // Last Updated Oct 17, 2020.
-    }
-};
 
 const main = async () => {
-        const mem = [...await fs.readFile(process.argv[2])];
+    const mem = [...await fs.readFile(process.argv[2])];
 
-        const vm = new Vm6502(mem);
-        vm.run();
+    const vm = new Vm6502(mem);
+    vm.run();
 };
 
 await main();
