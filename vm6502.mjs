@@ -1,7 +1,25 @@
 import fs from 'fs/promises';
 
+// http://www.6502.org/tutorials/6502opcodes.html
+
+// TODO check and fix this.pc handling
+//
+// When the 6502 is ready for the next instruction it increments the program counter before fetching the instruction.
+// Once it has the op code, it increments the program counter by the length of the operand, if any.
+// This must be accounted for when calculating branches or when pushing bytes to create a false return address
+// (i.e. jump table addresses are made up of addresses-1 when it is intended to use an RTS rather than a JMP).
+//
+// The program counter is loaded least signifigant byte first.
+// Therefore the most signifigant byte must be pushed first when creating a false return address.
+//
+// When calculating branches a forward branch of 6 skips the following 6 bytes so, effectively the program counter
+// points to the address that is 8 bytes beyond the address of the branch opcode; and a backward branch of $FA (256-6)
+// goes to an address 4 bytes before the branch instruction.
+
 class Vm6502 {
     constructor(mem = []) {
+        // TODO program counter (PC) is read from the address provided in the 16-bit reset vector at $FFFC (LB-HB)
+
         this.pc = 0;
         this.a = 0;
         this.x = 0;
@@ -22,35 +40,17 @@ class Vm6502 {
         return this.pc++;
     }
 
-    zeropage() {
-        return this.mem[this.pc++];
-    }
-
-    zeropageIndexed(reg) {
+    zeropage(reg = 0) {
         return (this.mem[this.pc++] + reg) % 256;
     }
 
-    absolute() {
-        return this.mem[this.pc++] + 256 * this.mem[this.pc++];
-    }
-
-    absoluteIndexed(reg) {
+    absolute(reg = 0) {
         return this.mem[this.pc++] + 256 * this.mem[this.pc++] + reg;
     }
 
-    indirect() {
-        const addr = this.mem[this.pc++] + 256 * this.mem[this.pc++];
-        return this.mem[addr] + 256 * this.mem[addr + 1];
-    }
-
-    indirectPreIndexed(reg) {
-        const addr = this.mem[this.pc++] + 256 * this.mem[this.pc++] + reg;
-        return this.mem[addr] + 256 * this.mem[addr + 1];
-    }
-
-    indirectPostIndexed(reg) {
-        const addr = this.mem[this.pc++] + 256 * this.mem[this.pc++];
-        return this.mem[addr] + 256 * this.mem[addr + 1] + reg;
+    indirect(pre = 0, post = 0) {
+        const addr = this.mem[this.pc++] + 256 * this.mem[this.pc++] + pre;
+        return this.mem[addr] + 256 * this.mem[addr + 1] + post;
     }
 
     relative() {
@@ -98,6 +98,11 @@ class Vm6502 {
         this.negative =  (sr & 0b1000_0000) !== 0;
     }
 
+    updateNegativeZero(val) {
+        this.negative = (val > 127);
+        this.zero = (val === 0);
+    }
+
     adc(addr) {
         if (this.decimal) {
             // TODO BCD
@@ -108,33 +113,27 @@ class Vm6502 {
 
             // TODO carry probably works differently than overflow
             this.carry = this.overflow;
-            this.negative = (this.a > 127);
-            this.zero = (this.a === 0);
+            this.updateNegativeZero(this.a);
         }
     }
 
     and(addr) {
         this.a = this.a & this.mem[addr];
-
-        this.negative = (this.a > 127);
-        this.zero = (this.a === 0);
+        this.updateNegativeZero(this.a);
     }
 
     asl(addr) {
+        const alg = (val) => {
+            this.carry = (val & 0b1000_0000) !== 0;
+            val = (val << 1) & 0b1111_1111;
+            this.updateNegativeZero(val);
+        };
+
         if (addr === undefined) {
-            this.a = this.aslInt(this.a);
+            this.a = alg(this.a);
         } else {
-            this.mem[addr] = this.aslInt(this.mem[addr]);
+            this.mem[addr] = alg(this.mem[addr]);
         }
-    }
-
-    aslInt(val) {
-        val = val << 1;
-        this.carry = (val & 0b1_0000_0000) !== 0;
-        val = val & 0b1111_1111;
-
-        this.negative = (val > 127);
-        this.zero = (val === 0);
     }
 
     bit(addr) {
@@ -164,49 +163,99 @@ class Vm6502 {
 
         // TODO carry probably works differently than overflow
         this.carry = overflow;
-        this.negative = (res > 127);
-        this.zero = (res === 0);
+        this.updateNegativeZero(res);
     }
 
     dec(addr) {
         this.mem[addr] = this.mem[addr] - 1;
-        this.negative = (this.mem[addr] > 127);
-        this.zero = (this.mem[addr] === 0);
+        this.updateNegativeZero(this.mem[addr]);
+    }
+
+    eor(addr) {
+        this.a = this.a ^ this.mem[addr];
+        this.updateNegativeZero(this.a);
+    }
+
+    inc(addr) {
+        this.mem[addr] = this.mem[addr] + 1;
+        this.updateNegativeZero(this.mem[addr]);
+    }
+
+    jmp(addr) {
+        // TODO handle indirect jump through the page border
+        // For example if address $3000 contains $40, $30FF contains $80, and $3100 contains $50, the result
+        // of JMP ($30FF) will be a transfer of control to $4080 rather than $5080 as you intended
+        // i.e. the 6502 took the low byte of the address from $30FF and the high byte from $3000.
+        this.pc = addr;
+    }
+
+    jsr(addr) {
+        this.push(this.pc - 1);
+        this.pc = addr;
+    }
+
+    lda(addr) {
+        this.a = this.mem[addr];
+        this.updateNegativeZero(this.a);
+    }
+
+    ldx(addr) {
+        this.x = this.mem[addr];
+        this.updateNegativeZero(this.x);
+    }
+
+    ldy(addr) {
+        this.y = this.mem[addr];
+        this.updateNegativeZero(this.y);
+    }
+
+    lsr(addr) {
+        const alg = (val) => {
+            this.carry = (val & 0b0000_0001) !== 0;
+            val = val >>> 1;
+            this.updateNegativeZero(val);
+        };
+
+        if (addr === undefined) {
+            this.a = alg(this.a);
+        } else {
+            this.mem[addr] = alg(this.mem[addr]);
+        }
+    }
+
+    ora(addr) {
+        this.a = this.a | this.mem[addr];
+        this.updateNegativeZero(this.a);
     }
 
     run() {
-        // TODO
-        // As the reset line goes high, the processor performs a start sequence of 7 cycles, at the end of which the
-        // program counter (PC) is read from the address provided in the 16-bit reset vector at $FFFC (LB-HB).
-        // Then, at the eighth cycle, the processor transfers control by performing a JMP to the provided address.
-
         while (true) {
             const op = this.mem[this.pc++];
 
             switch (op) {
             case 0x69: this.adc(this.immediate()); break;
             case 0x65: this.adc(this.zeropage()); break;
-            case 0x75: this.adc(this.zeropageIndexed(this.x)); break;
+            case 0x75: this.adc(this.zeropage(this.x)); break;
             case 0x6d: this.adc(this.absolute()); break;
-            case 0x7d: this.adc(this.absoluteIndexed(this.x)); break;
-            case 0x79: this.adc(this.absoluteIndexed(this.y)); break;
-            case 0x61: this.adc(this.indirectPreIndexed(this.x)); break;
-            case 0x71: this.adc(this.indirectPostIndexed(this.y)); break;
+            case 0x7d: this.adc(this.absolute(this.x)); break;
+            case 0x79: this.adc(this.absolute(this.y)); break;
+            case 0x61: this.adc(this.indirect(this.x)); break;
+            case 0x71: this.adc(this.indirect(0, this.y)); break;
 
             case 0x29: this.add(this.immediate()); break;
             case 0x25: this.add(this.zeropage()); break;
-            case 0x35: this.add(this.zeropageIndexed(this.x)); break;
+            case 0x35: this.add(this.zeropage(this.x)); break;
             case 0x2d: this.add(this.absolute()); break;
-            case 0x3d: this.add(this.absoluteIndexed(this.x)); break;
-            case 0x39: this.add(this.absoluteIndexed(this.y)); break;
-            case 0x21: this.add(this.indirectPreIndexed(this.x)); break;
-            case 0x31: this.add(this.indirectPostIndexed(this.y)); break;
+            case 0x3d: this.add(this.absolute(this.x)); break;
+            case 0x39: this.add(this.absolute(this.y)); break;
+            case 0x21: this.add(this.indirect(this.x)); break;
+            case 0x31: this.add(this.indirect(0, this.y)); break;
 
             case 0x0a: this.asl(); break;
             case 0x06: this.asl(this.zeropage()); break;
-            case 0x16: this.asl(this.zeropageIndexed(this.x)); break;
+            case 0x16: this.asl(this.zeropage(this.x)); break;
             case 0x0e: this.asl(this.absolute()); break;
-            case 0x1e: this.asl(this.absoluteIndexed(this.x)); break;
+            case 0x1e: this.asl(this.absolute(this.x)); break;
 
             case 0x24: this.bit(this.zeropage()); break;
             case 0x2c: this.bit(this.absolute()); break;
@@ -224,12 +273,12 @@ class Vm6502 {
 
             case 0xc9: this.cmp(this.a, this.immediate()); break;
             case 0xc5: this.cmp(this.a, this.zeropage()); break;
-            case 0xd5: this.cmp(this.a, this.zeropageIndexed(this.x)); break;
+            case 0xd5: this.cmp(this.a, this.zeropage(this.x)); break;
             case 0xcd: this.cmp(this.a, this.absolute()); break;
-            case 0xdd: this.cmp(this.a, this.absoluteIndexed(this.x)); break;
-            case 0xd9: this.cmp(this.a, this.absoluteIndexed(this.y)); break;
-            case 0xc1: this.cmp(this.a, this.indirectPreIndexed(this.x)); break;
-            case 0xd1: this.cmp(this.a, this.indirectPostIndexed(this.y)); break;
+            case 0xdd: this.cmp(this.a, this.absolute(this.x)); break;
+            case 0xd9: this.cmp(this.a, this.absolute(this.y)); break;
+            case 0xc1: this.cmp(this.a, this.indirect(this.x)); break;
+            case 0xd1: this.cmp(this.a, this.indirect(0, this.y)); break;
 
             case 0xe0: this.cmp(this.x, this.immediate()); break;           // CPX
             case 0xe4: this.cmp(this.x, this.zeropage()); break;            // CPX
@@ -239,18 +288,18 @@ class Vm6502 {
             case 0xcc: this.cmp(this.y, this.absolute()); break;            // CPY
 
             case 0xc6: this.dec(this.zeropage()); break;
-            case 0xd6: this.dec(this.zeropageIndexed(this.x)); break;
+            case 0xd6: this.dec(this.zeropage(this.x)); break;
             case 0xce: this.dec(this.absolute()); break;
-            case 0xde: this.dec(this.absoluteIndexed(this.x)); break;
+            case 0xde: this.dec(this.absolute(this.x)); break;
 
             case 0x49: this.eor(this.immediate()); break;
             case 0x45: this.eor(this.zeropage()); break;
-            case 0x55: this.eor(this.zeropageIndexed(this.x)); break;
+            case 0x55: this.eor(this.zeropage(this.x)); break;
             case 0x4D: this.eor(this.absolute()); break;
-            case 0x5D: this.eor(this.absoluteIndexed(this.x)); break;
-            case 0x59: this.eor(this.absoluteIndexed(this.y)); break;
-            case 0x41: this.eor(this.indirectPreIndexed(this.x)); break;
-            case 0x51: this.eor(this.indirectPostIndexed(this.y)); break;
+            case 0x5D: this.eor(this.absolute(this.x)); break;
+            case 0x59: this.eor(this.absolute(this.y)); break;
+            case 0x41: this.eor(this.indirect(this.x)); break;
+            case 0x51: this.eor(this.indirect(0, this.y)); break;
 
             case 0x18: this.carry = false; break;           // CLC (CLear Carry)
             case 0x38: this.carry = true; break;            // SEC (SEt Carry)
@@ -259,201 +308,82 @@ class Vm6502 {
             case 0xb8: this.overflow = false; break;        // CLV (CLear oVerflow)
             case 0xd8: this.decimal = false; break;         // CLD (CLear Decimal)
             case 0xf8: this.decimal = true; break;          // SED (SEt Decimal)
+
+            case 0xe6: this.inc(this.zeropage()); break;
+            case 0xf6: this.inc(this.zeropage(this.x)); break;
+            case 0xee: this.inc(this.absolute()); break;
+            case 0xfe: this.inc(this.absolute(this.x)); break;
+
+            case 0x4c: this.jmp(this.absolute()); break;
+            case 0x6c: this.jmp(this.indirect()); break;
+
+            case 0x20: this.jsr(this.absolute()); break;
+
+            case 0xa9: this.lda(this.immediate()); break;
+            case 0xa5: this.lda(this.zeropage()); break;
+            case 0xb5: this.lda(this.zeropage(this.x)); break;
+            case 0xad: this.lda(this.absolute()); break;
+            case 0xbd: this.lda(this.absolute(this.x)); break;
+            case 0xb9: this.lda(this.absolute(this.y)); break;
+            case 0xa1: this.lda(this.indirect(this.x)); break;
+            case 0xb1: this.lda(this.indirect(0, this.y)); break;
+
+            case 0xa2: this.ldx(this.immediate()); break;
+            case 0xa6: this.ldx(this.zeropage()); break;
+            case 0xb6: this.ldx(this.zeropage(this.y)); break;
+            case 0xae: this.ldx(this.absolute()); break;
+            case 0xbe: this.ldx(this.absolute(this.y)); break;
+
+            case 0xa0: this.ldy(this.immediate()); break;
+            case 0xa4: this.ldy(this.zeropage()); break;
+            case 0xb4: this.ldy(this.zeropage(this.x)); break;
+            case 0xac: this.ldy(this.absolute()); break;
+            case 0xbc: this.ldy(this.absolute(this.x)); break;
+
+            case 0x4a: this.lsr(); break;
+            case 0x46: this.lsr(this.zeropage()); break;
+            case 0x56: this.lsr(this.zeropage(this.x)); break;
+            case 0x4e: this.lsr(this.absolute()); break;
+            case 0x5e: this.lsr(this.absolute(this.x)); break;
+
+            case 0xea: break;               // NOP
+
+            case 0x09: this.ora(this.immediate()); break;
+            case 0x05: this.ora(this.zeropage()); break;
+            case 0x15: this.ora(this.zeropage(this.x)); break;
+            case 0x0d: this.ora(this.absolute()); break;
+            case 0x1d: this.ora(this.absolute(this.x)); break;
+            case 0x19: this.ora(this.absolute(this.y)); break;
+            case 0x01: this.ora(this.indirect(this.x)); break;
+            case 0x11: this.ora(this.indirect(0, this.y)); break;
+
+            case 0xAA: this.x = this.a; this.updateNegativeZero(this.x); break;         // TAX
+            case 0x8A: this.a = this.x; this.updateNegativeZero(this.a); break;         // TXA
+            case 0xCA: this.x--; this.updateNegativeZero(this.x); break;                // DEX
+            case 0xE8: this.x++; this.updateNegativeZero(this.x); break;                // INX
+            case 0xA8: this.y = this.a; this.updateNegativeZero(this.y); break;         // TAY
+            case 0x98: this.a = this.y; this.updateNegativeZero(this.a); break;         // TYA
+            case 0x88: this.y--; this.updateNegativeZero(this.y); break;                // DEY
+            case 0xC8: this.y++; this.updateNegativeZero(this.y); break;                // INY
+
             }
         }
     }
 }
 
 /* eslint-disable max-len */
-// INC (INCrement memory)
-
-// Affects Flags: N Z
-
-// MODE           SYNTAX       HEX LEN TIM
-// Zero Page     INC $44       $E6  2   5
-// Zero Page,X   INC $44,X     $F6  2   6
-// Absolute      INC $4400     $EE  3   6
-// Absolute,X    INC $4400,X   $FE  3   7
-
- 
-// JMP (JuMP)
-
-// Affects Flags: none
-
-// MODE           SYNTAX       HEX LEN TIM
-// Absolute      JMP $5597     $4C  3   3
-// Indirect      JMP ($5597)   $6C  3   5
-
-// JMP transfers program execution to the following address (absolute) or to the location contained in the following address (indirect). Note that there is no carry associated with the indirect jump so:
-
-// AN INDIRECT JUMP MUST NEVER USE A
-// VECTOR BEGINNING ON THE LAST BYTE
-// OF A PAGE
-
-// For example if address $3000 contains $40, $30FF contains $80, and $3100 contains $50, the result of JMP ($30FF) will be a transfer of control to $4080 rather than $5080 as you intended i.e. the 6502 took the low byte of the address from $30FF and the high byte from $3000.
-
- 
-// JSR (Jump to SubRoutine)
-
-// Affects Flags: none
-
-// MODE           SYNTAX       HEX LEN TIM
-// Absolute      JSR $5597     $20  3   6
-
-// JSR pushes the address-1 of the next operation on to the stack before transferring program control to the following address. Subroutines are normally terminated by a RTS op code.
-
- 
-// LDA (LoaD Accumulator)
-
-// Affects Flags: N Z
-
-// MODE           SYNTAX       HEX LEN TIM
-// Immediate     LDA #$44      $A9  2   2
-// Zero Page     LDA $44       $A5  2   3
-// Zero Page,X   LDA $44,X     $B5  2   4
-// Absolute      LDA $4400     $AD  3   4
-// Absolute,X    LDA $4400,X   $BD  3   4+
-// Absolute,Y    LDA $4400,Y   $B9  3   4+
-// Indirect,X    LDA ($44,X)   $A1  2   6
-// Indirect,Y    LDA ($44),Y   $B1  2   5+
-
-// + add 1 cycle if page boundary crossed
-
- 
-// LDX (LoaD X register)
-
-// Affects Flags: N Z
-
-// MODE           SYNTAX       HEX LEN TIM
-// Immediate     LDX #$44      $A2  2   2
-// Zero Page     LDX $44       $A6  2   3
-// Zero Page,Y   LDX $44,Y     $B6  2   4
-// Absolute      LDX $4400     $AE  3   4
-// Absolute,Y    LDX $4400,Y   $BE  3   4+
-
-// + add 1 cycle if page boundary crossed
-
- 
-// LDY (LoaD Y register)
-
-// Affects Flags: N Z
-
-// MODE           SYNTAX       HEX LEN TIM
-// Immediate     LDY #$44      $A0  2   2
-// Zero Page     LDY $44       $A4  2   3
-// Zero Page,X   LDY $44,X     $B4  2   4
-// Absolute      LDY $4400     $AC  3   4
-// Absolute,X    LDY $4400,X   $BC  3   4+
-
-// + add 1 cycle if page boundary crossed
-
- 
-// LSR (Logical Shift Right)
-
-// Affects Flags: N Z C
-
-// MODE           SYNTAX       HEX LEN TIM
-// Accumulator   LSR A         $4A  1   2
-// Zero Page     LSR $44       $46  2   5
-// Zero Page,X   LSR $44,X     $56  2   6
-// Absolute      LSR $4400     $4E  3   6
-// Absolute,X    LSR $4400,X   $5E  3   7
-
-// LSR shifts all bits right one position. 0 is shifted into bit 7 and the original bit 0 is shifted into the Carry.
-
- 
-// Wrap-Around
-
-// Use caution with indexed zero page operations as they are subject to wrap-around. For example, if the X register holds $FF and you execute LDA $80,X you will not access $017F as you might expect; instead you access $7F i.e. $80-1. This characteristic can be used to advantage but make sure your code is well commented.
-
-// It is possible, however, to access $017F when X = $FF by using the Absolute,X addressing mode of LDA $80,X. That is, instead of:
-
-//   LDA $80,X    ; ZeroPage,X - the resulting object code is: B5 80
-
-// which accesses $007F when X=$FF, use:
-
-//   LDA $0080,X  ; Absolute,X - the resulting object code is: BD 80 00
-
-// which accesses $017F when X = $FF (a at cost of one additional byte and one additional cycle). All of the ZeroPage,X and ZeroPage,Y instructions except STX ZeroPage,Y and STY ZeroPage,X have a corresponding Absolute,X and Absolute,Y instruction. Unfortunately, a lot of 6502 assemblers don't have an easy way to force Absolute addressing, i.e. most will assemble a LDA $0080,X as B5 80. One way to overcome this is to insert the bytes using the .BYTE pseudo-op (on some 6502 assemblers this pseudo-op is called DB or DFB, consult the assembler documentation) as follows:
-
-//   .BYTE $BD,$80,$00  ; LDA $0080,X (absolute,X addressing mode)
-
-// The comment is optional, but highly recommended for clarity.
-
-// In cases where you are writing code that will be relocated you must consider wrap-around when assigning dummy values for addresses that will be adjusted. Both zero and the semi-standard $FFFF should be avoided for dummy labels. The use of zero or zero page values will result in assembled code with zero page opcodes when you wanted absolute codes. With $FFFF, the problem is in addresses+1 as you wrap around to page 0.
-
- 
-// Program Counter
-
-// When the 6502 is ready for the next instruction it increments the program counter before fetching the instruction. Once it has the op code, it increments the program counter by the length of the operand, if any. This must be accounted for when calculating branches or when pushing bytes to create a false return address (i.e. jump table addresses are made up of addresses-1 when it is intended to use an RTS rather than a JMP).
-
-// The program counter is loaded least signifigant byte first. Therefore the most signifigant byte must be pushed first when creating a false return address.
-
-// When calculating branches a forward branch of 6 skips the following 6 bytes so, effectively the program counter points to the address that is 8 bytes beyond the address of the branch opcode; and a backward branch of $FA (256-6) goes to an address 4 bytes before the branch instruction.
-
- 
-// Execution Times
-
-// Op code execution times are measured in machine cycles; one machine cycle equals one clock cycle. Many instructions require one extra cycle for execution if a page boundary is crossed; these are indicated by a + following the time values shown.
-
- 
-// NOP (No OPeration)
-
-// Affects Flags: none
-
-// MODE           SYNTAX       HEX LEN TIM
-// Implied       NOP           $EA  1   2
-
-// NOP is used to reserve space for future modifications or effectively REM out existing code.
-
- 
-// ORA (bitwise OR with Accumulator)
-
-// Affects Flags: N Z
-
-// MODE           SYNTAX       HEX LEN TIM
-// Immediate     ORA #$44      $09  2   2
-// Zero Page     ORA $44       $05  2   3
-// Zero Page,X   ORA $44,X     $15  2   4
-// Absolute      ORA $4400     $0D  3   4
-// Absolute,X    ORA $4400,X   $1D  3   4+
-// Absolute,Y    ORA $4400,Y   $19  3   4+
-// Indirect,X    ORA ($44,X)   $01  2   6
-// Indirect,Y    ORA ($44),Y   $11  2   5+
-
-// + add 1 cycle if page boundary crossed
-
-               
-// Register Instructions
-
-// Affect Flags: N Z
-
-// These instructions are implied mode, have a length of one byte and require two machine cycles.
-
-// MNEMONIC                 HEX
-// TAX (Transfer A to X)    $AA
-// TXA (Transfer X to A)    $8A
-// DEX (DEcrement X)        $CA
-// INX (INcrement X)        $E8
-// TAY (Transfer A to Y)    $A8
-// TYA (Transfer Y to A)    $98
-// DEY (DEcrement Y)        $88
-// INY (INcrement Y)        $C8
-
- 
 // ROL (ROtate Left)
 
 // Affects Flags: N Z C
 
 // MODE           SYNTAX       HEX LEN TIM
 // Accumulator   ROL A         $2A  1   2
-// Zero Page     ROL $44       $26  2   5
-// Zero Page,X   ROL $44,X     $36  2   6
-// Absolute      ROL $4400     $2E  3   6
-// Absolute,X    ROL $4400,X   $3E  3   7
+// zeropage()     ROL $44       $26  2   5
+// zeropage(this.x)   ROL $44,X     $36  2   6
+// absolute()     ROL $4400     $2E  3   6
+// absolute(this.x)    ROL $4400,X   $3E  3   7
 
 // ROL shifts all bits left one position. The Carry is shifted into bit 0 and the original bit 7 is shifted into the Carry.
-
  
 // ROR (ROtate Right)
 
@@ -461,10 +391,10 @@ class Vm6502 {
 
 // MODE           SYNTAX       HEX LEN TIM
 // Accumulator   ROR A         $6A  1   2
-// Zero Page     ROR $44       $66  2   5
-// Zero Page,X   ROR $44,X     $76  2   6
-// Absolute      ROR $4400     $6E  3   6
-// Absolute,X    ROR $4400,X   $7E  3   7
+// zeropage()     ROR $44       $66  2   5
+// zeropage(this.x)   ROR $44,X     $76  2   6
+// absolute()     ROR $4400     $6E  3   6
+// absolute(this.x)    ROR $4400,X   $7E  3   7
 
 // ROR shifts all bits right one position. The Carry is shifted into bit 7 and the original bit 0 is shifted into the Carry.
 
@@ -517,14 +447,14 @@ class Vm6502 {
 // Affects Flags: N V Z C
 
 // MODE           SYNTAX       HEX LEN TIM
-// Immediate     SBC #$44      $E9  2   2
-// Zero Page     SBC $44       $E5  2   3
-// Zero Page,X   SBC $44,X     $F5  2   4
-// Absolute      SBC $4400     $ED  3   4
-// Absolute,X    SBC $4400,X   $FD  3   4+
-// Absolute,Y    SBC $4400,Y   $F9  3   4+
-// Indirect,X    SBC ($44,X)   $E1  2   6
-// Indirect,Y    SBC ($44),Y   $F1  2   5+
+// immediate()     SBC #$44      $E9  2   2
+// zeropage()     SBC $44       $E5  2   3
+// zeropage(this.x)   SBC $44,X     $F5  2   4
+// absolute()     SBC $4400     $ED  3   4
+// absolute(this.x)    SBC $4400,X   $FD  3   4+
+// absolute(this.y)    SBC $4400,Y   $F9  3   4+
+// indirect(this.x)    SBC ($44,X)   $E1  2   6
+// indirect(0, this.y)    SBC ($44),Y   $F1  2   5+
 
 // + add 1 cycle if page boundary crossed
 
@@ -538,13 +468,13 @@ class Vm6502 {
 // Affects Flags: none
 
 // MODE           SYNTAX       HEX LEN TIM
-// Zero Page     STA $44       $85  2   3
-// Zero Page,X   STA $44,X     $95  2   4
-// Absolute      STA $4400     $8D  3   4
-// Absolute,X    STA $4400,X   $9D  3   5
-// Absolute,Y    STA $4400,Y   $99  3   5
-// Indirect,X    STA ($44,X)   $81  2   6
-// Indirect,Y    STA ($44),Y   $91  2   6
+// zeropage()     STA $44       $85  2   3
+// zeropage(this.x)   STA $44,X     $95  2   4
+// absolute()     STA $4400     $8D  3   4
+// absolute(this.x)    STA $4400,X   $9D  3   5
+// absolute(this.y)    STA $4400,Y   $99  3   5
+// indirect(this.x)    STA ($44,X)   $81  2   6
+// indirect(0, this.y)    STA ($44),Y   $91  2   6
 
              
 // Stack Instructions
@@ -565,9 +495,9 @@ class Vm6502 {
 // Affects Flags: none
 
 // MODE           SYNTAX       HEX LEN TIM
-// Zero Page     STX $44       $86  2   3
-// Zero Page,Y   STX $44,Y     $96  2   4
-// Absolute      STX $4400     $8E  3   4
+// zeropage()     STX $44       $86  2   3
+// zeropage(this.y)   STX $44,Y     $96  2   4
+// absolute()     STX $4400     $8E  3   4
 
  
 // STY (STore Y register)
@@ -575,9 +505,9 @@ class Vm6502 {
 // Affects Flags: none
 
 // MODE           SYNTAX       HEX LEN TIM
-// Zero Page     STY $44       $84  2   3
-// Zero Page,X   STY $44,X     $94  2   4
-// Absolute      STY $4400     $8C  3   4
+// zeropage()     STY $44       $84  2   3
+// zeropage(this.x)   STY $44,X     $94  2   4
+// absolute()     STY $4400     $8C  3   4
 
 // Last Updated Oct 17, 2020.
 
