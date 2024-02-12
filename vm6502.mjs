@@ -14,6 +14,8 @@
 // points to the address that is 8 bytes beyond the address of the branch opcode; and a backward branch of $FA (256-6)
 // goes to an address 4 bytes before the branch instruction.
 
+// TODO when reading memory, handle undefined (this.mem[addr] ?? 0)
+
 export class Vm6502 {
     constructor(mem = []) {
         // TODO program counter (PC) is read from the address provided in the 16-bit reset vector at $FFFC (LB-HB)
@@ -466,6 +468,9 @@ export class Vm6502 {
             case 0x84: this.st(this.y, this.zeropage()); break;                 // STY
             case 0x94: this.st(this.y, this.zeropage(this.x)); break;           // STY
             case 0x8C: this.st(this.y, this.absolute()); break;                 // STY
+
+            // These are not official instructions, but we need them
+            case 0x02: return;              // HLT
             }
         }
     }

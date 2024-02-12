@@ -1,10 +1,12 @@
-- desc: Trivial assembly program
+- desc: Trivial program
   setup:
-    decimal: 1
-  code: |
-    CLD
+    decimal: true
+    mem:
+      0x0000: |
+        CLD
+        .byte $02
   check:
-    decimal: 0
+    decimal: false
 
 # clc
 # cld
