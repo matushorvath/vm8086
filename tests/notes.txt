@@ -1,0 +1,10 @@
+ca65 test.s -o tmp.o
+ld65 -C ld65.cfg tmp.o -o tmp.bin
+hexdump -C tmp.bin
+
+echo clc | ./assemble.sh | hd
+
+echo abc | hexdump -ve '/1 ",%02x"'
+,61,62,63,0a
+echo abc | hexdump -ve '/1 ",%02d"'
+,97,98,99,10

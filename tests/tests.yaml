@@ -1,0 +1,14 @@
+- desc: Trivial assembly program
+  setup:
+    decimal: 1
+  code: |
+    CLD
+  check:
+    decimal: 0
+
+# clc
+# cld
+
+# lda     $0400
+# lda     $0401
+# sta     $0402

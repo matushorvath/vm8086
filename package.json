@@ -2,7 +2,7 @@
   "name": "vm6502",
   "version": "1.0.0",
   "description": "Virtual Machine emulating the MOS 6502 processor",
-  "main": "vm6502.mjs",
+  "main": "main.mjs",
   "scripts": {
     "test": "npm run lint",
     "lint": "npm run eslint",
@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/matushorvath/vm6502#readme",
   "devDependencies": {
-    "eslint": "^8.56.0"
+    "eslint": "^8.56.0",
+    "yaml": "^2.3.4"
   }
 }

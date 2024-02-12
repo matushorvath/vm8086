@@ -1,5 +1,3 @@
-import fs from 'fs/promises';
-
 // http://www.6502.org/tutorials/6502opcodes.html
 
 // TODO check and fix this.pc handling
@@ -16,7 +14,7 @@ import fs from 'fs/promises';
 // points to the address that is 8 bytes beyond the address of the branch opcode; and a backward branch of $FA (256-6)
 // goes to an address 4 bytes before the branch instruction.
 
-class Vm6502 {
+export class Vm6502 {
     constructor(mem = []) {
         // TODO program counter (PC) is read from the address provided in the 16-bit reset vector at $FFFC (LB-HB)
 
@@ -272,7 +270,7 @@ class Vm6502 {
             // TODO BCD
             throw new Error('SBC with BCD not implemented');
         } else {
-            const sum = this.signed(this.a) - this.signed(this.mem[addr]) - (this.carry ? 1 : 0);
+            const sum = this.signed(this.a) - this.signed(this.mem[addr]) - (this.carry ? 0 : 1);
             [this.a, this.overflow] = this.unsigned(sum);
 
             // TODO carry probably works differently than overflow, and probably different than for adc
@@ -472,12 +470,3 @@ class Vm6502 {
         }
     }
 }
-
-const main = async () => {
-    const mem = [...await fs.readFile(process.argv[2])];
-
-    const vm = new Vm6502(mem);
-    vm.run();
-};
-
-await main();
