@@ -8,9 +8,16 @@
   check:
     decimal: false
 
-# clc
-# cld
+- desc: Load and store address A
+  setup:
+    mem:
+      0x0000: |
+        LDA $0400
+        LDA $0401
+        STA $0402
+        .byte $02
+      0x400: [0x42, 0x43]
+  check:
+    mem:
+      0x400: [0x42, 0x43, 0x43]
 
-# lda     $0400
-# lda     $0401
-# sta     $0402
