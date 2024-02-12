@@ -76,7 +76,7 @@ class Vm6502 {
         this.mem[0x0100 + this.sp--] = val;
     }
 
-    pop() {
+    pull() {
         return this.mem[0x0100 + ++this.sp];
     }
 
@@ -228,6 +228,63 @@ class Vm6502 {
         this.updateNegativeZero(this.a);
     }
 
+    rol(addr) {
+        const alg = (val) => {
+            const newCarry = (val & 0b1000_0000) !== 0;
+            val = ((val << 1) & 0b1111_1111) | (this.carry ? 0b0000_0001 : 0);
+            this.carry = newCarry;
+            this.updateNegativeZero(val);
+        };
+
+        if (addr === undefined) {
+            this.a = alg(this.a);
+        } else {
+            this.mem[addr] = alg(this.mem[addr]);
+        }
+    }
+
+    ror(addr) {
+        const alg = (val) => {
+            const newCarry = (val & 0b0000_0001) !== 0;
+            val = (val >>> 1) | (this.carry ? 0b1000_0000 : 0);
+            this.carry = newCarry;
+            this.updateNegativeZero(val);
+        };
+
+        if (addr === undefined) {
+            this.a = alg(this.a);
+        } else {
+            this.mem[addr] = alg(this.mem[addr]);
+        }
+    }
+
+    rti() {
+        this.unpackSr(this.pull() & 0b1100_1111);
+        this.pc = this.pull() + 256 * this.pull();
+    }
+
+    rts() {
+        this.pc = this.pull() + 256 * this.pull() + 1;
+    }
+
+    sbc(addr) {
+        if (this.decimal) {
+            // TODO BCD
+            throw new Error('SBC with BCD not implemented');
+        } else {
+            const sum = this.signed(this.a) - this.signed(this.mem[addr]) - (this.carry ? 1 : 0);
+            [this.a, this.overflow] = this.unsigned(sum);
+
+            // TODO carry probably works differently than overflow, and probably different than for adc
+            this.carry = this.overflow;
+            this.updateNegativeZero(this.a);
+        }
+    }
+
+    st(val, addr) {
+        this.mem[addr] = val;
+    }
+
     run() {
         while (true) {
             const op = this.mem[this.pc++];
@@ -316,7 +373,6 @@ class Vm6502 {
 
             case 0x4c: this.jmp(this.absolute()); break;
             case 0x6c: this.jmp(this.indirect()); break;
-
             case 0x20: this.jsr(this.absolute()); break;
 
             case 0xa9: this.lda(this.immediate()); break;
@@ -357,159 +413,65 @@ class Vm6502 {
             case 0x01: this.ora(this.indirect(this.x)); break;
             case 0x11: this.ora(this.indirect(0, this.y)); break;
 
-            case 0xAA: this.x = this.a; this.updateNegativeZero(this.x); break;         // TAX
-            case 0x8A: this.a = this.x; this.updateNegativeZero(this.a); break;         // TXA
-            case 0xCA: this.x--; this.updateNegativeZero(this.x); break;                // DEX
-            case 0xE8: this.x++; this.updateNegativeZero(this.x); break;                // INX
-            case 0xA8: this.y = this.a; this.updateNegativeZero(this.y); break;         // TAY
+            case 0xaa: this.x = this.a; this.updateNegativeZero(this.x); break;         // TAX
+            case 0x8a: this.a = this.x; this.updateNegativeZero(this.a); break;         // TXA
+            case 0xca: this.x--; this.updateNegativeZero(this.x); break;                // DEX
+            case 0xe8: this.x++; this.updateNegativeZero(this.x); break;                // INX
+            case 0xa8: this.y = this.a; this.updateNegativeZero(this.y); break;         // TAY
             case 0x98: this.a = this.y; this.updateNegativeZero(this.a); break;         // TYA
             case 0x88: this.y--; this.updateNegativeZero(this.y); break;                // DEY
-            case 0xC8: this.y++; this.updateNegativeZero(this.y); break;                // INY
+            case 0xc8: this.y++; this.updateNegativeZero(this.y); break;                // INY
 
+            case 0x2a: this.rol(); break;
+            case 0x26: this.rol(this.zeropage()); break;
+            case 0x36: this.rol(this.zeropage(this.x)); break;
+            case 0x2e: this.rol(this.absolute()); break;
+            case 0x3e: this.rol(this.absolute(this.x)); break;
+
+            case 0x6a: this.ror(); break;
+            case 0x66: this.ror(this.zeropage()); break;
+            case 0x76: this.ror(this.zeropage(this.x)); break;
+            case 0x6e: this.ror(this.absolute()); break;
+            case 0x7e: this.ror(this.absolute(this.x)); break;
+
+            case 0x40: this.rti(); break;
+            case 0x60: this.rts(); break;
+
+            case 0xe9: this.sbc(this.immediate()); break;
+            case 0xe5: this.sbc(this.zeropage()); break;
+            case 0xf5: this.sbc(this.zeropage(this.x)); break;
+            case 0xed: this.sbc(this.absolute()); break;
+            case 0xfd: this.sbc(this.absolute(this.x)); break;
+            case 0xf9: this.sbc(this.absolute(this.y)); break;
+            case 0xe1: this.sbc(this.indirect(this.x)); break;
+            case 0xf1: this.sbc(this.indirect(0, this.y)); break;
+
+            case 0x85: this.st(this.a, this.zeropage()); break;                 // STA
+            case 0x95: this.st(this.a, this.zeropage(this.x)); break;           // STA
+            case 0x8d: this.st(this.a, this.absolute()); break;                 // STA
+            case 0x9d: this.st(this.a, this.absolute(this.x)); break;           // STA
+            case 0x99: this.st(this.a, this.absolute(this.y)); break;           // STA
+            case 0x81: this.st(this.a, this.indirect(this.x)); break;           // STA
+            case 0x91: this.st(this.a, this.indirect(0, this.y)); break;        // STA
+
+            case 0x9a: this.sp = this.x; break;                                         // TXS
+            case 0xba: this.x = this.sp; this.updateNegativeZero(this.x); break;        // TSX
+            case 0x48: this.push(this.a); break;                                        // PHA
+            case 0x68: this.a = this.pull(); this.updateNegativeZero(this.a); break;    // PLA
+            case 0x08: this.push(this.packSr()); break;                                 // PHP
+            case 0x28: this.unpackSr(this.pull()); break;                               // PLP
+
+            case 0x86: this.st(this.x, this.zeropage()); break;                 // STX
+            case 0x96: this.st(this.x, this.zeropage(this.y)); break;           // STX
+            case 0x8E: this.st(this.x, this.absolute()); break;                 // STX
+
+            case 0x84: this.st(this.y, this.zeropage()); break;                 // STY
+            case 0x94: this.st(this.y, this.zeropage(this.x)); break;           // STY
+            case 0x8C: this.st(this.y, this.absolute()); break;                 // STY
             }
         }
     }
 }
-
-/* eslint-disable max-len */
-// ROL (ROtate Left)
-
-// Affects Flags: N Z C
-
-// MODE           SYNTAX       HEX LEN TIM
-// Accumulator   ROL A         $2A  1   2
-// zeropage()     ROL $44       $26  2   5
-// zeropage(this.x)   ROL $44,X     $36  2   6
-// absolute()     ROL $4400     $2E  3   6
-// absolute(this.x)    ROL $4400,X   $3E  3   7
-
-// ROL shifts all bits left one position. The Carry is shifted into bit 0 and the original bit 7 is shifted into the Carry.
- 
-// ROR (ROtate Right)
-
-// Affects Flags: N Z C
-
-// MODE           SYNTAX       HEX LEN TIM
-// Accumulator   ROR A         $6A  1   2
-// zeropage()     ROR $44       $66  2   5
-// zeropage(this.x)   ROR $44,X     $76  2   6
-// absolute()     ROR $4400     $6E  3   6
-// absolute(this.x)    ROR $4400,X   $7E  3   7
-
-// ROR shifts all bits right one position. The Carry is shifted into bit 7 and the original bit 0 is shifted into the Carry.
-
- 
-// RTI (ReTurn from Interrupt)
-
-// Affects Flags: all
-
-// MODE           SYNTAX       HEX LEN TIM
-// Implied       RTI           $40  1   6
-
-// RTI retrieves the Processor Status Word (flags) and the Program Counter from the stack in that order (interrupts push the PC first and then the PSW).
-
-// Note that unlike RTS, the return address on the stack is the actual address rather than the address-1.
-
- 
-// RTS (ReTurn from Subroutine)
-
-// Affects Flags: none
-
-// MODE           SYNTAX       HEX LEN TIM
-// Implied       RTS           $60  1   6
-
-// RTS pulls the top two bytes off the stack (low byte first) and transfers program control to that address+1. It is used, as expected, to exit a subroutine invoked via JSR which pushed the address-1.
-
-// RTS is frequently used to implement a jump table where addresses-1 are pushed onto the stack and accessed via RTS eg. to access the second of four routines:
-
-//  LDX #1
-//  JSR EXEC
-//  JMP SOMEWHERE
-
-// LOBYTE
-//  .BYTE <ROUTINE0-1,<ROUTINE1-1
-//  .BYTE <ROUTINE2-1,<ROUTINE3-1
-
-// HIBYTE
-//  .BYTE >ROUTINE0-1,>ROUTINE1-1
-//  .BYTE >ROUTINE2-1,>ROUTINE3-1
-
-// EXEC
-//  LDA HIBYTE,X
-//  PHA
-//  LDA LOBYTE,X
-//  PHA
-//  RTS
-
- 
-// SBC (SuBtract with Carry)
-
-// Affects Flags: N V Z C
-
-// MODE           SYNTAX       HEX LEN TIM
-// immediate()     SBC #$44      $E9  2   2
-// zeropage()     SBC $44       $E5  2   3
-// zeropage(this.x)   SBC $44,X     $F5  2   4
-// absolute()     SBC $4400     $ED  3   4
-// absolute(this.x)    SBC $4400,X   $FD  3   4+
-// absolute(this.y)    SBC $4400,Y   $F9  3   4+
-// indirect(this.x)    SBC ($44,X)   $E1  2   6
-// indirect(0, this.y)    SBC ($44),Y   $F1  2   5+
-
-// + add 1 cycle if page boundary crossed
-
-// SBC results are dependant on the setting of the decimal flag. In decimal mode, subtraction is carried out on the assumption that the values involved are packed BCD (Binary Coded Decimal).
-
-// There is no way to subtract without the carry which works as an inverse borrow. i.e, to subtract you set the carry before the operation. If the carry is cleared by the operation, it indicates a borrow occurred.
-
- 
-// STA (STore Accumulator)
-
-// Affects Flags: none
-
-// MODE           SYNTAX       HEX LEN TIM
-// zeropage()     STA $44       $85  2   3
-// zeropage(this.x)   STA $44,X     $95  2   4
-// absolute()     STA $4400     $8D  3   4
-// absolute(this.x)    STA $4400,X   $9D  3   5
-// absolute(this.y)    STA $4400,Y   $99  3   5
-// indirect(this.x)    STA ($44,X)   $81  2   6
-// indirect(0, this.y)    STA ($44),Y   $91  2   6
-
-             
-// Stack Instructions
-
-// These instructions are implied mode, have a length of one byte and require machine cycles as indicated. The "PuLl" operations are known as "POP" on most other microprocessors. With the 6502, the stack is always on page one ($100-$1FF) and works top down.
-
-// MNEMONIC                        HEX TIM
-// TXS (Transfer X to Stack ptr)   $9A  2
-// TSX (Transfer Stack ptr to X)   $BA  2
-// PHA (PusH Accumulator)          $48  3
-// PLA (PuLl Accumulator)          $68  4
-// PHP (PusH Processor status)     $08  3
-// PLP (PuLl Processor status)     $28  4
-
- 
-// STX (STore X register)
-
-// Affects Flags: none
-
-// MODE           SYNTAX       HEX LEN TIM
-// zeropage()     STX $44       $86  2   3
-// zeropage(this.y)   STX $44,Y     $96  2   4
-// absolute()     STX $4400     $8E  3   4
-
- 
-// STY (STore Y register)
-
-// Affects Flags: none
-
-// MODE           SYNTAX       HEX LEN TIM
-// zeropage()     STY $44       $84  2   3
-// zeropage(this.x)   STY $44,X     $94  2   4
-// absolute()     STY $4400     $8C  3   4
-
-// Last Updated Oct 17, 2020.
 
 const main = async () => {
     const mem = [...await fs.readFile(process.argv[2])];
