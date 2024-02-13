@@ -19,7 +19,8 @@ export class Vm6502 {
     constructor(mem = []) {
         this.mem = mem;
 
-        this.pc = this.read(0xfffc) + 256 * this.read(0xfffd);
+        //this.pc = this.read(0xfffc) + 256 * this.read(0xfffd);
+        this.pc = 0;
 
         this.a = 0;
         this.x = 0;
@@ -283,6 +284,8 @@ export class Vm6502 {
 
     run() {
         while (true) {
+            console.log(this.pc);
+
             const op = this.read(this.pc++);
 
             switch (op) {
@@ -467,6 +470,8 @@ export class Vm6502 {
 
             // These are not official instructions, but we need them
             case 0x02: return;              // HLT
+
+            default: throw new Error(`invalid opcode ${op} at ${this.pc - 1}`);
             }
         }
     }
