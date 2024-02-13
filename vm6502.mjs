@@ -14,13 +14,12 @@
 // points to the address that is 8 bytes beyond the address of the branch opcode; and a backward branch of $FA (256-6)
 // goes to an address 4 bytes before the branch instruction.
 
-// TODO when reading memory, handle undefined (this.mem[addr] ?? 0)
-
 export class Vm6502 {
     constructor(mem = []) {
-        // TODO program counter (PC) is read from the address provided in the 16-bit reset vector at $FFFC (LB-HB)
+        this.mem = mem;
 
-        this.pc = 0;
+        this.pc = this.read(0xfffc) + 256 * this.read(0xfffd);
+
         this.a = 0;
         this.x = 0;
         this.y = 0;
@@ -32,8 +31,10 @@ export class Vm6502 {
         this.interrupt = false;     // I
         this.zero = false;          // Z
         this.carry = false;         // C
+    }
 
-        this.mem = mem;
+    read(addr) {
+        return this.mem[addr] ?? 0;
     }
 
     immediate() {
@@ -41,20 +42,20 @@ export class Vm6502 {
     }
 
     zeropage(reg = 0) {
-        return (this.mem[this.pc++] + reg) % 256;
+        return (this.read(this.pc++) + reg) % 256;
     }
 
     absolute(reg = 0) {
-        return this.mem[this.pc++] + 256 * this.mem[this.pc++] + reg;
+        return this.read(this.pc++) + 256 * this.read(this.pc++) + reg;
     }
 
     indirect(pre = 0, post = 0) {
-        const addr = this.mem[this.pc++] + 256 * this.mem[this.pc++] + pre;
-        return this.mem[addr] + 256 * this.mem[addr + 1] + post;
+        const addr = this.read(this.pc++) + 256 * this.read(this.pc++) + pre;
+        return this.read(addr) + 256 * this.read(addr + 1) + post;
     }
 
     relative() {
-        const rel = this.mem[this.pc++];
+        const rel = this.read(this.pc++);
         return this.pc + (rel > 127 ? rel - 256 : rel);
     }
 
@@ -63,7 +64,7 @@ export class Vm6502 {
     }
 
     pull() {
-        return this.mem[0x0100 + ++this.sp];
+        return this.read(0x0100 + ++this.sp);
     }
 
     packSr() {
@@ -99,18 +100,18 @@ export class Vm6502 {
             // TODO BCD
             throw new Error('ADC with BCD not implemented');
         } else {
-            const sum = this.a + this.mem[addr] + (this.carry ? 1 : 0);
+            const sum = this.a + this.read(addr) + (this.carry ? 1 : 0);
 
             this.carry = sum > 255;
             const res = sum % 256;
-            this.overflow = this.isSameSign(res, this.a, this.mem[addr]);
+            this.overflow = this.isSameSign(res, this.a, this.read(addr));
 
             this.updateNegativeZero(this.a);
         }
     }
 
     and(addr) {
-        this.a = this.a & this.mem[addr];
+        this.a = this.a & this.read(addr);
         this.updateNegativeZero(this.a);
     }
 
@@ -124,14 +125,14 @@ export class Vm6502 {
         if (addr === undefined) {
             this.a = alg(this.a);
         } else {
-            this.mem[addr] = alg(this.mem[addr]);
+            this.mem[addr] = alg(this.read(addr));
         }
     }
 
     bit(addr) {
-        this.negative = (this.mem[addr] & 0b1000_0000) !== 0;
-        this.overflow = (this.mem[addr] & 0b0100_0000) !== 0;
-        this.zero = (this.a & this.mem[addr]) === 0;
+        this.negative = (this.read(addr) & 0b1000_0000) !== 0;
+        this.overflow = (this.read(addr) & 0b0100_0000) !== 0;
+        this.zero = (this.a & this.read(addr)) === 0;
     }
 
     branch(cond, addr) {
@@ -150,28 +151,28 @@ export class Vm6502 {
     }
 
     cmp(reg, addr) {
-        const diff = this.a - this.mem[addr];
+        const diff = this.a - this.read(addr);
 
         this.carry = diff > 255;
         const res = diff % 256;
-        this.overflow = this.isSameSign(res, this.a, this.mem[addr]);
+        this.overflow = this.isSameSign(res, this.a, this.read(addr));
 
         this.updateNegativeZero(res);
     }
 
     dec(addr) {
-        this.mem[addr] = this.mem[addr] - 1;
-        this.updateNegativeZero(this.mem[addr]);
+        this.mem[addr] = this.read(addr) - 1;
+        this.updateNegativeZero(this.read(addr));
     }
 
     eor(addr) {
-        this.a = this.a ^ this.mem[addr];
+        this.a = this.a ^ this.read(addr);
         this.updateNegativeZero(this.a);
     }
 
     inc(addr) {
-        this.mem[addr] = this.mem[addr] + 1;
-        this.updateNegativeZero(this.mem[addr]);
+        this.mem[addr] = this.read(addr) + 1;
+        this.updateNegativeZero(this.read(addr));
     }
 
     jmp(addr) {
@@ -188,17 +189,17 @@ export class Vm6502 {
     }
 
     lda(addr) {
-        this.a = this.mem[addr];
+        this.a = this.read(addr);
         this.updateNegativeZero(this.a);
     }
 
     ldx(addr) {
-        this.x = this.mem[addr];
+        this.x = this.read(addr);
         this.updateNegativeZero(this.x);
     }
 
     ldy(addr) {
-        this.y = this.mem[addr];
+        this.y = this.read(addr);
         this.updateNegativeZero(this.y);
     }
 
@@ -212,12 +213,12 @@ export class Vm6502 {
         if (addr === undefined) {
             this.a = alg(this.a);
         } else {
-            this.mem[addr] = alg(this.mem[addr]);
+            this.mem[addr] = alg(this.read(addr));
         }
     }
 
     ora(addr) {
-        this.a = this.a | this.mem[addr];
+        this.a = this.a | this.read(addr);
         this.updateNegativeZero(this.a);
     }
 
@@ -232,7 +233,7 @@ export class Vm6502 {
         if (addr === undefined) {
             this.a = alg(this.a);
         } else {
-            this.mem[addr] = alg(this.mem[addr]);
+            this.mem[addr] = alg(this.read(addr));
         }
     }
 
@@ -247,7 +248,7 @@ export class Vm6502 {
         if (addr === undefined) {
             this.a = alg(this.a);
         } else {
-            this.mem[addr] = alg(this.mem[addr]);
+            this.mem[addr] = alg(this.read(addr));
         }
     }
 
@@ -265,11 +266,11 @@ export class Vm6502 {
             // TODO BCD
             throw new Error('SBC with BCD not implemented');
         } else {
-            const diff = this.a - this.mem[addr] + (this.carry ? 1 : 0) - 1;
+            const diff = this.a - this.read(addr) + (this.carry ? 1 : 0) - 1;
 
             this.carry = diff > 255;
             const res = diff % 256;
-            this.overflow = this.isSameSign(res, this.a, this.mem[addr]);
+            this.overflow = this.isSameSign(res, this.a, this.read(addr));
 
             this.updateNegativeZero(this.a);
         }
@@ -281,7 +282,7 @@ export class Vm6502 {
 
     run() {
         while (true) {
-            const op = this.mem[this.pc++];
+            const op = this.read(this.pc++);
 
             switch (op) {
             case 0x69: this.adc(this.immediate()); break;

@@ -49,6 +49,9 @@ const assemble = async (code) => {
 };
 
 const setupVm = async (vm, setup) => {
+    // For simplicity, the VM by default starts at 0x0000 when running tests
+    vm.pc = 0;
+
     for (const reg of ['pc', 'a', 'x', 'y', 'sp']) {
         if (setup?.[reg] !== undefined) {
             if (!isNumber8B(setup[reg])) {
