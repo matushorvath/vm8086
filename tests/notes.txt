@@ -8,3 +8,13 @@ echo abc | hexdump -ve '/1 ",%02x"'
 ,61,62,63,0a
 echo abc | hexdump -ve '/1 ",%02d"'
 ,97,98,99,10
+
+
+msbasic:
+memory.s:154, rts returns wrong?
+because jsr stores wrong return address to stack? init.s:400 jsr REASON
+
+string.s:61 is last valid instruction, LDA indirect,Y
+next is 0c invalid opcode
+
+string.s:533 is the last JSR before crash

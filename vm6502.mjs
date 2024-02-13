@@ -15,6 +15,8 @@
 // points to the address that is 8 bytes beyond the address of the branch opcode; and a backward branch of $FA (256-6)
 // goes to an address 4 bytes before the branch instruction.
 
+import { OPCODES } from './opcodes.mjs';
+
 export class Vm6502 {
     constructor(mem = []) {
         this.mem = mem;
@@ -52,8 +54,8 @@ export class Vm6502 {
     }
 
     indirect(pre = 0, post = 0) {
-        const addr = this.read(this.pc++) + 256 * this.read(this.pc++) + pre;
-        return this.read(addr) + 256 * this.read(addr + 1) + post;
+        const addr = this.read(this.pc++) + pre;
+        return this.read(addr) + post;
     }
 
     relative() {
@@ -144,8 +146,8 @@ export class Vm6502 {
     }
 
     brk() {
-        this.push(((this.pc + 1) & 0xff00) >> 8);
-        this.push((this.pc + 1) & 0xff);
+        this.push((this.pc & 0xff00) >> 8);
+        this.push(this.pc & 0xff);
         this.push(this.packSr() & 0b0001_0000);
 
         this.interrupt = true;
@@ -186,7 +188,9 @@ export class Vm6502 {
     }
 
     jsr(addr) {
-        this.push(this.pc - 1);
+        this.push(((this.pc - 1) & 0xff00) >> 8);
+        this.push((this.pc - 1) & 0xff);
+
         this.pc = addr;
     }
 
@@ -282,9 +286,32 @@ export class Vm6502 {
         this.mem[addr] = val;
     }
 
+    format8(val) {
+        return val.toString(16).padStart(2, '0');
+    }
+
+    format16(val) {
+        return val.toString(16).padStart(4, '0');
+    }
+
+    trace() {
+        const addr = this.format16(this.pc);
+
+        const opcode = this.read(this.pc);
+        const opname = OPCODES[opcode]?.name ?? '???';
+        const oplength = OPCODES[opcode]?.length ?? 5;
+
+        const data = [];
+        for (let i = 0; i < oplength; i++) {
+            data.push(this.format8(this.read(this.pc + i)));
+        }
+
+        console.log(`${addr}: ${opname} ${data.join(' ')}`);
+    }
+
     run() {
         while (true) {
-            console.log(this.pc);
+            this.trace();
 
             const op = this.read(this.pc++);
 
@@ -471,7 +498,7 @@ export class Vm6502 {
             // These are not official instructions, but we need them
             case 0x02: return;              // HLT
 
-            default: throw new Error(`invalid opcode ${op} at ${this.pc - 1}`);
+            default: throw new Error(`invalid opcode ${this.format8(op)} at ${this.format16(this.pc - 1)}`);
             }
         }
     }

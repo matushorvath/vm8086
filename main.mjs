@@ -7,11 +7,11 @@ const main = async () => {
 
     const mem = [];
     for (let idx = 0; idx < img.length; idx++) {
-        mem[0xc000 + idx] = img[idx];
+        mem[0xc000 + idx] = img[idx]; // TODO remove hardcoded msbasic address
     }
 
     const vm = new Vm6502(mem);
-    vm.pc = 0xc000;
+    vm.pc = 0xe116; // TODO remove hardcoded msbasic address
 
     vm.run();
 };
