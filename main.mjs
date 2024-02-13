@@ -11,7 +11,7 @@ const main = async () => {
     }
 
     const vm = new Vm6502(mem);
-    vm.pc = 0xe116; // TODO remove hardcoded msbasic address
+    vm.pc = 0xc000; // TODO remove hardcoded msbasic address
 
     vm.run();
 };

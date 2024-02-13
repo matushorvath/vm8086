@@ -325,14 +325,14 @@ export class Vm6502 {
             case 0x61: this.adc(this.indirect(this.x)); break;
             case 0x71: this.adc(this.indirect(0, this.y)); break;
 
-            case 0x29: this.add(this.immediate()); break;
-            case 0x25: this.add(this.zeropage()); break;
-            case 0x35: this.add(this.zeropage(this.x)); break;
-            case 0x2d: this.add(this.absolute()); break;
-            case 0x3d: this.add(this.absolute(this.x)); break;
-            case 0x39: this.add(this.absolute(this.y)); break;
-            case 0x21: this.add(this.indirect(this.x)); break;
-            case 0x31: this.add(this.indirect(0, this.y)); break;
+            case 0x29: this.and(this.immediate()); break;
+            case 0x25: this.and(this.zeropage()); break;
+            case 0x35: this.and(this.zeropage(this.x)); break;
+            case 0x2d: this.and(this.absolute()); break;
+            case 0x3d: this.and(this.absolute(this.x)); break;
+            case 0x39: this.and(this.absolute(this.y)); break;
+            case 0x21: this.and(this.indirect(this.x)); break;
+            case 0x31: this.and(this.indirect(0, this.y)); break;
 
             case 0x0a: this.asl(); break;
             case 0x06: this.asl(this.zeropage()); break;
