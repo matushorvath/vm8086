@@ -55,21 +55,7 @@ export class Vm6502 {
 
     relative() {
         const rel = this.mem[this.pc++];
-        return this.pc + this.signed(rel);
-    }
-
-    signed(val) {
-        return val > 127 ? val - 256 : val;
-    }
-
-    unsigned(val) {
-        if (val > 127) {
-            return [val - 256, true];
-        } else if (val < 128) {
-            return [val + 256, true];
-        } else {
-            return [val, false];
-        }
+        return this.pc + (rel > 127 ? rel - 256 : rel);
     }
 
     push(val) {
@@ -103,16 +89,22 @@ export class Vm6502 {
         this.zero = (val === 0);
     }
 
+    isSameSign(k, l, m) {
+        return (k & 0b1000_0000) === (l & 0b1000_0000)
+            && (k & 0b1000_0000) === (m & 0b1000_0000);
+    }
+
     adc(addr) {
         if (this.decimal) {
             // TODO BCD
             throw new Error('ADC with BCD not implemented');
         } else {
-            const sum = this.signed(this.a) + this.signed(this.mem[addr]) + (this.carry ? 1 : 0);
-            [this.a, this.overflow] = this.unsigned(sum);
+            const sum = this.a + this.mem[addr] + (this.carry ? 1 : 0);
 
-            // TODO carry probably works differently than overflow
-            this.carry = this.overflow;
+            this.carry = sum > 255;
+            const res = sum % 256;
+            this.overflow = this.isSameSign(res, this.a, this.mem[addr]);
+
             this.updateNegativeZero(this.a);
         }
     }
@@ -158,11 +150,12 @@ export class Vm6502 {
     }
 
     cmp(reg, addr) {
-        const difference = this.signed(reg) - this.signed(this.mem[addr]);
-        const [res, overflow] = this.unsigned(difference);
+        const diff = this.a - this.mem[addr];
 
-        // TODO carry probably works differently than overflow
-        this.carry = overflow;
+        this.carry = diff > 255;
+        const res = diff % 256;
+        this.overflow = this.isSameSign(res, this.a, this.mem[addr]);
+
         this.updateNegativeZero(res);
     }
 
@@ -272,11 +265,12 @@ export class Vm6502 {
             // TODO BCD
             throw new Error('SBC with BCD not implemented');
         } else {
-            const sum = this.signed(this.a) - this.signed(this.mem[addr]) - (this.carry ? 0 : 1);
-            [this.a, this.overflow] = this.unsigned(sum);
+            const diff = this.a - this.mem[addr] + (this.carry ? 1 : 0) - 1;
 
-            // TODO carry probably works differently than overflow, and probably different than for adc
-            this.carry = this.overflow;
+            this.carry = diff > 255;
+            const res = diff % 256;
+            this.overflow = this.isSameSign(res, this.a, this.mem[addr]);
+
             this.updateNegativeZero(this.a);
         }
     }

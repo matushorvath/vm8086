@@ -142,7 +142,7 @@ const run = async (test) => {
         console.log(errors);
         return false;
     } else {
-        console.log('OK')
+        console.log('OK');
         return true;
     }
 };
