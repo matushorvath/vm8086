@@ -15,6 +15,8 @@
 // points to the address that is 8 bytes beyond the address of the branch opcode; and a backward branch of $FA (256-6)
 // goes to an address 4 bytes before the branch instruction.
 
+// TODO make sure PC is wrapping around to 0x0000 when incremented from 0xffff
+
 import { OPCODES } from './opcodes.mjs';
 import fs from 'node:fs';
 
@@ -22,7 +24,7 @@ export class Vm6502 {
     constructor(mem = []) {
         this.mem = mem;
 
-        //this.pc = this.read(0xfffc) + 256 * this.read(0xfffd);
+        //this.pc = this.read(0xfffc) + 0x100 * this.read(0xfffd);
         this.pc = 0;
 
         this.a = 0;
@@ -42,34 +44,43 @@ export class Vm6502 {
         return this.mem[addr] ?? 0;
     }
 
+    write(addr, val) {
+        if (val < 0x00 || val > 0xff) {
+            throw new Error(`range error; value ${this.format8(val)}, addr ${this.format16(this.pc)}`);
+        }
+        this.mem[addr] = val;
+    }
+
     immediate() {
         return this.pc++;
     }
 
     zeropage(reg = 0) {
-        return (this.read(this.pc++) + reg) % 256;
+        return (this.read(this.pc++) + reg) % 0x100;
     }
 
     absolute(reg = 0) {
-        return this.read(this.pc++) + 256 * this.read(this.pc++) + reg;
+        return (this.read(this.pc++) + 0x100 * this.read(this.pc++) + reg) % 0x10000;
     }
 
     indirect(pre = 0, post = 0) {
-        const addr = this.read(this.pc++) + pre;
-        return this.read(addr) + post;
+        const addr = (this.read(this.pc++) + pre) % 0x10000;
+        return (this.read(addr) + post) % 0x10000;
     }
 
     relative() {
         const rel = this.read(this.pc++);
-        return this.pc + (rel > 127 ? rel - 256 : rel);
+        return this.pc + (rel > 0x7f ? rel - 0x100 : rel);
     }
 
     push(val) {
-        this.mem[0x0100 + this.sp--] = val;
+        this.write(0x100 + this.sp, val);
+        this.sp = (this.sp - 1 + 0x100) % 0x100;
     }
 
     pull() {
-        return this.read(0x0100 + ++this.sp);
+        this.sp = (this.sp + 1) % 0x100;
+        return this.read(0x100 + this.sp);
     }
 
     packSr() {
@@ -91,7 +102,7 @@ export class Vm6502 {
     }
 
     updateNegativeZero(val) {
-        this.negative = (val > 127);
+        this.negative = (val > 0x7f);
         this.zero = (val === 0);
     }
 
@@ -107,8 +118,8 @@ export class Vm6502 {
         } else {
             const sum = this.a + this.read(addr) + (this.carry ? 1 : 0);
 
-            this.carry = sum > 255;
-            const res = sum % 256;
+            this.carry = sum > 0xff;
+            const res = sum % 0x100;
             this.overflow = this.isSameSign(res, this.a, this.read(addr));
 
             this.updateNegativeZero(this.a);
@@ -130,7 +141,7 @@ export class Vm6502 {
         if (addr === undefined) {
             this.a = alg(this.a);
         } else {
-            this.mem[addr] = alg(this.read(addr));
+            this.write(addr, alg(this.read(addr)));
         }
     }
 
@@ -156,17 +167,17 @@ export class Vm6502 {
     }
 
     cmp(reg, addr) {
-        const diff = this.a - this.read(addr);
+        const diff = (this.a - this.read(addr) + 0x100) % 0x100;
 
-        this.carry = diff > 255;
-        const res = diff % 256;
+        this.carry = diff > 0xff;
+        const res = diff % 0x100;
         this.overflow = this.isSameSign(res, this.a, this.read(addr));
 
         this.updateNegativeZero(res);
     }
 
     dec(addr) {
-        this.mem[addr] = this.read(addr) - 1;
+        this.write(addr, (this.read(addr) - 1 + 0x100) % 0x100);
         this.updateNegativeZero(this.read(addr));
     }
 
@@ -176,7 +187,7 @@ export class Vm6502 {
     }
 
     inc(addr) {
-        this.mem[addr] = this.read(addr) + 1;
+        this.write(addr, (this.read(addr) + 1) % 0x100);
         this.updateNegativeZero(this.read(addr));
     }
 
@@ -220,13 +231,25 @@ export class Vm6502 {
         if (addr === undefined) {
             this.a = alg(this.a);
         } else {
-            this.mem[addr] = alg(this.read(addr));
+            this.write(addr, alg(this.read(addr)));
         }
     }
 
     ora(addr) {
         this.a = this.a | this.read(addr);
         this.updateNegativeZero(this.a);
+    }
+
+    der(val) {
+        const res = (val - 1 + 0x100) % 0x100;
+        this.updateNegativeZero(res);
+        return res;
+    }
+
+    inr(val) {
+        const res = (val + 1) % 0x100;
+        this.updateNegativeZero(res);
+        return res;
     }
 
     rol(addr) {
@@ -240,7 +263,7 @@ export class Vm6502 {
         if (addr === undefined) {
             this.a = alg(this.a);
         } else {
-            this.mem[addr] = alg(this.read(addr));
+            this.write(addr, alg(this.read(addr)));
         }
     }
 
@@ -255,17 +278,17 @@ export class Vm6502 {
         if (addr === undefined) {
             this.a = alg(this.a);
         } else {
-            this.mem[addr] = alg(this.read(addr));
+            this.write(addr, alg(this.read(addr)));
         }
     }
 
     rti() {
         this.unpackSr(this.pull() & 0b1100_1111);
-        this.pc = this.pull() + 256 * this.pull();
+        this.pc = this.pull() + 0x100 * this.pull();
     }
 
     rts() {
-        this.pc = this.pull() + 256 * this.pull() + 1;
+        this.pc = this.pull() + 0x100 * this.pull() + 1;
     }
 
     sbc(addr) {
@@ -275,34 +298,27 @@ export class Vm6502 {
         } else {
             const diff = this.a - this.read(addr) + (this.carry ? 1 : 0) - 1;
 
-            this.carry = diff > 255;
-            const res = diff % 256;
+            this.carry = diff > 0xff;
+            const res = diff % 0x100;
             this.overflow = this.isSameSign(res, this.a, this.read(addr));
 
             this.updateNegativeZero(this.a);
         }
     }
 
-    st(val, addr) {
-        this.mem[addr] = val;
+    str(val, addr) {
+        this.write(addr, val);
     }
 
-    async input() {
-        return new Promise((resolve, reject) => fs.read(process.stdin.fd,
-            { buffer: Buffer.alloc(1) }, (e, c, b) => {
-                if (c) {
-                    //console.log('input', b[0]);
-                    resolve(b[0]);
-                } else {
-                    reject('no more inputs');
-                }
-            }
-        ));
+    input() {
+        const buffer = Buffer.alloc(1);
+        fs.readSync(0, buffer, 0, 1);
+        return buffer[0];
     }
 
     output(val) {
-        //process.stdout.write(String.fromCharCode(val));
-        if (val !== 0) console.log(this.format8(val), String.fromCharCode(val));
+        process.stdout.write(String.fromCharCode(val));
+        //if (val !== 0) console.log(this.format8(val), String.fromCharCode(val));
     }
 
     format8(val) {
@@ -328,7 +344,7 @@ export class Vm6502 {
         console.log(`${addr}: ${opname} ${data.join(' ')}`);
     }
 
-    async run() {
+    run() {
         while (true) {
             //this.trace();
 
@@ -460,12 +476,12 @@ export class Vm6502 {
 
             case 0xaa: this.x = this.a; this.updateNegativeZero(this.x); break;         // TAX
             case 0x8a: this.a = this.x; this.updateNegativeZero(this.a); break;         // TXA
-            case 0xca: this.x--; this.updateNegativeZero(this.x); break;                // DEX
-            case 0xe8: this.x++; this.updateNegativeZero(this.x); break;                // INX
+            case 0xca: this.x = this.der(this.x); break;                                // DEX
+            case 0xe8: this.x = this.inr(this.x); break;                                // INX
             case 0xa8: this.y = this.a; this.updateNegativeZero(this.y); break;         // TAY
             case 0x98: this.a = this.y; this.updateNegativeZero(this.a); break;         // TYA
-            case 0x88: this.y--; this.updateNegativeZero(this.y); break;                // DEY
-            case 0xc8: this.y++; this.updateNegativeZero(this.y); break;                // INY
+            case 0x88: this.y = this.der(this.y); break;                                // DEY
+            case 0xc8: this.y = this.inr(this.y); break;                                // INY
 
             case 0x2a: this.rol(); break;
             case 0x26: this.rol(this.zeropage()); break;
@@ -491,13 +507,13 @@ export class Vm6502 {
             case 0xe1: this.sbc(this.indirect(this.x)); break;
             case 0xf1: this.sbc(this.indirect(0, this.y)); break;
 
-            case 0x85: this.st(this.a, this.zeropage()); break;                 // STA
-            case 0x95: this.st(this.a, this.zeropage(this.x)); break;           // STA
-            case 0x8d: this.st(this.a, this.absolute()); break;                 // STA
-            case 0x9d: this.st(this.a, this.absolute(this.x)); break;           // STA
-            case 0x99: this.st(this.a, this.absolute(this.y)); break;           // STA
-            case 0x81: this.st(this.a, this.indirect(this.x)); break;           // STA
-            case 0x91: this.st(this.a, this.indirect(0, this.y)); break;        // STA
+            case 0x85: this.str(this.a, this.zeropage()); break;                 // STA
+            case 0x95: this.str(this.a, this.zeropage(this.x)); break;           // STA
+            case 0x8d: this.str(this.a, this.absolute()); break;                 // STA
+            case 0x9d: this.str(this.a, this.absolute(this.x)); break;           // STA
+            case 0x99: this.str(this.a, this.absolute(this.y)); break;           // STA
+            case 0x81: this.str(this.a, this.indirect(this.x)); break;           // STA
+            case 0x91: this.str(this.a, this.indirect(0, this.y)); break;        // STA
 
             case 0x9a: this.sp = this.x; break;                                         // TXS
             case 0xba: this.x = this.sp; this.updateNegativeZero(this.x); break;        // TSX
@@ -506,20 +522,20 @@ export class Vm6502 {
             case 0x08: this.push(this.packSr()); break;                                 // PHP
             case 0x28: this.unpackSr(this.pull()); break;                               // PLP
 
-            case 0x86: this.st(this.x, this.zeropage()); break;                 // STX
-            case 0x96: this.st(this.x, this.zeropage(this.y)); break;           // STX
-            case 0x8E: this.st(this.x, this.absolute()); break;                 // STX
+            case 0x86: this.str(this.x, this.zeropage()); break;                 // STX
+            case 0x96: this.str(this.x, this.zeropage(this.y)); break;           // STX
+            case 0x8E: this.str(this.x, this.absolute()); break;                 // STX
 
-            case 0x84: this.st(this.y, this.zeropage()); break;                 // STY
-            case 0x94: this.st(this.y, this.zeropage(this.x)); break;           // STY
-            case 0x8C: this.st(this.y, this.absolute()); break;                 // STY
+            case 0x84: this.str(this.y, this.zeropage()); break;                 // STY
+            case 0x94: this.str(this.y, this.zeropage(this.x)); break;           // STY
+            case 0x8C: this.str(this.y, this.absolute()); break;                 // STY
 
             // These are not official instructions, but we need them
             case 0x02: return;              // HLT
 
             // These instructions are specific to the VM
             // TODO maybe use MMIO instead
-            case 0x22: this.a = await this.input(); this.updateNegativeZero(this.a); break;
+            case 0x22: this.a = this.input(); this.updateNegativeZero(this.a); break;
             case 0x42: this.output(this.a); break;
 
             default: throw new Error(`invalid opcode ${this.format8(op)} at ${this.format16(this.pc - 1)}`);
