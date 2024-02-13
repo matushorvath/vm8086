@@ -1,4 +1,5 @@
 // http://www.6502.org/tutorials/6502opcodes.html
+// https://www.masswerk.at/6502/6502_instruction_set.html
 
 // TODO check and fix this.pc handling
 //
