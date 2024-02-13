@@ -1,5 +1,6 @@
 import { Vm6502 } from '../vm6502.mjs';
 import yaml from 'yaml';
+import chalk from 'chalk';
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -125,24 +126,20 @@ const checkVm = (vm, check) => {
 };
 
 const run = async (test) => {
-    const vm = new Vm6502();
+    process.stdout.write(`${test.desc}`);
 
-    console.log(test.desc);
+    const vm = new Vm6502();
     await setupVm(vm, test.setup);
 
-    //console.log('setup', JSON.stringify(vm));
-
     vm.run();
-
-    //console.log('check', JSON.stringify(vm));
-
     const errors = checkVm(vm, test.check);
+
     if (errors.length > 0) {
-        console.log('FAIL');
-        console.log(errors);
+        process.stdout.write(`    ${chalk.red('FAILED')}\n`);
+        process.stdout.write(`    ${chalk.gray(errors.join('\n    '))}\n`);
         return false;
     } else {
-        console.log('OK');
+        process.stdout.write(`    ${chalk.green('PASSED')}\n`);
         return true;
     }
 };
@@ -150,15 +147,19 @@ const run = async (test) => {
 const main = async () => {
     const tests = yaml.parse(await fs.readFile(path.join(__dirname, 'tests.yaml'), 'utf8'));
 
-    let success = true;
+    let passed = true;
     for (const test of tests) {
-        success &&= await run(test);
+        if (!await run(test)) {
+            passed = false;
+        }
     }
 
-    if (!success) {
-        console.log('Tests FAILED');
+    if (!passed) {
+        console.log(`\n${chalk.red('Some tests FAILED')}`);
         process.exit(1);
     }
+
+    console.log(`\n${chalk.green('All tests PASSED')}`);
 };
 
 await main();
