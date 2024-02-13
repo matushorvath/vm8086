@@ -134,7 +134,7 @@ const run = async (test) => {
     const vm = new Vm6502();
     await setupVm(vm, test.setup);
 
-    vm.run();
+    await vm.run();
     const errors = checkVm(vm, test.check);
 
     if (errors.length > 0) {

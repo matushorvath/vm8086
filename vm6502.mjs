@@ -16,6 +16,7 @@
 // goes to an address 4 bytes before the branch instruction.
 
 import { OPCODES } from './opcodes.mjs';
+import fs from 'node:fs';
 
 export class Vm6502 {
     constructor(mem = []) {
@@ -286,6 +287,24 @@ export class Vm6502 {
         this.mem[addr] = val;
     }
 
+    async input() {
+        return new Promise((resolve, reject) => fs.read(process.stdin.fd,
+            { buffer: Buffer.alloc(1) }, (e, c, b) => {
+                if (c) {
+                    //console.log('input', b[0]);
+                    resolve(b[0]);
+                } else {
+                    reject('no more inputs');
+                }
+            }
+        ));
+    }
+
+    output(val) {
+        //process.stdout.write(String.fromCharCode(val));
+        if (val !== 0) console.log(this.format8(val), String.fromCharCode(val));
+    }
+
     format8(val) {
         return val.toString(16).padStart(2, '0');
     }
@@ -309,9 +328,9 @@ export class Vm6502 {
         console.log(`${addr}: ${opname} ${data.join(' ')}`);
     }
 
-    run() {
+    async run() {
         while (true) {
-            this.trace();
+            //this.trace();
 
             const op = this.read(this.pc++);
 
@@ -497,6 +516,11 @@ export class Vm6502 {
 
             // These are not official instructions, but we need them
             case 0x02: return;              // HLT
+
+            // These instructions are specific to the VM
+            // TODO maybe use MMIO instead
+            case 0x22: this.a = await this.input(); this.updateNegativeZero(this.a); break;
+            case 0x42: this.output(this.a); break;
 
             default: throw new Error(`invalid opcode ${this.format8(op)} at ${this.format16(this.pc - 1)}`);
             }
