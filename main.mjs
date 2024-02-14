@@ -32,7 +32,6 @@ const main = async () => {
 
     const vm = new Vm6502(mem, symbols);
     //vm.trace = true;
-    vm.pc = 0xc000; // TODO remove hardcoded msbasic address
 
     vm.run();
 };

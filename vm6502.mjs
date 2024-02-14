@@ -25,8 +25,8 @@ export class Vm6502 {
         this.mem = mem;
         this.symbols = symbols;
 
-        //this.pc = this.read(0xfffc) + 0x100 * this.read(0xfffd);
-        this.pc = 0;
+        // Load initial address from the reset vector
+        this.pc = this.read(0xfffc) + 0x100 * this.read(0xfffd);
 
         this.a = 0;
         this.x = 0;
