@@ -15,16 +15,16 @@ const parseCommandLine = () => {
         const address = Number.parseInt(process.argv[2], 16);
         const imagePath = process.argv[3];
 
-        if (process.argv[4] !== undefined && process.argv[4] !== 'dbg') {
+        if (process.argv[4] !== undefined && process.argv[4] !== '-dbg') {
             throw new Error('invalid command line; dbg flag');
         }
 
-        const debug = process.argv[4] === 'dbg';
+        const debug = process.argv[4] === '-dbg';
 
         return [address, imagePath, debug];
     } catch (error) {
         console.error(error.message);
-        console.log('Usage: node main.mjs c000 msbasic/tmp/vm6502.bin [dbg]');
+        console.log('Usage: node main.mjs c000 msbasic/tmp/vm6502.bin [-dbg]');
         process.exit(1);
     }
 };

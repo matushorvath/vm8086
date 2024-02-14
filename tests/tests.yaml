@@ -1,3 +1,7 @@
+# If you want to run this against stdin:
+# echo A | npm run ut -- -stdio
+# yq 'map(select(.input)) | map(.input) | .[]' < tests/tests.yaml | npm run ut -- -stdio
+
 - desc: Trivial program
   setup:
     decimal: true
@@ -26,20 +30,21 @@
     mem:
       0x0000: |
         LDA #$41
-        .byte $42
+        STA $FFF0
         .byte $02
   check:
     a: 0x41
+  output: A
 
-# This actualy needs input from stdin
-# - desc: Input
-#   setup:
-#     mem:
-#       0x0000: |
-#         .byte $22
-#         .byte $02
-#   check:
-#     a: 0x41
+- desc: Input
+  setup:
+    mem:
+      0x0000: |
+        LDA $FFF0
+        .byte $02
+  input: A
+  check:
+    a: 0x41
 
 - desc: ADC immediate, no carry, no overflow
   setup:

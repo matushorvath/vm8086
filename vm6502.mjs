@@ -18,8 +18,19 @@
 import { OPCODES } from './opcodes.mjs';
 import fs from 'node:fs';
 
+const input = () => {
+    const buffer = Buffer.alloc(1);
+    fs.readSync(0, buffer, 0, 1);
+    return buffer[0];
+};
+
+const output = (val) => {
+    process.stdout.write(String.fromCharCode(val));
+    //if (val !== 0) console.log(this.format8(val), String.fromCharCode(val));
+};
+
 export class Vm6502 {
-    constructor(mem = [], symbols = []) {
+    constructor(mem = [], symbols = [], io = { input, output }) {
         this.mem = mem;
         this.symbols = symbols;
 
@@ -39,17 +50,29 @@ export class Vm6502 {
         this.carry = false;         // C
 
         this.trace = false;
+
+        this.io = io;
+        this.ioport = 0xfff0;
     }
 
     read(addr) {
-        return this.mem[addr] ?? 0;
+        if (addr === this.ioport) {
+            return this.io.input();
+        } else {
+            return this.mem[addr] ?? 0;
+        }
     }
 
     write(addr, val) {
         if (val < 0x00 || val > 0xff) {
             throw new Error(`range error; value ${this.format8(val)}, addr ${this.format16(this.pc)}`);
         }
-        this.mem[addr] = val;
+
+        if (addr === this.ioport) {
+            this.io.output(val);
+        } else {
+            this.mem[addr] = val;
+        }
     }
 
     incpc() {
@@ -320,17 +343,6 @@ export class Vm6502 {
         this.write(addr, val);
     }
 
-    input() {
-        const buffer = Buffer.alloc(1);
-        fs.readSync(0, buffer, 0, 1);
-        return buffer[0];
-    }
-
-    output(val) {
-        process.stdout.write(String.fromCharCode(val));
-        //if (val !== 0) console.log(this.format8(val), String.fromCharCode(val));
-    }
-
     format8(val) {
         return val.toString(16).padStart(2, '0');
     }
@@ -574,11 +586,6 @@ export class Vm6502 {
 
             // These are not official instructions, but we need them
             case 0x02: return;              // HLT
-
-            // These instructions are specific to the VM
-            // TODO maybe use MMIO instead
-            case 0x22: this.a = this.input(); this.updateNegativeZero(this.a); break;
-            case 0x42: this.output(this.a); break;
 
             default: throw new Error(`invalid opcode ${this.format8(op)} at ${this.format16((this.pc - 1 + 0x10000) % 0x10000)}`);
             }

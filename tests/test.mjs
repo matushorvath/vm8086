@@ -48,34 +48,34 @@ const assemble = async (code) => {
     return promise;
 };
 
-const setupVm = async (vm, setup) => {
+const setupVm = async (vm, test) => {
     // For simplicity, the VM by default starts at 0x0000 when running tests
     vm.pc = 0;
 
     for (const reg of ['pc', 'a', 'x', 'y', 'sp']) {
-        if (setup?.[reg] !== undefined) {
-            if (!isNumber8B(setup[reg])) {
+        if (test.setup?.[reg] !== undefined) {
+            if (!isNumber8B(test.setup[reg])) {
                 throw new Error(`setup register '${reg}' is not an 8-bit number`);
             }
-            vm[reg] = setup[reg];
+            vm[reg] = test.setup[reg];
         }
     }
 
     for (const flag of ['negative', 'overflow', 'decimal', 'interrupt', 'zero', 'carry']) {
-        if (setup?.[flag] !== undefined) {
-            if (!isBoolean(setup[flag])) {
+        if (test.setup?.[flag] !== undefined) {
+            if (!isBoolean(test.setup[flag])) {
                 throw new Error(`setup flag '${flag}' is not boolean`);
             }
-            vm[flag] = setup[flag];
+            vm[flag] = test.setup[flag];
         }
     }
 
-    for (const key in setup?.mem ?? []) {
+    for (const key in test.setup?.mem ?? []) {
         if (!isAddress(Number(key))) {
             throw new Error(`setup address '${key}' is not a 16-bit number`);
         }
 
-        const data = isString(setup.mem[key]) ? await assemble(setup.mem[key]) : setup.mem[key];
+        const data = isString(test.setup.mem[key]) ? await assemble(test.setup.mem[key]) : test.setup.mem[key];
 
         for (let idx = 0; idx < data.length; idx++) {
             const addr = Number(key) + idx;
@@ -84,37 +84,65 @@ const setupVm = async (vm, setup) => {
     }
 };
 
-const checkVm = (vm, check) => {
+const setupIO = (vm, instr, useStdio) => {
+    if (useStdio) {
+        return undefined;
+    }
+
+    const iodata = {
+        more: 0,
+        inchars: instr?.split('') ?? [],
+        outchars: []
+    };
+
+    const input = () => {
+        const ch = iodata.inchars.shift();
+        if (ch === undefined) {
+            iodata.more++;
+            return 0;
+        } else {
+            return ch.charCodeAt(0);
+        }
+    };
+
+    const output = (val) => iodata.outchars.push(String.fromCharCode(val));
+
+    vm.io = { input, output };
+
+    return iodata;
+};
+
+const checkVm = (vm, test) => {
     const errors = [];
 
     for (const reg of ['pc', 'a', 'x', 'y', 'sp']) {
-        if (check?.[reg] !== undefined) {
-            if (!isNumber8B(check[reg])) {
+        if (test.check?.[reg] !== undefined) {
+            if (!isNumber8B(test.check[reg])) {
                 throw new Error(`check register '${reg}' is not an 8-bit number`);
             }
-            if (vm[reg] !== check[reg]) {
-                errors.push(`register '${reg}' does not match; expected '${check[reg]}', actual '${vm[reg]}'`);
+            if (vm[reg] !== test.check[reg]) {
+                errors.push(`register '${reg}' does not match; expected '${test.check[reg]}', actual '${vm[reg]}'`);
             }
         }
     }
 
     for (const flag of ['negative', 'overflow', 'decimal', 'interrupt', 'zero', 'carry']) {
-        if (check?.[flag] !== undefined) {
-            if (!isBoolean(check[flag])) {
+        if (test.check?.[flag] !== undefined) {
+            if (!isBoolean(test.check[flag])) {
                 throw new Error(`check flag '${flag}' is not boolean`);
             }
-            if (vm[flag] !== check[flag]) {
-                errors.push(`flag '${flag}' does not match; expected '${check[flag]}', actual '${vm[flag]}'`);
+            if (vm[flag] !== test.check[flag]) {
+                errors.push(`flag '${flag}' does not match; expected '${test.check[flag]}', actual '${vm[flag]}'`);
             }
         }
     }
 
-    for (const key in check?.mem ?? []) {
+    for (const key in test.check?.mem ?? []) {
         if (!isAddress(Number(key))) {
             throw new Error(`check address '${key}' is not a 16-bit number`);
         }
 
-        const data = check.mem[key];
+        const data = test.check.mem[key];
 
         for (let idx = 0; idx < data.length; idx++) {
             const addr = Number(key) + idx;
@@ -128,14 +156,40 @@ const checkVm = (vm, check) => {
     return errors;
 };
 
-const run = async (test) => {
+const checkIO = (iodata, test, useStdio) => {
+    if (useStdio) {
+        return [];
+    }
+
+    const errors = [];
+
+    if (iodata.more > 0) {
+        errors.push(`more input characters needed; ${iodata.more} more consumed`);
+    }
+
+    if (iodata.inchars.length > 0) {
+        const consumed = test.input.slice(0, -iodata.inchars.length);
+        errors.push(`some input characters not consumed; expected '${test.input}', actual '${consumed}'`);
+    }
+
+    const outstr = iodata.outchars.join('');
+    if (test.output !== undefined && outstr !== test.output) {
+        errors.push(`output characters do not match; expected '${test.output}', actual '${outstr}'`);
+    }
+
+    return errors;
+};
+
+const run = async (test, useStdio) => {
     process.stdout.write(`${test.desc}`);
 
     const vm = new Vm6502();
-    await setupVm(vm, test.setup);
+    await setupVm(vm, test);
+    const iodata = setupIO(vm, test.input, useStdio);
 
     vm.run();
-    const errors = checkVm(vm, test.check);
+
+    const errors = [...checkVm(vm, test), ...checkIO(iodata, test, useStdio)];
 
     if (errors.length > 0) {
         process.stdout.write(`    ${chalk.red('FAILED')}\n`);
@@ -150,9 +204,14 @@ const run = async (test) => {
 const main = async () => {
     const tests = yaml.parse(await fs.readFile(path.join(__dirname, 'tests.yaml'), 'utf8'));
 
+    const useStdio = process.argv[2] === '-stdio';
+    if (useStdio) {
+        console.log(`Running against ${chalk.blueBright('real STDIO')}; input and output checks ${chalk.blueBright('disabled')}\n`);
+    }
+
     let passed = true;
     for (const test of tests) {
-        if (!await run(test)) {
+        if (!await run(test, useStdio)) {
             passed = false;
         }
     }
