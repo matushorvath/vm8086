@@ -5,18 +5,18 @@ import path from 'node:path';
 const parseCommandLine = () => {
     try {
         if (process.argv.length < 4 || process.argv.length > 5) {
-            throw new Error('invalid command line');
+            throw new Error('invalid command line; parameter count');
         }
 
         if (!/[0-9a-fA-F]{4}/.test(process.argv[2])) {
-            throw new Error('invalid command line');
+            throw new Error('invalid command line; address');
         }
 
         const address = Number.parseInt(process.argv[2], 16);
         const imagePath = process.argv[3];
 
-        if (process.argv[5] !== undefined || process.argv[5] !== 'dbg') {
-            throw new Error('invalid command line');
+        if (process.argv[4] !== undefined && process.argv[4] !== 'dbg') {
+            throw new Error('invalid command line; dbg flag');
         }
 
         const debug = process.argv[4] === 'dbg';

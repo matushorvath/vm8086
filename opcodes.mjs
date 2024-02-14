@@ -1,5 +1,4 @@
 export const OPCODES = {
-
     0x69: { name: 'ADC', code: 0x69, params: '#$44', mode: 'Immediate', length: 2 },
     0x65: { name: 'ADC', code: 0x65, params: '$44', mode: 'Zero Page', length: 2 },
     0x75: { name: 'ADC', code: 0x75, params: '$44,X', mode: 'Zero Page,X', length: 2 },
@@ -181,9 +180,3 @@ export const OPCODES = {
     0x94: { name: 'STY', code: 0x94, params: '$44,X', mode: 'Zero Page,X', length: 2 },
     0x8C: { name: 'STY', code: 0x8C, params: '$4400', mode: 'Absolute', length: 3 }
 };
-
-//([\w,]+|Zero Page|Zero Page,X|Zero Page,Y)\s+(\w+)\s+([^\s]+)\s+\$([\dA-F]+)\s+(\d+)\s+[\d+]+
-//    0x$4: { name: '$2', code: 0x$4, params: '$3', mode: '$1', length: $5 },
-
-//(\w+) \(.*\)\s+\$([\dA-Z]+)\s*(\d+)?
-//    0x$2: { name: '$1', code: 0x$2, length: $3 },

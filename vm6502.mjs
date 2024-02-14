@@ -15,8 +15,6 @@
 // points to the address that is 8 bytes beyond the address of the branch opcode; and a backward branch of $FA (256-6)
 // goes to an address 4 bytes before the branch instruction.
 
-// TODO make sure PC is wrapping around to 0x0000 when incremented from 0xffff
-
 import { OPCODES } from './opcodes.mjs';
 import fs from 'node:fs';
 
@@ -54,26 +52,32 @@ export class Vm6502 {
         this.mem[addr] = val;
     }
 
+    incpc() {
+        const pc = this.pc;
+        this.pc = (this.pc + 1) % 0x10000;
+        return pc;
+    }
+
     immediate() {
-        return this.pc++;
+        return this.incpc();
     }
 
     zeropage(reg = 0) {
-        return (this.read(this.pc++) + reg) % 0x100;
+        return (this.read(this.incpc()) + reg) % 0x100;
     }
 
     absolute(reg = 0) {
-        return (this.read(this.pc++) + 0x100 * this.read(this.pc++) + reg) % 0x10000;
+        return (this.read(this.incpc()) + 0x100 * this.read(this.incpc()) + reg) % 0x10000;
     }
 
     indirect(pre = 0, post = 0) {
-        const addr = (this.read(this.pc++) + pre) % 0x10000;
+        const addr = (this.read(this.incpc()) + pre) % 0x10000;
         return (this.read(addr) + 0x100 * this.read(addr + 1) + post) % 0x10000;
     }
 
     relative() {
-        const rel = this.read(this.pc++);
-        return this.pc + (rel > 0x7f ? rel - 0x100 : rel);
+        const rel = this.read(this.incpc());
+        return (this.pc + (rel > 0x7f ? rel - 0x100 : rel) + 0x10000) % 0x10000;
     }
 
     push(val) {
@@ -167,7 +171,7 @@ export class Vm6502 {
         this.push(this.packSr() & 0b0001_0000);
 
         this.interrupt = true;
-        this.pc = 0xfffe;
+        this.pc = this.read(0xfffe) + 0x100 * this.read(0xffff);
     }
 
     cmp(reg, addr) {
@@ -204,8 +208,9 @@ export class Vm6502 {
     }
 
     jsr(addr) {
-        this.push(((this.pc - 1) & 0xff00) >> 8);
-        this.push((this.pc - 1) & 0xff);
+        const ret = (this.pc - 1 + 0x10000) % 0x10000;
+        this.push((ret & 0xff00) >> 8);
+        this.push(ret & 0xff);
 
         this.pc = addr;
     }
@@ -341,13 +346,13 @@ export class Vm6502 {
         case 'Zero Page,Y':
         case 'Indirect,X':
         case 'Indirect,Y':
-            return this.symbols?.[this.read(this.pc + 1)];
+            return this.symbols?.[this.read((this.pc + 1) % 0x10000)];
 
         case 'Indirect':
         case 'Absolute':
         case 'Absolute,Y':
         case 'Absolute,X':
-            return this.symbols?.[this.read(this.pc + 1) + 0x100 * this.read(this.pc + 2)];
+            return this.symbols?.[this.read((this.pc + 1)  % 0x10000) + 0x100 * this.read((this.pc + 2) % 0x10000)];
 
         default:
             return undefined;
@@ -366,7 +371,7 @@ export class Vm6502 {
 
         const data = [];
         for (let i = 1; i < oplength; i++) {
-            data.push(this.format8(this.read(this.pc + i)));
+            data.push(this.format8(this.read((this.pc + i) % 0x10000)));
         }
         const dataSymbol = this.getDataSymbol(opinfo);
 
@@ -385,7 +390,7 @@ export class Vm6502 {
                 this.printTrace();
             }
 
-            const op = this.read(this.pc++);
+            const op = this.read(this.incpc());
 
             switch (op) {
             case 0x69: this.adc(this.immediate()); break;
@@ -575,7 +580,7 @@ export class Vm6502 {
             case 0x22: this.a = this.input(); this.updateNegativeZero(this.a); break;
             case 0x42: this.output(this.a); break;
 
-            default: throw new Error(`invalid opcode ${this.format8(op)} at ${this.format16(this.pc - 1)}`);
+            default: throw new Error(`invalid opcode ${this.format8(op)} at ${this.format16((this.pc - 1 + 0x10000) % 0x10000)}`);
             }
         }
     }
