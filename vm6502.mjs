@@ -21,8 +21,9 @@ import { OPCODES } from './opcodes.mjs';
 import fs from 'node:fs';
 
 export class Vm6502 {
-    constructor(mem = []) {
+    constructor(mem = [], symbols = []) {
         this.mem = mem;
+        this.symbols = symbols;
 
         //this.pc = this.read(0xfffc) + 0x100 * this.read(0xfffd);
         this.pc = 0;
@@ -329,24 +330,54 @@ export class Vm6502 {
         return val.toString(16).padStart(4, '0');
     }
 
-    trace() {
-        const addr = this.format16(this.pc);
+    getDataSymbol(opinfo) {
+        switch (opinfo?.mode) {
+        case 'Zero Page':
+        case 'Zero Page,X':
+        case 'Zero Page,Y':
+        case 'Indirect,X':
+        case 'Indirect,Y':
+            return this.symbols?.[this.read(this.pc + 1)];
 
+        case 'Indirect':
+        case 'Absolute':
+        case 'Absolute,Y':
+        case 'Absolute,X':
+            return this.symbols?.[this.read(this.pc + 1) + 0x100 * this.read(this.pc + 2)];
+
+        default:
+            return undefined;
+        }
+    }
+
+    trace() {
         const opcode = this.read(this.pc);
-        const opname = OPCODES[opcode]?.name ?? '???';
-        const oplength = OPCODES[opcode]?.length ?? 5;
+        const opinfo = OPCODES[opcode];
+
+        const opname = opinfo?.name ?? '???';
+        const oplength = opinfo?.length ?? 5;
+
+        const addr = this.format16(this.pc);
+        const addrSymbol = this.symbols?.[this.pc];
 
         const data = [];
-        for (let i = 0; i < oplength; i++) {
+        for (let i = 1; i < oplength; i++) {
             data.push(this.format8(this.read(this.pc + i)));
         }
+        const dataSymbol = this.getDataSymbol(opinfo);
 
-        console.log(`${addr}: ${opname} ${data.join(' ')}`);
+        const opStr = `${opname}(${this.format8(opcode)})`;
+        const dataStr = dataSymbol ? `${dataSymbol}(${data.join(' ')})`: data.join(' ');
+
+        if (addrSymbol !== undefined) {
+            console.log(`${addrSymbol}:`);
+        }
+        console.log(`${addr}: ${opStr} ${dataStr}`);
     }
 
     run() {
         while (true) {
-            //this.trace();
+            this.trace();
 
             const op = this.read(this.pc++);
 

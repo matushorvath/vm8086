@@ -18,3 +18,9 @@ string.s:61 is last valid instruction, LDA indirect,Y
 next is 0c invalid opcode
 
 string.s:533 is the last JSR before crash
+
+
+looks OK:
+up to c930: RTS(60)
+up to d1e9: ADC(65) STRNG1(c4)
+suspect that ADC is not working, it's the first ADC executed
