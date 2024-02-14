@@ -24,3 +24,14 @@ looks OK:
 up to c930: RTS(60)
 up to d1e9: ADC(65) STRNG1(c4)
 suspect that ADC is not working, it's the first ADC executed
+
+for (let i = 0; i < 11; i++) console.log(String.fromCharCode(this.mem[0xe04e + i]))
+MEMORY SIZE
+
+d1d5: LDA(b1) STRNG1(c4)
+STRNG1 is c4
+this.mem[0xc4]
+78=4e
+this.mem[0xc5]
+224=e0
+this.mem[0xe04e] is start of the string "MEMORY SIZE"

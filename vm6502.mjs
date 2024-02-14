@@ -39,6 +39,8 @@ export class Vm6502 {
         this.interrupt = false;     // I
         this.zero = false;          // Z
         this.carry = false;         // C
+
+        this.trace = false;
     }
 
     read(addr) {
@@ -66,7 +68,7 @@ export class Vm6502 {
 
     indirect(pre = 0, post = 0) {
         const addr = (this.read(this.pc++) + pre) % 0x10000;
-        return (this.read(addr) + post) % 0x10000;
+        return (this.read(addr) + 0x100 * this.read(addr + 1) + post) % 0x10000;
     }
 
     relative() {
@@ -121,8 +123,9 @@ export class Vm6502 {
 
             this.carry = sum > 0xff;
             const res = sum % 0x100;
-            this.overflow = this.isSameSign(res, this.a, this.read(addr));
+            this.overflow = !this.isSameSign(res, this.a, this.read(addr));
 
+            this.a = res;
             this.updateNegativeZero(this.a);
         }
     }
@@ -172,7 +175,7 @@ export class Vm6502 {
 
         this.carry = diff > 0xff;
         const res = diff % 0x100;
-        this.overflow = this.isSameSign(res, this.a, this.read(addr));
+        this.overflow = !this.isSameSign(res, this.a, this.read(addr));
 
         this.updateNegativeZero(res);
     }
@@ -301,8 +304,9 @@ export class Vm6502 {
 
             this.carry = diff > 0xff;
             const res = diff % 0x100;
-            this.overflow = this.isSameSign(res, this.a, this.read(addr));
+            this.overflow = !this.isSameSign(res, this.a, this.read(addr));
 
+            this.a = res;
             this.updateNegativeZero(this.a);
         }
     }
@@ -350,7 +354,7 @@ export class Vm6502 {
         }
     }
 
-    trace() {
+    printTrace() {
         const opcode = this.read(this.pc);
         const opinfo = OPCODES[opcode];
 
@@ -377,7 +381,9 @@ export class Vm6502 {
 
     run() {
         while (true) {
-            this.trace();
+            if (this.trace) {
+                this.printTrace();
+            }
 
             const op = this.read(this.pc++);
 
