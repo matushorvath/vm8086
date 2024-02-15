@@ -35,3 +35,14 @@ this.mem[0xc4]
 this.mem[0xc5]
 224=e0
 this.mem[0xe04e] is start of the string "MEMORY SIZE"
+
+
+    .ifndef CONFIG_NO_LINE_EDITING
+        cmp     #$20
+      .ifdef AIM65
+        bcc     L244E
+      .else
+        bcc     INLIN2
+      .endif
+hypothesis: bcc L244E jumps in VM, but are we handling carry correctly in CMP instruction?
+hypothesis: BASIC is waiting for 0D, but linux only sends 0A, we may need to insert 0D

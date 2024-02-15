@@ -18,15 +18,35 @@
 import { OPCODES } from './opcodes.mjs';
 import fs from 'node:fs';
 
+let inputSimulate0D = false;
+
 const input = () => {
-    const buffer = Buffer.alloc(1);
-    fs.readSync(0, buffer, 0, 1);
-    return buffer[0];
+    if (inputSimulate0D) {
+        // If the last character we got was 0x0a, simulate a following 0x0d
+        inputSimulate0D = false;
+        return 0x0d;
+    } else {
+        const buffer = Buffer.alloc(1);
+
+        // Ignore 0x0d characters, we simulate them automatically after each 0x0a
+        while (buffer[0] === 0x00 || buffer[0] === 0x0d) {
+            fs.readSync(0, buffer, 0, 1);
+        }
+
+        // Make sure a 0x0d always follows a 0x0a
+        if (buffer[0] === 0x0a) {
+            inputSimulate0D = true;
+        }
+
+        //console.log('in', buffer[0]);
+        return buffer[0];
+    }
 };
 
 const output = (val) => {
-    process.stdout.write(String.fromCharCode(val));
-    //if (val !== 0) console.log(this.format8(val), String.fromCharCode(val));
+    const ch = String.fromCharCode(val);
+    //console.log('out', this.format8(val), ch);
+    process.stdout.write(ch);
 };
 
 export class Vm6502 {
@@ -198,10 +218,10 @@ export class Vm6502 {
     }
 
     cmp(reg, addr) {
-        const diff = (this.a - this.read(addr) + 0x100) % 0x100;
+        const diff = this.a - this.read(addr);
 
         this.carry = diff > 0xff;
-        const res = diff % 0x100;
+        const res = (diff + 0x100) % 0x100;
         this.overflow = !this.isSameSign(res, this.a, this.read(addr));
 
         this.updateNegativeZero(res);
@@ -331,7 +351,7 @@ export class Vm6502 {
             const diff = this.a - this.read(addr) + (this.carry ? 1 : 0) - 1;
 
             this.carry = diff > 0xff;
-            const res = diff % 0x100;
+            const res = (diff + 0x100) % 0x100;
             this.overflow = !this.isSameSign(res, this.a, this.read(addr));
 
             this.a = res;
