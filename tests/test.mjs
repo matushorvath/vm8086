@@ -97,14 +97,19 @@ const setupVm = async (vm, test) => {
         }
     }
 
+    const mem = [];
+
     for (const key in test.setup?.mem ?? []) {
         const data = isString(test.setup.mem[key]) ? await assemble(test.setup.mem[key]) : test.setup.mem[key];
+        mem.push(data);
 
         for (let idx = 0; idx < data.length; idx++) {
             const addr = Number(key) + idx;
             vm.mem[addr] = data[idx];
         }
     }
+
+    return mem;
 };
 
 const setupIO = (vm, instr, useStdio) => {
@@ -209,19 +214,22 @@ const run = async (test, useStdio) => {
     checkConfig(test);
 
     const vm = new Vm6502();
-    await setupVm(vm, test);
+    const mem = await setupVm(vm, test);
     const iodata = setupIO(vm, test.input, useStdio);
 
     vm.run();
 
     const errors = [...checkVm(vm, test), ...checkIO(iodata, test, useStdio)];
+    const memStr = mem.map(r => `[${r.map(b => b.toString(16).padStart(2, '0')).join(' ')}]`);
 
     if (errors.length > 0) {
         process.stdout.write(`    ${chalk.red('FAILED')}\n`);
+        process.stdout.write(`    ${chalk.yellow(memStr)}\n`);
         process.stdout.write(`    ${chalk.gray(errors.join('\n    '))}\n`);
         return false;
     } else {
         process.stdout.write(`    ${chalk.green('PASSED')}\n`);
+        process.stdout.write(`    ${chalk.yellow(memStr)}\n`);
         return true;
     }
 };

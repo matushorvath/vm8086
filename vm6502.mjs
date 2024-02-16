@@ -156,9 +156,14 @@ export class Vm6502 {
         this.zero = (val === 0);
     }
 
-    isSameSign(k, l, m) {
-        return (k & 0b1000_0000) === (l & 0b1000_0000)
-            && (k & 0b1000_0000) === (m & 0b1000_0000);
+    updateOverflow(op1, op2, res) {
+        if ((op1 & 0b1000_0000) !== (op2 & 0b1000_0000)) {
+            // When operands are different signs, overflow is always false
+            this.overflow = false;
+        } else {
+            // When operands are the same sign but different than the result, overflow is true
+            this.overflow = (op1 & 0b1000_0000) !== (res & 0b1000_0000);
+        }
     }
 
     adc(addr) {
@@ -170,7 +175,7 @@ export class Vm6502 {
 
             this.carry = sum > 0xff;
             const res = sum % 0x100;
-            this.overflow = !this.isSameSign(res, this.a, this.read(addr));
+            this.updateOverflow(res, this.a, this.read(addr));
 
             this.a = res;
             this.updateNegativeZero(this.a);
@@ -222,7 +227,7 @@ export class Vm6502 {
 
         this.carry = diff > 0xff;
         const res = (diff + 0x100) % 0x100;
-        this.overflow = !this.isSameSign(res, this.a, this.read(addr));
+        this.updateOverflow(res, this.a, this.read(addr));
 
         this.updateNegativeZero(res);
     }
@@ -352,7 +357,7 @@ export class Vm6502 {
 
             this.carry = diff > 0xff;
             const res = (diff + 0x100) % 0x100;
-            this.overflow = !this.isSameSign(res, this.a, this.read(addr));
+            this.updateOverflow(res, this.a, this.read(addr));
 
             this.a = res;
             this.updateNegativeZero(this.a);
