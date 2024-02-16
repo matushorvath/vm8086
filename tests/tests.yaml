@@ -24,6 +24,7 @@
   check:
     mem:
       0x400: [0x42, 0x43, 0x43]
+    a: 0x43
 
 - desc: Output
   setup:
@@ -55,7 +56,3 @@
         .byte $02
   check:
     a: 0x03
-    negative: false
-    overflow: false
-    zero: false
-    carry: false

@@ -26,6 +26,39 @@ if (Promise.withResolvers === undefined) {
     };
 }
 
+const checkConfig = (test) => {
+    for (const reg of ['pc', 'a', 'x', 'y', 'sp']) {
+        if (test.setup?.[reg] !== undefined && !isNumber8B(test.setup[reg])) {
+            throw new Error(`setup register '${reg}' is not an 8-bit number`);
+        }
+
+        if (test.check?.[reg] !== undefined && !isNumber8B(test.check[reg])) {
+            throw new Error(`check register '${reg}' is not an 8-bit number`);
+        }
+    }
+
+    for (const flag of ['negative', 'overflow', 'decimal', 'interrupt', 'zero', 'carry']) {
+        if (test.check?.[flag] !== undefined && !isBoolean(test.check[flag])) {
+            throw new Error(`check flag '${flag}' is not boolean`);
+        }
+        if (test.setup?.[flag] !== undefined && !isBoolean(test.setup[flag])) {
+            throw new Error(`setup flag '${flag}' is not boolean`);
+        }
+    }
+
+    for (const key in test.setup?.mem ?? []) {
+        if (!isAddress(Number(key))) {
+            throw new Error(`setup address '${key}' is not a 16-bit number`);
+        }
+    }
+
+    for (const key in test.check?.mem ?? []) {
+        if (!isAddress(Number(key))) {
+            throw new Error(`check address '${key}' is not a 16-bit number`);
+        }
+    }
+};
+
 const assemble = async (code) => {
     const { promise, resolve, reject } = Promise.withResolvers();
 
@@ -54,27 +87,17 @@ const setupVm = async (vm, test) => {
 
     for (const reg of ['pc', 'a', 'x', 'y', 'sp']) {
         if (test.setup?.[reg] !== undefined) {
-            if (!isNumber8B(test.setup[reg])) {
-                throw new Error(`setup register '${reg}' is not an 8-bit number`);
-            }
             vm[reg] = test.setup[reg];
         }
     }
 
     for (const flag of ['negative', 'overflow', 'decimal', 'interrupt', 'zero', 'carry']) {
         if (test.setup?.[flag] !== undefined) {
-            if (!isBoolean(test.setup[flag])) {
-                throw new Error(`setup flag '${flag}' is not boolean`);
-            }
             vm[flag] = test.setup[flag];
         }
     }
 
     for (const key in test.setup?.mem ?? []) {
-        if (!isAddress(Number(key))) {
-            throw new Error(`setup address '${key}' is not a 16-bit number`);
-        }
-
         const data = isString(test.setup.mem[key]) ? await assemble(test.setup.mem[key]) : test.setup.mem[key];
 
         for (let idx = 0; idx < data.length; idx++) {
@@ -115,33 +138,33 @@ const setupIO = (vm, instr, useStdio) => {
 const checkVm = (vm, test) => {
     const errors = [];
 
-    for (const reg of ['pc', 'a', 'x', 'y', 'sp']) {
+    for (const reg of ['pc']) {
         if (test.check?.[reg] !== undefined) {
-            if (!isNumber8B(test.check[reg])) {
-                throw new Error(`check register '${reg}' is not an 8-bit number`);
-            }
             if (vm[reg] !== test.check[reg]) {
                 errors.push(`register '${reg}' does not match; expected '${test.check[reg]}', actual '${vm[reg]}'`);
             }
         }
     }
 
+    for (const reg of ['a', 'x', 'y', 'sp']) {
+        const value = test.check?.[reg] ?? test.setup?.[reg] ?? (reg === 'sp' ? 0xff : 0x00);
+        const source = test.check?.[reg] ? '' : test.setup?.[reg] ? ' (setup)' : ' (default)';
+
+        if (vm[reg] !== value) {
+            errors.push(`register '${reg}' does not match; expected '${value}'${source}, actual '${vm[reg]}'`);
+        }
+    }
+
     for (const flag of ['negative', 'overflow', 'decimal', 'interrupt', 'zero', 'carry']) {
-        if (test.check?.[flag] !== undefined) {
-            if (!isBoolean(test.check[flag])) {
-                throw new Error(`check flag '${flag}' is not boolean`);
-            }
-            if (vm[flag] !== test.check[flag]) {
-                errors.push(`flag '${flag}' does not match; expected '${test.check[flag]}', actual '${vm[flag]}'`);
-            }
+        const value = test.check?.[flag] ?? test.setup?.[flag] ?? false;
+        const source = test.check?.[flag] ? '' : test.setup?.[flag] ? ' (setup)' : ' (default)';
+
+        if (vm[flag] !== value) {
+            errors.push(`flag '${flag}' does not match; expected '${value}'${source}, actual '${vm[flag]}'`);
         }
     }
 
     for (const key in test.check?.mem ?? []) {
-        if (!isAddress(Number(key))) {
-            throw new Error(`check address '${key}' is not a 16-bit number`);
-        }
-
         const data = test.check.mem[key];
 
         for (let idx = 0; idx < data.length; idx++) {
@@ -182,6 +205,8 @@ const checkIO = (iodata, test, useStdio) => {
 
 const run = async (test, useStdio) => {
     process.stdout.write(`${test.desc}`);
+
+    checkConfig(test);
 
     const vm = new Vm6502();
     await setupVm(vm, test);
