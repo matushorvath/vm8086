@@ -48,6 +48,7 @@
     a: 0x41
 
 # ADC
+# TODO BCD
 
 - desc: ADC immediate, +/+, no carry, no overflow
   setup:
@@ -58,6 +59,19 @@
         .byte $02
   check:
     a: 0x03
+    # verified
+
+- desc: ADC immediate, -/-, no carry, overflow
+  setup:
+    mem:
+      0x0000: |
+        LDA #$FA
+        ADC #$FD
+        .byte $02
+  check:
+    a: 0xF7
+    negative: true
+    carry: true
     # verified
 
 - desc: ADC immediate, +/-, no carry, no overflow
@@ -82,4 +96,17 @@
   check:
     a: 0x12
     carry: true
+    # verified
+
+- desc: ADC immediate, +/+, no carry, overflow
+  setup:
+    mem:
+      0x0000: |
+        LDA #$40
+        ADC #$40
+        .byte $02
+  check:
+    a: 0x80
+    negative: true
+    overflow: true
     # verified

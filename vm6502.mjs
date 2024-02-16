@@ -175,7 +175,7 @@ export class Vm6502 {
 
             this.carry = sum > 0xff;
             const res = sum % 0x100;
-            this.updateOverflow(res, this.a, this.read(addr));
+            this.updateOverflow(this.a, this.read(addr), res);
 
             this.a = res;
             this.updateNegativeZero(this.a);
@@ -227,7 +227,7 @@ export class Vm6502 {
 
         this.carry = diff > 0xff;
         const res = (diff + 0x100) % 0x100;
-        this.updateOverflow(res, this.a, this.read(addr));
+        this.updateOverflow(this.a, this.read(addr), res);
 
         this.updateNegativeZero(res);
     }
@@ -357,7 +357,7 @@ export class Vm6502 {
 
             this.carry = diff > 0xff;
             const res = (diff + 0x100) % 0x100;
-            this.updateOverflow(res, this.a, this.read(addr));
+            this.updateOverflow(this.a, this.read(addr), res);
 
             this.a = res;
             this.updateNegativeZero(this.a);
