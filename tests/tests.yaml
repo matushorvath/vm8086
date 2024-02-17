@@ -111,17 +111,17 @@
     overflow: true
     # verified
 
-- desc: ADC immediate, -/-, no carry, overflow
+- desc: ADC immediate, -/-, carry, overflow
   setup:
     mem:
       0x0000: |
         LDA #$C0
-        ADC #$C0
+        ADC #$B0
         .byte $02
   check:
-    a: 0x80
-    negative: true
+    a: 0x70
     overflow: true
+    carry: true
     # verified
 
 # Generated tests for ADC
@@ -265,8 +265,6 @@
         .byte $02
   check:
     a: 0x7f
-    negative: true
-    overflow: true
 
 - desc: ADC 7f, 42 -> c1
   setup:
@@ -392,7 +390,7 @@
         .byte $02
   check:
     a: 0x7f
-    negative: true
+    overflow: true
     carry: true
 
 - desc: ADC b6, 00 -> b6
@@ -473,8 +471,7 @@
         .byte $02
   check:
     a: 0xff
-    zero: true
-    carry: true
+    negative: true
 
 - desc: ADC ff, 42 -> 41
   setup:
@@ -507,7 +504,7 @@
         .byte $02
   check:
     a: 0x7f
-    negative: true
+    overflow: true
     carry: true
 
 - desc: ADC ff, b6 -> b5
@@ -534,16 +531,6 @@
     negative: true
     carry: true
 
-- desc: ADC 00, 00 -> 00
-  setup:
-    mem:
-      0x0000: |
-        LDA #$00
-        ADC #$00
-        .byte $02
-  check:
-    a: 0x00
-
 - desc: ADC 40, c0 -> 00
   setup:
     mem:
@@ -565,18 +552,7 @@
         .byte $02
   check:
     a: 0x00
-    carry: true
-
-- desc: ADC 80, 80 -> 00
-  setup:
-    mem:
-      0x0000: |
-        LDA #$80
-        ADC #$80
-        .byte $02
-  check:
-    a: 0x00
-    overflow: true
+    zero: true
     carry: true
 
 - desc: ADC 7f, 81 -> 00
@@ -588,17 +564,8 @@
         .byte $02
   check:
     a: 0x00
+    zero: true
     carry: true
-
-- desc: ADC 00, 42 -> 42
-  setup:
-    mem:
-      0x0000: |
-        LDA #$00
-        ADC #$42
-        .byte $02
-  check:
-    a: 0x42
 
 - desc: ADC 12, 30 -> 42
   setup:
@@ -609,8 +576,6 @@
         .byte $02
   check:
     a: 0x42
-    overflow: true
-    zero: true
 
 - desc: ADC f0, 52 -> 42
   setup:
@@ -646,18 +611,6 @@
     overflow: true
     carry: true
 
-- desc: ADC 7f, 00 -> 7f
-  setup:
-    mem:
-      0x0000: |
-        LDA #$7f
-        ADC #$00
-        .byte $02
-  check:
-    a: 0x7f
-    negative: true
-    overflow: true
-
 - desc: ADC 50, 2f -> 7f
   setup:
     mem:
@@ -667,29 +620,6 @@
         .byte $02
   check:
     a: 0x7f
-
-- desc: ADC ff, 80 -> 7f
-  setup:
-    mem:
-      0x0000: |
-        LDA #$ff
-        ADC #$80
-        .byte $02
-  check:
-    a: 0x7f
-    overflow: true
-    carry: true
-
-- desc: ADC 80, 00 -> 80
-  setup:
-    mem:
-      0x0000: |
-        LDA #$80
-        ADC #$00
-        .byte $02
-  check:
-    a: 0x80
-    negative: true
 
 - desc: ADC 20, 60 -> 80
   setup:
@@ -714,28 +644,6 @@
     a: 0x80
     negative: true
     carry: true
-
-- desc: ADC 00, b6 -> b6
-  setup:
-    mem:
-      0x0000: |
-        LDA #$00
-        ADC #$b6
-        .byte $02
-  check:
-    a: 0xb6
-    negative: true
-
-- desc: ADC b6, 00 -> b6
-  setup:
-    mem:
-      0x0000: |
-        LDA #$b6
-        ADC #$00
-        .byte $02
-  check:
-    a: 0xb6
-    negative: true
 
 - desc: ADC 70, 46 -> b6
   setup:
@@ -772,30 +680,6 @@
     negative: true
     carry: true
 
-- desc: ADC ff, 00 -> ff
-  setup:
-    mem:
-      0x0000: |
-        LDA #$ff
-        ADC #$00
-        .byte $02
-  check:
-    a: 0xff
-    zero: true
-    carry: true
-
-- desc: ADC 00, ff -> ff
-  setup:
-    mem:
-      0x0000: |
-        LDA #$00
-        ADC #$ff
-        .byte $02
-  check:
-    a: 0xff
-    zero: true
-    carry: true
-
 - desc: ADC fe, 01 -> ff
   setup:
     mem:
@@ -805,18 +689,4 @@
         .byte $02
   check:
     a: 0xff
-    zero: true
-    carry: true
-
-- desc: ADC 7f, 80 -> ff
-  setup:
-    mem:
-      0x0000: |
-        LDA #$7f
-        ADC #$80
-        .byte $02
-  check:
-    a: 0xff
-    zero: true
-    carry: true
-
+    negative: true

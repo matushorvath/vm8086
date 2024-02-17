@@ -7,7 +7,7 @@ const main = async () => {
     const params = JSON.parse(await fs.readFile(process.argv[2], 'utf8'));
     const resf = await fs.readFile(process.argv[3], 'utf8');
 
-    const res = resf.trim().split(/\n\r?/).flatMap(line => {
+    const results = resf.trim().split(/\n\r?/).flatMap(line => {
         const m = line.match(/.{4}: ((.. .. ){4}) .*/);
         return [...m[1].matchAll(/(..) (..) /g)].map(([_, ress, flagss]) => {
             const res = Number.parseInt(ress, 16);
@@ -22,26 +22,26 @@ const main = async () => {
         });
     });
 
-    if (params.length > res.length) throw new Error(`lengths ${params.length} ${res.length}`);
+    if (params.length > results.length) throw new Error(`lengths ${params.length} ${results.length}`);
 
     const tests = params.map((p, i) => {
         const test = {
             desc: `${p[0]} ${f8(p[1])}, ${f8(p[2])} -> ${f8(p[3])}`,
             setup: {
                 mem: {
-                    ">0x0000<": `LDA #$${f8(p[1])}
+                    '>0x0000<': `LDA #$${f8(p[1])}
 ADC #$${f8(p[2])}
 .byte $02
-`}
+` }
             },
             check: {
                 a: `>0x${f8(p[3])}<`
             }
         };
-        if (res[i].negative) test.check.negative = true;
-        if (res[i].overflow) test.check.overflow = true;
-        if (res[i].zero) test.check.zero = true;
-        if (res[i].carry) test.check.carry = true;
+        if (results[i].negative) test.check.negative = true;
+        if (results[i].overflow) test.check.overflow = true;
+        if (results[i].zero) test.check.zero = true;
+        if (results[i].carry) test.check.carry = true;
         return test;
     });
 
