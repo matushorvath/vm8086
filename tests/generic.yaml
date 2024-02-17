@@ -1,0 +1,123 @@
+desc: Generic tests
+tests:
+  - desc: Trivial program
+    setup:
+      decimal: true
+      mem:
+        0x0000: |
+          CLD
+          .byte $02
+    check:
+      decimal: false
+
+  - desc: Load and store address A
+    setup:
+      mem:
+        0x0000: |
+          LDA $0400
+          LDA $0401
+          STA $0402
+          .byte $02
+        0x400: [0x42, 0x43]
+    check:
+      mem:
+        0x400: [0x42, 0x43, 0x43]
+      a: 0x43
+
+  - desc: Output
+    setup:
+      mem:
+        0x0000: |
+          LDA #$41
+          STA $FFF0
+          .byte $02
+    check:
+      a: 0x41
+    output: A
+
+  - desc: Input
+    setup:
+      mem:
+        0x0000: |
+          LDA $FFF0
+          .byte $02
+    input: A
+    check:
+      a: 0x41
+
+  # ADC
+  # TODO BCD
+
+  - desc: ADC immediate, +/+, no carry, no overflow
+    setup:
+      mem:
+        0x0000: |
+          LDA #$01
+          ADC #$02
+          .byte $02
+    check:
+      a: 0x03
+      # verified
+
+  - desc: ADC immediate, -/-, no carry, overflow
+    setup:
+      mem:
+        0x0000: |
+          LDA #$FA
+          ADC #$FD
+          .byte $02
+    check:
+      a: 0xF7
+      negative: true
+      carry: true
+      # verified
+
+  - desc: ADC immediate, +/-, no carry, no overflow
+    setup:
+      mem:
+        0x0000: |
+          LDA #$01
+          ADC #$FE
+          .byte $02
+    check:
+      a: 0xFF
+      negative: true
+      # verified
+
+  - desc: ADC immediate, -/+, carry, no overflow
+    setup:
+      mem:
+        0x0000: |
+          LDA #$FA
+          ADC #$18
+          .byte $02
+    check:
+      a: 0x12
+      carry: true
+      # verified
+
+  - desc: ADC immediate, +/+, no carry, overflow
+    setup:
+      mem:
+        0x0000: |
+          LDA #$40
+          ADC #$40
+          .byte $02
+    check:
+      a: 0x80
+      negative: true
+      overflow: true
+      # verified
+
+  - desc: ADC immediate, -/-, carry, overflow
+    setup:
+      mem:
+        0x0000: |
+          LDA #$C0
+          ADC #$B0
+          .byte $02
+    check:
+      a: 0x70
+      overflow: true
+      carry: true
+      # verified

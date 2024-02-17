@@ -1,3 +1,7 @@
+// If you want to run this against stdin:
+// echo A | npm run ut -- -stdio
+// yq 'map(select(.input)) | map(.input) | .[]' < tests/tests.yaml | npm run ut -- -stdio
+
 import { Vm6502 } from '../vm6502.mjs';
 import yaml from 'yaml';
 import chalk from 'chalk';
@@ -235,21 +239,38 @@ const run = async (test, useStdio) => {
 };
 
 const main = async () => {
-    const tests = yaml.parse(await fs.readFile(path.join(__dirname, 'tests.yaml'), 'utf8'));
+    const list = yaml.parse(await fs.readFile(path.join(__dirname, 'tests.yaml'), 'utf8'));
 
     const useStdio = process.argv[2] === '-stdio';
     if (useStdio) {
         console.log(`Running against ${chalk.blueBright('real STDIO')}; input and output checks ${chalk.blueBright('disabled')}\n`);
     }
 
-    let passed = true;
-    for (const test of tests) {
-        if (!await run(test, useStdio)) {
-            passed = false;
+    let allPassed = true;
+    const statuses = [];
+
+    for (const file of list) {
+        const collection = yaml.parse(await fs.readFile(path.join(__dirname, file), 'utf8'));
+        console.log(`\n${chalk.blueBright(`${collection.desc} (${file})\n`)}`);
+
+        let passed = true;
+
+        for (const test of collection.tests) {
+            if (!await run(test, useStdio)) {
+                allPassed = false;
+                passed = false;
+            }
         }
+
+        statuses.push({ file, desc: file.desc, passed });
     }
 
-    if (!passed) {
+    console.log('\n');
+    for (const status of statuses) {
+        console.log(`${status.desc} (${status.file}) ${status.passed ? chalk.green('PASSED') : chalk.red('FAILED')}`);
+    }
+
+    if (!allPassed) {
         console.log(`\n${chalk.red('Some tests FAILED')}`);
         process.exit(1);
     }

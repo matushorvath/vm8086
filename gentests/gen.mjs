@@ -1,4 +1,4 @@
-// node ./gentests/gen.mjs > code.s
+// node ./gentests/gen.mjs ADCf > code.s
 // ./tests/assemble.sh < code.s > code.bin
 // stderr is adc.json
 // < code.bin hexdump -ve '/1 "%02x "'
@@ -51,10 +51,10 @@ const f8 = n => n.toString(16).padStart(2, '0');
 
 let idx = 0;
 
-const genadc = (op1, op2, res) => {
+const genadc = (op1, op2, res, carry) => {
     console.log(`
         LDA #$${f8(op1)}
-        CLC
+        ${carry ? 'SEC' : 'CLC'}
         ADC #$${f8(op2)}
         STA $${f8(0x1000 + 2 * idx)}
         PHP
@@ -63,25 +63,68 @@ const genadc = (op1, op2, res) => {
 `);
 
     if (idx !== 0) process.stderr.write(',\n');
-    process.stderr.write(`["ADC", ${op1}, ${op2}, ${res}]`);
+    process.stderr.write(`["ADC", ${op1}, ${op2}, ${res}, ${carry}]`);
 
     idx++;
+};
+
+const gensbc = (op1, op2, res, carry) => {
+    console.log(`
+        LDA #$${f8(res)}
+        ${carry ? 'SEC' : 'CLC'}
+        ADC #$${f8(op1)}
+        STA $${f8(0x1000 + 2 * idx)}
+        PHP
+        PLA
+        STA $${f8(0x1000 + 2 * idx + 1)}
+`);
+
+    if (idx !== 0) process.stderr.write(',\n');
+    process.stderr.write(`["SBC", ${op1}, ${op2}, ${res}, ${carry}]`);
+
+    idx++;
+};
+
+const gencmp = (op1, op2, res, carry) => {
+    console.log(`
+        LDA #$${f8(res)}
+        ${carry ? 'SEC' : 'CLC'}
+        CMP #$${f8(op1)}
+        STA $${f8(0x1000 + 2 * idx)}
+        PHP
+        PLA
+        STA $${f8(0x1000 + 2 * idx + 1)}
+`);
+
+    if (idx !== 0) process.stderr.write(',\n');
+    process.stderr.write(`["CMP", ${op1}, ${op2}, ${res}, ${carry}]`);
+
+    idx++;
+};
+
+const gen = (op1, op2, res) => {
+    switch (process.argv[2]) {
+    case 'ADCf': return genadc(op1, op2, res, false);
+    case 'ADCt': return genadc(op1, op2, res, true);
+    case 'SBCf': return gensbc(op1, op2, res, false);
+    case 'SBCt': return gensbc(op1, op2, res, true);
+    case 'CMPf': return gencmp(op1, op2, res, false);
+    case 'CMPt': return gencmp(op1, op2, res, true);
+    }
 };
 
 process.stderr.write('[\n');
 
 for (const op1 of ops) {
     for (const op2 of ops) {
-        genadc(op1, op2, (op1 + op2 + 0x100) % 0x100);
+        gen(op1, op2, (op1 + op2 + 0x100) % 0x100);
     }
 }
 
 for (const key of Object.keys(cases)) {
-    const res = Number(key);
     for (const [op1, op2] of cases[key]) {
-        const caseRes = (op1 + op2 + 0x100) % 0x100;
-        if (caseRes !== res) throw new Error(`mismatch ${f8(op1)} ${f8(op2)} is ${f8(res)} should be ${f8(caseRes)}`);
-        genadc(op1, op2, res);
+        const res = (op1 + op2 + 0x100) % 0x100;
+        gen(op1, op2, res);
     }
 }
 
