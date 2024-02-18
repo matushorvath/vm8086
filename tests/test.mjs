@@ -275,7 +275,7 @@ const main = async () => {
 
     for (const file of list.filter(f => filter === undefined || filter.test(f))) {
         const collection = yaml.parse(await fs.readFile(path.join(__dirname, file), 'utf8'));
-        console.log(`\n${chalk.blueBright(`${collection.desc} (${file})\n`)}`);
+        console.log(`${chalk.blueBright(`${collection.desc} (${file})\n`)}`);
 
         let passed = true;
 
@@ -287,9 +287,9 @@ const main = async () => {
         }
 
         statuses.push({ file, desc: collection.desc, passed });
+        console.log('');
     }
 
-    console.log('\n');
     for (const status of statuses) {
         console.log(`${status.desc} (${status.file})    ${status.passed ? chalk.green('PASSED') : chalk.red('FAILED')}`);
     }
