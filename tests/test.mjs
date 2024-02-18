@@ -270,31 +270,32 @@ const main = async () => {
         console.log(`Running against ${chalk.blueBright('real STDIO')}; input and output checks ${chalk.blueBright('disabled')}\n`);
     }
 
-    let allPassed = true;
     const statuses = [];
 
     for (const file of list.filter(f => filter === undefined || filter.test(f))) {
         const collection = yaml.parse(await fs.readFile(path.join(__dirname, file), 'utf8'));
         console.log(`${chalk.blueBright(`${collection.desc} (${file})\n`)}`);
 
-        let passed = true;
+        let passed = 0;
 
         for (const test of collection.tests) {
-            if (!await run(test, useStdio)) {
-                allPassed = false;
-                passed = false;
+            if (await run(test, useStdio)) {
+                passed++;
             }
         }
 
-        statuses.push({ file, desc: collection.desc, passed });
+        statuses.push({ file, desc: collection.desc, total: collection.tests.length, passed });
         console.log('');
     }
 
     for (const status of statuses) {
-        console.log(`${status.desc} (${status.file})    ${status.passed ? chalk.green('PASSED') : chalk.red('FAILED')}`);
+        const success = status.passed === status.total;
+        const colorer = success ? chalk.green : chalk.red;
+        const nums = `(${status.passed}/${status.total})`;
+        console.log(`${status.desc} (${status.file})    ${colorer(success ? 'PASSED' : 'FAILED')} ${nums}`);
     }
 
-    if (!allPassed) {
+    if (statuses.some(s => s.total !== s.passed)) {
         console.log(`\n${chalk.red('Some tests FAILED')}`);
         process.exit(1);
     }

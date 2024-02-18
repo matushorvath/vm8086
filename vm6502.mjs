@@ -225,9 +225,8 @@ export class Vm6502 {
     cmp(reg, addr) {
         const diff = this.a - this.read(addr);
 
-        this.carry = diff > 0xff;
+        this.carry = diff >= 0x00;
         const res = (diff + 0x100) % 0x100;
-        this.updateOverflow(this.a, this.read(addr), res);
 
         this.updateNegativeZero(res);
     }
@@ -357,7 +356,7 @@ export class Vm6502 {
 
             this.carry = diff > 0xff;
             const res = (diff + 0x100) % 0x100;
-            this.updateOverflow(this.a, this.read(addr), res);
+            this.updateOverflow(this.read(addr), res, this.a);
 
             this.a = res;
             this.updateNegativeZero(this.a);
