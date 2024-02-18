@@ -1,0 +1,558 @@
+desc: CMP
+tests:
+  - desc: CMP; 00 - 00
+    setup:
+      mem:
+        0x0000: |
+          LDA #$00
+          CMP #$00
+          .byte $02
+    check:
+      a: 0x00
+      zero: true
+      carry: true
+
+  - desc: CMP; 42 - 00
+    setup:
+      mem:
+        0x0000: |
+          LDA #$42
+          CMP #$00
+          .byte $02
+    check:
+      a: 0x42
+      carry: true
+
+  - desc: CMP; 7f - 00
+    setup:
+      mem:
+        0x0000: |
+          LDA #$7f
+          CMP #$00
+          .byte $02
+    check:
+      a: 0x7f
+      carry: true
+
+  - desc: CMP; 80 - 00
+    setup:
+      mem:
+        0x0000: |
+          LDA #$80
+          CMP #$00
+          .byte $02
+    check:
+      a: 0x80
+      negative: true
+      carry: true
+
+  - desc: CMP; b6 - 00
+    setup:
+      mem:
+        0x0000: |
+          LDA #$b6
+          CMP #$00
+          .byte $02
+    check:
+      a: 0xb6
+      negative: true
+      carry: true
+
+  - desc: CMP; ff - 00
+    setup:
+      mem:
+        0x0000: |
+          LDA #$ff
+          CMP #$00
+          .byte $02
+    check:
+      a: 0xff
+      negative: true
+      carry: true
+
+  - desc: CMP; 42 - 42
+    setup:
+      mem:
+        0x0000: |
+          LDA #$42
+          CMP #$42
+          .byte $02
+    check:
+      a: 0x42
+      zero: true
+      carry: true
+
+  - desc: CMP; 84 - 42
+    setup:
+      mem:
+        0x0000: |
+          LDA #$84
+          CMP #$42
+          .byte $02
+    check:
+      a: 0x84
+      carry: true
+
+  - desc: CMP; c1 - 42
+    setup:
+      mem:
+        0x0000: |
+          LDA #$c1
+          CMP #$42
+          .byte $02
+    check:
+      a: 0xc1
+      carry: true
+
+  - desc: CMP; c2 - 42
+    setup:
+      mem:
+        0x0000: |
+          LDA #$c2
+          CMP #$42
+          .byte $02
+    check:
+      a: 0xc2
+      negative: true
+      carry: true
+
+  - desc: CMP; f8 - 42
+    setup:
+      mem:
+        0x0000: |
+          LDA #$f8
+          CMP #$42
+          .byte $02
+    check:
+      a: 0xf8
+      negative: true
+      carry: true
+
+  - desc: CMP; 41 - 42
+    setup:
+      mem:
+        0x0000: |
+          LDA #$41
+          CMP #$42
+          .byte $02
+    check:
+      a: 0x41
+      negative: true
+
+  - desc: CMP; 7f - 7f
+    setup:
+      mem:
+        0x0000: |
+          LDA #$7f
+          CMP #$7f
+          .byte $02
+    check:
+      a: 0x7f
+      zero: true
+      carry: true
+
+  - desc: CMP; c1 - 7f
+    setup:
+      mem:
+        0x0000: |
+          LDA #$c1
+          CMP #$7f
+          .byte $02
+    check:
+      a: 0xc1
+      carry: true
+
+  - desc: CMP; fe - 7f
+    setup:
+      mem:
+        0x0000: |
+          LDA #$fe
+          CMP #$7f
+          .byte $02
+    check:
+      a: 0xfe
+      carry: true
+
+  - desc: CMP; ff - 7f
+    setup:
+      mem:
+        0x0000: |
+          LDA #$ff
+          CMP #$7f
+          .byte $02
+    check:
+      a: 0xff
+      negative: true
+      carry: true
+
+  - desc: CMP; 35 - 7f
+    setup:
+      mem:
+        0x0000: |
+          LDA #$35
+          CMP #$7f
+          .byte $02
+    check:
+      a: 0x35
+      negative: true
+
+  - desc: CMP; 7e - 7f
+    setup:
+      mem:
+        0x0000: |
+          LDA #$7e
+          CMP #$7f
+          .byte $02
+    check:
+      a: 0x7e
+      negative: true
+
+  - desc: CMP; 80 - 80
+    setup:
+      mem:
+        0x0000: |
+          LDA #$80
+          CMP #$80
+          .byte $02
+    check:
+      a: 0x80
+      zero: true
+      carry: true
+
+  - desc: CMP; c2 - 80
+    setup:
+      mem:
+        0x0000: |
+          LDA #$c2
+          CMP #$80
+          .byte $02
+    check:
+      a: 0xc2
+      carry: true
+
+  - desc: CMP; ff - 80
+    setup:
+      mem:
+        0x0000: |
+          LDA #$ff
+          CMP #$80
+          .byte $02
+    check:
+      a: 0xff
+      carry: true
+
+  - desc: CMP; 00 - 80
+    setup:
+      mem:
+        0x0000: |
+          LDA #$00
+          CMP #$80
+          .byte $02
+    check:
+      a: 0x00
+      negative: true
+
+  - desc: CMP; 36 - 80
+    setup:
+      mem:
+        0x0000: |
+          LDA #$36
+          CMP #$80
+          .byte $02
+    check:
+      a: 0x36
+      negative: true
+
+  - desc: CMP; 7f - 80
+    setup:
+      mem:
+        0x0000: |
+          LDA #$7f
+          CMP #$80
+          .byte $02
+    check:
+      a: 0x7f
+      negative: true
+
+  - desc: CMP; b6 - b6
+    setup:
+      mem:
+        0x0000: |
+          LDA #$b6
+          CMP #$b6
+          .byte $02
+    check:
+      a: 0xb6
+      zero: true
+      carry: true
+
+  - desc: CMP; f8 - b6
+    setup:
+      mem:
+        0x0000: |
+          LDA #$f8
+          CMP #$b6
+          .byte $02
+    check:
+      a: 0xf8
+      carry: true
+
+  - desc: CMP; 35 - b6
+    setup:
+      mem:
+        0x0000: |
+          LDA #$35
+          CMP #$b6
+          .byte $02
+    check:
+      a: 0x35
+
+  - desc: CMP; 36 - b6
+    setup:
+      mem:
+        0x0000: |
+          LDA #$36
+          CMP #$b6
+          .byte $02
+    check:
+      a: 0x36
+      negative: true
+
+  - desc: CMP; 6c - b6
+    setup:
+      mem:
+        0x0000: |
+          LDA #$6c
+          CMP #$b6
+          .byte $02
+    check:
+      a: 0x6c
+      negative: true
+
+  - desc: CMP; b5 - b6
+    setup:
+      mem:
+        0x0000: |
+          LDA #$b5
+          CMP #$b6
+          .byte $02
+    check:
+      a: 0xb5
+      negative: true
+
+  - desc: CMP; ff - ff
+    setup:
+      mem:
+        0x0000: |
+          LDA #$ff
+          CMP #$ff
+          .byte $02
+    check:
+      a: 0xff
+      zero: true
+      carry: true
+
+  - desc: CMP; 41 - ff
+    setup:
+      mem:
+        0x0000: |
+          LDA #$41
+          CMP #$ff
+          .byte $02
+    check:
+      a: 0x41
+
+  - desc: CMP; 7e - ff
+    setup:
+      mem:
+        0x0000: |
+          LDA #$7e
+          CMP #$ff
+          .byte $02
+    check:
+      a: 0x7e
+
+  - desc: CMP; 7f - ff
+    setup:
+      mem:
+        0x0000: |
+          LDA #$7f
+          CMP #$ff
+          .byte $02
+    check:
+      a: 0x7f
+      negative: true
+
+  - desc: CMP; b5 - ff
+    setup:
+      mem:
+        0x0000: |
+          LDA #$b5
+          CMP #$ff
+          .byte $02
+    check:
+      a: 0xb5
+      negative: true
+
+  - desc: CMP; fe - ff
+    setup:
+      mem:
+        0x0000: |
+          LDA #$fe
+          CMP #$ff
+          .byte $02
+    check:
+      a: 0xfe
+      negative: true
+
+  - desc: CMP; 00 - 40
+    setup:
+      mem:
+        0x0000: |
+          LDA #$00
+          CMP #$40
+          .byte $02
+    check:
+      a: 0x00
+      negative: true
+
+  - desc: CMP; 00 - b0
+    setup:
+      mem:
+        0x0000: |
+          LDA #$00
+          CMP #$b0
+          .byte $02
+    check:
+      a: 0x00
+
+  - desc: CMP; 00 - 7f
+    setup:
+      mem:
+        0x0000: |
+          LDA #$00
+          CMP #$7f
+          .byte $02
+    check:
+      a: 0x00
+      negative: true
+
+  - desc: CMP; 42 - 12
+    setup:
+      mem:
+        0x0000: |
+          LDA #$42
+          CMP #$12
+          .byte $02
+    check:
+      a: 0x42
+      carry: true
+
+  - desc: CMP; 42 - f0
+    setup:
+      mem:
+        0x0000: |
+          LDA #$42
+          CMP #$f0
+          .byte $02
+    check:
+      a: 0x42
+
+  - desc: CMP; 42 - 60
+    setup:
+      mem:
+        0x0000: |
+          LDA #$42
+          CMP #$60
+          .byte $02
+    check:
+      a: 0x42
+      negative: true
+
+  - desc: CMP; 42 - a0
+    setup:
+      mem:
+        0x0000: |
+          LDA #$42
+          CMP #$a0
+          .byte $02
+    check:
+      a: 0x42
+      negative: true
+
+  - desc: CMP; 7f - 50
+    setup:
+      mem:
+        0x0000: |
+          LDA #$7f
+          CMP #$50
+          .byte $02
+    check:
+      a: 0x7f
+      carry: true
+
+  - desc: CMP; 80 - 20
+    setup:
+      mem:
+        0x0000: |
+          LDA #$80
+          CMP #$20
+          .byte $02
+    check:
+      a: 0x80
+      carry: true
+
+  - desc: CMP; 80 - 81
+    setup:
+      mem:
+        0x0000: |
+          LDA #$80
+          CMP #$81
+          .byte $02
+    check:
+      a: 0x80
+      negative: true
+
+  - desc: CMP; b6 - 70
+    setup:
+      mem:
+        0x0000: |
+          LDA #$b6
+          CMP #$70
+          .byte $02
+    check:
+      a: 0xb6
+      carry: true
+
+  - desc: CMP; b6 - 90
+    setup:
+      mem:
+        0x0000: |
+          LDA #$b6
+          CMP #$90
+          .byte $02
+    check:
+      a: 0xb6
+      carry: true
+
+  - desc: CMP; b6 - b7
+    setup:
+      mem:
+        0x0000: |
+          LDA #$b6
+          CMP #$b7
+          .byte $02
+    check:
+      a: 0xb6
+      negative: true
+
+  - desc: CMP; ff - fe
+    setup:
+      mem:
+        0x0000: |
+          LDA #$ff
+          CMP #$fe
+          .byte $02
+    check:
+      a: 0xff
+      carry: true

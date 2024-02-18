@@ -1,22 +1,7 @@
-- desc: Trivial program
-  setup:
-    decimal: true
-    mem:
-      0x0000: |
-        CLD
-        .byte $02
-  check:
-    decimal: false
+- generic.yaml
 
-- desc: Load and store address A
-  setup:
-    mem:
-      0x0000: |
-        LDA $0400
-        LDA $0401
-        STA $0402
-        .byte $02
-      0x400: [0x42, 0x43]
-  check:
-    mem:
-      0x400: [0x42, 0x43, 0x43]
+- adc-no-carry.yaml
+- adc-with-carry.yaml
+- cmp.yaml
+- sbc-no-carry.yaml
+- sbc-with-carry.yaml

@@ -1,0 +1,567 @@
+desc: ADC, no carry
+tests:
+  - desc: ADC no carry; 00 + 00 -> 00
+    setup:
+      mem:
+        0x0000: |
+          LDA #$00
+          ADC #$00
+          .byte $02
+    check:
+      a: 0x00
+      zero: true
+
+  - desc: ADC no carry; 00 + 42 -> 42
+    setup:
+      mem:
+        0x0000: |
+          LDA #$00
+          ADC #$42
+          .byte $02
+    check:
+      a: 0x42
+
+  - desc: ADC no carry; 00 + 7f -> 7f
+    setup:
+      mem:
+        0x0000: |
+          LDA #$00
+          ADC #$7f
+          .byte $02
+    check:
+      a: 0x7f
+
+  - desc: ADC no carry; 00 + 80 -> 80
+    setup:
+      mem:
+        0x0000: |
+          LDA #$00
+          ADC #$80
+          .byte $02
+    check:
+      a: 0x80
+      negative: true
+
+  - desc: ADC no carry; 00 + b6 -> b6
+    setup:
+      mem:
+        0x0000: |
+          LDA #$00
+          ADC #$b6
+          .byte $02
+    check:
+      a: 0xb6
+      negative: true
+
+  - desc: ADC no carry; 00 + ff -> ff
+    setup:
+      mem:
+        0x0000: |
+          LDA #$00
+          ADC #$ff
+          .byte $02
+    check:
+      a: 0xff
+      negative: true
+
+  - desc: ADC no carry; 42 + 00 -> 42
+    setup:
+      mem:
+        0x0000: |
+          LDA #$42
+          ADC #$00
+          .byte $02
+    check:
+      a: 0x42
+
+  - desc: ADC no carry; 42 + 42 -> 84
+    setup:
+      mem:
+        0x0000: |
+          LDA #$42
+          ADC #$42
+          .byte $02
+    check:
+      a: 0x84
+      negative: true
+      overflow: true
+
+  - desc: ADC no carry; 42 + 7f -> c1
+    setup:
+      mem:
+        0x0000: |
+          LDA #$42
+          ADC #$7f
+          .byte $02
+    check:
+      a: 0xc1
+      negative: true
+      overflow: true
+
+  - desc: ADC no carry; 42 + 80 -> c2
+    setup:
+      mem:
+        0x0000: |
+          LDA #$42
+          ADC #$80
+          .byte $02
+    check:
+      a: 0xc2
+      negative: true
+
+  - desc: ADC no carry; 42 + b6 -> f8
+    setup:
+      mem:
+        0x0000: |
+          LDA #$42
+          ADC #$b6
+          .byte $02
+    check:
+      a: 0xf8
+      negative: true
+
+  - desc: ADC no carry; 42 + ff -> 41
+    setup:
+      mem:
+        0x0000: |
+          LDA #$42
+          ADC #$ff
+          .byte $02
+    check:
+      a: 0x41
+      carry: true
+
+  - desc: ADC no carry; 7f + 00 -> 7f
+    setup:
+      mem:
+        0x0000: |
+          LDA #$7f
+          ADC #$00
+          .byte $02
+    check:
+      a: 0x7f
+
+  - desc: ADC no carry; 7f + 42 -> c1
+    setup:
+      mem:
+        0x0000: |
+          LDA #$7f
+          ADC #$42
+          .byte $02
+    check:
+      a: 0xc1
+      negative: true
+      overflow: true
+
+  - desc: ADC no carry; 7f + 7f -> fe
+    setup:
+      mem:
+        0x0000: |
+          LDA #$7f
+          ADC #$7f
+          .byte $02
+    check:
+      a: 0xfe
+      negative: true
+      overflow: true
+
+  - desc: ADC no carry; 7f + 80 -> ff
+    setup:
+      mem:
+        0x0000: |
+          LDA #$7f
+          ADC #$80
+          .byte $02
+    check:
+      a: 0xff
+      negative: true
+
+  - desc: ADC no carry; 7f + b6 -> 35
+    setup:
+      mem:
+        0x0000: |
+          LDA #$7f
+          ADC #$b6
+          .byte $02
+    check:
+      a: 0x35
+      carry: true
+
+  - desc: ADC no carry; 7f + ff -> 7e
+    setup:
+      mem:
+        0x0000: |
+          LDA #$7f
+          ADC #$ff
+          .byte $02
+    check:
+      a: 0x7e
+      carry: true
+
+  - desc: ADC no carry; 80 + 00 -> 80
+    setup:
+      mem:
+        0x0000: |
+          LDA #$80
+          ADC #$00
+          .byte $02
+    check:
+      a: 0x80
+      negative: true
+
+  - desc: ADC no carry; 80 + 42 -> c2
+    setup:
+      mem:
+        0x0000: |
+          LDA #$80
+          ADC #$42
+          .byte $02
+    check:
+      a: 0xc2
+      negative: true
+
+  - desc: ADC no carry; 80 + 7f -> ff
+    setup:
+      mem:
+        0x0000: |
+          LDA #$80
+          ADC #$7f
+          .byte $02
+    check:
+      a: 0xff
+      negative: true
+
+  - desc: ADC no carry; 80 + 80 -> 00
+    setup:
+      mem:
+        0x0000: |
+          LDA #$80
+          ADC #$80
+          .byte $02
+    check:
+      a: 0x00
+      overflow: true
+      zero: true
+      carry: true
+
+  - desc: ADC no carry; 80 + b6 -> 36
+    setup:
+      mem:
+        0x0000: |
+          LDA #$80
+          ADC #$b6
+          .byte $02
+    check:
+      a: 0x36
+      overflow: true
+      carry: true
+
+  - desc: ADC no carry; 80 + ff -> 7f
+    setup:
+      mem:
+        0x0000: |
+          LDA #$80
+          ADC #$ff
+          .byte $02
+    check:
+      a: 0x7f
+      overflow: true
+      carry: true
+
+  - desc: ADC no carry; b6 + 00 -> b6
+    setup:
+      mem:
+        0x0000: |
+          LDA #$b6
+          ADC #$00
+          .byte $02
+    check:
+      a: 0xb6
+      negative: true
+
+  - desc: ADC no carry; b6 + 42 -> f8
+    setup:
+      mem:
+        0x0000: |
+          LDA #$b6
+          ADC #$42
+          .byte $02
+    check:
+      a: 0xf8
+      negative: true
+
+  - desc: ADC no carry; b6 + 7f -> 35
+    setup:
+      mem:
+        0x0000: |
+          LDA #$b6
+          ADC #$7f
+          .byte $02
+    check:
+      a: 0x35
+      carry: true
+
+  - desc: ADC no carry; b6 + 80 -> 36
+    setup:
+      mem:
+        0x0000: |
+          LDA #$b6
+          ADC #$80
+          .byte $02
+    check:
+      a: 0x36
+      overflow: true
+      carry: true
+
+  - desc: ADC no carry; b6 + b6 -> 6c
+    setup:
+      mem:
+        0x0000: |
+          LDA #$b6
+          ADC #$b6
+          .byte $02
+    check:
+      a: 0x6c
+      overflow: true
+      carry: true
+
+  - desc: ADC no carry; b6 + ff -> b5
+    setup:
+      mem:
+        0x0000: |
+          LDA #$b6
+          ADC #$ff
+          .byte $02
+    check:
+      a: 0xb5
+      negative: true
+      carry: true
+
+  - desc: ADC no carry; ff + 00 -> ff
+    setup:
+      mem:
+        0x0000: |
+          LDA #$ff
+          ADC #$00
+          .byte $02
+    check:
+      a: 0xff
+      negative: true
+
+  - desc: ADC no carry; ff + 42 -> 41
+    setup:
+      mem:
+        0x0000: |
+          LDA #$ff
+          ADC #$42
+          .byte $02
+    check:
+      a: 0x41
+      carry: true
+
+  - desc: ADC no carry; ff + 7f -> 7e
+    setup:
+      mem:
+        0x0000: |
+          LDA #$ff
+          ADC #$7f
+          .byte $02
+    check:
+      a: 0x7e
+      carry: true
+
+  - desc: ADC no carry; ff + 80 -> 7f
+    setup:
+      mem:
+        0x0000: |
+          LDA #$ff
+          ADC #$80
+          .byte $02
+    check:
+      a: 0x7f
+      overflow: true
+      carry: true
+
+  - desc: ADC no carry; ff + b6 -> b5
+    setup:
+      mem:
+        0x0000: |
+          LDA #$ff
+          ADC #$b6
+          .byte $02
+    check:
+      a: 0xb5
+      negative: true
+      carry: true
+
+  - desc: ADC no carry; ff + ff -> fe
+    setup:
+      mem:
+        0x0000: |
+          LDA #$ff
+          ADC #$ff
+          .byte $02
+    check:
+      a: 0xfe
+      negative: true
+      carry: true
+
+  - desc: ADC no carry; 40 + c0 -> 00
+    setup:
+      mem:
+        0x0000: |
+          LDA #$40
+          ADC #$c0
+          .byte $02
+    check:
+      a: 0x00
+      zero: true
+      carry: true
+
+  - desc: ADC no carry; b0 + 50 -> 00
+    setup:
+      mem:
+        0x0000: |
+          LDA #$b0
+          ADC #$50
+          .byte $02
+    check:
+      a: 0x00
+      zero: true
+      carry: true
+
+  - desc: ADC no carry; 7f + 81 -> 00
+    setup:
+      mem:
+        0x0000: |
+          LDA #$7f
+          ADC #$81
+          .byte $02
+    check:
+      a: 0x00
+      zero: true
+      carry: true
+
+  - desc: ADC no carry; 12 + 30 -> 42
+    setup:
+      mem:
+        0x0000: |
+          LDA #$12
+          ADC #$30
+          .byte $02
+    check:
+      a: 0x42
+
+  - desc: ADC no carry; f0 + 52 -> 42
+    setup:
+      mem:
+        0x0000: |
+          LDA #$f0
+          ADC #$52
+          .byte $02
+    check:
+      a: 0x42
+      carry: true
+
+  - desc: ADC no carry; 60 + e2 -> 42
+    setup:
+      mem:
+        0x0000: |
+          LDA #$60
+          ADC #$e2
+          .byte $02
+    check:
+      a: 0x42
+      carry: true
+
+  - desc: ADC no carry; a0 + a2 -> 42
+    setup:
+      mem:
+        0x0000: |
+          LDA #$a0
+          ADC #$a2
+          .byte $02
+    check:
+      a: 0x42
+      overflow: true
+      carry: true
+
+  - desc: ADC no carry; 50 + 2f -> 7f
+    setup:
+      mem:
+        0x0000: |
+          LDA #$50
+          ADC #$2f
+          .byte $02
+    check:
+      a: 0x7f
+
+  - desc: ADC no carry; 20 + 60 -> 80
+    setup:
+      mem:
+        0x0000: |
+          LDA #$20
+          ADC #$60
+          .byte $02
+    check:
+      a: 0x80
+      negative: true
+      overflow: true
+
+  - desc: ADC no carry; 81 + ff -> 80
+    setup:
+      mem:
+        0x0000: |
+          LDA #$81
+          ADC #$ff
+          .byte $02
+    check:
+      a: 0x80
+      negative: true
+      carry: true
+
+  - desc: ADC no carry; 70 + 46 -> b6
+    setup:
+      mem:
+        0x0000: |
+          LDA #$70
+          ADC #$46
+          .byte $02
+    check:
+      a: 0xb6
+      negative: true
+      overflow: true
+
+  - desc: ADC no carry; 90 + 26 -> b6
+    setup:
+      mem:
+        0x0000: |
+          LDA #$90
+          ADC #$26
+          .byte $02
+    check:
+      a: 0xb6
+      negative: true
+
+  - desc: ADC no carry; b7 + ff -> b6
+    setup:
+      mem:
+        0x0000: |
+          LDA #$b7
+          ADC #$ff
+          .byte $02
+    check:
+      a: 0xb6
+      negative: true
+      carry: true
+
+  - desc: ADC no carry; fe + 01 -> ff
+    setup:
+      mem:
+        0x0000: |
+          LDA #$fe
+          ADC #$01
+          .byte $02
+    check:
+      a: 0xff
+      negative: true

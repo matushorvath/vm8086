@@ -1,0 +1,621 @@
+desc: SBC, with carry
+tests:
+  - desc: SBC with carry; 00 - 00 -> 00
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$00
+          SBC #$00
+          .byte $02
+    check:
+      a: 0x00
+      zero: true
+      carry: true
+
+  - desc: SBC with carry; 42 - 00 -> 42
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$42
+          SBC #$00
+          .byte $02
+    check:
+      a: 0x42
+      carry: true
+
+  - desc: SBC with carry; 7f - 00 -> 7f
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$7f
+          SBC #$00
+          .byte $02
+    check:
+      a: 0x7f
+      carry: true
+
+  - desc: SBC with carry; 80 - 00 -> 80
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$80
+          SBC #$00
+          .byte $02
+    check:
+      a: 0x80
+      negative: true
+      carry: true
+
+  - desc: SBC with carry; b6 - 00 -> b6
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$b6
+          SBC #$00
+          .byte $02
+    check:
+      a: 0xb6
+      negative: true
+      carry: true
+
+  - desc: SBC with carry; ff - 00 -> ff
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$ff
+          SBC #$00
+          .byte $02
+    check:
+      a: 0xff
+      negative: true
+      carry: true
+
+  - desc: SBC with carry; 42 - 42 -> 00
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$42
+          SBC #$42
+          .byte $02
+    check:
+      a: 0x00
+      zero: true
+      carry: true
+
+  - desc: SBC with carry; 84 - 42 -> 42
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$84
+          SBC #$42
+          .byte $02
+    check:
+      a: 0x42
+      overflow: true
+      carry: true
+
+  - desc: SBC with carry; c1 - 42 -> 7f
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$c1
+          SBC #$42
+          .byte $02
+    check:
+      a: 0x7f
+      overflow: true
+      carry: true
+
+  - desc: SBC with carry; c2 - 42 -> 80
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$c2
+          SBC #$42
+          .byte $02
+    check:
+      a: 0x80
+      negative: true
+      carry: true
+
+  - desc: SBC with carry; f8 - 42 -> b6
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$f8
+          SBC #$42
+          .byte $02
+    check:
+      a: 0xb6
+      negative: true
+      carry: true
+
+  - desc: SBC with carry; 41 - 42 -> ff
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$41
+          SBC #$42
+          .byte $02
+    check:
+      a: 0xff
+      negative: true
+
+  - desc: SBC with carry; 7f - 7f -> 00
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$7f
+          SBC #$7f
+          .byte $02
+    check:
+      a: 0x00
+      zero: true
+      carry: true
+
+  - desc: SBC with carry; c1 - 7f -> 42
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$c1
+          SBC #$7f
+          .byte $02
+    check:
+      a: 0x42
+      overflow: true
+      carry: true
+
+  - desc: SBC with carry; fe - 7f -> 7f
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$fe
+          SBC #$7f
+          .byte $02
+    check:
+      a: 0x7f
+      overflow: true
+      carry: true
+
+  - desc: SBC with carry; ff - 7f -> 80
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$ff
+          SBC #$7f
+          .byte $02
+    check:
+      a: 0x80
+      negative: true
+      carry: true
+
+  - desc: SBC with carry; 35 - 7f -> b6
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$35
+          SBC #$7f
+          .byte $02
+    check:
+      a: 0xb6
+      negative: true
+
+  - desc: SBC with carry; 7e - 7f -> ff
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$7e
+          SBC #$7f
+          .byte $02
+    check:
+      a: 0xff
+      negative: true
+
+  - desc: SBC with carry; 80 - 80 -> 00
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$80
+          SBC #$80
+          .byte $02
+    check:
+      a: 0x00
+      zero: true
+      carry: true
+
+  - desc: SBC with carry; c2 - 80 -> 42
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$c2
+          SBC #$80
+          .byte $02
+    check:
+      a: 0x42
+      carry: true
+
+  - desc: SBC with carry; ff - 80 -> 7f
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$ff
+          SBC #$80
+          .byte $02
+    check:
+      a: 0x7f
+      carry: true
+
+  - desc: SBC with carry; 00 - 80 -> 80
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$00
+          SBC #$80
+          .byte $02
+    check:
+      a: 0x80
+      negative: true
+      overflow: true
+
+  - desc: SBC with carry; 36 - 80 -> b6
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$36
+          SBC #$80
+          .byte $02
+    check:
+      a: 0xb6
+      negative: true
+      overflow: true
+
+  - desc: SBC with carry; 7f - 80 -> ff
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$7f
+          SBC #$80
+          .byte $02
+    check:
+      a: 0xff
+      negative: true
+      overflow: true
+
+  - desc: SBC with carry; b6 - b6 -> 00
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$b6
+          SBC #$b6
+          .byte $02
+    check:
+      a: 0x00
+      zero: true
+      carry: true
+
+  - desc: SBC with carry; f8 - b6 -> 42
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$f8
+          SBC #$b6
+          .byte $02
+    check:
+      a: 0x42
+      carry: true
+
+  - desc: SBC with carry; 35 - b6 -> 7f
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$35
+          SBC #$b6
+          .byte $02
+    check:
+      a: 0x7f
+
+  - desc: SBC with carry; 36 - b6 -> 80
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$36
+          SBC #$b6
+          .byte $02
+    check:
+      a: 0x80
+      negative: true
+      overflow: true
+
+  - desc: SBC with carry; 6c - b6 -> b6
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$6c
+          SBC #$b6
+          .byte $02
+    check:
+      a: 0xb6
+      negative: true
+      overflow: true
+
+  - desc: SBC with carry; b5 - b6 -> ff
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$b5
+          SBC #$b6
+          .byte $02
+    check:
+      a: 0xff
+      negative: true
+
+  - desc: SBC with carry; ff - ff -> 00
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$ff
+          SBC #$ff
+          .byte $02
+    check:
+      a: 0x00
+      zero: true
+      carry: true
+
+  - desc: SBC with carry; 41 - ff -> 42
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$41
+          SBC #$ff
+          .byte $02
+    check:
+      a: 0x42
+
+  - desc: SBC with carry; 7e - ff -> 7f
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$7e
+          SBC #$ff
+          .byte $02
+    check:
+      a: 0x7f
+
+  - desc: SBC with carry; 7f - ff -> 80
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$7f
+          SBC #$ff
+          .byte $02
+    check:
+      a: 0x80
+      negative: true
+      overflow: true
+
+  - desc: SBC with carry; b5 - ff -> b6
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$b5
+          SBC #$ff
+          .byte $02
+    check:
+      a: 0xb6
+      negative: true
+
+  - desc: SBC with carry; fe - ff -> ff
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$fe
+          SBC #$ff
+          .byte $02
+    check:
+      a: 0xff
+      negative: true
+
+  - desc: SBC with carry; 00 - 40 -> c0
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$00
+          SBC #$40
+          .byte $02
+    check:
+      a: 0xc0
+      negative: true
+
+  - desc: SBC with carry; 00 - b0 -> 50
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$00
+          SBC #$b0
+          .byte $02
+    check:
+      a: 0x50
+
+  - desc: SBC with carry; 00 - 7f -> 81
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$00
+          SBC #$7f
+          .byte $02
+    check:
+      a: 0x81
+      negative: true
+
+  - desc: SBC with carry; 42 - 12 -> 30
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$42
+          SBC #$12
+          .byte $02
+    check:
+      a: 0x30
+      carry: true
+
+  - desc: SBC with carry; 42 - f0 -> 52
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$42
+          SBC #$f0
+          .byte $02
+    check:
+      a: 0x52
+
+  - desc: SBC with carry; 42 - 60 -> e2
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$42
+          SBC #$60
+          .byte $02
+    check:
+      a: 0xe2
+      negative: true
+
+  - desc: SBC with carry; 42 - a0 -> a2
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$42
+          SBC #$a0
+          .byte $02
+    check:
+      a: 0xa2
+      negative: true
+      overflow: true
+
+  - desc: SBC with carry; 7f - 50 -> 2f
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$7f
+          SBC #$50
+          .byte $02
+    check:
+      a: 0x2f
+      carry: true
+
+  - desc: SBC with carry; 80 - 20 -> 60
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$80
+          SBC #$20
+          .byte $02
+    check:
+      a: 0x60
+      overflow: true
+      carry: true
+
+  - desc: SBC with carry; 80 - 81 -> ff
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$80
+          SBC #$81
+          .byte $02
+    check:
+      a: 0xff
+      negative: true
+
+  - desc: SBC with carry; b6 - 70 -> 46
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$b6
+          SBC #$70
+          .byte $02
+    check:
+      a: 0x46
+      overflow: true
+      carry: true
+
+  - desc: SBC with carry; b6 - 90 -> 26
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$b6
+          SBC #$90
+          .byte $02
+    check:
+      a: 0x26
+      carry: true
+
+  - desc: SBC with carry; b6 - b7 -> ff
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$b6
+          SBC #$b7
+          .byte $02
+    check:
+      a: 0xff
+      negative: true
+
+  - desc: SBC with carry; ff - fe -> 01
+    setup:
+      mem:
+        0x0000: |
+          SEC
+          LDA #$ff
+          SBC #$fe
+          .byte $02
+    check:
+      a: 0x01
+      carry: true
