@@ -202,6 +202,7 @@ export class Vm6502 {
             this.carry = (val & 0b1000_0000) !== 0;
             val = (val << 1) & 0b1111_1111;
             this.updateNegativeZero(val);
+            return val;
         };
 
         if (addr === undefined) {
@@ -292,6 +293,7 @@ export class Vm6502 {
             this.carry = (val & 0b0000_0001) !== 0;
             val = val >>> 1;
             this.updateNegativeZero(val);
+            return val;
         };
 
         if (addr === undefined) {
@@ -324,6 +326,7 @@ export class Vm6502 {
             val = ((val << 1) & 0b1111_1111) | (this.carry ? 0b0000_0001 : 0);
             this.carry = newCarry;
             this.updateNegativeZero(val);
+            return val;
         };
 
         if (addr === undefined) {
@@ -339,6 +342,7 @@ export class Vm6502 {
             val = (val >>> 1) | (this.carry ? 0b1000_0000 : 0);
             this.carry = newCarry;
             this.updateNegativeZero(val);
+            return val;
         };
 
         if (addr === undefined) {
