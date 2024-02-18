@@ -2,7 +2,6 @@
 
 - adc-no-carry.yaml
 - adc-with-carry.yaml
-- cmp-no-carry.yaml
-- cmp-with-carry.yaml
+- cmp.yaml
 - sbc-no-carry.yaml
 - sbc-with-carry.yaml

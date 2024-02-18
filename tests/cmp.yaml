@@ -1,10 +1,9 @@
-desc: CMP, with carry
+desc: CMP
 tests:
-  - desc: CMP with carry; 00 - 00
+  - desc: CMP; 00 - 00
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$00
           CMP #$00
           .byte $02
@@ -13,11 +12,10 @@ tests:
       zero: true
       carry: true
 
-  - desc: CMP with carry; 42 - 00
+  - desc: CMP; 42 - 00
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$42
           CMP #$00
           .byte $02
@@ -25,11 +23,10 @@ tests:
       a: 0x42
       carry: true
 
-  - desc: CMP with carry; 7f - 00
+  - desc: CMP; 7f - 00
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$7f
           CMP #$00
           .byte $02
@@ -37,11 +34,10 @@ tests:
       a: 0x7f
       carry: true
 
-  - desc: CMP with carry; 80 - 00
+  - desc: CMP; 80 - 00
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$80
           CMP #$00
           .byte $02
@@ -50,11 +46,10 @@ tests:
       negative: true
       carry: true
 
-  - desc: CMP with carry; b6 - 00
+  - desc: CMP; b6 - 00
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$b6
           CMP #$00
           .byte $02
@@ -63,11 +58,10 @@ tests:
       negative: true
       carry: true
 
-  - desc: CMP with carry; ff - 00
+  - desc: CMP; ff - 00
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$ff
           CMP #$00
           .byte $02
@@ -76,11 +70,10 @@ tests:
       negative: true
       carry: true
 
-  - desc: CMP with carry; 42 - 42
+  - desc: CMP; 42 - 42
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$42
           CMP #$42
           .byte $02
@@ -89,11 +82,10 @@ tests:
       zero: true
       carry: true
 
-  - desc: CMP with carry; 84 - 42
+  - desc: CMP; 84 - 42
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$84
           CMP #$42
           .byte $02
@@ -101,11 +93,10 @@ tests:
       a: 0x84
       carry: true
 
-  - desc: CMP with carry; c1 - 42
+  - desc: CMP; c1 - 42
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$c1
           CMP #$42
           .byte $02
@@ -113,11 +104,10 @@ tests:
       a: 0xc1
       carry: true
 
-  - desc: CMP with carry; c2 - 42
+  - desc: CMP; c2 - 42
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$c2
           CMP #$42
           .byte $02
@@ -126,11 +116,10 @@ tests:
       negative: true
       carry: true
 
-  - desc: CMP with carry; f8 - 42
+  - desc: CMP; f8 - 42
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$f8
           CMP #$42
           .byte $02
@@ -139,11 +128,10 @@ tests:
       negative: true
       carry: true
 
-  - desc: CMP with carry; 41 - 42
+  - desc: CMP; 41 - 42
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$41
           CMP #$42
           .byte $02
@@ -151,11 +139,10 @@ tests:
       a: 0x41
       negative: true
 
-  - desc: CMP with carry; 7f - 7f
+  - desc: CMP; 7f - 7f
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$7f
           CMP #$7f
           .byte $02
@@ -164,11 +151,10 @@ tests:
       zero: true
       carry: true
 
-  - desc: CMP with carry; c1 - 7f
+  - desc: CMP; c1 - 7f
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$c1
           CMP #$7f
           .byte $02
@@ -176,11 +162,10 @@ tests:
       a: 0xc1
       carry: true
 
-  - desc: CMP with carry; fe - 7f
+  - desc: CMP; fe - 7f
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$fe
           CMP #$7f
           .byte $02
@@ -188,11 +173,10 @@ tests:
       a: 0xfe
       carry: true
 
-  - desc: CMP with carry; ff - 7f
+  - desc: CMP; ff - 7f
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$ff
           CMP #$7f
           .byte $02
@@ -201,11 +185,10 @@ tests:
       negative: true
       carry: true
 
-  - desc: CMP with carry; 35 - 7f
+  - desc: CMP; 35 - 7f
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$35
           CMP #$7f
           .byte $02
@@ -213,11 +196,10 @@ tests:
       a: 0x35
       negative: true
 
-  - desc: CMP with carry; 7e - 7f
+  - desc: CMP; 7e - 7f
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$7e
           CMP #$7f
           .byte $02
@@ -225,11 +207,10 @@ tests:
       a: 0x7e
       negative: true
 
-  - desc: CMP with carry; 80 - 80
+  - desc: CMP; 80 - 80
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$80
           CMP #$80
           .byte $02
@@ -238,11 +219,10 @@ tests:
       zero: true
       carry: true
 
-  - desc: CMP with carry; c2 - 80
+  - desc: CMP; c2 - 80
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$c2
           CMP #$80
           .byte $02
@@ -250,11 +230,10 @@ tests:
       a: 0xc2
       carry: true
 
-  - desc: CMP with carry; ff - 80
+  - desc: CMP; ff - 80
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$ff
           CMP #$80
           .byte $02
@@ -262,11 +241,10 @@ tests:
       a: 0xff
       carry: true
 
-  - desc: CMP with carry; 00 - 80
+  - desc: CMP; 00 - 80
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$00
           CMP #$80
           .byte $02
@@ -274,11 +252,10 @@ tests:
       a: 0x00
       negative: true
 
-  - desc: CMP with carry; 36 - 80
+  - desc: CMP; 36 - 80
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$36
           CMP #$80
           .byte $02
@@ -286,11 +263,10 @@ tests:
       a: 0x36
       negative: true
 
-  - desc: CMP with carry; 7f - 80
+  - desc: CMP; 7f - 80
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$7f
           CMP #$80
           .byte $02
@@ -298,11 +274,10 @@ tests:
       a: 0x7f
       negative: true
 
-  - desc: CMP with carry; b6 - b6
+  - desc: CMP; b6 - b6
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$b6
           CMP #$b6
           .byte $02
@@ -311,11 +286,10 @@ tests:
       zero: true
       carry: true
 
-  - desc: CMP with carry; f8 - b6
+  - desc: CMP; f8 - b6
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$f8
           CMP #$b6
           .byte $02
@@ -323,22 +297,20 @@ tests:
       a: 0xf8
       carry: true
 
-  - desc: CMP with carry; 35 - b6
+  - desc: CMP; 35 - b6
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$35
           CMP #$b6
           .byte $02
     check:
       a: 0x35
 
-  - desc: CMP with carry; 36 - b6
+  - desc: CMP; 36 - b6
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$36
           CMP #$b6
           .byte $02
@@ -346,11 +318,10 @@ tests:
       a: 0x36
       negative: true
 
-  - desc: CMP with carry; 6c - b6
+  - desc: CMP; 6c - b6
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$6c
           CMP #$b6
           .byte $02
@@ -358,11 +329,10 @@ tests:
       a: 0x6c
       negative: true
 
-  - desc: CMP with carry; b5 - b6
+  - desc: CMP; b5 - b6
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$b5
           CMP #$b6
           .byte $02
@@ -370,11 +340,10 @@ tests:
       a: 0xb5
       negative: true
 
-  - desc: CMP with carry; ff - ff
+  - desc: CMP; ff - ff
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$ff
           CMP #$ff
           .byte $02
@@ -383,33 +352,30 @@ tests:
       zero: true
       carry: true
 
-  - desc: CMP with carry; 41 - ff
+  - desc: CMP; 41 - ff
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$41
           CMP #$ff
           .byte $02
     check:
       a: 0x41
 
-  - desc: CMP with carry; 7e - ff
+  - desc: CMP; 7e - ff
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$7e
           CMP #$ff
           .byte $02
     check:
       a: 0x7e
 
-  - desc: CMP with carry; 7f - ff
+  - desc: CMP; 7f - ff
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$7f
           CMP #$ff
           .byte $02
@@ -417,11 +383,10 @@ tests:
       a: 0x7f
       negative: true
 
-  - desc: CMP with carry; b5 - ff
+  - desc: CMP; b5 - ff
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$b5
           CMP #$ff
           .byte $02
@@ -429,11 +394,10 @@ tests:
       a: 0xb5
       negative: true
 
-  - desc: CMP with carry; fe - ff
+  - desc: CMP; fe - ff
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$fe
           CMP #$ff
           .byte $02
@@ -441,11 +405,10 @@ tests:
       a: 0xfe
       negative: true
 
-  - desc: CMP with carry; 00 - 40
+  - desc: CMP; 00 - 40
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$00
           CMP #$40
           .byte $02
@@ -453,22 +416,20 @@ tests:
       a: 0x00
       negative: true
 
-  - desc: CMP with carry; 00 - b0
+  - desc: CMP; 00 - b0
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$00
           CMP #$b0
           .byte $02
     check:
       a: 0x00
 
-  - desc: CMP with carry; 00 - 7f
+  - desc: CMP; 00 - 7f
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$00
           CMP #$7f
           .byte $02
@@ -476,11 +437,10 @@ tests:
       a: 0x00
       negative: true
 
-  - desc: CMP with carry; 42 - 12
+  - desc: CMP; 42 - 12
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$42
           CMP #$12
           .byte $02
@@ -488,22 +448,20 @@ tests:
       a: 0x42
       carry: true
 
-  - desc: CMP with carry; 42 - f0
+  - desc: CMP; 42 - f0
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$42
           CMP #$f0
           .byte $02
     check:
       a: 0x42
 
-  - desc: CMP with carry; 42 - 60
+  - desc: CMP; 42 - 60
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$42
           CMP #$60
           .byte $02
@@ -511,11 +469,10 @@ tests:
       a: 0x42
       negative: true
 
-  - desc: CMP with carry; 42 - a0
+  - desc: CMP; 42 - a0
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$42
           CMP #$a0
           .byte $02
@@ -523,11 +480,10 @@ tests:
       a: 0x42
       negative: true
 
-  - desc: CMP with carry; 7f - 50
+  - desc: CMP; 7f - 50
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$7f
           CMP #$50
           .byte $02
@@ -535,11 +491,10 @@ tests:
       a: 0x7f
       carry: true
 
-  - desc: CMP with carry; 80 - 20
+  - desc: CMP; 80 - 20
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$80
           CMP #$20
           .byte $02
@@ -547,11 +502,10 @@ tests:
       a: 0x80
       carry: true
 
-  - desc: CMP with carry; 80 - 81
+  - desc: CMP; 80 - 81
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$80
           CMP #$81
           .byte $02
@@ -559,11 +513,10 @@ tests:
       a: 0x80
       negative: true
 
-  - desc: CMP with carry; b6 - 70
+  - desc: CMP; b6 - 70
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$b6
           CMP #$70
           .byte $02
@@ -571,11 +524,10 @@ tests:
       a: 0xb6
       carry: true
 
-  - desc: CMP with carry; b6 - 90
+  - desc: CMP; b6 - 90
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$b6
           CMP #$90
           .byte $02
@@ -583,11 +535,10 @@ tests:
       a: 0xb6
       carry: true
 
-  - desc: CMP with carry; b6 - b7
+  - desc: CMP; b6 - b7
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$b6
           CMP #$b7
           .byte $02
@@ -595,11 +546,10 @@ tests:
       a: 0xb6
       negative: true
 
-  - desc: CMP with carry; ff - fe
+  - desc: CMP; ff - fe
     setup:
       mem:
         0x0000: |
-          SEC
           LDA #$ff
           CMP #$fe
           .byte $02
