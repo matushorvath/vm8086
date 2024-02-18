@@ -70,7 +70,7 @@ const main = async () => {
     });
 
     const wholeFile = {
-        desc: 'insert-description-here',
+        desc: `${params[0][0]}, ${params[0][4] ? 'with carry' : 'no carry'}`,
         tests
     };
 
