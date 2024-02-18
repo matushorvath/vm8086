@@ -46,7 +46,6 @@ tests:
       a: 0x41
 
   # ADC
-  # TODO BCD
 
   - desc: ADC immediate, +/+, no carry, no overflow
     setup:
@@ -121,3 +120,18 @@ tests:
       overflow: true
       carry: true
       # verified
+
+  # For example if address $3000 contains $40, $30FF contains $80, and $3100 contains $50, the result
+  # of JMP ($30FF) will be a transfer of control to $4080 rather than $5080 as you intended
+  # i.e. the 6502 took the low byte of the address from $30FF and the high byte from $3000.
+  - desc: Indirect jump through the page border
+    setup:
+      mem:
+        0x0000: JMP ($30FF)
+        0x3000: [0x40]
+        0x30FF: [0x80]
+        0x3100: [0x50]
+        0x4080: [0x02]    # should jump here
+        0x5080: [0x02]    # should NOT jump here
+    check:
+      pc: 0x4081

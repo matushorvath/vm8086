@@ -16,7 +16,7 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 const isString = value => typeof value === 'string' || value instanceof String;
 const isBoolean = value => typeof value === 'boolean';
 const isNumber8B = value => Number.isInteger(value) && value >= 0 && value < 256;
-const isAddress = value => Number.isInteger(value) && value >= 0 && value < 65536;
+const isNumber16B = value => Number.isInteger(value) && value >= 0 && value < 65536;
 
 const f8 = n => n.toString(16).padStart(2, '0');
 
@@ -33,7 +33,17 @@ if (Promise.withResolvers === undefined) {
 }
 
 const checkConfig = (test) => {
-    for (const reg of ['pc', 'a', 'x', 'y', 'sp']) {
+    for (const reg of ['pc']) {
+        if (test.setup?.[reg] !== undefined && !isNumber16B(test.setup[reg])) {
+            throw new Error(`setup register '${reg}' is not an 16-bit number`);
+        }
+
+        if (test.check?.[reg] !== undefined && !isNumber16B(test.check[reg])) {
+            throw new Error(`check register '${reg}' is not an 16-bit number`);
+        }
+    }
+
+    for (const reg of ['a', 'x', 'y', 'sp']) {
         if (test.setup?.[reg] !== undefined && !isNumber8B(test.setup[reg])) {
             throw new Error(`setup register '${reg}' is not an 8-bit number`);
         }
@@ -53,13 +63,13 @@ const checkConfig = (test) => {
     }
 
     for (const key in test.setup?.mem ?? []) {
-        if (!isAddress(Number(key))) {
+        if (!isNumber16B(Number(key))) {
             throw new Error(`setup address '${key}' is not a 16-bit number`);
         }
     }
 
     for (const key in test.check?.mem ?? []) {
-        if (!isAddress(Number(key))) {
+        if (!isNumber16B(Number(key))) {
             throw new Error(`check address '${key}' is not a 16-bit number`);
         }
     }

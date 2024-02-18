@@ -4,7 +4,8 @@
 // Functional tests:
 // https://github.com/amb5l/6502_65C02_functional_tests
 // set disable_decimal = 1
-// node main.mjs --trace full --start 0400 ../6502_65C02_functional_tests/ca65/6502_functional_test.bin
+// node main.mjs --trace pc --start 0400 ../6502_65C02_functional_tests/ca65/6502_functional_test.bin
+// if it loops at 336d, tests passed (exact address will depend on the 6502_functional_test.bin binary)
 
 import { OPCODES } from './opcodes.mjs';
 import fs from 'node:fs';
@@ -110,8 +111,12 @@ export class Vm6502 {
     }
 
     indirect16() {
-        const addr = this.read(this.incpc()) + 0x100 * this.read(this.incpc());
-        return this.read(addr) + 0x100 * this.read(addr + 1);
+        // Special way of incrementing the address to get the second byte:
+        // Increment the low byte without carry to the high byte
+        const addrLo = this.read(this.incpc()) + 0x100 * this.read(this.incpc());
+        const addrHi = (addrLo & 0xff00) | ((addrLo + 1) & 0x00ff);
+
+        return this.read(addrLo) + 0x100 * this.read(addrHi);
     }
 
     relative() {
@@ -245,10 +250,6 @@ export class Vm6502 {
     }
 
     jmp(addr) {
-        // TODO handle indirect jump through the page border
-        // For example if address $3000 contains $40, $30FF contains $80, and $3100 contains $50, the result
-        // of JMP ($30FF) will be a transfer of control to $4080 rather than $5080 as you intended
-        // i.e. the 6502 took the low byte of the address from $30FF and the high byte from $3000.
         this.pc = addr;
     }
 
