@@ -53,8 +53,8 @@ let idx = 0;
 
 const genadc = (op1, op2, res, carry) => {
     console.log(`
-        LDA #$${f8(op1)}
         ${carry ? 'SEC' : 'CLC'}
+        LDA #$${f8(op1)}
         ADC #$${f8(op2)}
         STA $${f8(0x1000 + 2 * idx)}
         PHP
@@ -70,8 +70,8 @@ const genadc = (op1, op2, res, carry) => {
 
 const gensbc = (op1, op2, res, carry) => {
     console.log(`
-        LDA #$${f8(res)}
         ${carry ? 'SEC' : 'CLC'}
+        LDA #$${f8(res)}
         ADC #$${f8(op1)}
         STA $${f8(0x1000 + 2 * idx)}
         PHP
@@ -87,8 +87,8 @@ const gensbc = (op1, op2, res, carry) => {
 
 const gencmp = (op1, op2, res, carry) => {
     console.log(`
-        LDA #$${f8(res)}
         ${carry ? 'SEC' : 'CLC'}
+        LDA #$${f8(res)}
         CMP #$${f8(op1)}
         STA $${f8(0x1000 + 2 * idx)}
         PHP

@@ -1,7 +1,31 @@
+/* eslint-disable indent */
+
 import yaml from 'yaml';
 import fs from 'node:fs/promises';
 
 const f8 = n => n.toString(16).padStart(2, '0');
+
+const mkdesc = (p, r) => {
+    switch (p[0]) {
+    case 'ADC': return p[4] ? `ADC with carry; ${f8(p[1])} + ${f8(p[2])} -> ${f8(r.res)}`
+                            : `ADC no carry; ${f8(p[1])} + ${f8(p[2])} -> ${f8(r.res)}`;
+    case 'SBC': return p[4] ? `SBC with carry; ${f8(p[3])} - ${f8(p[2])} -> ${f8(r.res)}`
+                            : `SBC no carry; ${f8(p[3])} - ${f8(p[2])} -> ${f8(r.res)}`;
+    case 'CMP': return p[4] ? `CMP with carry; ${f8(p[3])} - ${f8(p[2])}`
+                            : `CMP no carry; ${f8(p[3])} - ${f8(p[2])}`;
+    }
+};
+
+const mkcode = (p) => {
+    switch (p[0]) {
+    case 'ADC': return p[4] ? `SEC\nLDA #$${f8(p[1])}\nADC #$${f8(p[2])}\n.byte $02\n`
+                            : `LDA #$${f8(p[1])}\nADC #$${f8(p[2])}\n.byte $02\n`;
+    case 'SBC': return p[4] ? `SEC\nLDA #$${f8(p[3])}\nSBC #$${f8(p[2])}\n.byte $02\n`
+                            : `LDA #$${f8(p[3])}\nSBC #$${f8(p[2])}\n.byte $02\n`;
+    case 'CMP': return p[4] ? `SEC\nLDA #$${f8(p[3])}\nCMP #$${f8(p[2])}\n.byte $02\n`
+                            : `LDA #$${f8(p[3])}\nCMP #$${f8(p[2])}\n.byte $02\n`;
+    }
+};
 
 const main = async () => {
     const params = JSON.parse(await fs.readFile(process.argv[2], 'utf8'));
@@ -26,26 +50,36 @@ const main = async () => {
 
     const tests = params.map((p, i) => {
         const test = {
-            desc: `${p[0]} ${f8(p[1])}, ${f8(p[2])} -> ${f8(p[3])}`,
+            desc: mkdesc(p, results[i]),
             setup: {
                 mem: {
-                    '>0x0000<': `LDA #$${f8(p[1])}
-ADC #$${f8(p[2])}
-.byte $02
-` }
+                    '>0x0000<': mkcode(p)
+                }
             },
-            check: {
-                a: `>0x${f8(p[3])}<`
-            }
+            check: {}
         };
+
+        if (p[0] !== 'CMP') test.check.a = `>0x${f8(results[i].res)}<`;
+
         if (results[i].negative) test.check.negative = true;
         if (results[i].overflow) test.check.overflow = true;
         if (results[i].zero) test.check.zero = true;
         if (results[i].carry) test.check.carry = true;
+
         return test;
     });
 
-    console.log(yaml.stringify(tests));
+    const wholeFile = {
+        desc: 'insert-description-here',
+        tests
+    };
+
+    const output = yaml.stringify(wholeFile)
+        .replace(/">([^"]+)<"/g, '$1')
+        .replace(/ {2}- desc:/g, '\n  - desc:')
+        .replace(/tests:\n\n/g, 'tests:\n')
+        .trim();
+    console.log(output);
 };
 
 await main();

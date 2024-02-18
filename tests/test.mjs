@@ -262,12 +262,12 @@ const main = async () => {
             }
         }
 
-        statuses.push({ file, desc: file.desc, passed });
+        statuses.push({ file, desc: collection.desc, passed });
     }
 
     console.log('\n');
     for (const status of statuses) {
-        console.log(`${status.desc} (${status.file}) ${status.passed ? chalk.green('PASSED') : chalk.red('FAILED')}`);
+        console.log(`${status.desc} (${status.file})    ${status.passed ? chalk.green('PASSED') : chalk.red('FAILED')}`);
     }
 
     if (!allPassed) {
