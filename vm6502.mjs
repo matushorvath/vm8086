@@ -63,6 +63,7 @@ export class Vm6502 {
         this.carry = false;         // C
 
         this.trace = undefined;
+        this.callback = undefined;
 
         this.io = io;
         this.ioport = 0xfff0;
@@ -460,6 +461,10 @@ export class Vm6502 {
                 this.printFullTrace();
             } else if (this.trace === 'pc') {
                 this.printPcTrace();
+            }
+
+            if (this.callback !== undefined && !this.callback(this)) {
+                return;
             }
 
             const op = this.read(this.incpc());

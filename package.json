@@ -4,10 +4,11 @@
   "description": "Virtual Machine emulating the MOS 6502 processor",
   "main": "main.mjs",
   "scripts": {
-    "test": "npm run lint && npm run ut",
+    "test": "npm run lint && npm run ut && npm run ft",
     "lint": "npm run eslint",
     "eslint": "eslint --ext mjs .",
-    "ut": "node tests/test.mjs"
+    "ft": "node tests/func-tests.mjs",
+    "ut": "node tests/unit-tests.mjs"
   },
   "repository": {
     "type": "git",
