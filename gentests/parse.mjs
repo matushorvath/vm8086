@@ -60,6 +60,7 @@ const main = async () => {
         };
 
         if (p[0] !== 'CMP') test.check.a = `>0x${f8(results[i].res)}<`;
+        else test.check.a = `>0x${f8(p[3])}<`;
 
         if (results[i].negative) test.check.negative = true;
         if (results[i].overflow) test.check.overflow = true;
