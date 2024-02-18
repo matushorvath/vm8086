@@ -442,7 +442,7 @@ tests:
       zero: true
       carry: true
 
-  - desc: ADC no carry; 12 + 30 -> 49
+  - desc: ADC no carry; 12 + 30 -> 42
     setup:
       mem:
         0x0000: |

@@ -1,15 +1,17 @@
 // node ./gentests/gen.mjs ADCf > code.s
+// stderr is adcf.json
 // ./tests/assemble.sh < code.s > code.bin
-// stderr is adc.json
 // < code.bin hexdump -ve '/1 "%02x "'
 
 // https://www.masswerk.at/6502/
 // clear memory
-// load memory starting at 0000
-// reset CPU, continuous run
+// load memory starting at 0200
+// reset CPU
+// set PC to 0200
+// continuous run
 // inspect memory starting at 1000 for results
-// memory dump starting 1000 (in hexdump format) is adc.res
-// node ./gentests/parse.mjs adc.json adc.res
+// memory dump starting 1000 (in hexdump format) is adcf.res
+// node ./gentests/parse.mjs gentests/adcf.json gentests/adcf.res > adcf.yaml
 
 const ops = [0x00, 0x42, 0x7f, 0x80, 0xB6, 0xFF];
 
