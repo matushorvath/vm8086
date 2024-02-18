@@ -74,7 +74,7 @@ const gensbc = (op1, op2, res, carry) => {
     console.log(`
         ${carry ? 'SEC' : 'CLC'}
         LDA #$${f8(res)}
-        ADC #$${f8(op1)}
+        SBC #$${f8(op1)}
         STA $${f8(0x1000 + 2 * idx)}
         PHP
         PLA

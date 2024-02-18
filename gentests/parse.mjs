@@ -9,10 +9,10 @@ const mkdesc = (p, r) => {
     switch (p[0]) {
     case 'ADC': return p[4] ? `ADC with carry; ${f8(p[1])} + ${f8(p[2])} -> ${f8(r.res)}`
                             : `ADC no carry; ${f8(p[1])} + ${f8(p[2])} -> ${f8(r.res)}`;
-    case 'SBC': return p[4] ? `SBC with carry; ${f8(p[3])} - ${f8(p[2])} -> ${f8(r.res)}`
-                            : `SBC no carry; ${f8(p[3])} - ${f8(p[2])} -> ${f8(r.res)}`;
-    case 'CMP': return p[4] ? `CMP with carry; ${f8(p[3])} - ${f8(p[2])}`
-                            : `CMP no carry; ${f8(p[3])} - ${f8(p[2])}`;
+    case 'SBC': return p[4] ? `SBC with carry; ${f8(p[3])} - ${f8(p[1])} -> ${f8(r.res)}`
+                            : `SBC no carry; ${f8(p[3])} - ${f8(p[1])} -> ${f8(r.res)}`;
+    case 'CMP': return p[4] ? `CMP with carry; ${f8(p[3])} - ${f8(p[1])}`
+                            : `CMP no carry; ${f8(p[3])} - ${f8(p[1])}`;
     }
 };
 
@@ -20,10 +20,10 @@ const mkcode = (p) => {
     switch (p[0]) {
     case 'ADC': return p[4] ? `SEC\nLDA #$${f8(p[1])}\nADC #$${f8(p[2])}\n.byte $02\n`
                             : `LDA #$${f8(p[1])}\nADC #$${f8(p[2])}\n.byte $02\n`;
-    case 'SBC': return p[4] ? `SEC\nLDA #$${f8(p[3])}\nSBC #$${f8(p[2])}\n.byte $02\n`
-                            : `LDA #$${f8(p[3])}\nSBC #$${f8(p[2])}\n.byte $02\n`;
-    case 'CMP': return p[4] ? `SEC\nLDA #$${f8(p[3])}\nCMP #$${f8(p[2])}\n.byte $02\n`
-                            : `LDA #$${f8(p[3])}\nCMP #$${f8(p[2])}\n.byte $02\n`;
+    case 'SBC': return p[4] ? `SEC\nLDA #$${f8(p[3])}\nSBC #$${f8(p[1])}\n.byte $02\n`
+                            : `LDA #$${f8(p[3])}\nSBC #$${f8(p[1])}\n.byte $02\n`;
+    case 'CMP': return p[4] ? `SEC\nLDA #$${f8(p[3])}\nCMP #$${f8(p[1])}\n.byte $02\n`
+                            : `LDA #$${f8(p[3])}\nCMP #$${f8(p[1])}\n.byte $02\n`;
     }
 };
 

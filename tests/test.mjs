@@ -18,6 +18,8 @@ const isBoolean = value => typeof value === 'boolean';
 const isNumber8B = value => Number.isInteger(value) && value >= 0 && value < 256;
 const isAddress = value => Number.isInteger(value) && value >= 0 && value < 65536;
 
+const f8 = n => n.toString(16).padStart(2, '0');
+
 // Promise.withResolvers is not yet available in node.js
 if (Promise.withResolvers === undefined) {
     Promise.withResolvers = () => {
@@ -150,7 +152,7 @@ const checkVm = (vm, test) => {
     for (const reg of ['pc']) {
         if (test.check?.[reg] !== undefined) {
             if (vm[reg] !== test.check[reg]) {
-                errors.push(`register '${reg}' does not match; expected '${test.check[reg]}', actual '${vm[reg]}'`);
+                errors.push(`register '${reg}' does not match; expected '${f8(test.check[reg])}', actual '${f8(vm[reg])}'`);
             }
         }
     }
@@ -160,7 +162,7 @@ const checkVm = (vm, test) => {
         const source = test.check?.[reg] ? '' : test.setup?.[reg] ? ' (setup)' : ' (default)';
 
         if (vm[reg] !== value) {
-            errors.push(`register '${reg}' does not match; expected '${value}'${source}, actual '${vm[reg]}'`);
+            errors.push(`register '${reg}' does not match; expected '${f8(value)}'${source}, actual '${f8(vm[reg])}'`);
         }
     }
 
@@ -180,7 +182,7 @@ const checkVm = (vm, test) => {
             const addr = Number(key) + idx;
 
             if (vm.mem[addr] !== data[idx]) {
-                errors.push(`address '${addr}=${key}+${idx}' does not match; expected '${data[idx]}', actual '${vm.mem[addr]}'`);
+                errors.push(`address '${addr}=${key}+${idx}' does not match; expected '${f8(data[idx])}', actual '${f8(vm.mem[addr])}'`);
             }
         }
     }
