@@ -1,30 +1,51 @@
 import { Vm6502 } from './vm6502.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import util from 'node:util';
 
 const parseCommandLine = () => {
     try {
-        if (process.argv.length < 4 || process.argv.length > 5) {
-            throw new Error('invalid command line; parameter count');
+        const { values, positionals } = util.parseArgs({
+            options: {
+                debug: {
+                    type: 'boolean',
+                    short: 'd',
+                    default: false
+                },
+                load: {
+                    type: 'string',
+                    short: 'l',
+                    default: '0000'
+                },
+                start: {
+                    type: 'string',
+                    short: 's'
+                }
+            },
+            allowPositionals: true
+        });
+
+        if (!/[0-9a-fA-F]{4}/.test(values.load)) {
+            throw new Error('invalid command line; load address');
         }
 
-        if (!/[0-9a-fA-F]{4}/.test(process.argv[2])) {
-            throw new Error('invalid command line; address');
+        if (values.start !== undefined && !/[0-9a-fA-F]{4}/.test(values.start)) {
+            throw new Error('invalid command line; start address');
         }
 
-        const address = Number.parseInt(process.argv[2], 16);
-        const imagePath = process.argv[3];
-
-        if (process.argv[4] !== undefined && process.argv[4] !== '-dbg') {
-            throw new Error('invalid command line; dbg flag');
+        if (positionals.length > 1) {
+            throw new Error('invalid command line; too many parameters');
         }
 
-        const debug = process.argv[4] === '-dbg';
-
-        return [address, imagePath, debug];
+        return {
+            debug: values.debug,
+            load: Number.parseInt(values.load, 16),
+            start: values.start !== undefined ? Number.parseInt(values.start, 16) : undefined,
+            imagePath: positionals[0]
+        };
     } catch (error) {
         console.error(error.message);
-        console.log('Usage: node main.mjs c000 msbasic/tmp/vm6502.bin [-dbg]');
+        console.log('Usage: node main.mjs [(--load|-l) c000] [(--start|-s) 0000] [(--dbg|-d)] msbasic/tmp/vm6502.bin');
         process.exit(1);
     }
 };
@@ -48,17 +69,20 @@ const loadSymbols = async (imgPath) => {
 };
 
 const main = async () => {
-    const [address, imagePath, debug] = parseCommandLine();
+    const { debug, load, start, imagePath } = parseCommandLine();
 
     const image = [...await fs.readFile(imagePath)];
     const symbols = await loadSymbols(imagePath);
 
     const mem = [];
     for (let idx = 0; idx < image.length; idx++) {
-        mem[address + idx] = image[idx];
+        mem[load + idx] = image[idx];
     }
 
     const vm = new Vm6502(mem, symbols);
+    if (start !== undefined) {
+        vm.pc = start;
+    }
     vm.trace = debug;
 
     vm.run();

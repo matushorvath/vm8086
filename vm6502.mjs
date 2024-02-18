@@ -1,5 +1,9 @@
 // http://www.6502.org/tutorials/6502opcodes.html
 // https://www.masswerk.at/6502/6502_instruction_set.html
+//
+// Functional tests:
+// https://github.com/amb5l/6502_65C02_functional_tests
+// node main.mjs -d --start 0400 ../6502_65C02_functional_tests/ca65/6502_functional_test.bin
 
 // TODO check and fix this.pc handling
 //
@@ -113,9 +117,14 @@ export class Vm6502 {
         return (this.read(this.incpc()) + 0x100 * this.read(this.incpc()) + reg) % 0x10000;
     }
 
-    indirect(pre = 0, post = 0) {
-        const addr = (this.read(this.incpc()) + pre) % 0x10000;
+    indirect8(pre = 0, post = 0) {
+        const addr = (this.read(this.incpc()) + pre) % 0x100;
         return (this.read(addr) + 0x100 * this.read(addr + 1) + post) % 0x10000;
+    }
+
+    indirect16() {
+        const addr = this.read(this.incpc()) + 0x100 * this.read(this.incpc());
+        return this.read(addr) + 0x100 * this.read(addr + 1);
     }
 
     relative() {
@@ -134,12 +143,13 @@ export class Vm6502 {
     }
 
     packSr() {
-        return (this.carry ?     0b0000_0001 : 0)
-             | (this.zero ?      0b0000_0010 : 0)
-             | (this.interrupt ? 0b0000_0100 : 0)
-             | (this.decimal ?   0b0000_1000 : 0)
-             | (this.overflow ?  0b0100_0000 : 0)
-             | (this.negative ?  0b1000_0000 : 0);
+        return 0b0011_0000
+            | (this.carry ?     0b0000_0001 : 0)
+            | (this.zero ?      0b0000_0010 : 0)
+            | (this.interrupt ? 0b0000_0100 : 0)
+            | (this.decimal ?   0b0000_1000 : 0)
+            | (this.overflow ?  0b0100_0000 : 0)
+            | (this.negative ?  0b1000_0000 : 0);
     }
 
     unpackSr(sr) {
@@ -214,16 +224,16 @@ export class Vm6502 {
     }
 
     brk() {
-        this.push((this.pc & 0xff00) >> 8);
-        this.push(this.pc & 0xff);
-        this.push(this.packSr() & 0b0001_0000);
+        this.push(((this.pc + 1) & 0xff00) >> 8);
+        this.push((this.pc + 1) & 0xff);
+        this.push(this.packSr());
 
         this.interrupt = true;
         this.pc = this.read(0xfffe) + 0x100 * this.read(0xffff);
     }
 
     cmp(reg, addr) {
-        const diff = this.a - this.read(addr);
+        const diff = reg - this.read(addr);
 
         this.carry = diff >= 0x00;
         const res = (diff + 0x100) % 0x100;
@@ -435,8 +445,8 @@ export class Vm6502 {
             case 0x6d: this.adc(this.absolute()); break;
             case 0x7d: this.adc(this.absolute(this.x)); break;
             case 0x79: this.adc(this.absolute(this.y)); break;
-            case 0x61: this.adc(this.indirect(this.x)); break;
-            case 0x71: this.adc(this.indirect(0, this.y)); break;
+            case 0x61: this.adc(this.indirect8(this.x)); break;
+            case 0x71: this.adc(this.indirect8(0, this.y)); break;
 
             case 0x29: this.and(this.immediate()); break;
             case 0x25: this.and(this.zeropage()); break;
@@ -444,8 +454,8 @@ export class Vm6502 {
             case 0x2d: this.and(this.absolute()); break;
             case 0x3d: this.and(this.absolute(this.x)); break;
             case 0x39: this.and(this.absolute(this.y)); break;
-            case 0x21: this.and(this.indirect(this.x)); break;
-            case 0x31: this.and(this.indirect(0, this.y)); break;
+            case 0x21: this.and(this.indirect8(this.x)); break;
+            case 0x31: this.and(this.indirect8(0, this.y)); break;
 
             case 0x0a: this.asl(); break;
             case 0x06: this.asl(this.zeropage()); break;
@@ -473,8 +483,8 @@ export class Vm6502 {
             case 0xcd: this.cmp(this.a, this.absolute()); break;
             case 0xdd: this.cmp(this.a, this.absolute(this.x)); break;
             case 0xd9: this.cmp(this.a, this.absolute(this.y)); break;
-            case 0xc1: this.cmp(this.a, this.indirect(this.x)); break;
-            case 0xd1: this.cmp(this.a, this.indirect(0, this.y)); break;
+            case 0xc1: this.cmp(this.a, this.indirect8(this.x)); break;
+            case 0xd1: this.cmp(this.a, this.indirect8(0, this.y)); break;
 
             case 0xe0: this.cmp(this.x, this.immediate()); break;           // CPX
             case 0xe4: this.cmp(this.x, this.zeropage()); break;            // CPX
@@ -494,8 +504,8 @@ export class Vm6502 {
             case 0x4D: this.eor(this.absolute()); break;
             case 0x5D: this.eor(this.absolute(this.x)); break;
             case 0x59: this.eor(this.absolute(this.y)); break;
-            case 0x41: this.eor(this.indirect(this.x)); break;
-            case 0x51: this.eor(this.indirect(0, this.y)); break;
+            case 0x41: this.eor(this.indirect8(this.x)); break;
+            case 0x51: this.eor(this.indirect8(0, this.y)); break;
 
             case 0x18: this.carry = false; break;           // CLC (CLear Carry)
             case 0x38: this.carry = true; break;            // SEC (SEt Carry)
@@ -511,7 +521,7 @@ export class Vm6502 {
             case 0xfe: this.inc(this.absolute(this.x)); break;
 
             case 0x4c: this.jmp(this.absolute()); break;
-            case 0x6c: this.jmp(this.indirect()); break;
+            case 0x6c: this.jmp(this.indirect16()); break;
             case 0x20: this.jsr(this.absolute()); break;
 
             case 0xa9: this.lda(this.immediate()); break;
@@ -520,8 +530,8 @@ export class Vm6502 {
             case 0xad: this.lda(this.absolute()); break;
             case 0xbd: this.lda(this.absolute(this.x)); break;
             case 0xb9: this.lda(this.absolute(this.y)); break;
-            case 0xa1: this.lda(this.indirect(this.x)); break;
-            case 0xb1: this.lda(this.indirect(0, this.y)); break;
+            case 0xa1: this.lda(this.indirect8(this.x)); break;
+            case 0xb1: this.lda(this.indirect8(0, this.y)); break;
 
             case 0xa2: this.ldx(this.immediate()); break;
             case 0xa6: this.ldx(this.zeropage()); break;
@@ -549,8 +559,8 @@ export class Vm6502 {
             case 0x0d: this.ora(this.absolute()); break;
             case 0x1d: this.ora(this.absolute(this.x)); break;
             case 0x19: this.ora(this.absolute(this.y)); break;
-            case 0x01: this.ora(this.indirect(this.x)); break;
-            case 0x11: this.ora(this.indirect(0, this.y)); break;
+            case 0x01: this.ora(this.indirect8(this.x)); break;
+            case 0x11: this.ora(this.indirect8(0, this.y)); break;
 
             case 0xaa: this.x = this.a; this.updateNegativeZero(this.x); break;         // TAX
             case 0x8a: this.a = this.x; this.updateNegativeZero(this.a); break;         // TXA
@@ -582,22 +592,22 @@ export class Vm6502 {
             case 0xed: this.sbc(this.absolute()); break;
             case 0xfd: this.sbc(this.absolute(this.x)); break;
             case 0xf9: this.sbc(this.absolute(this.y)); break;
-            case 0xe1: this.sbc(this.indirect(this.x)); break;
-            case 0xf1: this.sbc(this.indirect(0, this.y)); break;
+            case 0xe1: this.sbc(this.indirect8(this.x)); break;
+            case 0xf1: this.sbc(this.indirect8(0, this.y)); break;
 
             case 0x85: this.str(this.a, this.zeropage()); break;                 // STA
             case 0x95: this.str(this.a, this.zeropage(this.x)); break;           // STA
             case 0x8d: this.str(this.a, this.absolute()); break;                 // STA
             case 0x9d: this.str(this.a, this.absolute(this.x)); break;           // STA
             case 0x99: this.str(this.a, this.absolute(this.y)); break;           // STA
-            case 0x81: this.str(this.a, this.indirect(this.x)); break;           // STA
-            case 0x91: this.str(this.a, this.indirect(0, this.y)); break;        // STA
+            case 0x81: this.str(this.a, this.indirect8(this.x)); break;           // STA
+            case 0x91: this.str(this.a, this.indirect8(0, this.y)); break;        // STA
 
             case 0x9a: this.sp = this.x; break;                                         // TXS
             case 0xba: this.x = this.sp; this.updateNegativeZero(this.x); break;        // TSX
             case 0x48: this.push(this.a); break;                                        // PHA
             case 0x68: this.a = this.pull(); this.updateNegativeZero(this.a); break;    // PLA
-            case 0x08: this.push(this.packSr()); break;                                 // PHP
+            case 0x08: this.push(this.packSr()); break;                   // PHP
             case 0x28: this.unpackSr(this.pull()); break;                               // PLP
 
             case 0x86: this.str(this.x, this.zeropage()); break;                 // STX
