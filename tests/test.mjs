@@ -240,10 +240,32 @@ const run = async (test, useStdio) => {
     }
 };
 
+const parseCommandLine = () => {
+    let useStdio;
+    let filter;
+
+    const args = process.argv.slice(2);
+
+    while (args.length > 0) {
+        const arg = args.shift();
+        if (useStdio === undefined && arg === '-stdio') {
+            useStdio = true;
+        } else if (filter === undefined) {
+            filter = new RegExp(arg);
+        } else {
+            console.error('Usage: node test.mjs [-stdio] [desc-filter-regex]');
+            process.exit(1);
+        }
+    }
+
+    return { useStdio: useStdio ?? false, filter };
+};
+
 const main = async () => {
     const list = yaml.parse(await fs.readFile(path.join(__dirname, 'tests.yaml'), 'utf8'));
 
-    const useStdio = process.argv[2] === '-stdio';
+    const { useStdio, filter } = parseCommandLine();
+
     if (useStdio) {
         console.log(`Running against ${chalk.blueBright('real STDIO')}; input and output checks ${chalk.blueBright('disabled')}\n`);
     }
@@ -251,7 +273,7 @@ const main = async () => {
     let allPassed = true;
     const statuses = [];
 
-    for (const file of list) {
+    for (const file of list.filter(f => filter === undefined || filter.test(f))) {
         const collection = yaml.parse(await fs.readFile(path.join(__dirname, file), 'utf8'));
         console.log(`\n${chalk.blueBright(`${collection.desc} (${file})\n`)}`);
 
