@@ -7,11 +7,6 @@ const parseCommandLine = () => {
     try {
         const { values, positionals } = util.parseArgs({
             options: {
-                debug: {
-                    type: 'boolean',
-                    short: 'd',
-                    default: false
-                },
                 load: {
                     type: 'string',
                     short: 'l',
@@ -20,6 +15,10 @@ const parseCommandLine = () => {
                 start: {
                     type: 'string',
                     short: 's'
+                },
+                trace: {
+                    type: 'string',
+                    short: 't'
                 }
             },
             allowPositionals: true
@@ -33,19 +32,23 @@ const parseCommandLine = () => {
             throw new Error('invalid command line; start address');
         }
 
+        if (values.trace !== undefined && values.trace !== 'pc' && values.trace !== 'full') {
+            throw new Error('invalid command line; trace');
+        }
+
         if (positionals.length > 1) {
             throw new Error('invalid command line; too many parameters');
         }
 
         return {
-            debug: values.debug,
             load: Number.parseInt(values.load, 16),
             start: values.start !== undefined ? Number.parseInt(values.start, 16) : undefined,
+            trace: values.trace,
             imagePath: positionals[0]
         };
     } catch (error) {
         console.error(error.message);
-        console.log('Usage: node main.mjs [(--load|-l) c000] [(--start|-s) 0000] [(--dbg|-d)] msbasic/tmp/vm6502.bin');
+        console.log('Usage: node main.mjs [(--load|-l) c000] [(--start|-s) 0000] [(--trace|-t) (pc|full)] msbasic/tmp/vm6502.bin');
         process.exit(1);
     }
 };
@@ -69,7 +72,7 @@ const loadSymbols = async (imgPath) => {
 };
 
 const main = async () => {
-    const { debug, load, start, imagePath } = parseCommandLine();
+    const { load, start, trace, imagePath } = parseCommandLine();
 
     const image = [...await fs.readFile(imagePath)];
     const symbols = await loadSymbols(imagePath);
@@ -83,7 +86,8 @@ const main = async () => {
     if (start !== undefined) {
         vm.pc = start;
     }
-    vm.trace = debug;
+
+    vm.trace = trace;
 
     vm.run();
 };

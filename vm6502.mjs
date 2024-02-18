@@ -3,21 +3,8 @@
 //
 // Functional tests:
 // https://github.com/amb5l/6502_65C02_functional_tests
-// node main.mjs -d --start 0400 ../6502_65C02_functional_tests/ca65/6502_functional_test.bin
-
-// TODO check and fix this.pc handling
-//
-// When the 6502 is ready for the next instruction it increments the program counter before fetching the instruction.
-// Once it has the op code, it increments the program counter by the length of the operand, if any.
-// This must be accounted for when calculating branches or when pushing bytes to create a false return address
-// (i.e. jump table addresses are made up of addresses-1 when it is intended to use an RTS rather than a JMP).
-//
-// The program counter is loaded least signifigant byte first.
-// Therefore the most signifigant byte must be pushed first when creating a false return address.
-//
-// When calculating branches a forward branch of 6 skips the following 6 bytes so, effectively the program counter
-// points to the address that is 8 bytes beyond the address of the branch opcode; and a backward branch of $FA (256-6)
-// goes to an address 4 bytes before the branch instruction.
+// set disable_decimal = 1
+// node main.mjs --trace full --start 0400 ../6502_65C02_functional_tests/ca65/6502_functional_test.bin
 
 import { OPCODES } from './opcodes.mjs';
 import fs from 'node:fs';
@@ -73,7 +60,7 @@ export class Vm6502 {
         this.zero = false;          // Z
         this.carry = false;         // C
 
-        this.trace = false;
+        this.trace = undefined;
 
         this.io = io;
         this.ioport = 0xfff0;
@@ -409,7 +396,7 @@ export class Vm6502 {
         }
     }
 
-    printTrace() {
+    printFullTrace() {
         const opcode = this.read(this.pc);
         const opinfo = OPCODES[opcode];
 
@@ -434,10 +421,22 @@ export class Vm6502 {
         console.log(`${addr}: ${opStr} ${dataStr}`);
     }
 
+    printPcTrace() {
+        if (this.cnt === undefined) {
+            this.cnt = 0;
+        }
+        if (this.cnt++ === 100000) {
+            console.log(this.format16(this.pc));
+            this.cnt = 0;
+        }
+    }
+
     run() {
         while (true) {
-            if (this.trace) {
-                this.printTrace();
+            if (this.trace === 'full') {
+                this.printFullTrace();
+            } else if (this.trace === 'pc') {
+                this.printPcTrace();
             }
 
             const op = this.read(this.incpc());
