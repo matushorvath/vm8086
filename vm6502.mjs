@@ -354,8 +354,8 @@ export class Vm6502 {
         } else {
             const diff = this.a - this.read(addr) + (this.carry ? 1 : 0) - 1;
 
-            this.carry = diff > 0xff;
             const res = (diff + 0x100) % 0x100;
+            this.carry = (res === this.a - this.read(addr) + (this.carry ? 1 : 0) - 1); // TODO find the real algorithm, this is ugly
             this.updateOverflow(this.read(addr), res, this.a);
 
             this.a = res;
