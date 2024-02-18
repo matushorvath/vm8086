@@ -5,7 +5,8 @@
 // https://github.com/amb5l/6502_65C02_functional_tests
 // set disable_decimal = 1
 // node main.mjs --trace pc --start 0400 ../6502_65C02_functional_tests/ca65/6502_functional_test.bin
-// if it loops at 336d, tests passed (exact address will depend on the 6502_functional_test.bin binary)
+// if it loops at 3xxx, tests passed
+// exact address will depend on the 6502_functional_test.bin binary; search for "success" in .lst
 
 import { OPCODES } from './opcodes.mjs';
 import fs from 'node:fs';
@@ -169,15 +170,26 @@ export class Vm6502 {
     }
 
     adc(addr) {
-        if (this.decimal) {
-            // TODO BCD
-            throw new Error('ADC with BCD not implemented');
-        } else {
-            const sum = this.a + this.read(addr) + (this.carry ? 1 : 0);
+        const b = this.read(addr);
 
+        if (this.decimal) {
+            const sumLo = (this.a & 0b0000_1111) + (b & 0b0000_1111) + (this.carry ? 1 : 0);
+            const carryLo = sumLo > 0x09;
+
+            const sumHi = ((this.a & 0b1111_0000) >> 4) + ((b & 0b1111_0000) >> 4) + (carryLo ? 1 : 0);
+            this.carry = sumHi > 0x09;
+
+            const res = (sumLo % 10) | ((sumHi % 10) << 4);
+            this.updateOverflow(this.a, b, res);      // TODO what does the real processor do?
+
+            this.a = res;
+            this.updateNegativeZero(this.a);
+        } else {
+            const sum = this.a + b + (this.carry ? 1 : 0);
             this.carry = sum > 0xff;
+
             const res = sum % 0x100;
-            this.updateOverflow(this.a, this.read(addr), res);
+            this.updateOverflow(this.a, b, res);
 
             this.a = res;
             this.updateNegativeZero(this.a);
@@ -227,10 +239,9 @@ export class Vm6502 {
 
     cmp(reg, addr) {
         const diff = reg - this.read(addr);
-
         this.carry = diff >= 0x00;
-        const res = (diff + 0x100) % 0x100;
 
+        const res = (diff + 0x100) % 0x100;
         this.updateNegativeZero(res);
     }
 
@@ -350,15 +361,26 @@ export class Vm6502 {
     }
 
     sbc(addr) {
-        if (this.decimal) {
-            // TODO BCD
-            throw new Error('SBC with BCD not implemented');
-        } else {
-            const diff = this.a - this.read(addr) + (this.carry ? 1 : 0) - 1;
+        const b = this.read(addr);
 
-            this.carry = diff >= 0x00 && diff < 0x100;
+        if (this.decimal) {
+            const diffLo = (this.a & 0b0000_1111) - (b & 0b0000_1111) + (this.carry ? 1 : 0) - 1;
+            const carryLo = diffLo >= 0x00 && diffLo <= 0x09;
+
+            const diffHi = ((this.a & 0b1111_0000) >> 4) - ((b & 0b1111_0000) >> 4) + (carryLo ? 1 : 0) - 1;
+            this.carry = diffHi >= 0x00 && diffHi <= 0x09;
+
+            const res = ((diffLo + 10) % 10) | (((diffHi + 10) % 10) << 4);
+            this.updateOverflow(b, res, this.a);      // TODO what does the real processor do?
+
+            this.a = res;
+            this.updateNegativeZero(this.a);
+        } else {
+            const diff = this.a - b + (this.carry ? 1 : 0) - 1;
+            this.carry = diff >= 0x00 && diff <= 0xff;
+
             const res = (diff + 0x100) % 0x100;
-            this.updateOverflow(this.read(addr), res, this.a);
+            this.updateOverflow(b, res, this.a);
 
             this.a = res;
             this.updateNegativeZero(this.a);

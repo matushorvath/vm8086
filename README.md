@@ -11,7 +11,7 @@ Q: How do I run the image?
 A: `$ node main.mjs --load c000 ../msbasic/tmp/vm6502.bin`
 
 Q: How complete is the emulation?  
-A: All officially documented instructions are emulated, except the BCD variants of ADC and SBC instructions. The virtual machine passes [6502 functional tests](https://github.com/amb5l/6502_65C02_functional_tests) with `disable_decimal` set to `1`.
+A: All officially documented instructions are emulated. The virtual machine passes [6502 functional tests](https://github.com/amb5l/6502_65C02_functional_tests).
 
 Q: Why?  
 A: Just for fun.
