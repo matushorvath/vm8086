@@ -7,8 +7,8 @@
     "test": "npm run lint && npm run ut && npm run ft",
     "lint": "npm run eslint",
     "eslint": "eslint --ext mjs .",
-    "ft": "node tests/func-tests.mjs",
-    "ut": "node tests/unit-tests.mjs"
+    "ft": "node func-tests.mjs",
+    "ut": "node unit-tests.mjs"
   },
   "repository": {
     "type": "git",
