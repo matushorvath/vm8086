@@ -1,4 +1,4 @@
-import { Vm6502 } from '../vm6502.mjs';
+import { Vm6502 } from './vm6502.mjs';
 import chalk from 'chalk';
 
 const binUrl = 'https://github.com/Klaus2m5/6502_65C02_functional_tests/raw/master/bin_files/6502_functional_test.bin';

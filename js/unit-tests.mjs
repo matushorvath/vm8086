@@ -1,8 +1,8 @@
 // If you want to run this against stdin:
 // echo A | npm run ut -- -stdio
-// yq 'map(select(.input)) | map(.input) | .[]' < tests/tests.yaml | npm run ut -- -stdio
+// yq 'map(select(.input)) | map(.input) | .[]' < ../tests/tests.yaml | npm run ut -- -stdio
 
-import { Vm6502 } from '../vm6502.mjs';
+import { Vm6502 } from './vm6502.mjs';
 import yaml from 'yaml';
 import chalk from 'chalk';
 
@@ -12,6 +12,7 @@ import url from 'node:url';
 import child_process from 'node:child_process';
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
+const testsDir = path.join(__dirname, '..', 'tests');
 
 const isString = value => typeof value === 'string' || value instanceof String;
 const isBoolean = value => typeof value === 'boolean';
@@ -78,7 +79,7 @@ const checkConfig = (test) => {
 const assemble = async (code) => {
     const { promise, resolve, reject } = Promise.withResolvers();
 
-    const as = child_process.spawn(path.join(__dirname, './assemble.sh'), [], { stdio: ['pipe', 'pipe', 'inherit'] });
+    const as = child_process.spawn(path.join(testsDir, './assemble.sh'), [], { stdio: ['pipe', 'pipe', 'inherit'] });
     const buffers = [];
 
     as.stdout.on('data', data => buffers.push(data));
@@ -263,7 +264,7 @@ const parseCommandLine = () => {
         } else if (filter === undefined) {
             filter = new RegExp(arg);
         } else {
-            console.error('Usage: node test.mjs [-stdio] [desc-filter-regex]');
+            console.error('Usage: node unit-tests.mjs [-stdio] [desc-filter-regex]');
             process.exit(1);
         }
     }
@@ -272,7 +273,7 @@ const parseCommandLine = () => {
 };
 
 const main = async () => {
-    const list = yaml.parse(await fs.readFile(path.join(__dirname, 'tests.yaml'), 'utf8'));
+    const list = yaml.parse(await fs.readFile(path.join(testsDir, 'tests.yaml'), 'utf8'));
 
     const { useStdio, filter } = parseCommandLine();
 
@@ -283,7 +284,7 @@ const main = async () => {
     const statuses = [];
 
     for (const file of list.filter(f => filter === undefined || filter.test(f))) {
-        const collection = yaml.parse(await fs.readFile(path.join(__dirname, file), 'utf8'));
+        const collection = yaml.parse(await fs.readFile(path.join(testsDir, file), 'utf8'));
         console.log(`${chalk.blueBright(`${collection.desc} (${file})\n`)}`);
 
         let passed = 0;
