@@ -39,15 +39,15 @@ build: build-prep $(BINDIR)/vm6502.input $(BINDIR)/msbasic.input
 build-prep:
 	mkdir -p "$(BINDIR)" "$(OBJDIR)"
 
-VM6502_OBJS = vm6502.o
+VM6502_OBJS = vm6502.o init.o binary.o
 
 $(BINDIR)/vm6502.input: $(addprefix $(OBJDIR)/, $(VM6502_OBJS)) $(LIBXIB)
 	$(run-ld)
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.s
+$(OBJDIR)/%.o: $(SRCDIR)/const.si $(SRCDIR)/%.s
 	$(run-as)
 
-MSBASIC_OBJS = vm6502.o msbasic.o msbasic_binary.o
+MSBASIC_OBJS = $(VM6502_OBJS) msbasic_header.o msbasic_binary.o
 
 $(BINDIR)/msbasic.input: $(addprefix $(OBJDIR)/, $(MSBASIC_OBJS)) $(LIBXIB)
 	$(run-ld)

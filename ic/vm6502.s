@@ -1,8 +1,8 @@
-# from libxib.s
-.IMPORT print_str
+# From init.s
+.IMPORT init_memory
 
 ##########
-# entry point
+# Entry point
     arb stack
 
     call main
@@ -13,19 +13,11 @@ main:
 .FRAME
     arb -0
 
-    add TODO_remove_message, 0, [rb - 1]
-    arb -1
-    call print_str
+    call init_memory
 
     arb 0
     ret 0
 .ENDFRAME
-
-##########
-# strings
-
-TODO_remove_message:
-    db  "Hello world!", 0
 
 ##########
     ds  50, 0
