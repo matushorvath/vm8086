@@ -11,40 +11,16 @@ init_memory:
 .FRAME tmp, src, tgt, cnt
     arb -4
 
-# Initialize the memory space for the 6502.
-
-    # TODO delme
-    add binary, 0, [rb - 1]
-    arb -1
-    call print_num
-    out 10
+    # Initialize memory space for the 6502.
 
     # Calculate the start address of the source (binary)
     add binary, BINARY_DATA, [rb + src]
 
-    # TODO delme
-    add [rb + src], 0, [rb - 1]
-    arb -1
-    call print_num
-    out 10
-
     # Calculate the start address of the target (MEM + [load])
     add MEM, [binary + 1], [rb + tgt]
 
-    # TODO delme
-    add [rb + tgt], 0, [rb - 1]
-    arb -1
-    call print_num
-    out 10
-
     # Number of bytes to copy
     add [binary + 2], 0, [rb + cnt]
-
-    # TODO delme
-    add [rb + cnt], 0, [rb - 1]
-    arb -1
-    call print_num
-    out 10
 
     # Move the image from src to tgt (iterating in reverse direction)
 init_memory_loop:
