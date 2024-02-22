@@ -70,24 +70,20 @@ init_state:
 init_state_skip_reset_vec:
     # Check if pc is a sane value
     lt  [reg_pc], 0, [rb + tmp]
-    jnz [rb + tmp], init_state_pc_invalid
+    jnz [rb + tmp], init_state_invalid_pc
     lt  65535, [reg_pc], [rb + tmp]
-    jnz [rb + tmp], init_state_pc_invalid
+    jnz [rb + tmp], init_state_invalid_pc
 
     arb 1
     ret 0
 
-init_state_pc_invalid:
-    # check if pc is a sane value
-    add err_pc_invalid, 0, [rb - 1]
+init_state_invalid_pc:
+    add init_state_invalid_pc_message, 0, [rb - 1]
     arb -1
     call report_error
+
+init_state_invalid_pc_message:
+    db  "invalid start address", 0
 .ENDFRAME
-
-##########
-# error messages
-
-err_pc_invalid:
-    db  "Initial value of pc register is invalid", 0
 
 .EOF

@@ -39,7 +39,7 @@ build: build-prep $(BINDIR)/vm6502.input $(BINDIR)/msbasic.input
 build-prep:
 	mkdir -p "$(BINDIR)" "$(OBJDIR)"
 
-VM6502_OBJS = vm6502.o error.o memory.o state.o binary.o
+VM6502_OBJS = vm6502.o error.o exec.o memory.o state.o binary.o
 
 $(BINDIR)/vm6502.input: $(addprefix $(OBJDIR)/, $(VM6502_OBJS)) $(LIBXIB)
 	$(run-ld)

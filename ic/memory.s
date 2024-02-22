@@ -3,6 +3,8 @@
 # From binary.s
 .IMPORT binary
 
+# TODO validate load address, size; see init_state for example
+
 ##########
 init_memory:
 .FRAME src, tgt, cnt
