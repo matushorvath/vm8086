@@ -2,26 +2,30 @@
 
 ##########
 execute:
-.FRAME tmp
-    arb -1
+.FRAME tmp, op
+    arb -2
 
 execute_loop:
+    # Read op code
+    add MEM, [reg_pc], [ip + 1]
+    add [0], 0, [rb + op]
 
-            const op = read(incpc());
+    # Increase pc
+    add [reg_pc], 1, [reg_pc]
+
+    # Process hlt
+    eq  [rb + op], 2, [rb + tmp]
+    jnz [rb + tmp], execute_hlt
 
     switch(op)
     {
-            # 02 HLT; not an official instruction, but we need it
-        db  return;
-
-
-            default: throw new Error(`invalid opcode ${format8(op)} at ${format16((pc - 1 + 0x10000) % 0x10000)}`);
-
+        default: throw new Error(`invalid opcode ${format8(op)} at ${format16((pc - 1 + 0x10000) % 0x10000)}`);
     }
 
     jz  execute_loop
+execute_hlt:
 
-    arb 1
+    arb 2
     ret 0
 .ENDFRAME
 
@@ -45,7 +49,7 @@ decode:
     db  zeropage
 
     # 08 PHP
-    db  execute push(packSr()) TODO
+    db  execute_push_sr
     db  0
 
     # 09
@@ -66,8 +70,8 @@ decode:
 
 
     # 10 BPL (Branch on PLus)
-    db  execute branch(!negative, relative()) TODO
-    db  0
+    db  execute_branch_positive
+    db  relative
 
     # 11
     db  execute_ora
@@ -82,7 +86,7 @@ decode:
     db  zeropage_x
 
     # 18 CLC (CLear Carry)
-    db  execute carry = false   TODO
+    db  execute_clear_carry
     db  0
 
     # 19
@@ -119,7 +123,7 @@ decode:
     db  zeropage
 
     # 28 PLP
-    db  execute unpackSr(pull()) TODO
+    db  execute_pull_sr
     db  0
 
     # 29
@@ -144,8 +148,8 @@ decode:
 
 
     # 30 BMI (Branch on MInus)
-    db  execute branch(negative, relative()) TODO
-    db  0
+    db  execute_branch_negative
+    db  relative
 
     # 31
     db  execute_and
@@ -160,7 +164,7 @@ decode:
     db  zeropage_x
 
     # 38 SEC (SEt Carry)
-    db  execute carry = true TODO
+    db  execute_set_carry
     db  0
 
     # 39
@@ -177,7 +181,7 @@ decode:
 
 
     # 40
-    db  execute_rti TODO
+    db  execute_rti
     db  0
 
     # 41
@@ -218,8 +222,8 @@ decode:
 
 
     # 50 BVC (Branch on oVerflow Clear)
-    db  execute branch(!overflow, relative()) TODO
-    db  0
+    db  execute_branch_not_overflow
+    db  relative
 
     # 51
     db  execute_eor
@@ -234,7 +238,7 @@ decode:
     db  zeropage_x
 
     # 58 CLI (CLear Interrupt)
-    db  execute interrupt = false TODO
+    db  execute_clear_interrupt
     db  0
 
     # 59
@@ -267,7 +271,7 @@ decode:
     db  zeropage
 
     # 68 PLA
-    db  execute a = pull(); updateNegativeZero(reg_a) TODO
+    db  execute_pull_a                  # a = pull(); updateNegativeZero(reg_a)
     db  0
 
     # 69
@@ -292,8 +296,8 @@ decode:
 
 
     # 70 BVS (Branch on oVerflow Set)
-    db  execute branch(overflow, relative()) TODO
-    db  0
+    db  execute_branch_overflow
+    db  relative
 
     # 71
     db  execute_adc
@@ -308,7 +312,7 @@ decode:
     db  zeropage_x
 
     # 78 SEI (SEt Interrupt)
-    db  execute interrupt = true TODO
+    db  execute_set_interrupt
     db  0
 
     # 79
@@ -325,77 +329,77 @@ decode:
 
 
     # 81 STA
-    db  execute str(reg_a, indirect8(reg_x)) TODO
-    db  0
+    db  execute_sta
+    db  indirect8_x
 
     # 84 STY
-    db  execute str(reg_y, zeropage()) TODO
-    db  0
+    db  execute_sty
+    db  zeropage
 
     # 85 STA
-    db  execute str(reg_a, zeropage()) TODO
-    db  0
+    db  execute_sta
+    db  zeropage
 
     # 86 STX
-    db  execute str(reg_x, zeropage()) TODO
-    db  0
+    db  execute_stx
+    db  zeropage
 
     # 88 DEY
-    db  execute y = der(reg_y) TODO
+    db  execute_dey
     db  0
 
     # 8a TXA
-    db  execute a = reg_x; updateNegativeZero(reg_a) TODO
+    db  execute_txa                     # a = reg_x; updateNegativeZero(reg_a)
     db  0
 
     # 8c STY
-    db  execute str(reg_y, absolute()) TODO
-    db  0
+    db  execute_sty
+    db  absolute
 
     # 8d STA
-    db  execute_str(reg_a, absolute()) TODO
-    db  0
+    db  execute_sta
+    db  absolute
 
     # 8e STX
-    db  execute_str(reg_x, absolute()) TODO
-    db  0
+    db  execute_stx
+    db  absolute
 
 
     # 90 BCC (Branch on Carry Clear)
-    db  execute branch(!carry, relative()) TODO
-    db  0
+    db  execute_branch_not_carry
+    db  relative
 
     # 91 STA
-    db  execute str(reg_a, indirect8(0, reg_y)) TODO
-    db  0
+    db  execute_sta
+    db  indirect8_y
 
     # 94 STY
-    db  execute str(reg_y, zeropage(reg_x)) TODO
-    db  0
+    db  execute_sty
+    db  zeropage_x
 
     # 95 STA
-    db  execute str(reg_a, zeropage(reg_x)) TODO
-    db  0
+    db  execute_sta
+    db  zeropage_x
 
     # 96 STX
-    db  execute str(reg_x, zeropage(reg_y)) TODO
-    db  0
+    db  execute_stx
+    db  zeropage_y
 
     # 98 TYA
-    db  execute a = reg_y; updateNegativeZero(reg_a) TODO
+    db  execute_tya                     # a = reg_y; updateNegativeZero(reg_a)
     db  0
 
     # 99 STA
-    db  execute str(reg_a, absolute(reg_y)) TODO
-    db  0
+    db  execute_sta
+    db  absolute_y
 
     # 9a TXS
-    db  execute sp = reg_x TODO
+    db  execute_tsx                     # sp = reg_x
     db  0
 
     # 9d STA
-    db  execute str(reg_a, absolute(reg_x)) TODO
-    db  0
+    db  execute_sta
+    db  absolute_x
 
 
     # a0
@@ -423,7 +427,7 @@ decode:
     db  zeropage
 
     # a8 TAY
-    db  execute y = reg_a; updateNegativeZero(reg_y) TODO
+    db  execute_tay                     # y = reg_a; updateNegativeZero(reg_y)
     db  0
 
     # a9
@@ -431,7 +435,7 @@ decode:
     db  immediate
 
     # aa TAX
-    db  execute x = reg_a; updateNegativeZero(reg_x) TODO
+    db  execute_tax                     # x = reg_a; updateNegativeZero(reg_x)
     db  0
 
     # ac
@@ -448,8 +452,8 @@ decode:
 
 
     # b0 BCS (Branch on Carry Set)
-    db  execute branch(carry, relative()) TODO
-    db  0
+    db  execute_branch_carry
+    db  relative
 
     # b1
     db  execute_lda
@@ -464,11 +468,11 @@ decode:
     db  zeropage_x
 
     # b6
-    db  execute ldx(zeropage(reg_y)) TODO
-    db  0
+    db  execute_ldx
+    db  zeropage_y
 
     # b8 CLV (CLear oVerflow)
-    db  execute overflow = false TODO
+    db  execute_clear_overflow
     db  0
 
     # b9
@@ -476,7 +480,7 @@ decode:
     db  absolute_y
 
     # ba TSX
-    db  execute x = sp; updateNegativeZero(reg_x) TODO
+    db  execute_tsx                     # x = sp; updateNegativeZero(reg_x)
     db  0
 
     # bc
@@ -493,44 +497,44 @@ decode:
 
 
     # c0 CPY
-    db  execute cmp(reg_y, immediate()) TODO
-    db  0
+    db  execute_cpy
+    db  immediate
 
     # c1
-    db  execute cmp(reg_a, indirect8(reg_x)) TODO
-    db  0
+    db  execute_cmp
+    db  indirect8_x
 
     # c4 CPY
-    db  execute cmp(reg_y, zeropage()) TODO
-    db  0
+    db  execute_cpy
+    db  zeropage
 
     # c5
-    db  execute cmp(reg_a, zeropage()) TODO
-    db  0
+    db  execute_cmp
+    db  zeropage
 
     # c6
     db  execute_dec
     db  zeropage
 
     # c8 INY
-    db  execute y = inr(reg_y) TODO
+    db  execute_iny                     #  y = inr(reg_y)
     db  0
 
     # c9
-    db  execute cmp(reg_a, immediate()) TODO
-    db  0
+    db  execute_cmp
+    db  immediate
 
     # ca DEX
-    db  execute x = der(reg_x) TODO
+    db  execute_dex                     # x = der(reg_x)
     db  0
 
     # cc CPY
-    db  execute cmp(reg_y, absolute()) TODO
-    db  0
+    db  execute_cpy
+    db  absolute
 
     # cd
-    db  execute cmp(reg_a, absolute()) TODO
-    db  0
+    db  execute_cmp
+    db  absolute
 
     # ce
     db  execute_dec
@@ -538,32 +542,32 @@ decode:
 
 
     # d0 BNE (Branch on Not Equal)
-    db  execute branch(!zero, relative()) TODO
-    db  0
+    db  execute_branch_not_zero
+    db  relative
 
     # d1
-    db  execute cmp(reg_a, indirect8(0, reg_y)) TODO
-    db  0
+    db  execute_cmp
+    db  indirect8_y
 
     # d5
-    db  execute cmp(reg_a, zeropage(reg_x)) TODO
-    db  0
+    db  execute_cmp
+    db  zeropage_x
 
     # d6
     db  execute_dec
     db  zeropage_x
 
     # d8 CLD (CLear Decimal)
-    db  execute decimal = false TODO
+    db  execute_clear_decimal
     db  0
 
     # d9
-    db  execute cmp(reg_a, absolute(reg_y)) TODO
-    db  0
+    db  execute_cmp
+    db  absolute_y
 
     # dd
-    db  execute cmp(reg_a, absolute(reg_x)) TODO
-    db  0
+    db  execute_cmp
+    db  absolute_x
 
     # de
     db  execute_dec
@@ -571,16 +575,16 @@ decode:
 
 
     # e0 CPX
-    db  execute cmp(reg_x, immediate()) TODO
-    db  0
+    db  execute_cpx
+    db  immediate
 
     # e1
     db  execute_sbc
     db  indirect8_x
 
     # e4 CPX
-    db  execute cmp(reg_x, zeropage()) TODO
-    db  0
+    db  execute_cpx
+    db  zeropage
 
     # e5
     db  execute_sbc
@@ -591,20 +595,20 @@ decode:
     db  zeropage
 
     # e8 INX
-    db  execute x = inr(reg_x) TODO
+    db  execute_inx                     # x = inr(reg_x)
     db  0
 
     # e9
     db  execute_sbc
     db  immediate
 
-    # ea: // NOP
-    db  execute nop TODO
+    # ea: NOP
+    db  execute_nop
     db  0
 
     # ec CPX
-    db  execute cmp(reg_x, absolute()) TODO
-    db  0
+    db  execute_cpx
+    db  absolute
 
     # ed
     db  execute_sbc
@@ -616,8 +620,8 @@ decode:
 
 
     # f0 BEQ (Branch on EQual)
-    db  execute branch(zero, relative()) TODO
-    db  0
+    db  execute_branch_zero
+    db  relative
 
     # f1
     db  execute_sbc
@@ -632,7 +636,7 @@ decode:
     db  zeropage_x
 
     # f8 SED (SEt Decimal)
-    db  execute decimal = true TODO
+    db  execute_set_decimal
     db  0
 
     # fd
