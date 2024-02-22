@@ -532,8 +532,8 @@ export class Vm6502 {
             case 0x49: this.eor(this.immediate()); break;
             case 0x45: this.eor(this.zeropage()); break;
             case 0x55: this.eor(this.zeropage(this.x)); break;
-            case 0x4D: this.eor(this.absolute()); break;
-            case 0x5D: this.eor(this.absolute(this.x)); break;
+            case 0x4d: this.eor(this.absolute()); break;
+            case 0x5d: this.eor(this.absolute(this.x)); break;
             case 0x59: this.eor(this.absolute(this.y)); break;
             case 0x41: this.eor(this.indirect8(this.x)); break;
             case 0x51: this.eor(this.indirect8(0, this.y)); break;
@@ -643,11 +643,11 @@ export class Vm6502 {
 
             case 0x86: this.str(this.x, this.zeropage()); break;                 // STX
             case 0x96: this.str(this.x, this.zeropage(this.y)); break;           // STX
-            case 0x8E: this.str(this.x, this.absolute()); break;                 // STX
+            case 0x8e: this.str(this.x, this.absolute()); break;                 // STX
 
             case 0x84: this.str(this.y, this.zeropage()); break;                 // STY
             case 0x94: this.str(this.y, this.zeropage(this.x)); break;           // STY
-            case 0x8C: this.str(this.y, this.absolute()); break;                 // STY
+            case 0x8c: this.str(this.y, this.absolute()); break;                 // STY
 
             // These are not official instructions, but we need them
             case 0x02: return;              // HLT

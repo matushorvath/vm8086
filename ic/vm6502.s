@@ -1,6 +1,12 @@
 # From init.s
 .IMPORT init_memory
 
+# From state.s
+.IMPORT init_state
+
+# From exec.s
+# TODO .IMPORT execute
+
 ##########
 # Entry point
     arb stack
@@ -14,6 +20,9 @@ main:
     arb -0
 
     call init_memory
+    call init_state
+
+    # TODO call execute
 
     arb 0
     ret 0
