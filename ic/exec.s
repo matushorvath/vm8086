@@ -3,6 +3,9 @@
 # From error.s
 .IMPORT report_error
 
+# From memory.s
+.IMPORT read
+
 # From params.s
 .IMPORT immediate
 .IMPORT zeropage
@@ -29,8 +32,10 @@ execute:
 
 execute_loop:
     # Read op code
-    add MEM, [reg_pc], [ip + 1]
-    add [0], 0, [rb + op]
+    add [reg_pc], 0, [rb - 1]
+    arb -1
+    call read
+    add [rb - 3], 0, [rb + op]
 
     # Increase pc
     call incpc

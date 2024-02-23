@@ -10,6 +10,9 @@
 .EXPORT indirect16
 .EXPORT relative
 
+# From memory.s
+.IMPORT read
+
 # From state.s
 .IMPORT reg_pc
 .IMPORT reg_x
@@ -52,12 +55,14 @@ zeropage_y:
     add [reg_y], 0, [rb + reg]
 
 zeropage_generic:
-    add MEM, [reg_pc], [ip + 1]
-    add [0], [rb + reg], [rb - 1]                   # [MEM + [reg_pc]] + [reg] -> [param0]
+    add [reg_pc], 0, [rb - 1]
+    arb -1
+    call read
+    add [rb - 3], [rb + reg], [rb - 1]              # read([reg_pc]) + [reg] -> [param0]
 
     arb -1
     call mod_8bit
-    add [rb - 3], 0, [rb + addr]                    # ([MEM + [reg_pc]] + [reg]) % 0x100 -> [addr]
+    add [rb - 3], 0, [rb + addr]                    # (read([reg_pc]) + [reg]) % 0x100 -> [addr]
 
     call incpc
 
@@ -85,18 +90,22 @@ absolute_y:
     add [reg_y], 0, [rb + reg]
 
 absolute_generic:
-    add MEM, [reg_pc], [ip + 1]
-    add [0], [rb + reg], [rb + addr]                # [MEM + [reg_pc]] + [reg] -> [addr]
+    add [reg_pc], 0, [rb - 1]
+    arb -1
+    call read
+    add [rb - 3], [rb + reg], [rb + addr]           # read([reg_pc]) + [reg] -> [addr]
 
     call incpc
 
-    add MEM, [reg_pc], [ip + 1]
-    mul [0], 256, [rb - 1]                          # [MEM + [reg_pc]] * 0x100 -> [param0]
+    add [reg_pc], 0, [rb - 1]
+    arb -1
+    call read
+    mul [rb - 3], 256, [rb - 1]                     # read([reg_pc]) * 0x100 -> [param0]
     add [rb - 1], [rb + addr], [rb - 1]             # [param0] + [addr] -> [param0]
 
     arb -1
     call mod_16bit
-    add [rb - 3], 0, [rb + addr]                    # ([MEM + [reg_pc]] + [reg] + [MEM + [reg_pc]] * 0x100) % 0x10000 -> [addr]
+    add [rb - 3], 0, [rb + addr]                    # (read([reg_pc]) + [reg] + read([reg_pc]) * 0x100) % 0x10000 -> [addr]
 
     call incpc
 
@@ -113,21 +122,26 @@ indirect8_x:
 .FRAME addr, tmp                                    # addr is returned
     arb -2
 
-    add MEM, [reg_pc], [ip + 1]
-    add [0], [reg_x], [rb - 1]                      # [MEM + [reg_pc]] + [reg_x] -> [param0]
+    add [reg_pc], 0, [rb - 1]
+    arb -1
+    call read
+    add [rb - 3], [reg_x], [rb - 1]                 # read([reg_pc]) + [reg_x] -> [param0]
 
     arb -1
     call mod_8bit
-    add [rb - 3], 0, [rb + tmp]                     # ([MEM + [reg_pc]] + [reg_x]) % 0x100 -> [tmp]
+    add [rb - 3], 0, [rb + tmp]                     # (read([reg_pc]) + [reg_x]) % 0x100 -> [tmp]
 
     call incpc
 
-    add MEM, [rb + tmp], [ip + 1]
-    add [0], 1, [rb + addr]                         # [MEM + [tmp] + 1] -> [addr]
-    mul [rb + addr], 256, [rb + addr]               # [MEM + [tmp] + 1] * 0x100 -> [addr]
+    add [rb + tmp], 1, [rb - 1]                     # [tmp] + 1 -> param0
+    arb -1
+    call read
+    mul [rb - 3], 256, [rb + addr]                  # read([tmp] + 1) * 0x100 -> [addr]
 
-    add MEM, [rb + tmp], [ip + 1]
-    add [0], [rb + addr], [rb + addr]               # [MEM + [tmp]] + [addr] -> [addr]
+    add [rb + tmp], 0, [rb - 1]
+    arb -1
+    call read
+    add [rb - 3], [rb + addr], [rb + addr]          # read([tmp]) + read([tmp] + 1) * 0x100 -> [addr]
 
     arb 2
     ret 0
@@ -138,22 +152,27 @@ indirect8_y:
 .FRAME addr, tmp                                    # addr is returned
     arb -2
 
-    add MEM, [reg_pc], [ip + 1]
-    add [0], 0, [rb + tmp]                          # [MEM + [reg_pc]] -> [tmp]
+    add [reg_pc], 0, [rb - 1]
+    arb -1
+    call read
+    add [rb - 3], 0, [rb + tmp]                     # read([reg_pc]) -> [tmp]
 
     call incpc
 
-    add MEM, [rb + tmp], [ip + 1]
-    add [0], 1, [rb - 1]                            # [MEM + [tmp] + 1] -> [param0]
-    mul [rb - 1], 256, [rb - 1]                     # [MEM + [tmp] + 1] * 0x100 -> [param0]
+    add [rb + tmp], 1, [rb - 1]                     # [tmp] + 1 -> param0
+    arb -1
+    call read
+    mul [rb - 3], 256, [rb + addr]                  # read([tmp] + 1) * 0x100 -> [addr]
 
-    add MEM, [rb + tmp], [ip + 1]
-    add [0], [rb - 1], [rb - 1]                     # [MEM + [tmp]] + [param0] -> [param0]
-    add [rb - 1], [reg_y], [rb - 1]                 # [param0] + [reg_y] -> [param0]
+    add [rb + tmp], 0, [rb - 1]
+    arb -1
+    call read
+    add [rb - 3], [rb + addr], [rb + addr]          # read([tmp]) + read([tmp] + 1) * 0x100 -> [addr]
+    add [rb + addr], [reg_y], [rb - 1]              # read([tmp]) + read([tmp] + 1) * 0x100 + [reg_y] -> [param0]
 
     arb -1
     call mod_16bit
-    add [rb - 3], 0, [rb + addr]                    # ([MEM + [tmp]] + [MEM + [tmp] + 1] * 0x100 + [reg_y]) % 0x10000 -> [addr]
+    add [rb - 3], 0, [rb + addr]                    # (read([tmp]) + read([tmp] + 1) * 0x100 + [reg_y]) % 0x10000 -> [addr]
 
     arb 2
     ret 0
@@ -164,13 +183,17 @@ indirect16:
 .FRAME addr, lo, hi                                 # addr is returned
     arb -3
 
-    add MEM, [reg_pc], [ip + 1]
-    add [0], 0, [rb + lo]                           # [MEM + [reg_pc]] -> [lo]
+    add [reg_pc], 0, [rb - 1]
+    arb -1
+    call read
+    add [rb - 3], 0, [rb + lo]                      # read([reg_pc]) -> [lo]
 
     call incpc
 
-    add MEM, [reg_pc], [ip + 1]
-    add [0], 0, [rb + hi]                           # [MEM + [reg_pc]] -> [hi]
+    add [reg_pc], 0, [rb - 1]
+    arb -1
+    call read
+    add [rb - 3], 0, [rb + hi]                      # read([reg_pc]) -> [hi]
 
     call incpc
 
@@ -187,11 +210,15 @@ indirect16:
 
     # Second indirection
 
-    add MEM, [rb + hi], [ip + 1]
-    mul [0], 256, [rb + addr]                       # [MEM + [hi]] * 0x100 -> [addr]
+    add [rb + hi], 0, [rb - 1]
+    arb -1
+    call read
+    mul [rb - 3], 256, [rb + addr]                  # read([hi]) * 0x100 -> [addr]
 
-    add MEM, [rb + lo], [ip + 1]
-    add [0], [rb + addr], [rb + addr]               # [MEM + [lo]] + [MEM + [hi]] * 0x100 -> [addr]
+    add [rb + lo], 0, [rb - 1]
+    arb -1
+    call read
+    add [rb - 3], [rb + addr], [rb + addr]          # read([lo]) + read([hi]) * 0x100 -> [addr]
 
     arb 3
     ret 0
@@ -202,8 +229,10 @@ relative:
 .FRAME addr, tmp                                    # addr is returned
     arb -2
 
-    add MEM, [reg_pc], [ip + 1]
-    add [0], 0, [rb + addr]                         # [MEM + [reg_pc]] -> [addr]
+    add [reg_pc], 0, [rb - 1]
+    arb -1
+    call read
+    add [rb - 3], 0, [rb + addr]                    # read([reg_pc]) -> [addr]
 
     call incpc
 

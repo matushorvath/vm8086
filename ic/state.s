@@ -20,6 +20,9 @@
 # From error.s
 .IMPORT report_error
 
+# From memory.s
+.IMPORT read
+
 # From util.s
 .IMPORT check_16bit
 
@@ -64,11 +67,15 @@ init_state:
     jz  [rb + tmp], init_state_skip_reset_vec
 
     # Read the reset vector from 0xfffc and 0xfffd
-    add MEM, 65532, [ip + 1]
-    mul [0], 256, [rb + tmp]                # [0xfffc] * 0x100
+    add 65532, 0, [rb - 1]
+    arb -1
+    call read
+    mul [rb - 3], 256, [rb + tmp]           # read(0xfffc) * 0x100 -> [tmp]
 
-    add MEM, 65533, [ip + 1]
-    add [0], [rb + tmp], [reg_pc]           # + [0xfffd]
+    add 65533, 0, [rb - 1]
+    arb -1
+    call read
+    add [rb - 3], [rb + tmp], [reg_pc]      # read(0xfffd) + read(0xfffc) * 0x100 -> [tmp]
 
 init_state_skip_reset_vec:
     # Check if pc is a sane value
