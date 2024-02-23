@@ -16,7 +16,6 @@
 .EXPORT pack_sr
 .EXPORT unpack_sr
 .EXPORT update_negative_zero
-.EXPORT update_overflow
 
 # From binary.s
 .IMPORT binary
@@ -184,34 +183,6 @@ update_negative_zero:
 
     arb 0
     ret 1
-.ENDFRAME
-
-##########
-update_overflow:
-.FRAME op1, op2, res; tmp
-    arb -1
-
-# TODO this should be next to arithmetic ops
-
-    lt  127, [rb + op1], [rb + op1]
-    lt  127, [rb + op2], [rb + op2]
-    lt  127, [rb + res], [rb + res]
-
-    eq  [rb + op1], [rb + op2], [rb + tmp]
-    jnz [rb + tmp], update_overflow_same_sign
-
-    # When operands are different signs, overflow is always false
-    add 0, 0, [flag_overflow]
-    jz  0, update_overflow_done
-
-update_overflow_same_sign:
-    # When operands are the same sign but different than the result, overflow is true
-    eq  [rb + op1], [rb + res], [rb + tmp]
-    eq  [rb + tmp], 0, [flag_overflow]
-
-update_overflow_done:
-    arb 1
-    ret 3
 .ENDFRAME
 
 .EOF
