@@ -497,14 +497,14 @@ export class Vm6502 {
             case 0x24: this.bit(this.zeropage()); break;
             case 0x2c: this.bit(this.absolute()); break;
 
-            case 0x10: this.branch(!this.negative, this.relative()); break;     // BPL (Branch on PLus)
-            case 0x30: this.branch(this.negative, this.relative()); break;      // BMI (Branch on MInus)
-            case 0x50: this.branch(!this.overflow, this.relative()); break;     // BVC (Branch on oVerflow Clear)
-            case 0x70: this.branch(this.overflow, this.relative()); break;      // BVS (Branch on oVerflow Set)
-            case 0x90: this.branch(!this.carry, this.relative()); break;        // BCC (Branch on Carry Clear)
-            case 0xb0: this.branch(this.carry, this.relative()); break;         // BCS (Branch on Carry Set)
-            case 0xd0: this.branch(!this.zero, this.relative()); break;         // BNE (Branch on Not Equal)
-            case 0xf0: this.branch(this.zero, this.relative()); break;          // BEQ (Branch on EQual)
+            case 0x10: this.branch(!this.negative, this.relative()); break;         // BPL (Branch on PLus)
+            case 0x30: this.branch(this.negative, this.relative()); break;          // BMI (Branch on MInus)
+            case 0x50: this.branch(!this.overflow, this.relative()); break;         // BVC (Branch on oVerflow Clear)
+            case 0x70: this.branch(this.overflow, this.relative()); break;          // BVS (Branch on oVerflow Set)
+            case 0x90: this.branch(!this.carry, this.relative()); break;            // BCC (Branch on Carry Clear)
+            case 0xb0: this.branch(this.carry, this.relative()); break;             // BCS (Branch on Carry Set)
+            case 0xd0: this.branch(!this.zero, this.relative()); break;             // BNE (Branch on Not Equal)
+            case 0xf0: this.branch(this.zero, this.relative()); break;              // BEQ (Branch on EQual)
 
             case 0x00: this.brk(); break;
 
@@ -517,12 +517,12 @@ export class Vm6502 {
             case 0xc1: this.cmp(this.a, this.indirect8(this.x)); break;
             case 0xd1: this.cmp(this.a, this.indirect8(0, this.y)); break;
 
-            case 0xe0: this.cmp(this.x, this.immediate()); break;           // CPX
-            case 0xe4: this.cmp(this.x, this.zeropage()); break;            // CPX
-            case 0xec: this.cmp(this.x, this.absolute()); break;            // CPX
-            case 0xc0: this.cmp(this.y, this.immediate()); break;           // CPY
-            case 0xc4: this.cmp(this.y, this.zeropage()); break;            // CPY
-            case 0xcc: this.cmp(this.y, this.absolute()); break;            // CPY
+            case 0xe0: this.cmp(this.x, this.immediate()); break;                   // CPX
+            case 0xe4: this.cmp(this.x, this.zeropage()); break;                    // CPX
+            case 0xec: this.cmp(this.x, this.absolute()); break;                    // CPX
+            case 0xc0: this.cmp(this.y, this.immediate()); break;                   // CPY
+            case 0xc4: this.cmp(this.y, this.zeropage()); break;                    // CPY
+            case 0xcc: this.cmp(this.y, this.absolute()); break;                    // CPY
 
             case 0xc6: this.dec(this.zeropage()); break;
             case 0xd6: this.dec(this.zeropage(this.x)); break;
@@ -538,13 +538,13 @@ export class Vm6502 {
             case 0x41: this.eor(this.indirect8(this.x)); break;
             case 0x51: this.eor(this.indirect8(0, this.y)); break;
 
-            case 0x18: this.carry = false; break;           // CLC (CLear Carry)
-            case 0x38: this.carry = true; break;            // SEC (SEt Carry)
-            case 0x58: this.interrupt = false; break;       // CLI (CLear Interrupt)
-            case 0x78: this.interrupt = true; break;        // SEI (SEt Interrupt)
-            case 0xb8: this.overflow = false; break;        // CLV (CLear oVerflow)
-            case 0xd8: this.decimal = false; break;         // CLD (CLear Decimal)
-            case 0xf8: this.decimal = true; break;          // SED (SEt Decimal)
+            case 0x18: this.carry = false; break;                       // CLC (CLear Carry)
+            case 0x38: this.carry = true; break;                        // SEC (SEt Carry)
+            case 0x58: this.interrupt = false; break;                   // CLI (CLear Interrupt)
+            case 0x78: this.interrupt = true; break;                    // SEI (SEt Interrupt)
+            case 0xb8: this.overflow = false; break;                    // CLV (CLear oVerflow)
+            case 0xd8: this.decimal = false; break;                     // CLD (CLear Decimal)
+            case 0xf8: this.decimal = true; break;                      // SED (SEt Decimal)
 
             case 0xe6: this.inc(this.zeropage()); break;
             case 0xf6: this.inc(this.zeropage(this.x)); break;
@@ -626,31 +626,31 @@ export class Vm6502 {
             case 0xe1: this.sbc(this.indirect8(this.x)); break;
             case 0xf1: this.sbc(this.indirect8(0, this.y)); break;
 
-            case 0x85: this.str(this.a, this.zeropage()); break;                 // STA
-            case 0x95: this.str(this.a, this.zeropage(this.x)); break;           // STA
-            case 0x8d: this.str(this.a, this.absolute()); break;                 // STA
-            case 0x9d: this.str(this.a, this.absolute(this.x)); break;           // STA
-            case 0x99: this.str(this.a, this.absolute(this.y)); break;           // STA
-            case 0x81: this.str(this.a, this.indirect8(this.x)); break;           // STA
-            case 0x91: this.str(this.a, this.indirect8(0, this.y)); break;        // STA
+            case 0x85: this.str(this.a, this.zeropage()); break;                        // STA
+            case 0x95: this.str(this.a, this.zeropage(this.x)); break;                  // STA
+            case 0x8d: this.str(this.a, this.absolute()); break;                        // STA
+            case 0x9d: this.str(this.a, this.absolute(this.x)); break;                  // STA
+            case 0x99: this.str(this.a, this.absolute(this.y)); break;                  // STA
+            case 0x81: this.str(this.a, this.indirect8(this.x)); break;                 // STA
+            case 0x91: this.str(this.a, this.indirect8(0, this.y)); break;              // STA
 
             case 0x9a: this.sp = this.x; break;                                         // TXS
             case 0xba: this.x = this.sp; this.updateNegativeZero(this.x); break;        // TSX
             case 0x48: this.push(this.a); break;                                        // PHA
             case 0x68: this.a = this.pull(); this.updateNegativeZero(this.a); break;    // PLA
-            case 0x08: this.push(this.packSr()); break;                   // PHP
+            case 0x08: this.push(this.packSr()); break;                                 // PHP
             case 0x28: this.unpackSr(this.pull()); break;                               // PLP
 
-            case 0x86: this.str(this.x, this.zeropage()); break;                 // STX
-            case 0x96: this.str(this.x, this.zeropage(this.y)); break;           // STX
-            case 0x8e: this.str(this.x, this.absolute()); break;                 // STX
+            case 0x86: this.str(this.x, this.zeropage()); break;                        // STX
+            case 0x96: this.str(this.x, this.zeropage(this.y)); break;                  // STX
+            case 0x8e: this.str(this.x, this.absolute()); break;                        // STX
 
-            case 0x84: this.str(this.y, this.zeropage()); break;                 // STY
-            case 0x94: this.str(this.y, this.zeropage(this.x)); break;           // STY
-            case 0x8c: this.str(this.y, this.absolute()); break;                 // STY
+            case 0x84: this.str(this.y, this.zeropage()); break;                        // STY
+            case 0x94: this.str(this.y, this.zeropage(this.x)); break;                  // STY
+            case 0x8c: this.str(this.y, this.absolute()); break;                        // STY
 
             // These are not official instructions, but we need them
-            case 0x02: return;              // HLT
+            case 0x02: return;                                                          // HLT
 
             default: throw new Error(`invalid opcode ${this.format8(op)} at ${this.format16((this.pc - 1 + 0x10000) % 0x10000)}`);
             }
