@@ -1,17 +1,93 @@
-execute_adc
-execute_sbc
+.EXPORT execute_adc
 
-execute_cmp
-execute_cpx
-execute_cpy
+# From error.s
+# TODO probably not needed
+.IMPORT report_error
 
+# From memory.s
+.IMPORT read
+.IMPORT write
+
+# From state.s
+.IMPORT flag_carry
+.IMPORT flag_decimal
+.IMPORT flag_negative
+.IMPORT flag_overflow
+.IMPORT flag_zero
+.IMPORT reg_a
+
+# From util
+.IMPORT mod_8bit
 
 ##########
 execute_adc:
+.FRAME addr; tmp, b, sum
+    arb -3
+
+    # Read the second operand
+    add [rb + addr], 0, [rb - 1]
+    arb -1
+    call read
+    add [rb - 3], 0, [rb + b]
+
+    # Decimal flag?
+    jz [flag_decimal], execute_adc_not_decimal
+
+    # Decimal adc, TODO implement
+    add [decimal_error], 0, [rb - 1]
+    arb -1
+    call report_error
+
+    # const sumLo = (this.a & 0b0000_1111) + (b & 0b0000_1111) + (this.carry ? 1 : 0);
+    # const carryLo = sumLo > 0x09;
+    #
+    # const sumHi = ((this.a & 0b1111_0000) >> 4) + ((b & 0b1111_0000) >> 4) + (carryLo ? 1 : 0);
+    # this.carry = sumHi > 0x09;
+    #
+    # const res = (sumLo % 10) | ((sumHi % 10) << 4);
+    # this.updateOverflow(this.a, b, res);      // TODO what does the real processor do?
+    #
+    # this.a = res;
+    # this.updateNegativeZero(this.a);
+
+    jz 0, execute_adc_done
+
+execute_adc_not_decimal:
+    # Sum [reg_a] + [b] + [flag_carry]
+    add [reg_a], [rb + b], [rb + sum]
+    add [rb + sum], [flag_carry], [rb + sum]
+
+    # Set carry flag if sum > 255
+    lt 255, [rb + sum], [flag_carry]
+
+    # Wrap around sum to 8 bits
+    add [rb + sum], 0, [rb - 1]
+    arb -1
+    call mod_8bit
+    add [rb - 3], 0, [rb + sum]
+
+    # Update overflow flag
+    add [reg_a], 0, [rb - 1]
+    add [rb + b], 0, [rb - 2]
+    add [rb + sum], 0, [rb - 3]
+    arb -3
+    call update_overflow
+
+    # Save the result and update rest of flags
+    add [rb + sum], 0, [reg_a]
+
+    lt  127, [reg_a], [flag_negative]
+    eq  [reg_a], 0, [flag_zero]
+
+execute_adc_done:
+    arb 3
+    ret 1
+.ENDFRAME
+
+##########
+update_overflow:
 .FRAME op1, op2, res; tmp
     arb -1
-
-# TODO this should be next to arithmetic ops
 
     lt  127, [rb + op1], [rb + op1]
     lt  127, [rb + op2], [rb + op2]
@@ -34,33 +110,22 @@ update_overflow_done:
     ret 3
 .ENDFRAME
 
+##########
+# TODO remove
+decimal_error:
+    db  "decimal operations not supported", 0
 
-    adc(addr) {
-        const b = this.read(addr);
+.EOF
 
-        if (this.decimal) {
-            const sumLo = (this.a & 0b0000_1111) + (b & 0b0000_1111) + (this.carry ? 1 : 0);
-            const carryLo = sumLo > 0x09;
 
-            const sumHi = ((this.a & 0b1111_0000) >> 4) + ((b & 0b1111_0000) >> 4) + (carryLo ? 1 : 0);
-            this.carry = sumHi > 0x09;
+execute_sbc
 
-            const res = (sumLo % 10) | ((sumHi % 10) << 4);
-            this.updateOverflow(this.a, b, res);      // TODO what does the real processor do?
+execute_cmp
+execute_cpx
+execute_cpy
 
-            this.a = res;
-            this.updateNegativeZero(this.a);
-        } else {
-            const sum = this.a + b + (this.carry ? 1 : 0);
-            this.carry = sum > 0xff;
 
-            const res = sum % 0x100;
-            this.updateOverflow(this.a, b, res);
 
-            this.a = res;
-            this.updateNegativeZero(this.a);
-        }
-    }
 
     sbc(addr) {
         const b = this.read(addr);
@@ -96,31 +161,3 @@ update_overflow_done:
         const res = (diff + 0x100) % 0x100;
         this.updateNegativeZero(res);
     }
-
-##########
-update_overflow:
-.FRAME op1, op2, res; tmp
-    arb -1
-
-# TODO this should be next to arithmetic ops
-
-    lt  127, [rb + op1], [rb + op1]
-    lt  127, [rb + op2], [rb + op2]
-    lt  127, [rb + res], [rb + res]
-
-    eq  [rb + op1], [rb + op2], [rb + tmp]
-    jnz [rb + tmp], update_overflow_same_sign
-
-    # When operands are different signs, overflow is always false
-    add 0, 0, [flag_overflow]
-    jz  0, update_overflow_done
-
-update_overflow_same_sign:
-    # When operands are the same sign but different than the result, overflow is true
-    eq  [rb + op1], [rb + res], [rb + tmp]
-    eq  [rb + tmp], 0, [flag_overflow]
-
-update_overflow_done:
-    arb 1
-    ret 3
-.ENDFRAME

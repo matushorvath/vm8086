@@ -1,5 +1,8 @@
 .EXPORT execute
 
+# From arithmetic.s
+.IMPORT execute_adc
+
 # From error.s
 .IMPORT report_error
 
@@ -200,36 +203,36 @@ instructions:
     db  invalid_opcode, 0                                   # 5f
 #
 #    db  execute_rts, 0                                      # 60
-#    db  execute_adc, indirect8_x                            # 61
+    db  execute_adc, indirect8_x                            # 61
     db  invalid_opcode, 0                                   # 62
     db  invalid_opcode, 0                                   # 63
     db  invalid_opcode, 0                                   # 64
-#    db  execute_adc, zeropage                               # 65
+    db  execute_adc, zeropage                               # 65
 #    db  execute_ror, zeropage                               # 66
     db  invalid_opcode, 0                                   # 67
 #    db  execute_pla, 0                                      # 68 a = pull(); updateNegativeZero(reg_a) TODO
-#    db  execute_adc, immediate                              # 69
+    db  execute_adc, immediate                              # 69
 #    db  execute_ror_a, 0                                    # 6a
     db  invalid_opcode, 0                                   # 6b
 #    db  execute_jmp, indirect16                             # 6c
-#    db  execute_adc, absolute                               # 6d
+    db  execute_adc, absolute                               # 6d
 #    db  execute_ror, absolute                               # 6e
     db  invalid_opcode, 0                                   # 6f
 #
 #    db  execute_bvs, relative                               # 70 Branch on oVerflow Set
-#    db  execute_adc, indirect8_y                            # 71
+    db  execute_adc, indirect8_y                            # 71
     db  invalid_opcode, 0                                   # 72
     db  invalid_opcode, 0                                   # 73
     db  invalid_opcode, 0                                   # 74
-#    db  execute_adc, zeropage_x                             # 75
+    db  execute_adc, zeropage_x                             # 75
 #    db  execute_ror, zeropage_x                             # 76
     db  invalid_opcode, 0                                   # 77
 #    db  execute_sei, 0                                      # 78 SEt Interrupt
-#    db  execute_adc, absolute_y                             # 79
+    db  execute_adc, absolute_y                             # 79
     db  invalid_opcode, 0                                   # 7a
     db  invalid_opcode, 0                                   # 7b
     db  invalid_opcode, 0                                   # 7c
-#    db  execute_adc, absolute_x                             # 7d
+    db  execute_adc, absolute_x                             # 7d
 #    db  execute_ror, absolute_x                             # 7e
     db  invalid_opcode, 0                                   # 7f
 #

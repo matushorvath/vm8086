@@ -15,7 +15,6 @@
 .EXPORT init_state
 .EXPORT pack_sr
 .EXPORT unpack_sr
-.EXPORT update_negative_zero
 
 # From binary.s
 .IMPORT binary
@@ -166,20 +165,6 @@ unpack_sr_after_interrupt:
 unpack_sr_after_zero:
 
     lt  0, [rb + sr], [flag_carry]                  # 0b0000_0001
-
-    arb 0
-    ret 1
-.ENDFRAME
-
-##########
-update_negative_zero:
-.FRAME value;
-    arb -0
-
-# TODO this is probably easier to inline than to call a function
-
-    lt  127, [rb + value], [flag_negative]
-    eq  [rb + value], 0, [flag_zero]
 
     arb 0
     ret 1
