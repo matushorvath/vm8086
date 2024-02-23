@@ -13,6 +13,10 @@
 .EXPORT flag_carry
 
 .EXPORT init_state
+.EXPORT pack_sr
+.EXPORT unpack_sr
+.EXPORT update_negative_zero
+.EXPORT update_overflow
 
 # From binary.s
 .IMPORT binary
@@ -85,6 +89,129 @@ init_state_skip_reset_vec:
 
     arb 1
     ret 0
+.ENDFRAME
+
+##########
+pack_sr:
+.FRAME sr                                           # returns sr
+    arb -1
+
+    add 16, 32, [rb + sr]                           # 0b0011_0000
+
+    jz  [flag_carry], pack_sr_after_carry
+    add [rb + sr], 1, [rb + sr]                     # 0b0000_0001
+pack_sr_after_carry:
+
+    jz  [flag_zero], pack_sr_after_zero
+    add [rb + sr], 2, [rb + sr]                     # 0b0000_0010
+pack_sr_after_zero:
+
+    jz  [flag_interrupt], pack_sr_after_interrupt
+    add [rb + sr], 4, [rb + sr]                     # 0b0000_0100
+pack_sr_after_interrupt:
+
+    jz  [flag_decimal], pack_sr_after_decimal
+    add [rb + sr], 8, [rb + sr]                     # 0b0000_1000
+pack_sr_after_decimal:
+
+    jz  [flag_overflow], pack_sr_after_overflow
+    add [rb + sr], 64, [rb + sr]                    # 0b0100_0000
+pack_sr_after_overflow:
+
+    jz  [flag_negative], pack_sr_after_negative
+    add [rb + sr], 128, [rb + sr]                   # 0b1000_0000
+pack_sr_after_negative:
+
+    arb 1
+    ret 0
+.ENDFRAME
+
+##########
+unpack_sr:
+.FRAME sr;
+    arb -0
+
+    lt  127, [rb + sr], [flag_negative]             # 0b1000_0000
+    jz  [flag_negative], unpack_sr_after_negative
+    add [rb + sr], -128, [rb + sr]
+unpack_sr_after_negative:
+
+    lt  63, [rb + sr], [flag_overflow]              # 0b0100_0000
+    jz  [flag_overflow], unpack_sr_after_overflow
+    add [rb + sr], -64, [rb + sr]
+unpack_sr_after_overflow:
+
+    lt  31, [rb + sr], [flag_decimal]               # 0b0010_0000; flag_decimal used as tmp
+    jz  [flag_decimal], unpack_sr_after_ignored
+    add [rb + sr], -32, [rb + sr]
+unpack_sr_after_ignored:
+
+    lt  15, [rb + sr], [flag_decimal]               # 0b0001_0000; flag_decimal used as tmp
+    jz  [flag_decimal], unpack_sr_after_break
+    add [rb + sr], -16, [rb + sr]
+unpack_sr_after_break:
+
+    lt  7, [rb + sr], [flag_decimal]                # 0b0000_1000
+    jz  [flag_decimal], unpack_sr_after_decimal
+    add [rb + sr], -8, [rb + sr]
+unpack_sr_after_decimal:
+
+    lt  3, [rb + sr], [flag_interrupt]              # 0b0000_0100
+    jz  [flag_interrupt], unpack_sr_after_interrupt
+    add [rb + sr], -4, [rb + sr]
+unpack_sr_after_interrupt:
+
+    lt  1, [rb + sr], [flag_zero]                   # 0b0000_0010
+    jz  [flag_zero], unpack_sr_after_zero
+    add [rb + sr], -2, [rb + sr]
+unpack_sr_after_zero:
+
+    lt  0, [rb + sr], [flag_carry]                  # 0b0000_0001
+
+    arb 0
+    ret 1
+.ENDFRAME
+
+##########
+update_negative_zero:
+.FRAME value;
+    arb -0
+
+# TODO this is probably easier to inline than to call a function
+
+    lt  127, [rb + value], [flag_negative]
+    eq  [rb + value], 0, [flag_zero]
+
+    arb 0
+    ret 1
+.ENDFRAME
+
+##########
+update_overflow:
+.FRAME op1, op2, res; tmp
+    arb -1
+
+# TODO this should be next to arithmetic ops
+
+    lt  127, [rb + op1], [rb + op1]
+    lt  127, [rb + op2], [rb + op2]
+    lt  127, [rb + res], [rb + res]
+
+    eq  [rb + op1], [rb + op2], [rb + tmp]
+    jnz [rb + tmp], update_overflow_same_sign
+
+    # When operands are different signs, overflow is always false
+    add 0, 0, [flag_overflow]
+    jz  0, update_overflow_done
+
+update_overflow_same_sign:
+    # When operands are the same sign but different than the result, overflow is true
+    eq  [rb + op1], [rb + res], [rb + tmp]
+    eq  [rb + tmp], 0, [flag_overflow]
+
+update_overflow_done:
+    arb 1
+    ret 3
 .ENDFRAME
 
 .EOF
