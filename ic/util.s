@@ -4,11 +4,11 @@
 .EXPORT mod_8bit
 .EXPORT mod_16bit
 
-# From state.s
-.IMPORT reg_pc
-
 # From error.s
 .IMPORT report_error
+
+# From state.s
+.IMPORT reg_pc
 
 ##########
 # Increase pc with wrap around

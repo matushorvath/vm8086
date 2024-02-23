@@ -1,11 +1,11 @@
+# From exec.s
+# TODO .IMPORT execute
+
 # From init.s
 .IMPORT init_memory
 
 # From state.s
 .IMPORT init_state
-
-# From exec.s
-# TODO .IMPORT execute
 
 ##########
 # Entry point

@@ -3,6 +3,19 @@
 # From error.s
 .IMPORT report_error
 
+# From params.s
+.IMPORT immediate
+.IMPORT zeropage
+.IMPORT zeropage_x
+.IMPORT zeropage_y
+.IMPORT absolute
+.IMPORT absolute_x
+.IMPORT absolute_y
+.IMPORT indirect8_x
+.IMPORT indirect8_y
+.IMPORT indirect16
+.IMPORT relative
+
 # From state.s
 .IMPORT reg_pc
 

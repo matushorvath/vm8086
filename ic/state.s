@@ -14,11 +14,11 @@
 
 .EXPORT init_state
 
-# From error.s
-.IMPORT report_error
-
 # From binary.s
 .IMPORT binary
+
+# From error.s
+.IMPORT report_error
 
 # From util.s
 .IMPORT check_16bit
