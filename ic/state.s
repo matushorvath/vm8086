@@ -20,6 +20,9 @@
 # From binary.s
 .IMPORT binary
 
+# From util.s
+.IMPORT check_16bit
+
 ##########
 # vm state
 
@@ -69,21 +72,12 @@ init_state:
 
 init_state_skip_reset_vec:
     # Check if pc is a sane value
-    lt  [reg_pc], 0, [rb + tmp]
-    jnz [rb + tmp], init_state_invalid_pc
-    lt  65535, [reg_pc], [rb + tmp]
-    jnz [rb + tmp], init_state_invalid_pc
+    add [reg_pc], 0, [rb - 1]
+    arb -1
+    call check_16bit
 
     arb 1
     ret 0
-
-init_state_invalid_pc:
-    add init_state_invalid_pc_message, 0, [rb - 1]
-    arb -1
-    call report_error
-
-init_state_invalid_pc_message:
-    db  "invalid start address", 0
 .ENDFRAME
 
 .EOF
