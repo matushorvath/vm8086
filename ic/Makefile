@@ -33,7 +33,7 @@ endef
 
 # Build
 .PHONY: build
-build: build-prep $(BINDIR)/vm6502.input $(BINDIR)/msbasic.input
+build: build-prep $(BINDIR)/vm6502.input $(BINDIR)/msbasic.input $(BINDIR)/test.input
 
 .PHONY: build-prep
 build-prep:
@@ -53,6 +53,14 @@ $(BINDIR)/msbasic.input: $(addprefix $(OBJDIR)/, $(MSBASIC_OBJS)) $(LIBXIB)
 	$(run-ld)
 
 $(OBJDIR)/msbasic_binary.o: $(MSBASICDIR)/tmp/vm6502.bin
+	$(run-bin2obj)
+
+TEST_OBJS = $(VM6502_OBJS) test_header.o test_binary.o
+
+$(BINDIR)/test.input: $(addprefix $(OBJDIR)/, $(TEST_OBJS)) $(LIBXIB)
+	$(run-ld)
+
+$(OBJDIR)/test_binary.o: test.bin
 	$(run-bin2obj)
 
 # Clean

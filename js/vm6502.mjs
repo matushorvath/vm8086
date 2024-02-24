@@ -11,6 +11,9 @@
 import { OPCODES } from './opcodes.mjs';
 import fs from 'node:fs';
 
+const f8 = n => n.toString(16).padStart(2, '0');
+const f16 = n => n.toString(16).padStart(4, '0');
+
 let inputSimulate0D = false;
 
 const input = () => {
@@ -38,7 +41,7 @@ const input = () => {
 
 const output = (val) => {
     const ch = String.fromCharCode(val);
-    //console.log('out', this.format8(val), ch);
+    //console.log('out', f8(val), ch);
     process.stdout.write(ch);
 };
 
@@ -79,7 +82,7 @@ export class Vm6502 {
 
     write(addr, val) {
         if (val < 0x00 || val > 0xff) {
-            throw new Error(`range error; value ${this.format8(val)}, addr ${this.format16(this.pc)}`);
+            throw new Error(`range error; value ${f8(val)}, addr ${f16(this.pc)}`);
         }
 
         if (addr === this.ioport) {
@@ -392,14 +395,6 @@ export class Vm6502 {
         this.write(addr, val);
     }
 
-    format8(val) {
-        return val.toString(16).padStart(2, '0');
-    }
-
-    format16(val) {
-        return val.toString(16).padStart(4, '0');
-    }
-
     getDataSymbol(opinfo) {
         switch (opinfo?.mode) {
         case 'Zero Page':
@@ -427,16 +422,16 @@ export class Vm6502 {
         const opname = opinfo?.name ?? '???';
         const oplength = opinfo?.length ?? 5;
 
-        const addr = this.format16(this.pc);
+        const addr = f16(this.pc);
         const addrSymbol = this.symbols?.[this.pc];
 
         const data = [];
         for (let i = 1; i < oplength; i++) {
-            data.push(this.format8(this.read((this.pc + i) % 0x10000)));
+            data.push(f8(this.read((this.pc + i) % 0x10000)));
         }
         const dataSymbol = this.getDataSymbol(opinfo);
 
-        const opStr = `${opname}(${this.format8(opcode)})`;
+        const opStr = `${opname}(${f8(opcode)})`;
         const dataStr = dataSymbol ? `${dataSymbol}(${data.join(' ')})`: data.join(' ');
 
         if (addrSymbol !== undefined) {
@@ -450,7 +445,7 @@ export class Vm6502 {
             this.cnt = 0;
         }
         if (this.cnt++ === 100000) {
-            console.log(this.format16(this.pc));
+            console.log(f16(this.pc));
             this.cnt = 0;
         }
     }
@@ -652,7 +647,7 @@ export class Vm6502 {
             // These are not official instructions, but we need them
             case 0x02: return;                                                          // HLT
 
-            default: throw new Error(`invalid opcode ${this.format8(op)} at ${this.format16((this.pc - 1 + 0x10000) % 0x10000)}`);
+            default: throw new Error(`invalid opcode ${f8(op)} at ${f16((this.pc - 1 + 0x10000) % 0x10000)}`);
             }
         }
     }
