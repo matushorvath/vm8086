@@ -17,14 +17,11 @@
 ##########
 main:
 .FRAME
-    arb -0
-
     call init_memory
     call init_state
 
     call execute
 
-    arb 0
     ret 0
 .ENDFRAME
 

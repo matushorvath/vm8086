@@ -127,8 +127,6 @@ pack_sr_after_negative:
 ##########
 unpack_sr:
 .FRAME sr;
-    arb -0
-
     lt  127, [rb + sr], [flag_negative]             # 0b1000_0000
     jz  [flag_negative], unpack_sr_after_negative
     add [rb + sr], -128, [rb + sr]
@@ -166,7 +164,6 @@ unpack_sr_after_zero:
 
     lt  0, [rb + sr], [flag_carry]                  # 0b0000_0001
 
-    arb 0
     ret 1
 .ENDFRAME
 

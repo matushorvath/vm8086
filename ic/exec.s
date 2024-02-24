@@ -10,9 +10,17 @@
 .IMPORT execute_lda
 .IMPORT execute_ldx
 .IMPORT execute_ldy
+
 .IMPORT execute_sta
 .IMPORT execute_stx
 .IMPORT execute_sty
+
+.IMPORT execute_tax
+.IMPORT execute_tay
+.IMPORT execute_txa
+.IMPORT execute_tya
+.IMPORT execute_txs
+.IMPORT execute_tsx
 
 # From memory.s
 .IMPORT read
@@ -267,7 +275,7 @@ instructions:
     db  invalid_opcode, 0                                   # 87
     db  not_implemented, 0        #    db  execute_dey, 0                                      # 88
     db  invalid_opcode, 0                                   # 89
-    db  not_implemented, 0        #    db  execute_txa, 0                                      # 8a a = reg_x; updateNegativeZero(reg_a) TODO
+    db  execute_txa, 0                                      # 8a
     db  invalid_opcode, 0                                   # 8b
     db  execute_sty, absolute                               # 8c
     db  execute_sta, absolute                               # 8d
@@ -282,9 +290,9 @@ instructions:
     db  execute_sta, zeropage_x                             # 95
     db  execute_stx, zeropage_y                             # 96
     db  invalid_opcode, 0                                   # 97
-    db  not_implemented, 0        #    db  execute_tya, 0                                      # 98 a = reg_y; updateNegativeZero(reg_a) TODO
+    db  execute_tya, 0                                      # 98
     db  execute_sta, absolute_y                             # 99
-    db  not_implemented, 0        #    db  execute_tsx, 0                                      # 9a sp = reg_x TODO
+    db  execute_txs, 0                                      # 9a
     db  invalid_opcode, 0                                   # 9b
     db  invalid_opcode, 0                                   # 9c
     db  execute_sta, absolute_x                             # 9d
@@ -299,9 +307,9 @@ instructions:
     db  execute_lda, zeropage                               # a5
     db  execute_ldx, zeropage                               # a6
     db  invalid_opcode, 0                                   # a7
-    db  not_implemented, 0        #    db  execute_tay, 0                                      # a8 y = reg_a; updateNegativeZero(reg_y) TODO
+    db  execute_tay, 0                                      # a8
     db  execute_lda, immediate                              # a9
-    db  not_implemented, 0        #    db  execute_tax, 0                                      # aa x = reg_a; updateNegativeZero(reg_x) TODO
+    db  execute_tax, 0                                      # aa
     db  invalid_opcode, 0                                   # ab
     db  execute_ldy, absolute                               # ac
     db  execute_lda, absolute                               # ad
@@ -318,7 +326,7 @@ instructions:
     db  invalid_opcode, 0                                   # b7
     db  not_implemented, 0        #    db  execute_clv, 0                                      # b8 CLear oVerflow
     db  execute_lda, absolute_y                             # b9
-    db  not_implemented, 0        #    db  execute_tsx, 0                                      # ba x = sp; updateNegativeZero(reg_x) TODO
+    db  execute_tsx, 0                                      # ba
     db  invalid_opcode, 0                                   # bb
     db  execute_ldy, absolute_x                             # bc
     db  execute_lda, absolute_x                             # bd
