@@ -16,6 +16,15 @@
 .IMPORT execute_sed
 .IMPORT execute_sei
 
+# From incdec.s
+.IMPORT execute_inc
+.IMPORT execute_inx
+.IMPORT execute_iny
+
+.IMPORT execute_dec
+.IMPORT execute_dex
+.IMPORT execute_dey
+
 # From loadstore.s
 .IMPORT execute_lda
 .IMPORT execute_ldx
@@ -283,7 +292,7 @@ instructions:
     db  execute_sta, zeropage                               # 85
     db  execute_stx, zeropage                               # 86
     db  invalid_opcode, 0                                   # 87
-    db  not_implemented, 0        #    db  execute_dey, 0                                      # 88
+    db  execute_dey, 0                                      # 88
     db  invalid_opcode, 0                                   # 89
     db  execute_txa, 0                                      # 8a
     db  invalid_opcode, 0                                   # 8b
@@ -349,15 +358,15 @@ instructions:
     db  invalid_opcode, 0                                   # c3
     db  not_implemented, 0        #    db  execute_cpy, zeropage                               # c4
     db  not_implemented, 0        #    db  execute_cmp, zeropage                               # c5
-    db  not_implemented, 0        #    db  execute_dec, zeropage                               # c6
+    db  execute_dec, zeropage                               # c6
     db  invalid_opcode, 0                                   # c7
-    db  not_implemented, 0        #    db  execute_iny, 0                                      # c8 y = inr(reg_y) TODO
+    db  execute_iny, 0                                      # c8
     db  not_implemented, 0        #    db  execute_cmp, immediate                              # c9
-    db  not_implemented, 0        #    db  execute_dex, 0                                      # ca x = der(reg_x) TODO
+    db  execute_dex, 0                                      # ca
     db  invalid_opcode, 0                                   # cb
     db  not_implemented, 0        #    db  execute_cpy, absolute                               # cc
     db  not_implemented, 0        #    db  execute_cmp, absolute                               # cd
-    db  not_implemented, 0        #    db  execute_dec, absolute                               # ce
+    db  execute_dec, absolute                               # ce
     db  invalid_opcode, 0                                   # cf
 
     db  not_implemented, 0        #    db  execute_bne, relative                               # d0 Branch on Not Equal
@@ -366,7 +375,7 @@ instructions:
     db  invalid_opcode, 0                                   # d3
     db  invalid_opcode, 0                                   # d4
     db  not_implemented, 0        #    db  execute_cmp, zeropage_x                             # d5
-    db  not_implemented, 0        #    db  execute_dec, zeropage_x                             # d6
+    db  execute_dec, zeropage_x                             # d6
     db  invalid_opcode, 0                                   # d7
     db  execute_cld, 0                                      # d8 CLear Decimal
     db  not_implemented, 0        #    db  execute_cmp, absolute_y                             # d9
@@ -374,7 +383,7 @@ instructions:
     db  invalid_opcode, 0                                   # db
     db  invalid_opcode, 0                                   # dc
     db  not_implemented, 0        #    db  execute_cmp, absolute_x                             # dd
-    db  not_implemented, 0        #    db  execute_dec, absolute_x                             # de
+    db  execute_dec, absolute_x                             # de
     db  invalid_opcode, 0                                   # df
 
     db  not_implemented, 0        #    db  execute_cpx, immediate                              # e0
@@ -383,15 +392,15 @@ instructions:
     db  invalid_opcode, 0                                   # e3
     db  not_implemented, 0        #    db  execute_cpx, zeropage                               # e4
     db  not_implemented, 0        #    db  execute_sbc, zeropage                               # e5
-    db  not_implemented, 0        #    db  execute_inc, zeropage                               # e6
+    db  execute_inc, zeropage                               # e6
     db  invalid_opcode, 0                                   # e7
-    db  not_implemented, 0        #    db  execute_inx, 0                                      # e8 x = inr(reg_x) TODO
+    db  execute_inx, 0                                      # e8
     db  not_implemented, 0        #    db  execute_sbc, immediate                              # e9
     db  execute_nop, 0                                      # ea
     db  invalid_opcode, 0                                   # eb
     db  not_implemented, 0        #    db  execute_cpx, absolute                               # ec
     db  not_implemented, 0        #    db  execute_sbc, absolute                               # ed
-    db  not_implemented, 0        #    db  execute_inc, absolute                               # ee
+    db  execute_inc, absolute                               # ee
     db  invalid_opcode, 0                                   # ef
 
     db  not_implemented, 0        #    db  execute_beq, relative                               # f0 Branch on EQual
@@ -400,7 +409,7 @@ instructions:
     db  invalid_opcode, 0                                   # f3
     db  invalid_opcode, 0                                   # f4
     db  not_implemented, 0        #    db  execute_sbc, zeropage_x                             # f5
-    db  not_implemented, 0        #    db  execute_inc, zeropage_x                             # f6
+    db  execute_inc, zeropage_x                             # f6
     db  invalid_opcode, 0                                   # f7
     db  execute_sed, 0                                      # f8 SEt Decimal
     db  not_implemented, 0        #    db  execute_sbc, absolute_y                             # f9
@@ -408,7 +417,7 @@ instructions:
     db  invalid_opcode, 0                                   # fb
     db  invalid_opcode, 0                                   # fc
     db  not_implemented, 0        #    db  execute_sbc, absolute_x                             # fd
-    db  not_implemented, 0        #    db  execute_inc, absolute_x                             # fe
+    db  execute_inc, absolute_x                             # fe
     db  invalid_opcode, 0                                   # ff
 
 .EOF
