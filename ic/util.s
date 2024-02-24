@@ -77,8 +77,8 @@ check_16bit_invalid_message:
 ##########
 # Calculate value mod 0x100
 mod_8bit:
-.FRAME value; tmp
-    arb -2
+.FRAME value; tmp                                   # returns tmp
+    arb -1
 
     # Handle negative value
     lt  [rb + value], 0, [rb + tmp]
@@ -99,15 +99,17 @@ mod_8bit_negative_loop:
     jz  0, mod_8bit_negative_loop
 
 mod_8bit_done:
-    arb 2
+    add [rb + value], 0, [rb + tmp]
+
+    arb 1
     ret 1
 .ENDFRAME
 
 ##########
 # Calculate value mod 0x10000
 mod_16bit:
-.FRAME value; tmp
-    arb -2
+.FRAME value; tmp                                   # returns tmp
+    arb -1
 
     # Handle negative value
     lt  [rb + value], 0, [rb + tmp]
@@ -128,7 +130,9 @@ mod_16bit_negative_loop:
     jz  0, mod_16bit_negative_loop
 
 mod_16bit_done:
-    arb 2
+    add [rb + value], 0, [rb + tmp]
+
+    arb 1
     ret 1
 .ENDFRAME
 

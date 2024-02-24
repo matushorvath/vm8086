@@ -36,9 +36,17 @@ ICDIR=~/xzintbit make
 # Tests
 
 ./tests/assemble.sh > test.bin
+
+# adc test
 adc #$42
 nop
 nop
 .byte 02
-^D
 
+# prints 'B'
+adc #$42
+sta $fff0
+adc #$0a
+sta $fff0
+nop
+.byte 02

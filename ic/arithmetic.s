@@ -6,7 +6,6 @@
 
 # From memory.s
 .IMPORT read
-.IMPORT write
 
 # From state.s
 .IMPORT flag_carry
