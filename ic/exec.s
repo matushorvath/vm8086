@@ -6,6 +6,16 @@
 # From error.s
 .IMPORT report_error
 
+# From flags.s
+.IMPORT execute_clc
+.IMPORT execute_cld
+.IMPORT execute_cli
+.IMPORT execute_clv
+
+.IMPORT execute_sec
+.IMPORT execute_sed
+.IMPORT execute_sei
+
 # From loadstore.s
 .IMPORT execute_lda
 .IMPORT execute_ldx
@@ -154,7 +164,7 @@ instructions:
     db  not_implemented, 0        #    db  execute_ora, zeropage_x                             # 15
     db  not_implemented, 0        #    db  execute_asl, zeropage_x                             # 16
     db  invalid_opcode, 0                                   # 17
-    db  not_implemented, 0        #    db  execute_clc, 0                                      # 18 CLear Carry
+    db  execute_clc, 0                                      # 18 CLear Carry
     db  not_implemented, 0        #    db  execute_ora, absolute_y                             # 19
     db  invalid_opcode, 0                                   # 1a
     db  invalid_opcode, 0                                   # 1b
@@ -188,7 +198,7 @@ instructions:
     db  not_implemented, 0        #    db  execute_and, zeropage_x                             # 35
     db  not_implemented, 0        #    db  execute_rol, zeropage_x                             # 36
     db  invalid_opcode, 0                                   # 37
-    db  not_implemented, 0        #    db  execute_sec, 0                                      # 38 SEt Carry
+    db  execute_sec, 0                                      # 38 SEt Carry
     db  not_implemented, 0        #    db  execute_and, absolute_y                             # 39
     db  invalid_opcode, 0                                   # 3a
     db  invalid_opcode, 0                                   # 3b
@@ -222,7 +232,7 @@ instructions:
     db  not_implemented, 0        #    db  execute_eor, zeropage_x                             # 55
     db  not_implemented, 0        #    db  execute_lsr, zeropage_x                             # 56
     db  invalid_opcode, 0                                   # 57
-    db  not_implemented, 0        #    db  execute_cli, 0                                      # 58 CLear Interrupt
+    db  execute_cli, 0                                      # 58 CLear Interrupt
     db  not_implemented, 0        #    db  execute_eor, absolute_y                             # 59
     db  invalid_opcode, 0                                   # 5a
     db  invalid_opcode, 0                                   # 5b
@@ -256,7 +266,7 @@ instructions:
     db  execute_adc, zeropage_x                             # 75
     db  not_implemented, 0        #    db  execute_ror, zeropage_x                             # 76
     db  invalid_opcode, 0                                   # 77
-    db  not_implemented, 0        #    db  execute_sei, 0                                      # 78 SEt Interrupt
+    db  execute_sei, 0                                      # 78 SEt Interrupt
     db  execute_adc, absolute_y                             # 79
     db  invalid_opcode, 0                                   # 7a
     db  invalid_opcode, 0                                   # 7b
@@ -324,7 +334,7 @@ instructions:
     db  execute_lda, zeropage_x                             # b5
     db  execute_ldx, zeropage_y                             # b6
     db  invalid_opcode, 0                                   # b7
-    db  not_implemented, 0        #    db  execute_clv, 0                                      # b8 CLear oVerflow
+    db  execute_clv, 0                                      # b8 CLear oVerflow
     db  execute_lda, absolute_y                             # b9
     db  execute_tsx, 0                                      # ba
     db  invalid_opcode, 0                                   # bb
@@ -358,7 +368,7 @@ instructions:
     db  not_implemented, 0        #    db  execute_cmp, zeropage_x                             # d5
     db  not_implemented, 0        #    db  execute_dec, zeropage_x                             # d6
     db  invalid_opcode, 0                                   # d7
-    db  not_implemented, 0        #    db  execute_cld, 0                                      # d8 CLear Decimal
+    db  execute_cld, 0                                      # d8 CLear Decimal
     db  not_implemented, 0        #    db  execute_cmp, absolute_y                             # d9
     db  invalid_opcode, 0                                   # da
     db  invalid_opcode, 0                                   # db
@@ -392,7 +402,7 @@ instructions:
     db  not_implemented, 0        #    db  execute_sbc, zeropage_x                             # f5
     db  not_implemented, 0        #    db  execute_inc, zeropage_x                             # f6
     db  invalid_opcode, 0                                   # f7
-    db  not_implemented, 0        #    db  execute_sed, 0                                      # f8 SEt Decimal
+    db  execute_sed, 0                                      # f8 SEt Decimal
     db  not_implemented, 0        #    db  execute_sbc, absolute_y                             # f9
     db  invalid_opcode, 0                                   # fa
     db  invalid_opcode, 0                                   # fb
