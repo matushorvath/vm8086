@@ -3,6 +3,22 @@
 # From arithmetic.s
 .IMPORT execute_adc
 
+# From branch.s
+.IMPORT execute_brk
+.IMPORT execute_jmp
+#.IMPORT execute_jsr
+#.IMPORT execute_rti
+#.IMPORT execute_rts
+
+.IMPORT execute_bcc
+.IMPORT execute_bcs
+.IMPORT execute_bne
+.IMPORT execute_beq
+.IMPORT execute_bpl
+.IMPORT execute_bmi
+.IMPORT execute_bvc
+.IMPORT execute_bvs
+
 # From error.s
 .IMPORT report_error
 
@@ -148,7 +164,7 @@ not_implemented_message:
 ##########
 # instruction decoding table
 instructions:
-    db  not_implemented, 0        #    db  execute_brk, 0                                      # 00
+    db  execute_brk, 0                                      # 00
     db  not_implemented, 0        #    db  execute_ora, indirect8_x                            # 01
     db  invalid_opcode, 0                                   # 02
     db  invalid_opcode, 0                                   # 03
@@ -165,7 +181,7 @@ instructions:
     db  not_implemented, 0        #    db  execute_asl, absolute                               # 0e
     db  invalid_opcode, 0                                   # 0f
 
-    db  not_implemented, 0        #    db  execute_bpl, relative                               # 10 Branch on PLus
+    db  execute_bpl, relative                               # 10 Branch on PLus
     db  not_implemented, 0        #    db  execute_ora, indirect8_y                            # 11
     db  invalid_opcode, 0                                   # 12
     db  invalid_opcode, 0                                   # 13
@@ -199,7 +215,7 @@ instructions:
     db  not_implemented, 0        #    db  execute_rol, absolute                               # 2e
     db  invalid_opcode, 0                                   # 2f
 
-    db  not_implemented, 0        #    db  execute_bmi, relative                               # 30 Branch on MInus
+    db  execute_bmi, relative                               # 30 Branch on MInus
     db  not_implemented, 0        #    db  execute_and, indirect8_y                            # 31
     db  invalid_opcode, 0                                   # 32
     db  invalid_opcode, 0                                   # 33
@@ -228,12 +244,12 @@ instructions:
     db  not_implemented, 0        #    db  execute_eor, immediate                              # 49
     db  not_implemented, 0        #    db  execute_lsr_a, 0                                    # 4a
     db  invalid_opcode, 0                                   # 4b
-    db  not_implemented, 0        #    db  execute_jmp, absolute                               # 4c
+    db  execute_jmp, absolute                               # 4c
     db  not_implemented, 0        #    db  execute_eor, absolute                               # 4d
     db  not_implemented, 0        #    db  execute_lsr, absolute                               # 4e
     db  invalid_opcode, 0                                   # 4f
 
-    db  not_implemented, 0        #    db  execute_bvc, relative                               # 50 Branch on oVerflow Clear
+    db  execute_bvc, relative                               # 50 Branch on oVerflow Clear
     db  not_implemented, 0        #    db  execute_eor, indirect8_y                            # 51
     db  invalid_opcode, 0                                   # 52
     db  invalid_opcode, 0                                   # 53
@@ -262,12 +278,12 @@ instructions:
     db  execute_adc, immediate                              # 69
     db  not_implemented, 0        #    db  execute_ror_a, 0                                    # 6a
     db  invalid_opcode, 0                                   # 6b
-    db  not_implemented, 0        #    db  execute_jmp, indirect16                             # 6c
+    db  execute_jmp, indirect16                             # 6c
     db  execute_adc, absolute                               # 6d
     db  not_implemented, 0        #    db  execute_ror, absolute                               # 6e
     db  invalid_opcode, 0                                   # 6f
 
-    db  not_implemented, 0        #    db  execute_bvs, relative                               # 70 Branch on oVerflow Set
+    db  execute_bvs, relative                               # 70 Branch on oVerflow Set
     db  execute_adc, indirect8_y                            # 71
     db  invalid_opcode, 0                                   # 72
     db  invalid_opcode, 0                                   # 73
@@ -301,7 +317,7 @@ instructions:
     db  execute_stx, absolute                               # 8e
     db  invalid_opcode, 0                                   # 8f
 
-    db  not_implemented, 0        #    db  execute_bcc, relative                               # 90 Branch on Carry Clear
+    db  execute_bcc, relative                               # 90 Branch on Carry Clear
     db  execute_sta, indirect8_y                            # 91
     db  invalid_opcode, 0                                   # 92
     db  invalid_opcode, 0                                   # 93
@@ -335,7 +351,7 @@ instructions:
     db  execute_ldx, absolute                               # ae
     db  invalid_opcode, 0                                   # af
 
-    db  not_implemented, 0        #    db  execute_bcs, relative                               # b0 Branch on Carry Set
+    db  execute_bcs, relative                               # b0 Branch on Carry Set
     db  execute_lda, indirect8_y                            # b1
     db  invalid_opcode, 0                                   # b2
     db  invalid_opcode, 0                                   # b3
@@ -369,7 +385,7 @@ instructions:
     db  execute_dec, absolute                               # ce
     db  invalid_opcode, 0                                   # cf
 
-    db  not_implemented, 0        #    db  execute_bne, relative                               # d0 Branch on Not Equal
+    db  execute_bne, relative                               # d0 Branch on Not Equal
     db  not_implemented, 0        #    db  execute_cmp, indirect8_y                            # d1
     db  invalid_opcode, 0                                   # d2
     db  invalid_opcode, 0                                   # d3
@@ -403,7 +419,7 @@ instructions:
     db  execute_inc, absolute                               # ee
     db  invalid_opcode, 0                                   # ef
 
-    db  not_implemented, 0        #    db  execute_beq, relative                               # f0 Branch on EQual
+    db  execute_beq, relative                               # f0 Branch on EQual
     db  not_implemented, 0        #    db  execute_sbc, indirect8_y                            # f1
     db  invalid_opcode, 0                                   # f2
     db  invalid_opcode, 0                                   # f3

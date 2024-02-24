@@ -69,15 +69,15 @@ init_state:
     jz  [rb + tmp], init_state_skip_reset_vec
 
     # Read the reset vector from 0xfffc and 0xfffd
-    add 65532, 0, [rb - 1]
-    arb -1
-    call read
-    mul [rb - 3], 256, [rb + tmp]           # read(0xfffc) * 0x100 -> [tmp]
-
     add 65533, 0, [rb - 1]
     arb -1
     call read
-    add [rb - 3], [rb + tmp], [reg_pc]      # read(0xfffd) + read(0xfffc) * 0x100 -> [tmp]
+    mul [rb - 3], 256, [rb + tmp]           # read(0xfffd) * 0x100 -> [tmp]
+
+    add 65532, 0, [rb - 1]
+    arb -1
+    call read
+    add [rb - 3], [rb + tmp], [reg_pc]      # read(0xfffc) + read(0xfffd) * 0x100 -> [reg_pc]
 
 init_state_skip_reset_vec:
     # Check if pc is a sane value
