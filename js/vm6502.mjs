@@ -408,7 +408,7 @@ export class Vm6502 {
         case 'Absolute':
         case 'Absolute,Y':
         case 'Absolute,X':
-            return this.symbols?.[this.read((this.pc + 1)  % 0x10000) + 0x100 * this.read((this.pc + 2) % 0x10000)];
+            return this.symbols?.[this.read((this.pc + 1) % 0x10000) + 0x100 * this.read((this.pc + 2) % 0x10000)];
 
         default:
             return undefined;

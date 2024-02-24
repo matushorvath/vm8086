@@ -26,7 +26,7 @@ report_error:
     arb -1
     call print_num
 
-    add report_error_msg_pc, 0, [rb - 1]
+    add report_error_msg_end, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -35,7 +35,7 @@ report_error:
     hlt
 
 report_error_msg_start:
-    db "Error: ", 0
+    db "vm6502 error: ", 0
 report_error_msg_pc:
     db " (pc: ", 0
 report_error_msg_end:
