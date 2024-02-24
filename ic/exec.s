@@ -7,7 +7,12 @@
 .IMPORT report_error
 
 # From loadstore.s
+.IMPORT execute_lda
+.IMPORT execute_ldx
+.IMPORT execute_ldy
 .IMPORT execute_sta
+.IMPORT execute_stx
+.IMPORT execute_sty
 
 # From memory.s
 .IMPORT read
@@ -256,26 +261,26 @@ instructions:
     db  execute_sta, indirect8_x                            # 81
     db  invalid_opcode, 0                                   # 82
     db  invalid_opcode, 0                                   # 83
-    db  not_implemented, 0        #    db  execute_sty, zeropage                               # 84
+    db  execute_sty, zeropage                               # 84
     db  execute_sta, zeropage                               # 85
-    db  not_implemented, 0        #    db  execute_stx, zeropage                               # 86
+    db  execute_stx, zeropage                               # 86
     db  invalid_opcode, 0                                   # 87
     db  not_implemented, 0        #    db  execute_dey, 0                                      # 88
     db  invalid_opcode, 0                                   # 89
     db  not_implemented, 0        #    db  execute_txa, 0                                      # 8a a = reg_x; updateNegativeZero(reg_a) TODO
     db  invalid_opcode, 0                                   # 8b
-    db  not_implemented, 0        #    db  execute_sty, absolute                               # 8c
+    db  execute_sty, absolute                               # 8c
     db  execute_sta, absolute                               # 8d
-    db  not_implemented, 0        #    db  execute_stx, absolute                               # 8e
+    db  execute_stx, absolute                               # 8e
     db  invalid_opcode, 0                                   # 8f
 
     db  not_implemented, 0        #    db  execute_bcc, relative                               # 90 Branch on Carry Clear
     db  execute_sta, indirect8_y                            # 91
     db  invalid_opcode, 0                                   # 92
     db  invalid_opcode, 0                                   # 93
-    db  not_implemented, 0        #    db  execute_sty, zeropage_x                             # 94
+    db  execute_sty, zeropage_x                             # 94
     db  execute_sta, zeropage_x                             # 95
-    db  not_implemented, 0        #    db  execute_stx, zeropage_y                             # 96
+    db  execute_stx, zeropage_y                             # 96
     db  invalid_opcode, 0                                   # 97
     db  not_implemented, 0        #    db  execute_tya, 0                                      # 98 a = reg_y; updateNegativeZero(reg_a) TODO
     db  execute_sta, absolute_y                             # 99
@@ -286,38 +291,38 @@ instructions:
     db  invalid_opcode, 0                                   # 9e
     db  invalid_opcode, 0                                   # 9f
 
-    db  not_implemented, 0        #    db  execute_ldy, immediate                              # a0
-    db  not_implemented, 0        #    db  execute_lda, indirect8_x                            # a1
-    db  not_implemented, 0        #    db  execute_ldx, immediate                              # a2
+    db  execute_ldy, immediate                              # a0
+    db  execute_lda, indirect8_x                            # a1
+    db  execute_ldx, immediate                              # a2
     db  invalid_opcode, 0                                   # a3
-    db  not_implemented, 0        #    db  execute_ldy, zeropage                               # a4
-    db  not_implemented, 0        #    db  execute_lda, zeropage                               # a5
-    db  not_implemented, 0        #    db  execute_ldx, zeropage                               # a6
+    db  execute_ldy, zeropage                               # a4
+    db  execute_lda, zeropage                               # a5
+    db  execute_ldx, zeropage                               # a6
     db  invalid_opcode, 0                                   # a7
     db  not_implemented, 0        #    db  execute_tay, 0                                      # a8 y = reg_a; updateNegativeZero(reg_y) TODO
-    db  not_implemented, 0        #    db  execute_lda, immediate                              # a9
+    db  execute_lda, immediate                              # a9
     db  not_implemented, 0        #    db  execute_tax, 0                                      # aa x = reg_a; updateNegativeZero(reg_x) TODO
     db  invalid_opcode, 0                                   # ab
-    db  not_implemented, 0        #    db  execute_ldy, absolute                               # ac
-    db  not_implemented, 0        #    db  execute_lda, absolute                               # ad
-    db  not_implemented, 0        #    db  execute_ldx, absolute                               # ae
+    db  execute_ldy, absolute                               # ac
+    db  execute_lda, absolute                               # ad
+    db  execute_ldx, absolute                               # ae
     db  invalid_opcode, 0                                   # af
 
     db  not_implemented, 0        #    db  execute_bcs, relative                               # b0 Branch on Carry Set
-    db  not_implemented, 0        #    db  execute_lda, indirect8_y                            # b1
+    db  execute_lda, indirect8_y                            # b1
     db  invalid_opcode, 0                                   # b2
     db  invalid_opcode, 0                                   # b3
-    db  not_implemented, 0        #    db  execute_ldy, zeropage_x                             # b4
-    db  not_implemented, 0        #    db  execute_lda, zeropage_x                             # b5
-    db  not_implemented, 0        #    db  execute_ldx, zeropage_y                             # b6
+    db  execute_ldy, zeropage_x                             # b4
+    db  execute_lda, zeropage_x                             # b5
+    db  execute_ldx, zeropage_y                             # b6
     db  invalid_opcode, 0                                   # b7
     db  not_implemented, 0        #    db  execute_clv, 0                                      # b8 CLear oVerflow
-    db  not_implemented, 0        #    db  execute_lda, absolute_y                             # b9
+    db  execute_lda, absolute_y                             # b9
     db  not_implemented, 0        #    db  execute_tsx, 0                                      # ba x = sp; updateNegativeZero(reg_x) TODO
     db  invalid_opcode, 0                                   # bb
-    db  not_implemented, 0        #    db  execute_ldy, absolute_x                             # bc
-    db  not_implemented, 0        #    db  execute_lda, absolute_x                             # bd
-    db  not_implemented, 0        #    db  execute_ldx, absolute_y                             # be
+    db  execute_ldy, absolute_x                             # bc
+    db  execute_lda, absolute_x                             # bd
+    db  execute_ldx, absolute_y                             # be
     db  invalid_opcode, 0                                   # bf
 
     db  not_implemented, 0        #    db  execute_cpy, immediate                              # c0
