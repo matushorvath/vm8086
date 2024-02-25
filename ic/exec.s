@@ -78,6 +78,12 @@
 .IMPORT indirect16
 .IMPORT relative
 
+# From pushpull.s
+.IMPORT execute_php
+.IMPORT execute_plp
+.IMPORT execute_pha
+.IMPORT execute_pla
+
 # From state.s
 .IMPORT reg_pc
 
@@ -177,7 +183,7 @@ instructions:
     db  not_implemented, 0        #    db  execute_ora, zeropage                               # 05
     db  not_implemented, 0        #    db  execute_asl, zeropage                               # 06
     db  invalid_opcode, 0                                   # 07
-    db  not_implemented, 0        #    db  execute_php, 0                                      # 08
+    db  execute_php, 0                                      # 08
     db  not_implemented, 0        #    db  execute_ora, immediate                              # 09
     db  not_implemented, 0        #    db  execute_asl_a, 0                                    # 0a
     db  invalid_opcode, 0                                   # 0b
@@ -211,7 +217,7 @@ instructions:
     db  not_implemented, 0        #    db  execute_and, zeropage                               # 25
     db  not_implemented, 0        #    db  execute_rol, zeropage                               # 26
     db  invalid_opcode, 0                                   # 27
-    db  not_implemented, 0        #    db  execute_plp, 0                                      # 28
+    db  execute_plp, 0                                      # 28
     db  not_implemented, 0        #    db  execute_and, immediate                              # 29
     db  not_implemented, 0        #    db  execute_rol_a, 0                                    # 2a
     db  invalid_opcode, 0                                   # 2b
@@ -245,7 +251,7 @@ instructions:
     db  not_implemented, 0        #    db  execute_eor, zeropage                               # 45
     db  not_implemented, 0        #    db  execute_lsr, zeropage                               # 46
     db  invalid_opcode, 0                                   # 47
-    db  not_implemented, 0        #    db  execute_pha, 0                                      # 48
+    db  execute_pha, 0                                      # 48
     db  not_implemented, 0        #    db  execute_eor, immediate                              # 49
     db  not_implemented, 0        #    db  execute_lsr_a, 0                                    # 4a
     db  invalid_opcode, 0                                   # 4b
@@ -279,7 +285,7 @@ instructions:
     db  execute_adc, zeropage                               # 65
     db  not_implemented, 0        #    db  execute_ror, zeropage                               # 66
     db  invalid_opcode, 0                                   # 67
-    db  not_implemented, 0        #    db  execute_pla, 0                                      # 68 a = pull(); updateNegativeZero(reg_a) TODO
+    db  execute_pla, 0                                      # 68
     db  execute_adc, immediate                              # 69
     db  not_implemented, 0        #    db  execute_ror_a, 0                                    # 6a
     db  invalid_opcode, 0                                   # 6b

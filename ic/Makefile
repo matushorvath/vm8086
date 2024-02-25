@@ -40,7 +40,7 @@ build-prep:
 	mkdir -p "$(BINDIR)" "$(OBJDIR)"
 
 VM6502_OBJS = vm6502.o arithmetic.o branch.o error.o exec.o flags.o incdec.o loadstore.o \
-	memory.o opcodes.o params.o state.o util.o binary.o
+	memory.o opcodes.o params.o pushpull.o state.o util.o binary.o
 
 $(BINDIR)/vm6502.input: $(addprefix $(OBJDIR)/, $(VM6502_OBJS)) $(LIBXIB)
 	$(run-ld)
