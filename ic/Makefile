@@ -1,7 +1,10 @@
+# ICDIR=~/xzintbit MSBASICDIR=~/vm6502/msbasic FUNCTESTDIR=~/vm6502/6502_65C02_functional_tests make
+
 ICVM_TYPE ?= c
 
 ICDIR ?= $(error ICDIR variable is not set; point it where https://github.com/matushorvath/xzintbit is built)
 MSBASICDIR ?= $(error MSBASICDIR variable is not set; point it where https://github.com/matushorvath/msbasic is built)
+FUNCTESTDIR ?= $(error FUNCTESTDIR variable is not set; point it where https://github.com/Klaus2m5/6502_65C02_functional_tests is cloned)
 
 ICVM ?= $(abspath $(ICDIR)/vms)/$(ICVM_TYPE)/ic
 ICAS ?= $(abspath $(ICDIR)/bin/as.input)
@@ -33,7 +36,7 @@ endef
 
 # Build
 .PHONY: build
-build: build-prep $(BINDIR)/vm6502.input $(BINDIR)/msbasic.input $(BINDIR)/test.input
+build: build-prep $(BINDIR)/vm6502.input $(BINDIR)/msbasic.input $(BINDIR)/func_tests.input
 
 .PHONY: build-prep
 build-prep:
@@ -66,12 +69,12 @@ $(BINDIR)/msbasic.input: $(addprefix $(OBJDIR)/, $(MSBASIC_OBJS)) $(LIBXIB)
 $(OBJDIR)/msbasic_binary.o: $(MSBASICDIR)/tmp/vm6502.bin
 	$(run-bin2obj)
 
-TEST_OBJS = $(VM6502_OBJS) test_header.o test_binary.o
+FUNC_TESTS_OBJS = $(VM6502_OBJS) func_tests_header.o func_tests_binary.o
 
-$(BINDIR)/test.input: $(addprefix $(OBJDIR)/, $(TEST_OBJS)) $(LIBXIB)
+$(BINDIR)/func_tests.input: $(addprefix $(OBJDIR)/, $(FUNC_TESTS_OBJS)) $(LIBXIB)
 	$(run-ld)
 
-$(OBJDIR)/test_binary.o: test.bin
+$(OBJDIR)/func_tests_binary.o: $(FUNCTESTDIR)/bin_files/6502_functional_test.bin
 	$(run-bin2obj)
 
 GEN_BITS_OBJS = gen_bits.o
