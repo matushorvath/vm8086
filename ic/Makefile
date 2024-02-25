@@ -39,14 +39,20 @@ build: build-prep $(BINDIR)/vm6502.input $(BINDIR)/msbasic.input $(BINDIR)/test.
 build-prep:
 	mkdir -p "$(BINDIR)" "$(OBJDIR)"
 
-VM6502_OBJS = vm6502.o arithmetic.o branch.o error.o exec.o flags.o incdec.o loadstore.o \
-	memory.o opcodes.o params.o pushpull.o state.o util.o binary.o
+VM6502_OBJS = vm6502.o arithmetic.o bits.o branch.o error.o exec.o flags.o incdec.o loadstore.o \
+	memory.o opcodes.o params.o pushpull.o shift.o state.o util.o binary.o
 
 $(BINDIR)/vm6502.input: $(addprefix $(OBJDIR)/, $(VM6502_OBJS)) $(LIBXIB)
 	$(run-ld)
 
 $(OBJDIR)/%.o: $(SRCDIR)/const.si $(SRCDIR)/%.s
 	$(run-as)
+
+$(OBJDIR)/bits.o: $(OBJDIR)/bits.s
+	$(run-as)
+
+$(OBJDIR)/bits.s: $(BINDIR)/gen_bits.input
+	$(ICVM) $(BINDIR)/gen_bits.input > $@ || ( cat $@ ; false )
 
 MSBASIC_OBJS = $(VM6502_OBJS) msbasic_header.o msbasic_binary.o
 
@@ -63,6 +69,11 @@ $(BINDIR)/test.input: $(addprefix $(OBJDIR)/, $(TEST_OBJS)) $(LIBXIB)
 
 $(OBJDIR)/test_binary.o: test.bin
 	$(run-bin2obj)
+
+GEN_BITS_OBJS = gen_bits.o
+
+$(BINDIR)/gen_bits.input: $(addprefix $(OBJDIR)/, $(GEN_BITS_OBJS)) $(LIBXIB)
+	$(run-ld)
 
 # Clean
 .PHONY: clean

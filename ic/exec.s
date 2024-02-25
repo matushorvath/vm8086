@@ -84,6 +84,16 @@
 .IMPORT execute_pha
 .IMPORT execute_pla
 
+# From shift.s
+.IMPORT execute_asl
+.IMPORT execute_asl_a
+#.IMPORT execute_lsr
+#.IMPORT execute_lsr_a
+.IMPORT execute_rol
+.IMPORT execute_rol_a
+#.IMPORT execute_ror
+#.IMPORT execute_ror_a
+
 # From state.s
 .IMPORT reg_pc
 
@@ -181,15 +191,15 @@ instructions:
     db  invalid_opcode, 0                                   # 03
     db  invalid_opcode, 0                                   # 04
     db  not_implemented, 0        #    db  execute_ora, zeropage                               # 05
-    db  not_implemented, 0        #    db  execute_asl, zeropage                               # 06
+    db  execute_asl, zeropage                               # 06
     db  invalid_opcode, 0                                   # 07
     db  execute_php, 0                                      # 08
     db  not_implemented, 0        #    db  execute_ora, immediate                              # 09
-    db  not_implemented, 0        #    db  execute_asl_a, 0                                    # 0a
+    db  execute_asl_a, 0                                    # 0a
     db  invalid_opcode, 0                                   # 0b
     db  invalid_opcode, 0                                   # 0c
     db  not_implemented, 0        #    db  execute_ora, absolute                               # 0d
-    db  not_implemented, 0        #    db  execute_asl, absolute                               # 0e
+    db  execute_asl, absolute                               # 0e
     db  invalid_opcode, 0                                   # 0f
 
     db  execute_bpl, relative                               # 10 Branch on PLus
@@ -198,7 +208,7 @@ instructions:
     db  invalid_opcode, 0                                   # 13
     db  invalid_opcode, 0                                   # 14
     db  not_implemented, 0        #    db  execute_ora, zeropage_x                             # 15
-    db  not_implemented, 0        #    db  execute_asl, zeropage_x                             # 16
+    db  execute_asl, zeropage_x                             # 16
     db  invalid_opcode, 0                                   # 17
     db  execute_clc, 0                                      # 18 CLear Carry
     db  not_implemented, 0        #    db  execute_ora, absolute_y                             # 19
@@ -206,7 +216,7 @@ instructions:
     db  invalid_opcode, 0                                   # 1b
     db  invalid_opcode, 0                                   # 1c
     db  not_implemented, 0        #    db  execute_ora, absolute_x                             # 1d
-    db  not_implemented, 0        #    db  execute_asl, absolute_x                             # 1e
+    db  execute_asl, absolute_x                             # 1e
     db  invalid_opcode, 0                                   # 1f
 
     db  execute_jsr, absolute                               # 20
@@ -215,15 +225,15 @@ instructions:
     db  invalid_opcode, 0                                   # 23
     db  not_implemented, 0        #    db  execute_bit, zeropage                               # 24
     db  not_implemented, 0        #    db  execute_and, zeropage                               # 25
-    db  not_implemented, 0        #    db  execute_rol, zeropage                               # 26
+    db  execute_rol, zeropage                               # 26
     db  invalid_opcode, 0                                   # 27
     db  execute_plp, 0                                      # 28
     db  not_implemented, 0        #    db  execute_and, immediate                              # 29
-    db  not_implemented, 0        #    db  execute_rol_a, 0                                    # 2a
+    db  execute_rol_a, 0                                    # 2a
     db  invalid_opcode, 0                                   # 2b
     db  not_implemented, 0        #    db  execute_bit, absolute                               # 2c
     db  not_implemented, 0        #    db  execute_and, absolute                               # 2d
-    db  not_implemented, 0        #    db  execute_rol, absolute                               # 2e
+    db  execute_rol, absolute                               # 2e
     db  invalid_opcode, 0                                   # 2f
 
     db  execute_bmi, relative                               # 30 Branch on MInus
@@ -232,7 +242,7 @@ instructions:
     db  invalid_opcode, 0                                   # 33
     db  invalid_opcode, 0                                   # 34
     db  not_implemented, 0        #    db  execute_and, zeropage_x                             # 35
-    db  not_implemented, 0        #    db  execute_rol, zeropage_x                             # 36
+    db  execute_rol, zeropage_x                             # 36
     db  invalid_opcode, 0                                   # 37
     db  execute_sec, 0                                      # 38 SEt Carry
     db  not_implemented, 0        #    db  execute_and, absolute_y                             # 39
@@ -240,7 +250,7 @@ instructions:
     db  invalid_opcode, 0                                   # 3b
     db  invalid_opcode, 0                                   # 3c
     db  not_implemented, 0        #    db  execute_and, absolute_x                             # 3d
-    db  not_implemented, 0        #    db  execute_rol, absolute_x                             # 3e
+    db  execute_rol, absolute_x                             # 3e
     db  invalid_opcode, 0                                   # 3f
 
     db  execute_rti, 0                                      # 40
