@@ -1,6 +1,10 @@
 .EXPORT execute_adc
 .EXPORT execute_sbc
 
+.EXPORT execute_cmp
+.EXPORT execute_cpx
+.EXPORT execute_cpy
+
 # From error.s
 # TODO probably not needed
 .IMPORT report_error
@@ -15,14 +19,16 @@
 .IMPORT flag_overflow
 .IMPORT flag_zero
 .IMPORT reg_a
+.IMPORT reg_x
+.IMPORT reg_y
 
 # From util
 .IMPORT mod_8bit
 
 ##########
 execute_adc:
-.FRAME addr; tmp, b, sum
-    arb -3
+.FRAME addr; b, sum
+    arb -2
 
     # Read the second operand
     add [rb + addr], 0, [rb - 1]
@@ -80,7 +86,7 @@ execute_adc_not_decimal:
     eq  [reg_a], 0, [flag_zero]
 
 execute_adc_done:
-    arb 3
+    arb 2
     ret 1
 .ENDFRAME
 
@@ -160,6 +166,56 @@ execute_sbc_done:
 .ENDFRAME
 
 ##########
+.FRAME addr; reg, b, diff
+    # Multiple entry points for this function, to share the common code without having to add
+    # a parameter (which would not work with the exec.s instructions table mechanism).
+
+execute_cpx:
+    arb -3
+    add [reg_x], 0, [rb + reg]
+    jz  0, execute_cmp_cpr_generic
+
+execute_cpy:
+    arb -3
+    add [reg_y], 0, [rb + reg]
+    jz  0, execute_cmp_cpr_generic
+
+execute_cmp:
+    arb -3
+    add [reg_a], 0, [rb + reg]
+    jz  0, execute_cmp_cpr_generic
+
+execute_cmp_cpr_generic:
+    # Read the second operand
+    add [rb + addr], 0, [rb - 1]
+    arb -1
+    call read
+    add [rb - 3], 0, [rb + b]
+
+    # Subtract [reg] - [b]
+    mul [rb + b], -1, [rb + diff]
+    add [rb + diff], [rb + reg], [rb + diff]
+
+    # Set carry flag if diff >= 0
+    lt  [rb + diff], 0, [flag_carry]
+    mul [flag_carry], -1, [flag_carry]
+    add [flag_carry], 1, [flag_carry]
+
+    # Wrap around diff to 8 bits
+    add [rb + diff], 0, [rb - 1]
+    arb -1
+    call mod_8bit
+    add [rb - 3], 0, [rb + diff]
+
+    # Update flags
+    lt  127, [rb + diff], [flag_negative]
+    eq  [rb + diff], 0, [flag_zero]
+
+    arb 3
+    ret 1
+.ENDFRAME
+
+##########
 update_overflow:
 .FRAME op1, op2, res; tmp
     arb -1
@@ -191,17 +247,3 @@ decimal_error:
     db  "decimal operations not supported", 0
 
 .EOF
-
-TODO instructions
-
-execute_cmp
-execute_cpx
-execute_cpy
-
-    cmp(reg, addr) {
-        const diff = reg - this.read(addr);
-        this.carry = diff >= 0x00;
-
-        const res = (diff + 0x100) % 0x100;
-        this.updateNegativeZero(res);
-    }

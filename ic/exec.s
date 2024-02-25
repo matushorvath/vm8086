@@ -4,6 +4,10 @@
 .IMPORT execute_adc
 .IMPORT execute_sbc
 
+.IMPORT execute_cmp
+.IMPORT execute_cpx
+.IMPORT execute_cpy
+
 # From branch.s
 .IMPORT execute_brk
 .IMPORT execute_jmp
@@ -369,45 +373,45 @@ instructions:
     db  execute_ldx, absolute_y                             # be
     db  invalid_opcode, 0                                   # bf
 
-    db  not_implemented, 0        #    db  execute_cpy, immediate                              # c0
-    db  not_implemented, 0        #    db  execute_cmp, indirect8_x                            # c1
+    db  execute_cpy, immediate                              # c0
+    db  execute_cmp, indirect8_x                            # c1
     db  invalid_opcode, 0                                   # c2
     db  invalid_opcode, 0                                   # c3
-    db  not_implemented, 0        #    db  execute_cpy, zeropage                               # c4
-    db  not_implemented, 0        #    db  execute_cmp, zeropage                               # c5
+    db  execute_cpy, zeropage                               # c4
+    db  execute_cmp, zeropage                               # c5
     db  execute_dec, zeropage                               # c6
     db  invalid_opcode, 0                                   # c7
     db  execute_iny, 0                                      # c8
-    db  not_implemented, 0        #    db  execute_cmp, immediate                              # c9
+    db  execute_cmp, immediate                              # c9
     db  execute_dex, 0                                      # ca
     db  invalid_opcode, 0                                   # cb
-    db  not_implemented, 0        #    db  execute_cpy, absolute                               # cc
-    db  not_implemented, 0        #    db  execute_cmp, absolute                               # cd
+    db  execute_cpy, absolute                               # cc
+    db  execute_cmp, absolute                               # cd
     db  execute_dec, absolute                               # ce
     db  invalid_opcode, 0                                   # cf
 
     db  execute_bne, relative                               # d0 Branch on Not Equal
-    db  not_implemented, 0        #    db  execute_cmp, indirect8_y                            # d1
+    db  execute_cmp, indirect8_y                            # d1
     db  invalid_opcode, 0                                   # d2
     db  invalid_opcode, 0                                   # d3
     db  invalid_opcode, 0                                   # d4
-    db  not_implemented, 0        #    db  execute_cmp, zeropage_x                             # d5
+    db  execute_cmp, zeropage_x                             # d5
     db  execute_dec, zeropage_x                             # d6
     db  invalid_opcode, 0                                   # d7
     db  execute_cld, 0                                      # d8 CLear Decimal
-    db  not_implemented, 0        #    db  execute_cmp, absolute_y                             # d9
+    db  execute_cmp, absolute_y                             # d9
     db  invalid_opcode, 0                                   # da
     db  invalid_opcode, 0                                   # db
     db  invalid_opcode, 0                                   # dc
-    db  not_implemented, 0        #    db  execute_cmp, absolute_x                             # dd
+    db  execute_cmp, absolute_x                             # dd
     db  execute_dec, absolute_x                             # de
     db  invalid_opcode, 0                                   # df
 
-    db  not_implemented, 0        #    db  execute_cpx, immediate                              # e0
+    db  execute_cpx, immediate                              # e0
     db  execute_sbc, indirect8_x                            # e1
     db  invalid_opcode, 0                                   # e2
     db  invalid_opcode, 0                                   # e3
-    db  not_implemented, 0        #    db  execute_cpx, zeropage                               # e4
+    db  execute_cpx, zeropage                               # e4
     db  execute_sbc, zeropage                               # e5
     db  execute_inc, zeropage                               # e6
     db  invalid_opcode, 0                                   # e7
@@ -415,7 +419,7 @@ instructions:
     db  execute_sbc, immediate                              # e9
     db  execute_nop, 0                                      # ea
     db  invalid_opcode, 0                                   # eb
-    db  not_implemented, 0        #    db  execute_cpx, absolute                               # ec
+    db  execute_cpx, absolute                               # ec
     db  execute_sbc, absolute                               # ed
     db  execute_inc, absolute                               # ee
     db  invalid_opcode, 0                                   # ef
