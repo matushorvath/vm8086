@@ -45,7 +45,7 @@ VM6502_OBJS = vm6502.o arithmetic.o bits.o branch.o error.o exec.o flags.o incde
 $(BINDIR)/vm6502.input: $(addprefix $(OBJDIR)/, $(VM6502_OBJS)) $(LIBXIB)
 	$(run-ld)
 
-$(OBJDIR)/%.o: $(SRCDIR)/const.si $(SRCDIR)/%.s
+$(OBJDIR)/%.o: $(SRCDIR)/%.s
 	$(run-as)
 
 # Intcode does not have a convenient way to access individual bits of a byte.
