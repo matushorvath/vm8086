@@ -8,6 +8,12 @@
 .IMPORT execute_cpx
 .IMPORT execute_cpy
 
+# From bitwise.s
+.IMPORT execute_and
+.IMPORT execute_bit
+.IMPORT execute_eor
+.IMPORT execute_ora
+
 # From branch.s
 .IMPORT execute_brk
 .IMPORT execute_jmp
@@ -170,120 +176,107 @@ invalid_opcode_message:
 .ENDFRAME
 
 ##########
-not_implemented:                        # TODO remove this function
-.FRAME
-    arb -0
-
-    add not_implemented_message, 0, [rb - 1]
-    arb -1
-    call report_error
-
-not_implemented_message:
-    db  "opcode not implemented", 0
-.ENDFRAME
-
-##########
 # instruction decoding table
 instructions:
     db  execute_brk, 0                                      # 00
-    db  not_implemented, 0        #    db  execute_ora, indirect8_x                            # 01
+    db  execute_ora, indirect8_x                            # 01
     db  invalid_opcode, 0                                   # 02
     db  invalid_opcode, 0                                   # 03
     db  invalid_opcode, 0                                   # 04
-    db  not_implemented, 0        #    db  execute_ora, zeropage                               # 05
+    db  execute_ora, zeropage                               # 05
     db  execute_asl, zeropage                               # 06
     db  invalid_opcode, 0                                   # 07
     db  execute_php, 0                                      # 08
-    db  not_implemented, 0        #    db  execute_ora, immediate                              # 09
+    db  execute_ora, immediate                              # 09
     db  execute_asl_a, 0                                    # 0a
     db  invalid_opcode, 0                                   # 0b
     db  invalid_opcode, 0                                   # 0c
-    db  not_implemented, 0        #    db  execute_ora, absolute                               # 0d
+    db  execute_ora, absolute                               # 0d
     db  execute_asl, absolute                               # 0e
     db  invalid_opcode, 0                                   # 0f
 
     db  execute_bpl, relative                               # 10 Branch on PLus
-    db  not_implemented, 0        #    db  execute_ora, indirect8_y                            # 11
+    db  execute_ora, indirect8_y                            # 11
     db  invalid_opcode, 0                                   # 12
     db  invalid_opcode, 0                                   # 13
     db  invalid_opcode, 0                                   # 14
-    db  not_implemented, 0        #    db  execute_ora, zeropage_x                             # 15
+    db  execute_ora, zeropage_x                             # 15
     db  execute_asl, zeropage_x                             # 16
     db  invalid_opcode, 0                                   # 17
     db  execute_clc, 0                                      # 18 CLear Carry
-    db  not_implemented, 0        #    db  execute_ora, absolute_y                             # 19
+    db  execute_ora, absolute_y                             # 19
     db  invalid_opcode, 0                                   # 1a
     db  invalid_opcode, 0                                   # 1b
     db  invalid_opcode, 0                                   # 1c
-    db  not_implemented, 0        #    db  execute_ora, absolute_x                             # 1d
+    db  execute_ora, absolute_x                             # 1d
     db  execute_asl, absolute_x                             # 1e
     db  invalid_opcode, 0                                   # 1f
 
     db  execute_jsr, absolute                               # 20
-    db  not_implemented, 0        #    db  execute_and, indirect8_x                            # 21
+    db  execute_and, indirect8_x                            # 21
     db  invalid_opcode, 0                                   # 22
     db  invalid_opcode, 0                                   # 23
-    db  not_implemented, 0        #    db  execute_bit, zeropage                               # 24
-    db  not_implemented, 0        #    db  execute_and, zeropage                               # 25
+    db  execute_bit, zeropage                               # 24
+    db  execute_and, zeropage                               # 25
     db  execute_rol, zeropage                               # 26
     db  invalid_opcode, 0                                   # 27
     db  execute_plp, 0                                      # 28
-    db  not_implemented, 0        #    db  execute_and, immediate                              # 29
+    db  execute_and, immediate                              # 29
     db  execute_rol_a, 0                                    # 2a
     db  invalid_opcode, 0                                   # 2b
-    db  not_implemented, 0        #    db  execute_bit, absolute                               # 2c
-    db  not_implemented, 0        #    db  execute_and, absolute                               # 2d
+    db  execute_bit, absolute                               # 2c
+    db  execute_and, absolute                               # 2d
     db  execute_rol, absolute                               # 2e
     db  invalid_opcode, 0                                   # 2f
 
     db  execute_bmi, relative                               # 30 Branch on MInus
-    db  not_implemented, 0        #    db  execute_and, indirect8_y                            # 31
+    db  execute_and, indirect8_y                            # 31
     db  invalid_opcode, 0                                   # 32
     db  invalid_opcode, 0                                   # 33
     db  invalid_opcode, 0                                   # 34
-    db  not_implemented, 0        #    db  execute_and, zeropage_x                             # 35
+    db  execute_and, zeropage_x                             # 35
     db  execute_rol, zeropage_x                             # 36
     db  invalid_opcode, 0                                   # 37
     db  execute_sec, 0                                      # 38 SEt Carry
-    db  not_implemented, 0        #    db  execute_and, absolute_y                             # 39
+    db  execute_and, absolute_y                             # 39
     db  invalid_opcode, 0                                   # 3a
     db  invalid_opcode, 0                                   # 3b
     db  invalid_opcode, 0                                   # 3c
-    db  not_implemented, 0        #    db  execute_and, absolute_x                             # 3d
+    db  execute_and, absolute_x                             # 3d
     db  execute_rol, absolute_x                             # 3e
     db  invalid_opcode, 0                                   # 3f
 
     db  execute_rti, 0                                      # 40
-    db  not_implemented, 0        #    db  execute_eor, indirect8_x                            # 41
+    db  execute_eor, indirect8_x                            # 41
     db  invalid_opcode, 0                                   # 42
     db  invalid_opcode, 0                                   # 43
     db  invalid_opcode, 0                                   # 44
-    db  not_implemented, 0        #    db  execute_eor, zeropage                               # 45
+    db  execute_eor, zeropage                               # 45
     db  execute_lsr, zeropage                               # 46
     db  invalid_opcode, 0                                   # 47
     db  execute_pha, 0                                      # 48
-    db  not_implemented, 0        #    db  execute_eor, immediate                              # 49
+    db  execute_eor, immediate                              # 49
     db  execute_lsr_a, 0                                    # 4a
     db  invalid_opcode, 0                                   # 4b
     db  execute_jmp, absolute                               # 4c
-    db  not_implemented, 0        #    db  execute_eor, absolute                               # 4d
+    db  execute_eor, absolute                               # 4d
     db  execute_lsr, absolute                               # 4e
     db  invalid_opcode, 0                                   # 4f
 
     db  execute_bvc, relative                               # 50 Branch on oVerflow Clear
-    db  not_implemented, 0        #    db  execute_eor, indirect8_y                            # 51
+    db  execute_eor, indirect8_y                            # 51
     db  invalid_opcode, 0                                   # 52
     db  invalid_opcode, 0                                   # 53
     db  invalid_opcode, 0                                   # 54
-    db  not_implemented, 0        #    db  execute_eor, zeropage_x                             # 55
+    db  execute_eor, zeropage_x                             # 55
     db  execute_lsr, zeropage_x                             # 56
     db  invalid_opcode, 0                                   # 57
     db  execute_cli, 0                                      # 58 CLear Interrupt
-    db  not_implemented, 0        #    db  execute_eor, absolute_y                             # 59
+    db  execute_eor, absolute_y                             # 59
     db  invalid_opcode, 0                                   # 5a
     db  invalid_opcode, 0                                   # 5b
     db  invalid_opcode, 0                                   # 5c
-    db  not_implemented, 0        #    db  execute_eor, absolute_x                             # 5d
+    db  execute_eor, absolute_x                             # 5d
     db  execute_lsr, absolute_x                             # 5e
     db  invalid_opcode, 0                                   # 5f
 

@@ -198,8 +198,7 @@ execute_cmp_cpr_generic:
 
     # Set carry flag if diff >= 0
     lt  [rb + diff], 0, [flag_carry]
-    mul [flag_carry], -1, [flag_carry]
-    add [flag_carry], 1, [flag_carry]
+    eq  [flag_carry], 0, [flag_carry]
 
     # Wrap around diff to 8 bits
     add [rb + diff], 0, [rb - 1]
