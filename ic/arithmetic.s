@@ -6,7 +6,7 @@
 .EXPORT execute_cpy
 
 # From error.s
-# TODO probably not needed
+# TODO remove after decimal support
 .IMPORT report_error
 
 # From memory.s
@@ -242,7 +242,7 @@ update_overflow_done:
 .ENDFRAME
 
 ##########
-# TODO remove
+# TODO remove after decimal support
 decimal_error:
     db  "decimal operations not supported", 0
 

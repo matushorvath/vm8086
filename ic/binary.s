@@ -17,7 +17,6 @@
 
 # The object unfortunately needs to include at least one byte, otherwise the byte will be added
 # automatically and the 'binary' symbol will point to it.
-# TODO Fix linker with zero length object files, it should add zero bytes to the binary.
 db  0
 
 binary:
