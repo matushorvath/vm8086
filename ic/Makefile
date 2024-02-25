@@ -48,6 +48,10 @@ $(BINDIR)/vm6502.input: $(addprefix $(OBJDIR)/, $(VM6502_OBJS)) $(LIBXIB)
 $(OBJDIR)/%.o: $(SRCDIR)/const.si $(SRCDIR)/%.s
 	$(run-as)
 
+# Intcode does not have a convenient way to access individual bits of a byte.
+# For speed and convenience we will sacrifice 256 * 8 = 2048 bytes and memoize the operation.
+# The table for that is generated using gen_bits.s and can be found in file $(OBJDIR)/bits.s.
+
 $(OBJDIR)/bits.o: $(OBJDIR)/bits.s
 	$(run-as)
 

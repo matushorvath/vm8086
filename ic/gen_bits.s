@@ -23,42 +23,7 @@ b7_loop:
                                 call print_str
 
                                 # Print the bits '0, 0, 0, 0, 0, 0, 0, 0'
-                                add [b7], 0, [rb - 1]
-                                arb -1
-                                call print_num
-
-                                out ','
-                                out ' '
-
-                                add [b6], 0, [rb - 1]
-                                arb -1
-                                call print_num
-
-                                out ','
-                                out ' '
-
-                                add [b5], 0, [rb - 1]
-                                arb -1
-                                call print_num
-
-                                out ','
-                                out ' '
-
-                                add [b4], 0, [rb - 1]
-                                arb -1
-                                call print_num
-
-                                out ','
-                                out ' '
-
-                                add [b3], 0, [rb - 1]
-                                arb -1
-                                call print_num
-
-                                out ','
-                                out ' '
-
-                                add [b2], 0, [rb - 1]
+                                add [b0], 0, [rb - 1]
                                 arb -1
                                 call print_num
 
@@ -72,7 +37,42 @@ b7_loop:
                                 out ','
                                 out ' '
 
-                                add [b0], 0, [rb - 1]
+                                add [b2], 0, [rb - 1]
+                                arb -1
+                                call print_num
+
+                                out ','
+                                out ' '
+
+                                add [b3], 0, [rb - 1]
+                                arb -1
+                                call print_num
+
+                                out ','
+                                out ' '
+
+                                add [b4], 0, [rb - 1]
+                                arb -1
+                                call print_num
+
+                                out ','
+                                out ' '
+
+                                add [b5], 0, [rb - 1]
+                                arb -1
+                                call print_num
+
+                                out ','
+                                out ' '
+
+                                add [b6], 0, [rb - 1]
+                                arb -1
+                                call print_num
+
+                                out ','
+                                out ' '
+
+                                add [b7], 0, [rb - 1]
                                 arb -1
                                 call print_num
 

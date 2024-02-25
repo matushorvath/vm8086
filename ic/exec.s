@@ -87,12 +87,12 @@
 # From shift.s
 .IMPORT execute_asl
 .IMPORT execute_asl_a
-#.IMPORT execute_lsr
-#.IMPORT execute_lsr_a
+.IMPORT execute_lsr
+.IMPORT execute_lsr_a
 .IMPORT execute_rol
 .IMPORT execute_rol_a
-#.IMPORT execute_ror
-#.IMPORT execute_ror_a
+.IMPORT execute_ror
+.IMPORT execute_ror_a
 
 # From state.s
 .IMPORT reg_pc
@@ -259,15 +259,15 @@ instructions:
     db  invalid_opcode, 0                                   # 43
     db  invalid_opcode, 0                                   # 44
     db  not_implemented, 0        #    db  execute_eor, zeropage                               # 45
-    db  not_implemented, 0        #    db  execute_lsr, zeropage                               # 46
+    db  execute_lsr, zeropage                               # 46
     db  invalid_opcode, 0                                   # 47
     db  execute_pha, 0                                      # 48
     db  not_implemented, 0        #    db  execute_eor, immediate                              # 49
-    db  not_implemented, 0        #    db  execute_lsr_a, 0                                    # 4a
+    db  execute_lsr_a, 0                                    # 4a
     db  invalid_opcode, 0                                   # 4b
     db  execute_jmp, absolute                               # 4c
     db  not_implemented, 0        #    db  execute_eor, absolute                               # 4d
-    db  not_implemented, 0        #    db  execute_lsr, absolute                               # 4e
+    db  execute_lsr, absolute                               # 4e
     db  invalid_opcode, 0                                   # 4f
 
     db  execute_bvc, relative                               # 50 Branch on oVerflow Clear
@@ -276,7 +276,7 @@ instructions:
     db  invalid_opcode, 0                                   # 53
     db  invalid_opcode, 0                                   # 54
     db  not_implemented, 0        #    db  execute_eor, zeropage_x                             # 55
-    db  not_implemented, 0        #    db  execute_lsr, zeropage_x                             # 56
+    db  execute_lsr, zeropage_x                             # 56
     db  invalid_opcode, 0                                   # 57
     db  execute_cli, 0                                      # 58 CLear Interrupt
     db  not_implemented, 0        #    db  execute_eor, absolute_y                             # 59
@@ -284,7 +284,7 @@ instructions:
     db  invalid_opcode, 0                                   # 5b
     db  invalid_opcode, 0                                   # 5c
     db  not_implemented, 0        #    db  execute_eor, absolute_x                             # 5d
-    db  not_implemented, 0        #    db  execute_lsr, absolute_x                             # 5e
+    db  execute_lsr, absolute_x                             # 5e
     db  invalid_opcode, 0                                   # 5f
 
     db  execute_rts, 0                                      # 60
@@ -293,15 +293,15 @@ instructions:
     db  invalid_opcode, 0                                   # 63
     db  invalid_opcode, 0                                   # 64
     db  execute_adc, zeropage                               # 65
-    db  not_implemented, 0        #    db  execute_ror, zeropage                               # 66
+    db  execute_ror, zeropage                               # 66
     db  invalid_opcode, 0                                   # 67
     db  execute_pla, 0                                      # 68
     db  execute_adc, immediate                              # 69
-    db  not_implemented, 0        #    db  execute_ror_a, 0                                    # 6a
+    db  execute_ror_a, 0                                    # 6a
     db  invalid_opcode, 0                                   # 6b
     db  execute_jmp, indirect16                             # 6c
     db  execute_adc, absolute                               # 6d
-    db  not_implemented, 0        #    db  execute_ror, absolute                               # 6e
+    db  execute_ror, absolute                               # 6e
     db  invalid_opcode, 0                                   # 6f
 
     db  execute_bvs, relative                               # 70 Branch on oVerflow Set
@@ -310,7 +310,7 @@ instructions:
     db  invalid_opcode, 0                                   # 73
     db  invalid_opcode, 0                                   # 74
     db  execute_adc, zeropage_x                             # 75
-    db  not_implemented, 0        #    db  execute_ror, zeropage_x                             # 76
+    db  execute_ror, zeropage_x                             # 76
     db  invalid_opcode, 0                                   # 77
     db  execute_sei, 0                                      # 78 SEt Interrupt
     db  execute_adc, absolute_y                             # 79
@@ -318,7 +318,7 @@ instructions:
     db  invalid_opcode, 0                                   # 7b
     db  invalid_opcode, 0                                   # 7c
     db  execute_adc, absolute_x                             # 7d
-    db  not_implemented, 0        #    db  execute_ror, absolute_x                             # 7e
+    db  execute_ror, absolute_x                             # 7e
     db  invalid_opcode, 0                                   # 7f
 
     db  invalid_opcode, 0                                   # 80
