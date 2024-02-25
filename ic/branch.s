@@ -1,8 +1,8 @@
 .EXPORT execute_brk
 .EXPORT execute_jmp
-#.EXPORT execute_jsr
-#.EXPORT execute_rti
-#.EXPORT execute_rts
+.EXPORT execute_jsr
+.EXPORT execute_rti
+.EXPORT execute_rts
 
 .EXPORT execute_bcc
 .EXPORT execute_bcs
@@ -30,6 +30,7 @@
 
 # From util.s
 .IMPORT incpc
+.IMPORT mod_16bit
 .IMPORT split_16_8_8
 
 ##########
@@ -37,7 +38,8 @@ execute_brk:
 .FRAME pc_hi, pc_lo
     arb -2
 
-    # Increment pc with wraparound, since we need to push that value. We will overwrite it soon anyway.
+    # Increment pc with wraparound, since we need to push that value. We will overwrite pc soon anyway.
+    # This implements a one byte gap after a BRK instruction (BRK <gap for handler use> <RTI returns here>).
     call incpc
 
     # Split pc into high and low part
@@ -88,23 +90,82 @@ execute_jmp:
     ret 1
 .ENDFRAME
 
-# TODO instructions
-#    jsr(addr) {
-#        const ret = (this.pc - 1 + 0x10000) % 0x10000;
-#        this.push((ret & 0xff00) >> 8);
-#        this.push(ret & 0xff);
-#
-#        this.pc = addr;
-#    }
-#
-#    rti() {
-#        this.unpackSr(this.pull() & 0b1100_1111);
-#        this.pc = this.pull() + 0x100 * this.pull();
-#    }
-#
-#    rts() {
-#        this.pc = this.pull() + 0x100 * this.pull() + 1;
-#    }
+##########
+execute_jsr:
+.FRAME addr; ret_hi, ret_lo
+    arb -2
+
+    # JSR pushes pc - 1 to the stack, and rts adds + 1 to the address after it's pulled
+    # (JSR <addr-lo> ^<addr-hi> - the address pushed to stack is marked with a "^").
+
+    # Decrement pc with wraparound
+    add [reg_pc], -1, [rb - 1]
+    arb -1
+    call mod_16bit
+
+    # Split the return addres into high and low part
+    add [rb - 3], 0, [rb - 1]
+    arb -1
+    call split_16_8_8
+
+    add [rb - 4], 0, [rb + ret_hi]
+    add [rb - 3], 0, [rb + ret_lo]
+
+    # Push both parts of the return address
+    add [rb + ret_hi], 0, [rb - 1]
+    arb -1
+    call push
+
+    add [rb + ret_lo], 0, [rb - 1]
+    arb -1
+    call push
+
+    # Jump to address
+    add [rb + addr], 0, [reg_pc]
+
+    arb 2
+    ret 1
+.ENDFRAME
+
+##########
+execute_rti:
+.FRAME
+    # Pull sr and unpack it into flags_*
+    call pull
+    add [rb - 2], 0, [rb - 1]
+    arb -1
+    call unpack_sr
+
+    # Pull return addres lo and hi and update reg_pc
+    call pull
+    add [rb - 2], 0, [reg_pc]
+
+    call pull
+    mul [rb - 2], 256, [rb - 2]
+    add [reg_pc], [rb - 2], [reg_pc]
+
+    ret 0
+.ENDFRAME
+
+##########
+execute_rts:
+.FRAME
+    # Pull return addres lo and hi and update reg_pc
+    call pull
+    add [rb - 2], 0, [reg_pc]
+
+    call pull
+    mul [rb - 2], 256, [rb - 2]
+    add [reg_pc], [rb - 2], [reg_pc]
+
+    # Increment reg_pc by 1 with wraparound
+    add [reg_pc], 1, [rb - 1]
+    arb -1
+    call mod_16bit
+    add [rb - 3], 0, [reg_pc]
+
+    ret 0
+.ENDFRAME
 
 ##########
 execute_bcc:

@@ -11,9 +11,9 @@
 # From branch.s
 .IMPORT execute_brk
 .IMPORT execute_jmp
-#.IMPORT execute_jsr
-#.IMPORT execute_rti
-#.IMPORT execute_rts
+.IMPORT execute_jsr
+.IMPORT execute_rti
+.IMPORT execute_rts
 
 .IMPORT execute_bcc
 .IMPORT execute_bcs
@@ -203,7 +203,7 @@ instructions:
     db  not_implemented, 0        #    db  execute_asl, absolute_x                             # 1e
     db  invalid_opcode, 0                                   # 1f
 
-    db  not_implemented, 0        #    db  execute_jsr, absolute                               # 20
+    db  execute_jsr, absolute                               # 20
     db  not_implemented, 0        #    db  execute_and, indirect8_x                            # 21
     db  invalid_opcode, 0                                   # 22
     db  invalid_opcode, 0                                   # 23
@@ -237,7 +237,7 @@ instructions:
     db  not_implemented, 0        #    db  execute_rol, absolute_x                             # 3e
     db  invalid_opcode, 0                                   # 3f
 
-    db  not_implemented, 0        #    db  execute_rti, 0                                      # 40
+    db  execute_rti, 0                                      # 40
     db  not_implemented, 0        #    db  execute_eor, indirect8_x                            # 41
     db  invalid_opcode, 0                                   # 42
     db  invalid_opcode, 0                                   # 43
@@ -271,7 +271,7 @@ instructions:
     db  not_implemented, 0        #    db  execute_lsr, absolute_x                             # 5e
     db  invalid_opcode, 0                                   # 5f
 
-    db  not_implemented, 0        #    db  execute_rts, 0                                      # 60
+    db  execute_rts, 0                                      # 60
     db  execute_adc, indirect8_x                            # 61
     db  invalid_opcode, 0                                   # 62
     db  invalid_opcode, 0                                   # 63

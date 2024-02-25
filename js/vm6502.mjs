@@ -361,7 +361,7 @@ export class Vm6502 {
     }
 
     rts() {
-        this.pc = this.pull() + 0x100 * this.pull() + 1;
+        this.pc = (this.pull() + 0x100 * this.pull() + 1) % 0x10000;
     }
 
     sbc(addr) {
