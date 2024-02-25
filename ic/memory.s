@@ -29,13 +29,13 @@ init_memory:
     # Initialize memory space for the 6502.
 
     # Calculate the beginning address of the source (binary)
-    add binary + 3, 0, [rb + src]
+    add binary + 5, 0, [rb + src]
 
     # Calculate the beginning address of the target (MEM + [load])
     add MEM, [binary + 1], [rb + tgt]
 
     # Number of bytes to copy
-    add [binary + 2], 0, [rb + cnt]
+    add [binary + 4], 0, [rb + cnt]
 
     # Move the image from src to tgt (iterating in reverse direction)
 init_memory_loop:

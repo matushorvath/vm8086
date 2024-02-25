@@ -8,6 +8,9 @@
 .IMPORT execute_cpx
 .IMPORT execute_cpy
 
+# From binary.s
+.IMPORT binary
+
 # From bitwise.s
 .IMPORT execute_and
 .IMPORT execute_bit
@@ -103,6 +106,9 @@
 # From state.s
 .IMPORT reg_pc
 
+# From trace.s
+.IMPORT print_trace
+
 # From util.s
 .IMPORT incpc
 
@@ -112,6 +118,24 @@ execute:
     arb -4
 
 execute_loop:
+    # Print trace if enabled
+    add [binary + 2], 0, [rb + tmp]
+    jz  [rb + tmp], execute_after_tracing
+
+    call print_trace
+
+execute_after_tracing:
+    # Call the callback if enabled
+    add [binary + 3], 0, [rb + tmp]
+    jz  [rb + tmp], execute_after_callback
+
+    call [rb + tmp]
+    jnz [rb - 2], execute_after_callback
+
+    # Callback returned 0, halt
+    jz  0, execute_hlt
+
+execute_after_callback:
     # Read op code
     add [reg_pc], 0, [rb - 1]
     arb -1

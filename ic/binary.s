@@ -30,7 +30,13 @@ binary:
 # binary_load_address:
 #    db  49152        # load address of the binary image in 6502 memory
 #
-# binary_length_address:
+# enable_tracing:
+#    db  1            # enable tracing if 1
+#
+# vm_callback:
+#    db  123456       # optional callback function to call before each instruction
+#
+# binary_length:
 #    db  16384        # size of the binary image
 #
 # binary_data:
