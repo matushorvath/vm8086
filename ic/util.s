@@ -145,9 +145,11 @@ split_16_8_8:
     add 0, 0, [rb + v8h]
     add [rb + v16], 0, [rb + v8l]
 
-    add 7, 0, [rb + bit]
+    add 8, 0, [rb + bit]
 
 split_16_8_8_loop:
+    add [rb + bit], -1, [rb + bit]
+
     # Load power of 2 for this high bit
     add split_16_8_8_pow_hi, [rb + bit], [ip + 1]
     add [0], 0, [rb + pow]
@@ -166,7 +168,6 @@ split_16_8_8_loop:
 
 split_16_8_8_zero:
     # Next bit
-    add [rb + bit], -1, [rb + bit]
     jnz [rb + bit], split_16_8_8_loop
 
     arb 5

@@ -47,8 +47,8 @@ execute_brk:
     arb -1
     call split_16_8_8
 
-    add [rb - 4], 0, [rb + pc_hi]
-    add [rb - 3], 0, [rb + pc_lo]
+    add [rb - 3], 0, [rb + pc_hi]
+    add [rb - 4], 0, [rb + pc_lo]
 
     # Push both parts of pc
     add [rb + pc_hi], 0, [rb - 1]
@@ -85,7 +85,7 @@ execute_brk:
 
 ##########
 execute_jmp:
-.FRAME addr
+.FRAME addr;
     add [rb + addr], 0, [reg_pc]
     ret 1
 .ENDFRAME
@@ -108,8 +108,8 @@ execute_jsr:
     arb -1
     call split_16_8_8
 
-    add [rb - 4], 0, [rb + ret_hi]
-    add [rb - 3], 0, [rb + ret_lo]
+    add [rb - 3], 0, [rb + ret_hi]
+    add [rb - 4], 0, [rb + ret_lo]
 
     # Push both parts of the return address
     add [rb + ret_hi], 0, [rb - 1]
@@ -169,8 +169,8 @@ execute_rts:
 
 ##########
 execute_bcc:
-.FRAME addr
-    jnz flag_carry, execute_bcc_done
+.FRAME addr;
+    jnz [flag_carry], execute_bcc_done
     add [rb + addr], 0, [reg_pc]
 
 execute_bcc_done:
@@ -179,8 +179,8 @@ execute_bcc_done:
 
 ##########
 execute_bcs:
-.FRAME addr
-    jz  flag_carry, execute_bcs_done
+.FRAME addr;
+    jz  [flag_carry], execute_bcs_done
     add [rb + addr], 0, [reg_pc]
 
 execute_bcs_done:
@@ -189,8 +189,8 @@ execute_bcs_done:
 
 ##########
 execute_bne:
-.FRAME addr
-    jnz flag_zero, execute_bne_done
+.FRAME addr;
+    jnz [flag_zero], execute_bne_done
     add [rb + addr], 0, [reg_pc]
 
 execute_bne_done:
@@ -199,8 +199,8 @@ execute_bne_done:
 
 ##########
 execute_beq:
-.FRAME addr
-    jz  flag_zero, execute_beq_done
+.FRAME addr;
+    jz  [flag_zero], execute_beq_done
     add [rb + addr], 0, [reg_pc]
 
 execute_beq_done:
@@ -209,8 +209,8 @@ execute_beq_done:
 
 ##########
 execute_bpl:
-.FRAME addr
-    jnz flag_negative, execute_bpl_done
+.FRAME addr;
+    jnz [flag_negative], execute_bpl_done
     add [rb + addr], 0, [reg_pc]
 
 execute_bpl_done:
@@ -219,8 +219,8 @@ execute_bpl_done:
 
 ##########
 execute_bmi:
-.FRAME addr
-    jz  flag_negative, execute_bmi_done
+.FRAME addr;
+    jz  [flag_negative], execute_bmi_done
     add [rb + addr], 0, [reg_pc]
 
 execute_bmi_done:
@@ -229,8 +229,8 @@ execute_bmi_done:
 
 ##########
 execute_bvc:
-.FRAME addr
-    jnz flag_overflow, execute_bvc_done
+.FRAME addr;
+    jnz [flag_overflow], execute_bvc_done
     add [rb + addr], 0, [reg_pc]
 
 execute_bvc_done:
@@ -239,8 +239,8 @@ execute_bvc_done:
 
 ##########
 execute_bvs:
-.FRAME addr
-    jz  flag_overflow, execute_bvs_done
+.FRAME addr;
+    jz  [flag_overflow], execute_bvs_done
     add [rb + addr], 0, [reg_pc]
 
 execute_bvs_done:

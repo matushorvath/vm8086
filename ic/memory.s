@@ -156,7 +156,7 @@ pull:
     add [rb - 3], 0, [rb + tmp]
 
     arb 1
-    ret 1
+    ret 0
 .ENDFRAME
 
 .EOF
