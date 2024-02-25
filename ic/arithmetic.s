@@ -1,4 +1,5 @@
 .EXPORT execute_adc
+.EXPORT execute_sbc
 
 # From error.s
 # TODO probably not needed
@@ -84,6 +85,81 @@ execute_adc_done:
 .ENDFRAME
 
 ##########
+execute_sbc:
+.FRAME addr; tmp, b, diff
+    arb -3
+
+    # Read the second operand
+    add [rb + addr], 0, [rb - 1]
+    arb -1
+    call read
+    add [rb - 3], 0, [rb + b]
+
+    # Decimal flag?
+    jz [flag_decimal], execute_adc_not_decimal
+
+    # Decimal sbc, TODO implement
+    add [decimal_error], 0, [rb - 1]
+    arb -1
+    call report_error
+
+    # const diffLo = (this.a & 0b0000_1111) - (b & 0b0000_1111) + (this.carry ? 1 : 0) - 1;
+    # const carryLo = diffLo >= 0x00 && diffLo <= 0x09;
+    #
+    # const diffHi = ((this.a & 0b1111_0000) >> 4) - ((b & 0b1111_0000) >> 4) + (carryLo ? 1 : 0) - 1;
+    # this.carry = diffHi >= 0x00 && diffHi <= 0x09;
+    #
+    # const res = ((diffLo + 10) % 10) | (((diffHi + 10) % 10) << 4);
+    # this.updateOverflow(b, res, this.a);      // TODO what does the real processor do?
+    #
+    # this.a = res;
+    # this.updateNegativeZero(this.a);
+
+    jz 0, execute_sbc_done
+
+execute_sbc_not_decimal:
+    # Subtract [reg_a] - [b] + [flag_carry] - 1
+    mul [rb + b], -1, [rb + diff]
+    add [rb + diff], [reg_a], [rb + diff]
+    add [rb + diff], [flag_carry], [rb + diff]
+    add [rb + diff], -1, [rb + diff]
+
+    # Set carry flag if diff >= 0 && diff <= 255
+    add 0, 0, [flag_carry]
+
+    lt  [rb + diff], 0, [rb + tmp]
+    jnz [rb + tmp], execute_sbc_carry_false
+    lt  255, [rb + diff], [rb + tmp]
+    jnz [rb + tmp], execute_sbc_carry_false
+
+    add 1, 0, [flag_carry]
+
+execute_sbc_carry_false:
+    # Wrap around diff to 8 bits
+    add [rb + diff], 0, [rb - 1]
+    arb -1
+    call mod_8bit
+    add [rb - 3], 0, [rb + diff]
+
+    # Update overflow flag
+    add [reg_a], 0, [rb - 1]
+    add [rb + b], 0, [rb - 2]
+    add [rb + diff], 0, [rb - 3]
+    arb -3
+    call update_overflow
+
+    # Save the result and update rest of flags
+    add [rb + diff], 0, [reg_a]
+
+    lt  127, [reg_a], [flag_negative]
+    eq  [reg_a], 0, [flag_zero]
+
+execute_sbc_done:
+    arb 3
+    ret 1
+.ENDFRAME
+
+##########
 update_overflow:
 .FRAME op1, op2, res; tmp
     arb -1
@@ -116,42 +192,11 @@ decimal_error:
 
 .EOF
 
-
-execute_sbc
+TODO instructions
 
 execute_cmp
 execute_cpx
 execute_cpy
-
-
-
-
-    sbc(addr) {
-        const b = this.read(addr);
-
-        if (this.decimal) {
-            const diffLo = (this.a & 0b0000_1111) - (b & 0b0000_1111) + (this.carry ? 1 : 0) - 1;
-            const carryLo = diffLo >= 0x00 && diffLo <= 0x09;
-
-            const diffHi = ((this.a & 0b1111_0000) >> 4) - ((b & 0b1111_0000) >> 4) + (carryLo ? 1 : 0) - 1;
-            this.carry = diffHi >= 0x00 && diffHi <= 0x09;
-
-            const res = ((diffLo + 10) % 10) | (((diffHi + 10) % 10) << 4);
-            this.updateOverflow(b, res, this.a);      // TODO what does the real processor do?
-
-            this.a = res;
-            this.updateNegativeZero(this.a);
-        } else {
-            const diff = this.a - b + (this.carry ? 1 : 0) - 1;
-            this.carry = diff >= 0x00 && diff <= 0xff;
-
-            const res = (diff + 0x100) % 0x100;
-            this.updateOverflow(b, res, this.a);
-
-            this.a = res;
-            this.updateNegativeZero(this.a);
-        }
-    }
 
     cmp(reg, addr) {
         const diff = reg - this.read(addr);

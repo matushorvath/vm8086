@@ -88,6 +88,7 @@ execute_jmp:
     ret 1
 .ENDFRAME
 
+# TODO instructions
 #    jsr(addr) {
 #        const ret = (this.pc - 1 + 0x10000) % 0x10000;
 #        this.push((ret & 0xff00) >> 8);

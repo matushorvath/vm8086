@@ -2,6 +2,7 @@
 
 # From arithmetic.s
 .IMPORT execute_adc
+.IMPORT execute_sbc
 
 # From branch.s
 .IMPORT execute_brk
@@ -403,36 +404,36 @@ instructions:
     db  invalid_opcode, 0                                   # df
 
     db  not_implemented, 0        #    db  execute_cpx, immediate                              # e0
-    db  not_implemented, 0        #    db  execute_sbc, indirect8_x                            # e1
+    db  execute_sbc, indirect8_x                            # e1
     db  invalid_opcode, 0                                   # e2
     db  invalid_opcode, 0                                   # e3
     db  not_implemented, 0        #    db  execute_cpx, zeropage                               # e4
-    db  not_implemented, 0        #    db  execute_sbc, zeropage                               # e5
+    db  execute_sbc, zeropage                               # e5
     db  execute_inc, zeropage                               # e6
     db  invalid_opcode, 0                                   # e7
     db  execute_inx, 0                                      # e8
-    db  not_implemented, 0        #    db  execute_sbc, immediate                              # e9
+    db  execute_sbc, immediate                              # e9
     db  execute_nop, 0                                      # ea
     db  invalid_opcode, 0                                   # eb
     db  not_implemented, 0        #    db  execute_cpx, absolute                               # ec
-    db  not_implemented, 0        #    db  execute_sbc, absolute                               # ed
+    db  execute_sbc, absolute                               # ed
     db  execute_inc, absolute                               # ee
     db  invalid_opcode, 0                                   # ef
 
     db  execute_beq, relative                               # f0 Branch on EQual
-    db  not_implemented, 0        #    db  execute_sbc, indirect8_y                            # f1
+    db  execute_sbc, indirect8_y                            # f1
     db  invalid_opcode, 0                                   # f2
     db  invalid_opcode, 0                                   # f3
     db  invalid_opcode, 0                                   # f4
-    db  not_implemented, 0        #    db  execute_sbc, zeropage_x                             # f5
+    db  execute_sbc, zeropage_x                             # f5
     db  execute_inc, zeropage_x                             # f6
     db  invalid_opcode, 0                                   # f7
     db  execute_sed, 0                                      # f8 SEt Decimal
-    db  not_implemented, 0        #    db  execute_sbc, absolute_y                             # f9
+    db  execute_sbc, absolute_y                             # f9
     db  invalid_opcode, 0                                   # fa
     db  invalid_opcode, 0                                   # fb
     db  invalid_opcode, 0                                   # fc
-    db  not_implemented, 0        #    db  execute_sbc, absolute_x                             # fd
+    db  execute_sbc, absolute_x                             # fd
     db  execute_inc, absolute_x                             # fe
     db  invalid_opcode, 0                                   # ff
 
