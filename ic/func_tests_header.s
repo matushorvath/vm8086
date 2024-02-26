@@ -11,6 +11,7 @@
     db  0
 
 # Disable tracing
+# TODO -1 = trace always; >0 = start tracing once VM passes that address
     db  0
 
 # Callback address
