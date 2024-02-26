@@ -10,7 +10,7 @@
 .IMPORT reg_pc
 
 # From libxib.a
-.IMPORT print_num
+.IMPORT print_num_radix
 .IMPORT print_str
 
 ##########
@@ -32,8 +32,9 @@ print_trace:
 
     # Print address
     add [reg_pc], 0, [rb - 1]
-    arb -1
-    call print_num      # TODO hex
+    add 16, 0, [rb - 2]
+    arb -2
+    call print_num_radix
 
     out ':'
     out ' '
@@ -46,8 +47,9 @@ print_trace:
     out '('
 
     add [rb + opcode], 0, [rb - 1]
-    arb -1
-    call print_num      # TODO hex
+    add 16, 0, [rb - 2]
+    arb -2
+    call print_num_radix
 
     out ')'
 
@@ -64,8 +66,9 @@ print_trace_data_loop:
     call read
 
     add [rb - 3], 0, [rb - 1]
-    arb -1
-    call print_num      # TODO hex
+    add 16, 0, [rb - 2]
+    arb -2
+    call print_num_radix
 
     add [rb + idx], 1, [rb + idx]
     jz  0, print_trace_data_loop

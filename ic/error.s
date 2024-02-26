@@ -4,7 +4,7 @@
 .IMPORT reg_pc
 
 # From libxib.s
-.IMPORT print_num
+.IMPORT print_num_radix
 .IMPORT print_str
 
 ##########
@@ -23,8 +23,10 @@ report_error:
     call print_str
 
     add [reg_pc], 0, [rb - 1]
-    arb -1
-    call print_num
+    add 16, 0, [rb - 2]
+    arb -2
+    call print_num_radix
+
 
     add report_error_msg_end, 0, [rb - 1]
     arb -1
