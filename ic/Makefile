@@ -42,8 +42,18 @@ build: build-prep $(BINDIR)/vm6502.input $(BINDIR)/msbasic.input $(BINDIR)/func_
 build-prep:
 	mkdir -p "$(BINDIR)" "$(OBJDIR)"
 
-VM6502_OBJS = vm6502.o arithmetic.o bits.o bitwise.o branch.o error.o exec.o flags.o incdec.o \
-	loadstore.o memory.o opcodes.o params.o pushpull.o shift.o state.o trace.o util.o binary.o
+# Test
+.PHONY: test
+test: build
+	$(ICVM) bin/func_tests.input < /dev/null
+
+# The order of the object files matters: First include all the code in any order, then binary.o,
+# then the (optional) 6502 image header and the 6502 image itself.
+
+BASE_OBJS = vm6502.o arithmetic.o bits.o bitwise.o branch.o error.o exec.o flags.o incdec.o \
+	loadstore.o memory.o opcodes.o params.o pushpull.o shift.o state.o trace.o util.o
+
+VM6502_OBJS = $(BASE_OBJS) binary.o
 
 $(BINDIR)/vm6502.input: $(addprefix $(OBJDIR)/, $(VM6502_OBJS)) $(LIBXIB)
 	$(run-ld)
@@ -61,7 +71,7 @@ $(OBJDIR)/bits.o: $(OBJDIR)/bits.s
 $(OBJDIR)/bits.s: $(BINDIR)/gen_bits.input
 	$(ICVM) $(BINDIR)/gen_bits.input > $@ || ( cat $@ ; false )
 
-MSBASIC_OBJS = $(VM6502_OBJS) msbasic_header.o msbasic_binary.o
+MSBASIC_OBJS = $(BASE_OBJS) binary.o msbasic_header.o msbasic_binary.o
 
 $(BINDIR)/msbasic.input: $(addprefix $(OBJDIR)/, $(MSBASIC_OBJS)) $(LIBXIB)
 	$(run-ld)
@@ -69,7 +79,7 @@ $(BINDIR)/msbasic.input: $(addprefix $(OBJDIR)/, $(MSBASIC_OBJS)) $(LIBXIB)
 $(OBJDIR)/msbasic_binary.o: $(MSBASICDIR)/tmp/vm6502.bin
 	$(run-bin2obj)
 
-FUNC_TESTS_OBJS = $(VM6502_OBJS) func_tests_header.o func_tests_binary.o
+FUNC_TESTS_OBJS = $(BASE_OBJS) func_tests_callback.o binary.o func_tests_header.o func_tests_binary.o
 
 $(BINDIR)/func_tests.input: $(addprefix $(OBJDIR)/, $(FUNC_TESTS_OBJS)) $(LIBXIB)
 	$(run-ld)
