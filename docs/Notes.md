@@ -32,3 +32,21 @@ cd ic
 ICDIR=~/xzintbit make
 ~/xzintbit/vms/c/ic bin/vm6502.input
 ```
+
+# Tests
+
+./tests/assemble.sh > test.bin
+
+# adc test
+adc #$42
+nop
+nop
+.byte 02
+
+# prints 'B'
+adc #$42
+sta $fff0
+adc #$0a
+sta $fff0
+nop
+.byte 02

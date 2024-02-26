@@ -15,11 +15,6 @@
 # also used by heap.s in libxib. The VM without a binary must not use the heap unless it takes
 # care the overlap between the heap and the appended binary image.
 
-# The object unfortunately needs to include at least one byte, otherwise the byte will be added
-# automatically and the 'binary' symbol will point to it.
-# TODO Fix linker with zero length object files, it should add zero bytes to the binary.
-db  0
-
 binary:
 
 # After this we expect:
@@ -31,7 +26,13 @@ binary:
 # binary_load_address:
 #    db  49152        # load address of the binary image in 6502 memory
 #
-# binary_length_address:
+# enable_tracing:
+#    db  1            # enable tracing if 1
+#
+# vm_callback:
+#    db  123456       # optional callback function to call before each instruction
+#
+# binary_length:
 #    db  16384        # size of the binary image
 #
 # binary_data:

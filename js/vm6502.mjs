@@ -11,6 +11,9 @@
 import { OPCODES } from './opcodes.mjs';
 import fs from 'node:fs';
 
+const f8 = n => n.toString(16).padStart(2, '0');
+const f16 = n => n.toString(16).padStart(4, '0');
+
 let inputSimulate0D = false;
 
 const input = () => {
@@ -38,7 +41,7 @@ const input = () => {
 
 const output = (val) => {
     const ch = String.fromCharCode(val);
-    //console.log('out', this.format8(val), ch);
+    //console.log('out', f8(val), ch);
     process.stdout.write(ch);
 };
 
@@ -79,7 +82,7 @@ export class Vm6502 {
 
     write(addr, val) {
         if (val < 0x00 || val > 0xff) {
-            throw new Error(`range error; value ${this.format8(val)}, addr ${this.format16(this.pc)}`);
+            throw new Error(`range error; value ${f8(val)}, addr ${f16(this.pc)}`);
         }
 
         if (addr === this.ioport) {
@@ -358,7 +361,7 @@ export class Vm6502 {
     }
 
     rts() {
-        this.pc = this.pull() + 0x100 * this.pull() + 1;
+        this.pc = (this.pull() + 0x100 * this.pull() + 1) % 0x10000;
     }
 
     sbc(addr) {
@@ -392,14 +395,6 @@ export class Vm6502 {
         this.write(addr, val);
     }
 
-    format8(val) {
-        return val.toString(16).padStart(2, '0');
-    }
-
-    format16(val) {
-        return val.toString(16).padStart(4, '0');
-    }
-
     getDataSymbol(opinfo) {
         switch (opinfo?.mode) {
         case 'Zero Page':
@@ -413,7 +408,7 @@ export class Vm6502 {
         case 'Absolute':
         case 'Absolute,Y':
         case 'Absolute,X':
-            return this.symbols?.[this.read((this.pc + 1)  % 0x10000) + 0x100 * this.read((this.pc + 2) % 0x10000)];
+            return this.symbols?.[this.read((this.pc + 1) % 0x10000) + 0x100 * this.read((this.pc + 2) % 0x10000)];
 
         default:
             return undefined;
@@ -427,16 +422,16 @@ export class Vm6502 {
         const opname = opinfo?.name ?? '???';
         const oplength = opinfo?.length ?? 5;
 
-        const addr = this.format16(this.pc);
+        const addr = f16(this.pc);
         const addrSymbol = this.symbols?.[this.pc];
 
         const data = [];
         for (let i = 1; i < oplength; i++) {
-            data.push(this.format8(this.read((this.pc + i) % 0x10000)));
+            data.push(f8(this.read((this.pc + i) % 0x10000)));
         }
         const dataSymbol = this.getDataSymbol(opinfo);
 
-        const opStr = `${opname}(${this.format8(opcode)})`;
+        const opStr = `${opname}(${f8(opcode)})`;
         const dataStr = dataSymbol ? `${dataSymbol}(${data.join(' ')})`: data.join(' ');
 
         if (addrSymbol !== undefined) {
@@ -450,7 +445,7 @@ export class Vm6502 {
             this.cnt = 0;
         }
         if (this.cnt++ === 100000) {
-            console.log(this.format16(this.pc));
+            console.log(f16(this.pc));
             this.cnt = 0;
         }
     }
@@ -497,14 +492,14 @@ export class Vm6502 {
             case 0x24: this.bit(this.zeropage()); break;
             case 0x2c: this.bit(this.absolute()); break;
 
-            case 0x10: this.branch(!this.negative, this.relative()); break;     // BPL (Branch on PLus)
-            case 0x30: this.branch(this.negative, this.relative()); break;      // BMI (Branch on MInus)
-            case 0x50: this.branch(!this.overflow, this.relative()); break;     // BVC (Branch on oVerflow Clear)
-            case 0x70: this.branch(this.overflow, this.relative()); break;      // BVS (Branch on oVerflow Set)
-            case 0x90: this.branch(!this.carry, this.relative()); break;        // BCC (Branch on Carry Clear)
-            case 0xb0: this.branch(this.carry, this.relative()); break;         // BCS (Branch on Carry Set)
-            case 0xd0: this.branch(!this.zero, this.relative()); break;         // BNE (Branch on Not Equal)
-            case 0xf0: this.branch(this.zero, this.relative()); break;          // BEQ (Branch on EQual)
+            case 0x10: this.branch(!this.negative, this.relative()); break;         // BPL (Branch on PLus)
+            case 0x30: this.branch(this.negative, this.relative()); break;          // BMI (Branch on MInus)
+            case 0x50: this.branch(!this.overflow, this.relative()); break;         // BVC (Branch on oVerflow Clear)
+            case 0x70: this.branch(this.overflow, this.relative()); break;          // BVS (Branch on oVerflow Set)
+            case 0x90: this.branch(!this.carry, this.relative()); break;            // BCC (Branch on Carry Clear)
+            case 0xb0: this.branch(this.carry, this.relative()); break;             // BCS (Branch on Carry Set)
+            case 0xd0: this.branch(!this.zero, this.relative()); break;             // BNE (Branch on Not Equal)
+            case 0xf0: this.branch(this.zero, this.relative()); break;              // BEQ (Branch on EQual)
 
             case 0x00: this.brk(); break;
 
@@ -517,12 +512,12 @@ export class Vm6502 {
             case 0xc1: this.cmp(this.a, this.indirect8(this.x)); break;
             case 0xd1: this.cmp(this.a, this.indirect8(0, this.y)); break;
 
-            case 0xe0: this.cmp(this.x, this.immediate()); break;           // CPX
-            case 0xe4: this.cmp(this.x, this.zeropage()); break;            // CPX
-            case 0xec: this.cmp(this.x, this.absolute()); break;            // CPX
-            case 0xc0: this.cmp(this.y, this.immediate()); break;           // CPY
-            case 0xc4: this.cmp(this.y, this.zeropage()); break;            // CPY
-            case 0xcc: this.cmp(this.y, this.absolute()); break;            // CPY
+            case 0xe0: this.cmp(this.x, this.immediate()); break;                   // CPX
+            case 0xe4: this.cmp(this.x, this.zeropage()); break;                    // CPX
+            case 0xec: this.cmp(this.x, this.absolute()); break;                    // CPX
+            case 0xc0: this.cmp(this.y, this.immediate()); break;                   // CPY
+            case 0xc4: this.cmp(this.y, this.zeropage()); break;                    // CPY
+            case 0xcc: this.cmp(this.y, this.absolute()); break;                    // CPY
 
             case 0xc6: this.dec(this.zeropage()); break;
             case 0xd6: this.dec(this.zeropage(this.x)); break;
@@ -538,13 +533,13 @@ export class Vm6502 {
             case 0x41: this.eor(this.indirect8(this.x)); break;
             case 0x51: this.eor(this.indirect8(0, this.y)); break;
 
-            case 0x18: this.carry = false; break;           // CLC (CLear Carry)
-            case 0x38: this.carry = true; break;            // SEC (SEt Carry)
-            case 0x58: this.interrupt = false; break;       // CLI (CLear Interrupt)
-            case 0x78: this.interrupt = true; break;        // SEI (SEt Interrupt)
-            case 0xb8: this.overflow = false; break;        // CLV (CLear oVerflow)
-            case 0xd8: this.decimal = false; break;         // CLD (CLear Decimal)
-            case 0xf8: this.decimal = true; break;          // SED (SEt Decimal)
+            case 0x18: this.carry = false; break;                       // CLC (CLear Carry)
+            case 0x38: this.carry = true; break;                        // SEC (SEt Carry)
+            case 0x58: this.interrupt = false; break;                   // CLI (CLear Interrupt)
+            case 0x78: this.interrupt = true; break;                    // SEI (SEt Interrupt)
+            case 0xb8: this.overflow = false; break;                    // CLV (CLear oVerflow)
+            case 0xd8: this.decimal = false; break;                     // CLD (CLear Decimal)
+            case 0xf8: this.decimal = true; break;                      // SED (SEt Decimal)
 
             case 0xe6: this.inc(this.zeropage()); break;
             case 0xf6: this.inc(this.zeropage(this.x)); break;
@@ -626,33 +621,33 @@ export class Vm6502 {
             case 0xe1: this.sbc(this.indirect8(this.x)); break;
             case 0xf1: this.sbc(this.indirect8(0, this.y)); break;
 
-            case 0x85: this.str(this.a, this.zeropage()); break;                 // STA
-            case 0x95: this.str(this.a, this.zeropage(this.x)); break;           // STA
-            case 0x8d: this.str(this.a, this.absolute()); break;                 // STA
-            case 0x9d: this.str(this.a, this.absolute(this.x)); break;           // STA
-            case 0x99: this.str(this.a, this.absolute(this.y)); break;           // STA
-            case 0x81: this.str(this.a, this.indirect8(this.x)); break;           // STA
-            case 0x91: this.str(this.a, this.indirect8(0, this.y)); break;        // STA
+            case 0x85: this.str(this.a, this.zeropage()); break;                        // STA
+            case 0x95: this.str(this.a, this.zeropage(this.x)); break;                  // STA
+            case 0x8d: this.str(this.a, this.absolute()); break;                        // STA
+            case 0x9d: this.str(this.a, this.absolute(this.x)); break;                  // STA
+            case 0x99: this.str(this.a, this.absolute(this.y)); break;                  // STA
+            case 0x81: this.str(this.a, this.indirect8(this.x)); break;                 // STA
+            case 0x91: this.str(this.a, this.indirect8(0, this.y)); break;              // STA
 
             case 0x9a: this.sp = this.x; break;                                         // TXS
             case 0xba: this.x = this.sp; this.updateNegativeZero(this.x); break;        // TSX
             case 0x48: this.push(this.a); break;                                        // PHA
             case 0x68: this.a = this.pull(); this.updateNegativeZero(this.a); break;    // PLA
-            case 0x08: this.push(this.packSr()); break;                   // PHP
+            case 0x08: this.push(this.packSr()); break;                                 // PHP
             case 0x28: this.unpackSr(this.pull()); break;                               // PLP
 
-            case 0x86: this.str(this.x, this.zeropage()); break;                 // STX
-            case 0x96: this.str(this.x, this.zeropage(this.y)); break;           // STX
-            case 0x8e: this.str(this.x, this.absolute()); break;                 // STX
+            case 0x86: this.str(this.x, this.zeropage()); break;                        // STX
+            case 0x96: this.str(this.x, this.zeropage(this.y)); break;                  // STX
+            case 0x8e: this.str(this.x, this.absolute()); break;                        // STX
 
-            case 0x84: this.str(this.y, this.zeropage()); break;                 // STY
-            case 0x94: this.str(this.y, this.zeropage(this.x)); break;           // STY
-            case 0x8c: this.str(this.y, this.absolute()); break;                 // STY
+            case 0x84: this.str(this.y, this.zeropage()); break;                        // STY
+            case 0x94: this.str(this.y, this.zeropage(this.x)); break;                  // STY
+            case 0x8c: this.str(this.y, this.absolute()); break;                        // STY
 
             // These are not official instructions, but we need them
-            case 0x02: return;              // HLT
+            case 0x02: return;                                                          // HLT
 
-            default: throw new Error(`invalid opcode ${this.format8(op)} at ${this.format16((this.pc - 1 + 0x10000) % 0x10000)}`);
+            default: throw new Error(`invalid opcode ${f8(op)} at ${f16((this.pc - 1 + 0x10000) % 0x10000)}`);
             }
         }
     }
