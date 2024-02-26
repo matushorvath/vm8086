@@ -102,7 +102,7 @@ execute_sbc:
     add [rb - 3], 0, [rb + b]
 
     # Decimal flag?
-    jz [flag_decimal], execute_adc_not_decimal
+    jz [flag_decimal], execute_sbc_not_decimal
 
     # Decimal sbc, TODO implement
     add [decimal_error], 0, [rb - 1]
