@@ -24,11 +24,12 @@
 
 # From util
 .IMPORT mod_8bit
+.IMPORT split_16_8_8
 
 ##########
 execute_adc:
-.FRAME addr; b, sum
-    arb -2
+.FRAME addr; b, sum, a_lo, a_hi, b_lo, b_hi
+    arb -6
 
     # Read the second operand
     add [rb + addr], 0, [rb - 1]
@@ -39,24 +40,51 @@ execute_adc:
     # Decimal flag?
     jz [flag_decimal], execute_adc_not_decimal
 
-    # Decimal adc, TODO implement
-    add decimal_error, 0, [rb - 1]
+    # Split a into high and low part
+    add [reg_a], 0, [rb - 1]
     arb -1
-    call report_error
+    call split_16_8_8
 
-    # const sumLo = (this.a & 0b0000_1111) + (b & 0b0000_1111) + (this.carry ? 1 : 0);
-    # const carryLo = sumLo > 0x09;
-    #
-    # const sumHi = ((this.a & 0b1111_0000) >> 4) + ((b & 0b1111_0000) >> 4) + (carryLo ? 1 : 0);
-    # this.carry = sumHi > 0x09;
-    #
-    # const res = (sumLo % 10) | ((sumHi % 10) << 4);
-    # this.updateOverflow(this.a, b, res);      // TODO what does the real processor do?
-    #
-    # this.a = res;
-    # this.updateNegativeZero(this.a);
+    add [rb - 3], 0, [rb + a_hi]
+    add [rb - 4], 0, [rb + a_lo]
 
-    jz 0, execute_adc_done
+    # Split b into high and low part
+    add [rb + b], 0, [rb - 1]
+    arb -1
+    call split_16_8_8
+
+    add [rb - 3], 0, [rb + b_hi]
+    add [rb - 4], 0, [rb + b_lo]
+
+    # Sum the lo parts plus carry -> a_lo
+    add [rb + a_lo], [rb + b_lo], [rb + a_lo]
+    add [rb + a_lo], [flag_carry], [rb + a_lo]
+
+    # Carry from a_lo -> flag_carry (temporarily)
+    lt  9, [rb + a_lo], [flag_carry]
+
+    # If carry, reduce a_lo by 10
+    jz  [flag_carry], execute_adc_bcd_lo_no_carry
+    add [rb + a_lo], -10, [rb + a_lo]
+
+execute_adc_bcd_lo_no_carry:
+    # Sum the hi parts plus lo carry -> a_hi
+    add [rb + a_hi], [rb + b_hi], [rb + a_hi]
+    add [rb + a_hi], [flag_carry], [rb + a_hi]
+
+    # Carry from a_hi -> flag_carry
+    lt  9, [rb + a_hi], [flag_carry]
+
+    # If carry, reduce a_hi by 10
+    jz  [flag_carry], execute_adc_bcd_hi_no_carry
+    add [rb + a_hi], -10, [rb + a_hi]
+
+execute_adc_bcd_hi_no_carry:
+    # Sum the lo and hi parts
+    mul [rb + a_hi], 16, [rb + sum]
+    add [rb + sum], [rb + a_lo], [rb + sum]
+
+    jz 0, execute_adc_update_flags
 
 execute_adc_not_decimal:
     # Sum [reg_a] + [b] + [flag_carry]
@@ -72,6 +100,7 @@ execute_adc_not_decimal:
     call mod_8bit
     add [rb - 3], 0, [rb + sum]
 
+execute_adc_update_flags:
     # Update overflow flag
     add [reg_a], 0, [rb - 1]
     add [rb + b], 0, [rb - 2]
@@ -85,8 +114,7 @@ execute_adc_not_decimal:
     lt  127, [reg_a], [flag_negative]
     eq  [reg_a], 0, [flag_zero]
 
-execute_adc_done:
-    arb 2
+    arb 6
     ret 1
 .ENDFRAME
 
