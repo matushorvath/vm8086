@@ -1,3 +1,5 @@
+<div align="right"><img src="https://github.com/matushorvath/vm6502/actions/workflows/build.yml/badge.svg"></div>
+
 # Microsoft Basic on an Intcode Runtime
 
 VM6502 is a simple virtual nachine emulating the MOS 6502 processor, capable of running Microsoft Basic.

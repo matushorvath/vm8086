@@ -1,0 +1,87 @@
+name: Build and Test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-javascript:
+    name: JavaScript
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install cc65
+        run: sudo apt install -y cc65
+
+      - name: Test
+        working-directory: js
+        run: |
+          npm install
+          npm test
+
+  build-intcode:
+    name: Intcode
+    runs-on: ubuntu-latest
+
+    env:
+      ICDIR: xzintbit
+      MSBASICDIR: msbasic
+      FUNCTESTDIR: 6502_65C02_functional_tests
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout xzintbit
+        uses: actions/checkout@v4
+        with:
+          repository: matushorvath/xzintbit
+          path: ic/xzintbit
+
+      - name: Build xzintbit
+        working-directory: ic/xzintbit
+        run: make build-vm
+
+      - name: Checkout Microsoft Basic
+        uses: actions/checkout@v4
+        with:
+          repository: matushorvath/msbasic
+          path: ic/msbasic
+
+      - name: Install cc65
+        run: sudo apt install -y cc65
+
+      - name: Build Microsoft Basic
+        working-directory: ic/msbasic
+        run: ./make.sh
+
+      - name: Checkout 6502 functional tests
+        uses: actions/checkout@v4
+        with:
+          repository: Klaus2m5/6502_65C02_functional_tests
+          path: ic/6502_65C02_functional_tests
+
+      - name: Build
+        working-directory: ic
+        run: make build
+
+# TODO enable tests in CI/CD
+#      - name: Test
+#        working-directory: ic
+#        run: make test
+
+      - name: Store artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: msbasic.input
+          path: bin/msbasic.input
+          if-no-files-found: error
+        if: github.ref == 'refs/heads/main'
