@@ -46,7 +46,7 @@ execute_and_loop:
     add [rb + b_bits], [rb + bit], [ip + 2]
     add [0], [0], [rb + tmp]                                # bit n of a + bit n of b -> tmp
 
-    eq  [rb + tmp], 2, [rb + res]                           # tmp is 2 means both bits are 1
+    eq  [rb + tmp], 2, [rb + tmp]                           # tmp is 2 means both bits are 1
     add [rb + res], [rb + tmp], [rb + res]                  # res += bit n
 
     jnz [rb + bit], execute_and_loop
@@ -137,7 +137,7 @@ execute_ora_loop:
     add [rb + b_bits], [rb + bit], [ip + 2]
     add [0], [0], [rb + tmp]                                # bit n of a + bit n of b -> tmp
 
-    lt  0, [rb + tmp], [rb + res]                           # tmp is 0 means both bits are 0
+    lt  0, [rb + tmp], [rb + tmp]                           # tmp is 0 means both bits are 0
     add [rb + res], [rb + tmp], [rb + res]                  # res += bit n
 
     jnz [rb + bit], execute_ora_loop
