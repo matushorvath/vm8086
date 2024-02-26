@@ -1,4 +1,4 @@
-# VM6502
+# Microsoft Basic on an Intcode Runtime
 
 VM6502 is a simple virtual nachine emulating the MOS 6502 processor, capable of running Microsoft Basic.
 There are two implementations of VM6502 in this repository: one in JavaScript and one in [Intcode](https://esolangs.org/wiki/Intcode).
