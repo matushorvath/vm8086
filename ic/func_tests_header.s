@@ -16,7 +16,6 @@
 # Callback address TODO
     db  0
 
-# TODO tracing for 6502
 # TODO print hexa numbers from 6502, add print_num_hex to libxib
 # TODO detect successful/failed tests
 #

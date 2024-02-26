@@ -15,10 +15,6 @@
 # also used by heap.s in libxib. The VM without a binary must not use the heap unless it takes
 # care the overlap between the heap and the appended binary image.
 
-# The object unfortunately needs to include at least one byte, otherwise the byte will be added
-# automatically and the 'binary' symbol will point to it.
-db  0
-
 binary:
 
 # After this we expect:
