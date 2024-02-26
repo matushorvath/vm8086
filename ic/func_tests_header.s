@@ -4,22 +4,17 @@
 # The binary is available in git repository https://github.com/Klaus2m5/6502_65C02_functional_tests
 
 # Start address for the functional tests binary
-# Can be found using bin_files/6502_functional_test.lst, Search for "Program start address is at".
+# Can be found using bin_files/6502_functional_test.lst, search for "Program start address is at"
     db  1024        # 0x0400
 
 # Load address for the functional tests binary
     db  0
 
-# Enable tracing
-    db  1
-
-# Callback address TODO
+# Disable tracing
     db  0
 
-# TODO detect successful/failed tests
-#
-# Test success address
-# Can be found using bin_files/6502_functional_test.lst. Search for "test passed, no errors".
-#    db  13417       # 0x3469
+# Callback address
+.IMPORT func_tests_callback
+    db  func_tests_callback
 
 .EOF
