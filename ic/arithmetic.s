@@ -40,7 +40,7 @@ execute_adc:
     jz [flag_decimal], execute_adc_not_decimal
 
     # Decimal adc, TODO implement
-    add [decimal_error], 0, [rb - 1]
+    add decimal_error, 0, [rb - 1]
     arb -1
     call report_error
 
@@ -105,7 +105,7 @@ execute_sbc:
     jz [flag_decimal], execute_sbc_not_decimal
 
     # Decimal sbc, TODO implement
-    add [decimal_error], 0, [rb - 1]
+    add decimal_error, 0, [rb - 1]
     arb -1
     call report_error
 
@@ -148,9 +148,9 @@ execute_sbc_carry_false:
     add [rb - 3], 0, [rb + diff]
 
     # Update overflow flag
-    add [reg_a], 0, [rb - 1]
-    add [rb + b], 0, [rb - 2]
-    add [rb + diff], 0, [rb - 3]
+    add [rb + b], 0, [rb - 1]
+    add [rb + diff], 0, [rb - 2]
+    add [reg_a], 0, [rb - 3]
     arb -3
     call update_overflow
 

@@ -79,7 +79,7 @@ func_tests_callback_done:
 func_tests_passed:
     db  "Functional tests PASSED", 10, 0
 func_tests_failed_start:
-    db  "Functional tests FAILED (address: $", 0
+    db  "Functional tests FAILED (address: ", 0
 func_tests_failed_end:
     db  ")", 10, 0
 
