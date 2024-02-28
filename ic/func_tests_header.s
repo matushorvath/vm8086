@@ -14,7 +14,7 @@
 #  0 - disable tracing
 # -1 - trace always
 # >0 - start tracing after passing that address
-    db  13423 # 0x346f
+    db  0
 
 # Callback address
 .IMPORT func_tests_callback
