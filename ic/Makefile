@@ -48,7 +48,7 @@ test: build
 	$(ICVM) bin/func_tests.input < /dev/null
 
 # The order of the object files matters: First include all the code in any order, then binary.o,
-# then the (optional) 6502 image header and the 6502 image itself.
+# then the (optional) 6502 image header and data.
 
 BASE_OBJS = vm6502.o arithmetic.o bits.o bitwise.o branch.o error.o exec.o flags.o incdec.o \
 	loadstore.o memory.o opcodes.o params.o pushpull.o shift.o state.o trace.o util.o

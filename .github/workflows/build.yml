@@ -73,10 +73,9 @@ jobs:
         working-directory: ic
         run: make build
 
-# TODO enable tests in CI/CD
-#      - name: Test
-#        working-directory: ic
-#        run: make test
+      - name: Test
+        working-directory: ic
+        run: make test
 
       - name: Store artifact
         uses: actions/upload-artifact@v4

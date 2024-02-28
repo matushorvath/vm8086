@@ -7,13 +7,15 @@
 # From binary.s
 .IMPORT binary
 
+# From error.s
+.IMPORT report_error
+
 # From state.s
 .IMPORT reg_sp
 
 # From util.s
+.IMPORT check_16bit
 .IMPORT mod_8bit
-
-# TODO validate load address, size; see init_state for example
 
 # Start of the 6502 memory space
 .SYMBOL MEM                             100000
@@ -28,6 +30,21 @@ init_memory:
 
     # Initialize memory space for the 6502.
 
+    # Validate the load address is a valid 16-bit number
+    add [binary + 1], 0, [rb - 1]
+    arb -1
+    call check_16bit
+
+    # Validate the image will fit to 16-bits when loaded there
+    add [binary + 1], [binary + 4], [rb + tgt]
+    lt  65536, [rb + tgt], [rb + tgt]
+    jz  [rb + tgt], init_memory_load_address_ok
+
+    add image_too_big_error, 0, [rb - 1]
+    arb -1
+    call report_error
+
+init_memory_load_address_ok:
     # Calculate the beginning address of the source (binary)
     add binary + 5, 0, [rb + src]
 
@@ -37,8 +54,8 @@ init_memory:
     # Number of bytes to copy
     add [binary + 4], 0, [rb + cnt]
 
-    # Move the image from src to tgt (iterating in reverse direction)
 init_memory_loop:
+    # Move the image from src to tgt (iterating in reverse direction)
     jz  [rb + cnt], init_memory_done
     add [rb + cnt], -1, [rb + cnt]
 
@@ -158,5 +175,9 @@ pull:
     arb 1
     ret 0
 .ENDFRAME
+
+##########
+image_too_big_error:
+    db  "image too big to load at specified address", 0
 
 .EOF

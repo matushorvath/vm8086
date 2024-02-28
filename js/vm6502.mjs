@@ -184,7 +184,7 @@ export class Vm6502 {
             this.carry = sumHi > 0x09;
 
             const res = (sumLo % 10) | ((sumHi % 10) << 4);
-            this.updateOverflow(this.a, b, res);      // TODO what does the real processor do?
+            this.updateOverflow(this.a, b, res);
 
             this.a = res;
             this.updateNegativeZero(this.a);
@@ -375,7 +375,7 @@ export class Vm6502 {
             this.carry = diffHi >= 0x00 && diffHi <= 0x09;
 
             const res = ((diffLo + 10) % 10) | (((diffHi + 10) % 10) << 4);
-            this.updateOverflow(b, res, this.a);      // TODO what does the real processor do?
+            this.updateOverflow(b, res, this.a);
 
             this.a = res;
             this.updateNegativeZero(this.a);
