@@ -40,6 +40,8 @@ execute_adc:
     # Decimal flag?
     jz [flag_decimal], execute_adc_not_decimal
 
+    #db  -42  # TODO remove
+
     # Split a into high and low part
     add [reg_a], 0, [rb - 1]
     arb -1
