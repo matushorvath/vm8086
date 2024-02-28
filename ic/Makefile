@@ -29,9 +29,8 @@ echo .$$ | cat $^ - | $(ICVM) $(ICLD) > $@ || ( cat $@ ; false )
 echo .$$ | cat $^ - | $(ICVM) $(ICLDMAP) > $@.map.yaml || ( cat $@.map.yaml ; false )
 endef
 
-# TODO write bin2obj in intcode
 define run-bin2obj
-echo ".C\n$$(wc -c $^ | cut -d' ' -f1)$$(hexdump -ve '/1 ",%u"' $^)\n.R\n.I\n.E\nbinary_length:0\nbinary_data:1" > $@
+stat -c %s $< | cat - $< | $(ICVM) $(BINDIR)/bin2obj.input > $@
 endef
 
 # Build
@@ -76,7 +75,7 @@ MSBASIC_OBJS = $(BASE_OBJS) binary.o msbasic_header.o msbasic_binary.o
 $(BINDIR)/msbasic.input: $(addprefix $(OBJDIR)/, $(MSBASIC_OBJS)) $(LIBXIB)
 	$(run-ld)
 
-$(OBJDIR)/msbasic_binary.o: $(MSBASICDIR)/tmp/vm6502.bin
+$(OBJDIR)/msbasic_binary.o: $(MSBASICDIR)/tmp/vm6502.bin $(BINDIR)/bin2obj.input
 	$(run-bin2obj)
 
 FUNC_TESTS_OBJS = $(BASE_OBJS) func_tests_callback.o binary.o func_tests_header.o func_tests_binary.o
@@ -84,12 +83,17 @@ FUNC_TESTS_OBJS = $(BASE_OBJS) func_tests_callback.o binary.o func_tests_header.
 $(BINDIR)/func_tests.input: $(addprefix $(OBJDIR)/, $(FUNC_TESTS_OBJS)) $(LIBXIB)
 	$(run-ld)
 
-$(OBJDIR)/func_tests_binary.o: $(FUNCTESTDIR)/bin_files/6502_functional_test.bin
+$(OBJDIR)/func_tests_binary.o: $(FUNCTESTDIR)/bin_files/6502_functional_test.bin $(BINDIR)/bin2obj.input
 	$(run-bin2obj)
 
 GEN_BITS_OBJS = gen_bits.o
 
 $(BINDIR)/gen_bits.input: $(addprefix $(OBJDIR)/, $(GEN_BITS_OBJS)) $(LIBXIB)
+	$(run-ld)
+
+BIN2OBJ_OBJS = bin2obj.o
+
+$(BINDIR)/bin2obj.input: $(addprefix $(OBJDIR)/, $(BIN2OBJ_OBJS)) $(LIBXIB)
 	$(run-ld)
 
 # Clean
