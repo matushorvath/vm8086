@@ -10,8 +10,10 @@
 # Load address for the functional tests binary
     db  0
 
-# Disable tracing
-# TODO -1 = trace always; >0 = start tracing once VM passes that address
+# Set up tracing
+#  0 - disable tracing
+# -1 - trace always
+# >0 - start tracing after passing that address
     db  0
 
 # Callback address
