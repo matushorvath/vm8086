@@ -12,7 +12,7 @@ ICLD ?= $(abspath $(ICDIR)/bin/ld.input)
 ICLDMAP ?= $(abspath $(ICDIR)/bin/ldmap.input)
 LIBXIB ?= $(abspath $(ICDIR)/bin/libxib.a)
 
-SRCDIR = .
+SRCDIR = src
 BINDIR ?= bin
 OBJDIR ?= obj
 

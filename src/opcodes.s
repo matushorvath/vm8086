@@ -1,7 +1,6 @@
 .EXPORT opcodes
 
 # Metadata on 6502 opcodes for tracing purposes
-# Generated using js/gen-opcodes.mjs
 
 opcodes:
     # 0 = 0x00, BRK (Implied)
