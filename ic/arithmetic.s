@@ -24,7 +24,7 @@
 
 # From util
 .IMPORT mod_8bit
-.IMPORT split_16_8_8
+.IMPORT split_8_4_4
 
 ##########
 execute_adc:
@@ -40,12 +40,10 @@ execute_adc:
     # Decimal flag?
     jz [flag_decimal], execute_adc_not_decimal
 
-    #db  -42  # TODO remove
-
     # Split a into high and low part
     add [reg_a], 0, [rb - 1]
     arb -1
-    call split_16_8_8
+    call split_8_4_4
 
     add [rb - 3], 0, [rb + a_hi]
     add [rb - 4], 0, [rb + a_lo]
@@ -53,7 +51,7 @@ execute_adc:
     # Split b into high and low part
     add [rb + b], 0, [rb - 1]
     arb -1
-    call split_16_8_8
+    call split_8_4_4
 
     add [rb - 3], 0, [rb + b_hi]
     add [rb - 4], 0, [rb + b_lo]

@@ -4,6 +4,7 @@
 .EXPORT mod_8bit
 .EXPORT mod_16bit
 .EXPORT split_16_8_8
+.EXPORT split_8_4_4
 
 # From error.s
 .IMPORT report_error
@@ -134,6 +135,23 @@ mod_16bit_done:
     add [rb + value], 0, [rb + tmp]
 
     arb 1
+    ret 1
+.ENDFRAME
+
+##########
+split_8_4_4:
+.FRAME v8; v4h, v4l                                 # returns v4h, v4l
+    arb -2
+
+    add [rb + v8], 0, [rb - 1]
+    add 4, 0, [rb - 2]
+    arb -2
+    call split_hi_lo
+
+    add [rb - 4], 0, [rb + v4h]
+    add [rb - 5], 0, [rb + v4l]
+
+    arb 2
     ret 1
 .ENDFRAME
 
