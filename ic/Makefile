@@ -29,9 +29,8 @@ echo .$$ | cat $^ - | $(ICVM) $(ICLD) > $@ || ( cat $@ ; false )
 echo .$$ | cat $^ - | $(ICVM) $(ICLDMAP) > $@.map.yaml || ( cat $@.map.yaml ; false )
 endef
 
-# TODO write bin2obj in intcode
 define run-bin2obj
-echo ".C\n$$(wc -c $^ | cut -d' ' -f1)$$(hexdump -ve '/1 ",%u"' $^)\n.R\n.I\n.E\nbinary_length:0\nbinary_data:1" > $@
+stat -c %s $< | cat - $< | $(ICVM) $(BINDIR)/bin2obj.input > $@
 endef
 
 # Build
@@ -44,11 +43,18 @@ build-prep:
 
 # Test
 .PHONY: test
-test: build
-	$(ICVM) bin/func_tests.input < /dev/null
+test: build msbasic_test func_tests
+
+.PHONY: func_tests
+func_tests: $(BINDIR)/func_tests.input
+	$(ICVM) $(BINDIR)/func_tests.input < /dev/null
+
+.PHONY: msbasic_test
+msbasic_test: $(BINDIR)/msbasic.input
+	< $(SRCDIR)/msbasic_test.in $(ICVM) $(BINDIR)/msbasic.input 2> /dev/null | diff -r - $(SRCDIR)/msbasic_test.out
 
 # The order of the object files matters: First include all the code in any order, then binary.o,
-# then the (optional) 6502 image header and the 6502 image itself.
+# then the (optional) 6502 image header and data.
 
 BASE_OBJS = vm6502.o arithmetic.o bits.o bitwise.o branch.o error.o exec.o flags.o incdec.o \
 	loadstore.o memory.o opcodes.o params.o pushpull.o shift.o state.o trace.o util.o
@@ -76,7 +82,7 @@ MSBASIC_OBJS = $(BASE_OBJS) binary.o msbasic_header.o msbasic_binary.o
 $(BINDIR)/msbasic.input: $(addprefix $(OBJDIR)/, $(MSBASIC_OBJS)) $(LIBXIB)
 	$(run-ld)
 
-$(OBJDIR)/msbasic_binary.o: $(MSBASICDIR)/tmp/vm6502.bin
+$(OBJDIR)/msbasic_binary.o: $(MSBASICDIR)/tmp/vm6502.bin $(BINDIR)/bin2obj.input
 	$(run-bin2obj)
 
 FUNC_TESTS_OBJS = $(BASE_OBJS) func_tests_callback.o binary.o func_tests_header.o func_tests_binary.o
@@ -84,12 +90,17 @@ FUNC_TESTS_OBJS = $(BASE_OBJS) func_tests_callback.o binary.o func_tests_header.
 $(BINDIR)/func_tests.input: $(addprefix $(OBJDIR)/, $(FUNC_TESTS_OBJS)) $(LIBXIB)
 	$(run-ld)
 
-$(OBJDIR)/func_tests_binary.o: $(FUNCTESTDIR)/bin_files/6502_functional_test.bin
+$(OBJDIR)/func_tests_binary.o: $(FUNCTESTDIR)/bin_files/6502_functional_test.bin $(BINDIR)/bin2obj.input
 	$(run-bin2obj)
 
 GEN_BITS_OBJS = gen_bits.o
 
 $(BINDIR)/gen_bits.input: $(addprefix $(OBJDIR)/, $(GEN_BITS_OBJS)) $(LIBXIB)
+	$(run-ld)
+
+BIN2OBJ_OBJS = bin2obj.o
+
+$(BINDIR)/bin2obj.input: $(addprefix $(OBJDIR)/, $(BIN2OBJ_OBJS)) $(LIBXIB)
 	$(run-ld)
 
 # Clean

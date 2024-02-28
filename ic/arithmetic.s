@@ -5,10 +5,6 @@
 .EXPORT execute_cpx
 .EXPORT execute_cpy
 
-# From error.s
-# TODO remove after decimal support
-.IMPORT report_error
-
 # From memory.s
 .IMPORT read
 
@@ -288,10 +284,5 @@ update_overflow_done:
     arb 1
     ret 3
 .ENDFRAME
-
-##########
-# TODO remove after decimal support
-decimal_error:
-    db  "decimal operations not supported", 0
 
 .EOF
