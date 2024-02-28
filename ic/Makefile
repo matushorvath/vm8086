@@ -43,8 +43,15 @@ build-prep:
 
 # Test
 .PHONY: test
-test: build
-	$(ICVM) bin/func_tests.input < /dev/null
+test: build msbasic_test func_tests
+
+.PHONY: func_tests
+func_tests: $(BINDIR)/func_tests.input
+	$(ICVM) $(BINDIR)/func_tests.input < /dev/null
+
+.PHONY: msbasic_test
+msbasic_test: $(BINDIR)/msbasic.input
+	< $(SRCDIR)/msbasic_test.in $(ICVM) $(BINDIR)/msbasic.input 2> /dev/null | diff -r - $(SRCDIR)/msbasic_test.out
 
 # The order of the object files matters: First include all the code in any order, then binary.o,
 # then the (optional) 6502 image header and data.
