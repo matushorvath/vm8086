@@ -26,8 +26,8 @@ binary:
 # binary_load_address:
 #    db  49152        # load address of the binary image in 6502 memory
 #
-# enable_tracing:
-#    db  1            # enable tracing if 1
+# tracing:
+#    db  1            # 0 - disable tracing, -1 - trace always, >0 - start tracing after passing that address
 #
 # vm_callback:
 #    db  123456       # optional callback function to call before each instruction

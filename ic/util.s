@@ -4,6 +4,7 @@
 .EXPORT mod_8bit
 .EXPORT mod_16bit
 .EXPORT split_16_8_8
+.EXPORT split_8_4_4
 
 # From error.s
 .IMPORT report_error
@@ -138,45 +139,78 @@ mod_16bit_done:
 .ENDFRAME
 
 ##########
+split_8_4_4:
+.FRAME v8; v4h, v4l                                 # returns v4h, v4l
+    arb -2
+
+    add [rb + v8], 0, [rb - 1]
+    add 4, 0, [rb - 2]
+    arb -2
+    call split_hi_lo
+
+    add [rb - 4], 0, [rb + v4h]
+    add [rb - 5], 0, [rb + v4l]
+
+    arb 2
+    ret 1
+.ENDFRAME
+
+##########
 split_16_8_8:
-.FRAME v16; v8h, v8l, bit, pow, tmp                 # returns v8h, v8l
+.FRAME v16; v8h, v8l                                # returns v8h, v8l
+    arb -2
+
+    add [rb + v16], 0, [rb - 1]
+    add 8, 0, [rb - 2]
+    arb -2
+    call split_hi_lo
+
+    add [rb - 4], 0, [rb + v8h]
+    add [rb - 5], 0, [rb + v8l]
+
+    arb 2
+    ret 1
+.ENDFRAME
+
+##########
+split_hi_lo:
+.FRAME vin, bits; vh, vl, bit, pow, tmp             # returns vh, vl
     arb -5
 
-    add 0, 0, [rb + v8h]
-    add [rb + v16], 0, [rb + v8l]
+    add 0, 0, [rb + vh]
+    add [rb + vin], 0, [rb + vl]
 
     add 8, 0, [rb + bit]
 
-split_16_8_8_loop:
+split_hi_lo_loop:
     add [rb + bit], -1, [rb + bit]
 
     # Load power of 2 for this high bit
-    add split_16_8_8_pow_hi, [rb + bit], [ip + 1]
+    add split_hi_lo_pow, [rb + bits], [rb + tmp]
+    add [rb + tmp], [rb + bit], [ip + 1]
     add [0], 0, [rb + pow]
 
-    # Is v8l smaller than pow?
-    lt  [rb + v8l], [rb + pow], [rb + tmp]
-    jnz [rb + tmp], split_16_8_8_zero
+    # Is vl smaller than pow?
+    lt  [rb + vl], [rb + pow], [rb + tmp]
+    jnz [rb + tmp], split_hi_lo_zero
 
-    # If v8l >= pow: subtract pow_hi from v8l, add pow_lo to v8h
+    # If vl >= pow: subtract pow_hi from vl, add pow_lo to vh
     mul [rb + pow], -1, [rb + pow]
-    add [rb + v8l], [rb + pow], [rb + v8l]
+    add [rb + vl], [rb + pow], [rb + vl]
 
-    add split_16_8_8_pow_lo, [rb + bit], [ip + 1]
+    add split_hi_lo_pow, [rb + bit], [ip + 1]
     add [0], 0, [rb + pow]
-    add [rb + v8h], [rb + pow], [rb + v8h]
+    add [rb + vh], [rb + pow], [rb + vh]
 
-split_16_8_8_zero:
+split_hi_lo_zero:
     # Next bit
-    jnz [rb + bit], split_16_8_8_loop
+    jnz [rb + bit], split_hi_lo_loop
 
     arb 5
-    ret 1
+    ret 2
 
-split_16_8_8_pow_lo:
-    db  1, 2, 4, 8, 16, 32, 64, 128
-split_16_8_8_pow_hi:
-    db  256, 512, 1024, 2048, 4096, 8192, 16384, 32768
+split_hi_lo_pow:
+    db  1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768
 .ENDFRAME
 
 .EOF

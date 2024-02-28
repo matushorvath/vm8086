@@ -24,11 +24,12 @@
 
 # From util
 .IMPORT mod_8bit
+.IMPORT split_8_4_4
 
 ##########
 execute_adc:
-.FRAME addr; b, sum
-    arb -2
+.FRAME addr; b, sum, a_lo, a_hi, b_lo, b_hi
+    arb -6
 
     # Read the second operand
     add [rb + addr], 0, [rb - 1]
@@ -39,24 +40,51 @@ execute_adc:
     # Decimal flag?
     jz [flag_decimal], execute_adc_not_decimal
 
-    # Decimal adc, TODO implement
-    add decimal_error, 0, [rb - 1]
+    # Split a into high and low part
+    add [reg_a], 0, [rb - 1]
     arb -1
-    call report_error
+    call split_8_4_4
 
-    # const sumLo = (this.a & 0b0000_1111) + (b & 0b0000_1111) + (this.carry ? 1 : 0);
-    # const carryLo = sumLo > 0x09;
-    #
-    # const sumHi = ((this.a & 0b1111_0000) >> 4) + ((b & 0b1111_0000) >> 4) + (carryLo ? 1 : 0);
-    # this.carry = sumHi > 0x09;
-    #
-    # const res = (sumLo % 10) | ((sumHi % 10) << 4);
-    # this.updateOverflow(this.a, b, res);      // TODO what does the real processor do?
-    #
-    # this.a = res;
-    # this.updateNegativeZero(this.a);
+    add [rb - 3], 0, [rb + a_hi]
+    add [rb - 4], 0, [rb + a_lo]
 
-    jz 0, execute_adc_done
+    # Split b into high and low part
+    add [rb + b], 0, [rb - 1]
+    arb -1
+    call split_8_4_4
+
+    add [rb - 3], 0, [rb + b_hi]
+    add [rb - 4], 0, [rb + b_lo]
+
+    # Sum the lo parts plus carry -> a_lo
+    add [rb + a_lo], [rb + b_lo], [rb + a_lo]
+    add [rb + a_lo], [flag_carry], [rb + a_lo]
+
+    # Carry from a_lo -> flag_carry (temporarily)
+    lt  9, [rb + a_lo], [flag_carry]
+
+    # If carry, reduce a_lo by 10
+    jz  [flag_carry], execute_adc_bcd_lo_no_carry
+    add [rb + a_lo], -10, [rb + a_lo]
+
+execute_adc_bcd_lo_no_carry:
+    # Sum the hi parts plus lo carry -> a_hi
+    add [rb + a_hi], [rb + b_hi], [rb + a_hi]
+    add [rb + a_hi], [flag_carry], [rb + a_hi]
+
+    # Carry from a_hi -> flag_carry
+    lt  9, [rb + a_hi], [flag_carry]
+
+    # If carry, reduce a_hi by 10
+    jz  [flag_carry], execute_adc_bcd_hi_no_carry
+    add [rb + a_hi], -10, [rb + a_hi]
+
+execute_adc_bcd_hi_no_carry:
+    # Sum the lo and hi parts
+    mul [rb + a_hi], 16, [rb + sum]
+    add [rb + sum], [rb + a_lo], [rb + sum]
+
+    jz 0, execute_adc_update_flags
 
 execute_adc_not_decimal:
     # Sum [reg_a] + [b] + [flag_carry]
@@ -66,12 +94,11 @@ execute_adc_not_decimal:
     # Set carry flag if sum > 255
     lt 255, [rb + sum], [flag_carry]
 
-    # Wrap around sum to 8 bits
-    add [rb + sum], 0, [rb - 1]
-    arb -1
-    call mod_8bit
-    add [rb - 3], 0, [rb + sum]
+    # If carry, reduce sum by 256
+    jz  [flag_carry], execute_adc_update_flags
+    add [rb + sum], -256, [rb + sum]
 
+execute_adc_update_flags:
     # Update overflow flag
     add [reg_a], 0, [rb - 1]
     add [rb + b], 0, [rb - 2]
@@ -85,15 +112,14 @@ execute_adc_not_decimal:
     lt  127, [reg_a], [flag_negative]
     eq  [reg_a], 0, [flag_zero]
 
-execute_adc_done:
-    arb 2
+    arb 6
     ret 1
 .ENDFRAME
 
 ##########
 execute_sbc:
-.FRAME addr; tmp, b, diff
-    arb -3
+.FRAME addr; tmp, b, diff, a_lo, a_hi, b_lo, b_hi
+    arb -7
 
     # Read the second operand
     add [rb + addr], 0, [rb - 1]
@@ -104,24 +130,57 @@ execute_sbc:
     # Decimal flag?
     jz [flag_decimal], execute_sbc_not_decimal
 
-    # Decimal sbc, TODO implement
-    add decimal_error, 0, [rb - 1]
+    # Split a into high and low part
+    add [reg_a], 0, [rb - 1]
     arb -1
-    call report_error
+    call split_8_4_4
 
-    # const diffLo = (this.a & 0b0000_1111) - (b & 0b0000_1111) + (this.carry ? 1 : 0) - 1;
-    # const carryLo = diffLo >= 0x00 && diffLo <= 0x09;
-    #
-    # const diffHi = ((this.a & 0b1111_0000) >> 4) - ((b & 0b1111_0000) >> 4) + (carryLo ? 1 : 0) - 1;
-    # this.carry = diffHi >= 0x00 && diffHi <= 0x09;
-    #
-    # const res = ((diffLo + 10) % 10) | (((diffHi + 10) % 10) << 4);
-    # this.updateOverflow(b, res, this.a);      // TODO what does the real processor do?
-    #
-    # this.a = res;
-    # this.updateNegativeZero(this.a);
+    add [rb - 3], 0, [rb + a_hi]
+    add [rb - 4], 0, [rb + a_lo]
 
-    jz 0, execute_sbc_done
+    # Split b into high and low part
+    add [rb + b], 0, [rb - 1]
+    arb -1
+    call split_8_4_4
+
+    add [rb - 3], 0, [rb + b_hi]
+    add [rb - 4], 0, [rb + b_lo]
+
+    # Subtract lo parts [a_lo] - [b_lo] + [flag_carry] - 1 -> a_lo
+    mul [rb + b_lo], -1, [rb + diff]
+    add [rb + diff], [rb + a_lo], [rb + diff]
+    add [rb + diff], [flag_carry], [rb + diff]
+    add [rb + diff], -1, [rb + a_lo]
+
+    # If a_lo >= 0 -> set lo carry to flag_carry (temporarily)
+    # Note: This will probably not calculate expected values for invalid BCD input (digit > 9)
+    lt  -1, [rb + a_lo], [flag_carry]
+
+    # If carry, increase a_lo by 10
+    jnz [flag_carry], execute_sbc_bcd_lo_no_carry
+    add [rb + a_lo], 10, [rb + a_lo]
+
+execute_sbc_bcd_lo_no_carry:
+    # Subtract hi parts [a_hi] - [b_hi] + [flag_carry] - 1 -> a_hi
+    mul [rb + b_hi], -1, [rb + diff]
+    add [rb + diff], [rb + a_hi], [rb + diff]
+    add [rb + diff], [flag_carry], [rb + diff]
+    add [rb + diff], -1, [rb + a_hi]
+
+    # If a_hi >= 0 -> set hi carry to flag_carry
+    # Note: This will probably not calculate expected values for invalid BCD input (digit > 9)
+    lt  -1, [rb + a_hi], [flag_carry]
+
+    # If carry, increase a_hi by 10
+    jnz [flag_carry], execute_sbc_bcd_hi_no_carry
+    add [rb + a_hi], 10, [rb + a_hi]
+
+execute_sbc_bcd_hi_no_carry:
+    # Sum the lo and hi parts
+    mul [rb + a_hi], 16, [rb + diff]
+    add [rb + diff], [rb + a_lo], [rb + diff]
+
+    jz 0, execute_sbc_update_flags
 
 execute_sbc_not_decimal:
     # Subtract [reg_a] - [b] + [flag_carry] - 1
@@ -130,23 +189,14 @@ execute_sbc_not_decimal:
     add [rb + diff], [flag_carry], [rb + diff]
     add [rb + diff], -1, [rb + diff]
 
-    # Set carry flag if diff >= 0 && diff <= 255
-    add 0, 0, [flag_carry]
+    # Set carry flag if diff >= 0
+    lt  -1, [rb + diff], [flag_carry]
 
-    lt  [rb + diff], 0, [rb + tmp]
-    jnz [rb + tmp], execute_sbc_carry_false
-    lt  255, [rb + diff], [rb + tmp]
-    jnz [rb + tmp], execute_sbc_carry_false
+    # If carry, increase a_hi by 256
+    jnz [flag_carry], execute_sbc_update_flags
+    add [rb + diff], 256, [rb + diff]
 
-    add 1, 0, [flag_carry]
-
-execute_sbc_carry_false:
-    # Wrap around diff to 8 bits
-    add [rb + diff], 0, [rb - 1]
-    arb -1
-    call mod_8bit
-    add [rb - 3], 0, [rb + diff]
-
+execute_sbc_update_flags:
     # Update overflow flag
     add [rb + b], 0, [rb - 1]
     add [rb + diff], 0, [rb - 2]
@@ -160,8 +210,7 @@ execute_sbc_carry_false:
     lt  127, [reg_a], [flag_negative]
     eq  [reg_a], 0, [flag_zero]
 
-execute_sbc_done:
-    arb 3
+    arb 7
     ret 1
 .ENDFRAME
 
