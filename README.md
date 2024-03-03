@@ -33,7 +33,7 @@ Now you can the `msbasic.input` Intcode image. Please substitute the correct pat
    $ ICDIR=~/xzintbit MSBASICDIR=~/msbasic FUNCTESTDIR=~/6502_65C02_functional_tests make test
    ```
 
-The functional tests take a minute or two to finish. If the build process looks frozen and the last output line mentions `func_tests.input`, you're probably still waiting for the tests. You can skip the tests by running a plain `make` instead of `make test`.
+The functional test takes a minute or two to finish. If the build process looks frozen and the last output line mentions `func_test.input`, you're probably still waiting for the test. You can skip the test by running a plain `make` instead of `make test`.
 
 Now you can execute the newly built image:
    ```sh
@@ -45,7 +45,7 @@ You should now see the `MEMORY SIZE?` prompt from Microsoft Basic. Enter a reaso
 ## Q & A
 
 Q: How complete is the 6502 emulation?  
-A: All officially documented instructions are emulated. The virtual machine passes [6502 functional tests](https://github.com/amb5l/6502_65C02_functional_tests).
+A: All officially documented instructions are emulated. The virtual machine passes the basic [6502 functional test](https://github.com/amb5l/6502_65C02_functional_tests/blob/master/6502_functional_test.a65).
 
 Q: Why?  
 A: Just for fun.

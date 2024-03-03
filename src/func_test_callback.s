@@ -1,6 +1,6 @@
 # Callback function called by the VM for every 6502 instruction executed.
 
-.EXPORT func_tests_callback
+.EXPORT func_test_callback
 
 # From state.s
 .IMPORT reg_pc
@@ -10,49 +10,49 @@
 .IMPORT print_str
 .IMPORT halt_and_catch_fire
 
-# We use this to detect a failed/successful test run and halt the VM, since the functional tests
-# themselves never finish, they just enter a tight endless loop.
+# We use this to detect a failed/successful test run and halt the VM, since the functional test
+# itself never finishes, it just enters a tight endless loop.
 
 # Previous value of the pc register
-func_tests_prev_pc:
+func_test_prev_pc:
     db  -1
 
 # Test success address
 # Can be found using bin_files/6502_functional_test.lst, search for "test passed, no errors"
 .SYMBOL SUCCESS_ADDRESS                 13417       # 0x3469
 
-func_tests_callback:
+func_test_callback:
 .FRAME tmp                              # returns tmp
     arb -1
 
-    # Have we reached the successful end of tests?
+    # Have we reached the successful end of the test?
     eq  [reg_pc], SUCCESS_ADDRESS, [rb + tmp]
-    jnz [rb + tmp], func_tests_callback_passed
+    jnz [rb + tmp], func_test_callback_passed
 
     # Are we in a tight loop?
-    eq  [reg_pc], [func_tests_prev_pc], [rb + tmp]
-    jnz [rb + tmp], func_tests_callback_failed
+    eq  [reg_pc], [func_test_prev_pc], [rb + tmp]
+    jnz [rb + tmp], func_test_callback_failed
 
     # Save previous pc value
-    add [reg_pc], 0, [func_tests_prev_pc]
+    add [reg_pc], 0, [func_test_prev_pc]
 
     # Return 1 to keep running
     add 1, 0, [rb + tmp]
-    jz  0, func_tests_callback_done
+    jz  0, func_test_callback_done
 
-func_tests_callback_passed:
+func_test_callback_passed:
     # Successful test run
-    add func_tests_passed, 0, [rb - 1]
+    add func_test_passed, 0, [rb - 1]
     arb -1
     call print_str
 
     # Return 0 to halt
     add 0, 0, [rb + tmp]
-    jz  0, func_tests_callback_done
+    jz  0, func_test_callback_done
 
-func_tests_callback_failed:
+func_test_callback_failed:
     # Failed test run
-    add func_tests_failed_start, 0, [rb - 1]
+    add func_test_failed_start, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -61,7 +61,7 @@ func_tests_callback_failed:
     arb -2
     call print_num_radix
 
-    add func_tests_failed_end, 0, [rb - 1]
+    add func_test_failed_end, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -70,17 +70,17 @@ func_tests_callback_failed:
     # If you don't redirect stdin, this just waits for console input forever
     call halt_and_catch_fire
 
-func_tests_callback_done:
+func_test_callback_done:
     arb 1
     ret 0
 .ENDFRAME
 
 # Strings
-func_tests_passed:
-    db  "Functional tests PASSED", 10, 0
-func_tests_failed_start:
-    db  "Functional tests FAILED (address: ", 0
-func_tests_failed_end:
+func_test_passed:
+    db  "Functional test PASSED", 10, 0
+func_test_failed_start:
+    db  "Functional test FAILED (address: ", 0
+func_test_failed_end:
     db  ")", 10, 0
 
 .EOF

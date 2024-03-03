@@ -35,7 +35,7 @@ endef
 
 # Build
 .PHONY: build
-build: build-prep $(BINDIR)/vm6502.input $(BINDIR)/msbasic.input $(BINDIR)/func_tests.input
+build: build-prep $(BINDIR)/vm6502.input $(BINDIR)/msbasic.input $(BINDIR)/func_test.input
 
 .PHONY: build-prep
 build-prep:
@@ -43,11 +43,11 @@ build-prep:
 
 # Test
 .PHONY: test
-test: build msbasic_test func_tests
+test: build msbasic_test func_test
 
-.PHONY: func_tests
-func_tests: $(BINDIR)/func_tests.input
-	$(ICVM) $(BINDIR)/func_tests.input < /dev/null
+.PHONY: func_test
+func_test: $(BINDIR)/func_test.input
+	$(ICVM) $(BINDIR)/func_test.input < /dev/null
 
 .PHONY: msbasic_test
 msbasic_test: $(BINDIR)/msbasic.input
@@ -85,12 +85,12 @@ $(BINDIR)/msbasic.input: $(addprefix $(OBJDIR)/, $(MSBASIC_OBJS)) $(LIBXIB)
 $(OBJDIR)/msbasic_binary.o: $(MSBASICDIR)/tmp/vm6502.bin $(BINDIR)/bin2obj.input
 	$(run-bin2obj)
 
-FUNC_TESTS_OBJS = $(BASE_OBJS) func_tests_callback.o binary.o func_tests_header.o func_tests_binary.o
+FUNC_TEST_OBJS = $(BASE_OBJS) func_test_callback.o binary.o func_test_header.o func_test_binary.o
 
-$(BINDIR)/func_tests.input: $(addprefix $(OBJDIR)/, $(FUNC_TESTS_OBJS)) $(LIBXIB)
+$(BINDIR)/func_test.input: $(addprefix $(OBJDIR)/, $(FUNC_TEST_OBJS)) $(LIBXIB)
 	$(run-ld)
 
-$(OBJDIR)/func_tests_binary.o: $(FUNCTESTDIR)/bin_files/6502_functional_test.bin $(BINDIR)/bin2obj.input
+$(OBJDIR)/func_test_binary.o: $(FUNCTESTDIR)/bin_files/6502_functional_test.bin $(BINDIR)/bin2obj.input
 	$(run-bin2obj)
 
 GEN_BITS_OBJS = gen_bits.o
