@@ -8,13 +8,17 @@ on:
 
 jobs:
   build:
-    name: Build and Test
-    runs-on: ubuntu-latest
+    name: OS=${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
 
     env:
       ICDIR: xzintbit
       MSBASICDIR: msbasic
       FUNCTESTDIR: 6502_65C02_functional_tests
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -27,6 +31,8 @@ jobs:
 
       - name: Build xzintbit
         working-directory: xzintbit
+        env:
+          CC: gcc
         run: make build-vm
 
       - name: Checkout Microsoft Basic
@@ -36,11 +42,20 @@ jobs:
           path: msbasic
 
       - name: Install cc65
-        run: sudo apt install -y cc65
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            sudo apt install -y cc65
+          elif [ "$RUNNER_OS" == "Windows" ]; then
+            choco install cc65-compiler
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            brew install cc65
+          fi
+        shell: bash
 
       - name: Build Microsoft Basic
         working-directory: msbasic
         run: ./make.sh
+        shell: bash
 
       - name: Checkout 6502 functional tests
         uses: actions/checkout@v4
@@ -50,6 +65,7 @@ jobs:
 
       - name: Build
         run: make build
+        shell: bash
 
       - name: Test
         run: make test
