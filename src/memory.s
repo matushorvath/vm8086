@@ -77,8 +77,8 @@ init_memory_done:
 
 ##########
 read:
-.FRAME addr; tmp                        # returns tmp
-    arb -1
+.FRAME addr; value, tmp                 # returns value
+    arb -2
 
     # Is this IO?
     eq  [rb + addr], IOPORT, [rb + tmp]
@@ -87,28 +87,33 @@ read:
     # Yes, do we need to simulate a 0x0d?
     jnz [read_io_simulate_0d_flag], read_io_simulate_0d
 
+read_io_next_char:
     # No, regular input
-    in  [rb + tmp]
+    in  [rb + value]
+
+    # Drop any 0x0d characters, we simulate those after a 0x0a automatically
+    eq  [rb + value], 13, [rb + tmp]
+    jnz [rb + tmp], read_io_next_char
 
     # If 0x0a, next input char should be 0x0d
-    eq  [rb + tmp], 10, [read_io_simulate_0d_flag]
+    eq  [rb + value], 10, [read_io_simulate_0d_flag]
 
     jz  0, read_done
 
 read_io_simulate_0d:
     # If the last character we got was 0x0a, simulate a following 0x0d
     add 0, 0, [read_io_simulate_0d_flag]
-    add 13, 0, [rb + tmp]
+    add 13, 0, [rb + value]
 
     jz  0, read_done
 
 read_mem:
     # No, regular memory read
     add MEM, [rb + addr], [ip + 1]
-    add [0], 0, [rb + tmp]
+    add [0], 0, [rb + value]
 
 read_done:
-    arb 1
+    arb 2
     ret 1
 
 read_io_simulate_0d_flag:
@@ -124,7 +129,11 @@ write:
     eq  [rb + addr], IOPORT, [rb + tmp]
     jz  [rb + tmp], write_mem
 
-    # Yes, output value
+    # Yes, drop any 0x0a characters
+    eq  [rb + value], 13, [rb + tmp]
+    jnz [rb + tmp], write_done
+
+    # Output the character
     out [rb + value]
     jz  0, write_done
 

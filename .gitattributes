@@ -1,0 +1,2 @@
+src/msbasic_test.in text eol=lf
+src/msbasic_test.out text eol=lf

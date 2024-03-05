@@ -42,7 +42,7 @@ define run-ld
 endef
 
 define run-bin2obj
-	ls -n $< | awk '{ printf $$5" " }' | cat - $< | $(ICVM) $(BINDIR)/bin2obj.input > $@ || ( cat $@ ; false )
+	ls -n $< | awk '{ printf "%s ", $$5 }' | cat - $< | $(ICVM) $(BINDIR)/bin2obj.input > $@ || ( cat $@ ; false )
 endef
 
 # Build
