@@ -2,9 +2,21 @@
 
 ICVM_TYPE ?= c
 
-ICDIR ?= $(error ICDIR variable is not set; point it where https://github.com/matushorvath/xzintbit is built)
-MSBASICDIR ?= $(error MSBASICDIR variable is not set; point it where https://github.com/matushorvath/msbasic is built)
-FUNCTESTDIR ?= $(error FUNCTESTDIR variable is not set; point it where https://github.com/Klaus2m5/6502_65C02_functional_tests is cloned)
+ICDIR ?= $(abspath ../xzintbit)
+MSBASICDIR ?= $(abspath ../msbasic)
+FUNCTESTDIR ?= $(abspath ../6502_65C02_functional_tests)
+
+ifeq ($(shell test -d $(ICDIR) || echo error),error)
+$(error ICDIR variable is invalid; point it where https://github.com/matushorvath/xzintbit is built)
+endif
+
+ifeq ($(shell test -d $(MSBASICDIR) || echo error),error)
+$(error MSBASICDIR variable is invalid; point it where https://github.com/matushorvath/msbasic is built)
+endif
+
+ifeq ($(shell test -d $(FUNCTESTDIR) || echo error),error)
+$(error FUNCTESTDIR variable is invalid; point it where https://github.com/Klaus2m5/6502_65C02_functional_tests is cloned)
+endif
 
 ICVM ?= $(abspath $(ICDIR)/vms)/$(ICVM_TYPE)/ic
 ICAS ?= $(abspath $(ICDIR)/bin/as.input)
@@ -17,20 +29,20 @@ BINDIR ?= bin
 OBJDIR ?= obj
 
 define run-as
-cat $^ | $(ICVM) $(ICAS) > $@ || ( cat $@ ; false )
+	cat $^ | $(ICVM) $(ICAS) > $@ || ( cat $@ ; false )
 endef
 
 define run-ar
-echo .L | cat - $^ > $@ || ( cat $@ ; false )
+	echo .L | cat - $^ > $@ || ( cat $@ ; false )
 endef
 
 define run-ld
-echo .$$ | cat $^ - | $(ICVM) $(ICLD) > $@ || ( cat $@ ; false )
-echo .$$ | cat $^ - | $(ICVM) $(ICLDMAP) > $@.map.yaml || ( cat $@.map.yaml ; false )
+	echo .$$ | cat $^ - | $(ICVM) $(ICLD) > $@ || ( cat $@ ; false )
+	echo .$$ | cat $^ - | $(ICVM) $(ICLDMAP) > $@.map.yaml || ( cat $@.map.yaml ; false )
 endef
 
 define run-bin2obj
-stat -c %s $< | cat - $< | $(ICVM) $(BINDIR)/bin2obj.input > $@
+	ls -n $< | awk '{ print $$5 }' | cat - $< | $(ICVM) $(BINDIR)/bin2obj.input > $@
 endef
 
 # Build
@@ -45,13 +57,13 @@ build-prep:
 .PHONY: test
 test: build msbasic_test func_test
 
-.PHONY: func_test
-func_test: $(BINDIR)/func_test.input
-	$(ICVM) $(BINDIR)/func_test.input < /dev/null
-
 .PHONY: msbasic_test
 msbasic_test: $(BINDIR)/msbasic.input
 	< $(SRCDIR)/msbasic_test.in $(ICVM) $(BINDIR)/msbasic.input 2> /dev/null | diff -r - $(SRCDIR)/msbasic_test.out
+
+.PHONY: func_test
+func_test: $(BINDIR)/func_test.input
+	$(ICVM) $(BINDIR)/func_test.input < /dev/null
 
 # The order of the object files matters: First include all the code in any order, then binary.o,
 # then the (optional) 6502 image header and data.
