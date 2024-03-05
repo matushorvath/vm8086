@@ -76,4 +76,4 @@ jobs:
           name: msbasic.input
           path: bin/msbasic.input
           if-no-files-found: error
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest'
