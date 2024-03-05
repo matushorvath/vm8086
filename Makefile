@@ -7,15 +7,15 @@ MSBASICDIR ?= $(abspath ../msbasic)
 FUNCTESTDIR ?= $(abspath ../6502_65C02_functional_tests)
 
 ifeq ($(shell test -d $(ICDIR) || echo error),error)
-$(error ICDIR variable is invalid; point it where https://github.com/matushorvath/xzintbit is built)
+	$(error ICDIR variable is invalid; point it where https://github.com/matushorvath/xzintbit is built)
 endif
 
 ifeq ($(shell test -d $(MSBASICDIR) || echo error),error)
-$(error MSBASICDIR variable is invalid; point it where https://github.com/matushorvath/msbasic is built)
+	$(error MSBASICDIR variable is invalid; point it where https://github.com/matushorvath/msbasic is built)
 endif
 
 ifeq ($(shell test -d $(FUNCTESTDIR) || echo error),error)
-$(error FUNCTESTDIR variable is invalid; point it where https://github.com/Klaus2m5/6502_65C02_functional_tests is cloned)
+	$(error FUNCTESTDIR variable is invalid; point it where https://github.com/Klaus2m5/6502_65C02_functional_tests is cloned)
 endif
 
 ICVM ?= $(abspath $(ICDIR)/vms)/$(ICVM_TYPE)/ic
@@ -42,7 +42,7 @@ define run-ld
 endef
 
 define run-bin2obj
-	ls -n $< | awk '{ print $$5 }' | cat - $< | $(ICVM) $(BINDIR)/bin2obj.input > $@
+	ls -n $< | awk '{ printf $$5" " }' | cat - $< | $(ICVM) $(BINDIR)/bin2obj.input > $@ || ( cat $@ ; false )
 endef
 
 # Build

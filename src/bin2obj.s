@@ -7,7 +7,7 @@
 #       db  <byte_0>, <byte_1>, ... <byte_size-1>           # File data, <size> bytes, each from 0 to 255
 
 # Since Intcode has no way of detecting end of file, this utility expects the file size followed
-# by a new line (ASCII 10) to be passed through the standard input before the binary itself.
+# by a space to be passed through the standard input before the binary itself.
 
 .IMPORT print_num
 .IMPORT print_str
@@ -20,7 +20,7 @@ read_size_loop:
     # Read file size
     in  [digit]
 
-    eq  [digit], 10, [tmp]
+    eq  [digit], ' ', [tmp]
     jnz [tmp], read_size_done
     lt  [digit], '0', [tmp]
     jnz [tmp], invalid_size
