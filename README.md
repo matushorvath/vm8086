@@ -13,7 +13,7 @@ into raw Intcode using my [xzintbit](https://github.com/matushorvath/xzintbit) I
 
 You will need an Intcode virtual machine. Perhaps you created one as part of solving Advent of Code 2019. If it can run all Advent of Code assignments, it should be good enough to run Microsoft Basic as well.
 
-Download the pre-built [`msbasic.input`](TODO) file from this repository and run it with your Intcode virtual machine. If everything goes correctly, you should see a "MEMORY SIZE?" prompt from the Microsoft Basic interpreter.
+Download the pre-built [`msbasic.input`](https://github.com/matushorvath/vm6502/releases/download/v1.0.0/msbasic.input) file from this repository and run it with your Intcode virtual machine. If everything goes correctly, you should see a "MEMORY SIZE?" prompt from the Microsoft Basic interpreter.
 
 The `msbasic.input` file contains plain Intcode in the same format that was used by Advent of Code assignments. It requires about 165536 "bytes" of Intcode memory, and should work fine even with Intcode VMs that use signed 32-bit integers.
 
@@ -24,7 +24,7 @@ The `msbasic.input` file contains plain Intcode in the same format that was used
 This projects has multiple parts that you'll need to get working if you want to rebuild the sources. (This is not needed if you just want to see Microsoft Basic running on your Intcode virtual machine; see the [Trying it Out](#trying-it-out) section above.)
 
 - You will need an Intcode virtual machine. Feel free to use your own, or you can use one of the Intcode virtual machines in the `vms` directory in the [xzintbit](https://github.com/matushorvath/xzintbit) repository.
-- You will need the Intcode assembler and linker itself. Please clone and build the [xzintbit](https://github.com/matushorvath/xzintbit) repository. See documentation in that repository for details, but a simple `make` should be enough to get you some results.
+- You will need the Intcode assembler and linker itself. Clone and build the [xzintbit](https://github.com/matushorvath/xzintbit) repository. See documentation in that repository for details, but a simple `make` should be enough to get you some results.
 - Clone and build the [msbasic](https://github.com/matushorvath/msbasic) repository. This is a a slightly modified Microsoft Basic version that can run on an emulated 6502.
 - Clone the [functional tests](https://github.com/Klaus2m5/6502_65C02_functional_tests) repository (no need to build it). This is used as a test suite to validate the 6502 virtual machine is working correctly.
 
