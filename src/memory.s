@@ -17,16 +17,13 @@
 .IMPORT check_16bit
 .IMPORT mod_8bit
 
-# Start of the 6502 memory space
-.SYMBOL MEM                             100000
-
-# Where IO is mapped in memory
+# Where IO is mapped in 6502 memory
 .SYMBOL IOPORT                          65520       # 0xfff0;
 
 ##########
 init_memory:
-.FRAME src, tgt, cnt
-    arb -3
+.FRAME tmp, src, tgt, cnt
+    arb -4
 
     # Initialize memory space for the 6502.
 
@@ -37,19 +34,25 @@ init_memory:
 
     # Validate the image will fit to 16-bits when loaded there
     add [binary + 1], [binary + 4], [rb + tgt]
-    lt  65536, [rb + tgt], [rb + tgt]
-    jz  [rb + tgt], init_memory_load_address_ok
+    lt  65536, [rb + tgt], [rb + tmp]
+    jz  [rb + tmp], init_memory_load_address_ok
 
     add image_too_big_error, 0, [rb - 1]
     arb -1
     call report_error
 
 init_memory_load_address_ok:
-    # Calculate the beginning address of the source (binary)
+    # The 6502 memory space will start where the binary starts now
+    add binary + 5, 0, [mem]
+
+    # Do we need to move the binary to a different load address?
+    jz  [binary + 1], init_memory_done
+
+    # Yes, calculate beginning address of the source (binary),
     add binary + 5, 0, [rb + src]
 
-    # Calculate the beginning address of the target (MEM + [load])
-    add MEM, [binary + 1], [rb + tgt]
+    # Calculate the beginning address of the target ([mem] + [load])
+    add [mem], [binary + 1], [rb + tgt]
 
     # Number of bytes to copy
     add [binary + 4], 0, [rb + cnt]
@@ -71,7 +74,7 @@ init_memory_loop:
     jz  0, init_memory_loop
 
 init_memory_done:
-    arb 3
+    arb 4
     ret 0
 .ENDFRAME
 
@@ -109,7 +112,7 @@ read_io_simulate_0d:
 
 read_mem:
     # No, regular memory read
-    add MEM, [rb + addr], [ip + 1]
+    add [mem], [rb + addr], [ip + 1]
     add [0], 0, [rb + value]
 
 read_done:
@@ -139,7 +142,7 @@ write:
 
 write_mem:
     # No, regular memory write
-    add MEM, [rb + addr], [ip + 3]
+    add [mem], [rb + addr], [ip + 3]
     add [rb + value], 0, [0]
 
 write_done:
@@ -186,6 +189,9 @@ pull:
 .ENDFRAME
 
 ##########
+mem:
+    db 0
+
 image_too_big_error:
     db  "image too big to load at specified address", 0
 
