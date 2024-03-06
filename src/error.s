@@ -27,7 +27,6 @@ report_error:
     arb -2
     call print_num_radix
 
-
     add report_error_msg_end, 0, [rb - 1]
     arb -1
     call print_str
