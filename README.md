@@ -2,7 +2,7 @@
 
 # Microsoft Basic on an Intcode Runtime
 
-VM6502 is a virtual machine emulating the MOS 6502 processor, and is capable of running Microsoft Basic. The 6502 virtual machine itself is implemented in [Intcode](https://esolangs.org/wiki/Intcode), which a machine language specification introduced as part of [Advent of Code 2019](https://adventofcode.com/2019).
+VM6502 is a virtual machine emulating the MOS 6502 processor, an 8-bit processor used in many home computers from the 80s, and is capable of running Microsoft Basic. The 6502 virtual machine itself is implemented in [Intcode](https://esolangs.org/wiki/Intcode), which a virtual machine introduced as part of [Advent of Code 2019](https://adventofcode.com/2019).
 
 ## Implementation Details
 
@@ -11,11 +11,13 @@ into raw Intcode using my [xzintbit](https://github.com/matushorvath/xzintbit) I
 
 ## Trying it Out
 
-You will need an Intcode virtual machine. Perhaps you created one as part of solving Advent of Code 2019. If it can run all Advent of Code assignments, it should be good enough to run Microsoft Basic as well.
+You will need an Intcode virtual machine. Perhaps you created one as part of solving Advent of Code 2019. If it can run the Advent of Code assignments, it should be good enough to run Microsoft Basic as well. Or you could use one of [my Intcode virtual machines](https://github.com/matushorvath/xzintbit/tree/main/vms).
 
-Download the pre-built [`msbasic.input`](https://github.com/matushorvath/vm6502/releases/download/v1.0.0/msbasic.input) file from this repository and run it with your Intcode virtual machine. If everything goes correctly, you should see a "MEMORY SIZE?" prompt from the Microsoft Basic interpreter.
+Specifically the Intcode virtual machine needs to meet the [AoC 2019 Day 9](https://adventofcode.com/2019/day/9) standard, with the [Aft Scaffolding Control and Information Interface (ASCII)](https://adventofcode.com/2019/day/17). In other words, it should implement all the instructions and use ASCII characters on standard input and output.
 
-The `msbasic.input` file contains plain Intcode in the same format that was used by Advent of Code assignments. It requires about 165536 "bytes" of Intcode memory, and should work fine even with Intcode VMs that use signed 32-bit integers.
+Download the pre-built [`msbasic.input`](https://github.com/matushorvath/vm6502/releases/download/v1.0.0/msbasic.input) file from this repository and run it on your Intcode virtual machine. If everything goes correctly, you should see a "MEMORY SIZE?" prompt from the Microsoft Basic interpreter.
+
+The `msbasic.input` file contains plain Intcode in the same format that was used by Advent of Code assignments. It requires about 80.000 (80k) "bytes" of Intcode memory, and should work fine even with Intcode VMs that use signed 32-bit integers.
 
 ![Screenshot of Intcode VM6502 running Microsoft Basic](docs/screenshot.png)
 
@@ -47,5 +49,5 @@ You should now see the `MEMORY SIZE?` prompt from Microsoft Basic. Enter a reaso
 Q: How complete is the 6502 emulation?  
 A: All officially documented instructions are emulated. The virtual machine passes the basic [6502 functional test](https://github.com/amb5l/6502_65C02_functional_tests/blob/master/6502_functional_test.a65).
 
-Q: Why?  
-A: Just for fun.
+Q: Why Microsoft Basic?  
+A: I was watching a Ben Eater [video](https://www.youtube.com/watch?v=XlbPnihCM0E) where he gets Microsoft Basic working on his home-built 8-bit computer. It turns out Microsoft Basic is very portable, you really just need to take care of console IO and it will run on any 6502 based computer.
