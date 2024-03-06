@@ -15,7 +15,7 @@ You will need an Intcode virtual machine. Perhaps you created one as part of sol
 
 Specifically the Intcode virtual machine needs to meet the [AoC 2019 Day 9](https://adventofcode.com/2019/day/9) standard, with the [Aft Scaffolding Control and Information Interface (ASCII)](https://adventofcode.com/2019/day/17). In other words, it should implement all the instructions and use ASCII characters on standard input and output.
 
-Download the pre-built [`msbasic.input`](https://github.com/matushorvath/vm6502/releases/download/v1.0.0/msbasic.input) file from this repository and run it on your Intcode virtual machine. If everything goes correctly, you should see a "MEMORY SIZE?" prompt from the Microsoft Basic interpreter.
+Download the pre-built [`msbasic.input`](https://github.com/matushorvath/vm6502/releases/download/v1.1.0/msbasic.input) file from this repository and run it on your Intcode virtual machine. If everything goes correctly, you should see a "MEMORY SIZE?" prompt from the Microsoft Basic interpreter.
 
 The `msbasic.input` file contains plain Intcode in the same format that was used by Advent of Code assignments. It requires about 80.000 (80k) "bytes" of Intcode memory, and should work fine even with Intcode VMs that use signed 32-bit integers.
 
