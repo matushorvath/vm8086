@@ -3,8 +3,8 @@
 # From memory.s
 .IMPORT read
 
-# From opcodes.s
-.IMPORT opcodes
+# From instructions.s
+.IMPORT instructions
 
 # From state.s
 .IMPORT reg_pc
@@ -18,16 +18,16 @@ print_trace:
 .FRAME opcode, opname, length, idx, tmp
     arb -5
 
-    # Load information from opcodes
+    # Load information from instructions
     add [reg_pc], 0, [rb - 1]
     arb -1
     call read
     add [rb - 3], 0, [rb + opcode]
 
-    mul [rb + opcode], 5, [rb + tmp]
-    add opcodes, [rb + tmp], [rb + opname]
+    mul [rb + opcode], 7, [rb + tmp]                        # one record is 7 bytes long
+    add instructions + 0, [rb + tmp], [rb + opname]         # instruction name is at index 0 in the record
 
-    add opcodes + 4, [rb + tmp], [ip + 1]
+    add instructions + 4, [rb + tmp], [ip + 1]              # instruction length is at index 4 in the record
     add [0], 0, [rb + length]
 
     # Print address

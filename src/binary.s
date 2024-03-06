@@ -4,7 +4,7 @@
 # start of the binary to execute
 #
 # This needs to be the last object file linked into the VM, except for the 6502 binary to be executed.
-# It exports the "binary" symbol that will either be fillowed by the linked-in binary, or by the
+# It exports the "binary" symbol that will either be followed by the linked-in binary, or by the
 # concatenated binary in case no binary is linked in.
 #
 # We want the VM to be usable with a compiled-in binary, as well as just concatenating a binary
