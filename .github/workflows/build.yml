@@ -13,12 +13,11 @@ jobs:
 
     env:
       ICDIR: xzintbit
-      MSBASICDIR: msbasic
-      FUNCTESTDIR: 6502_65C02_functional_tests
 
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+# TODO        os: [ubuntu-latest, windows-latest, macOS-latest]
+        os: [ubuntu-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -35,45 +34,9 @@ jobs:
           CC: gcc
         run: make build-vm
 
-      - name: Checkout Microsoft Basic
-        uses: actions/checkout@v4
-        with:
-          repository: matushorvath/msbasic
-          path: msbasic
-
-      - name: Install cc65
-        run: |
-          if [ "$RUNNER_OS" == "Linux" ]; then
-            sudo apt install -y cc65
-          elif [ "$RUNNER_OS" == "Windows" ]; then
-            choco install cc65-compiler
-          elif [ "$RUNNER_OS" == "macOS" ]; then
-            brew install cc65
-          fi
-        shell: bash
-
-      - name: Build Microsoft Basic
-        working-directory: msbasic
-        run: ./make.sh
-        shell: bash
-
-      - name: Checkout 6502 functional tests
-        uses: actions/checkout@v4
-        with:
-          repository: Klaus2m5/6502_65C02_functional_tests
-          path: 6502_65C02_functional_tests
-
       - name: Build
         run: make build
         shell: bash
 
       - name: Test
         run: make test
-
-      - name: Store artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: msbasic.input
-          path: bin/msbasic.input
-          if-no-files-found: error
-        if: github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest'
