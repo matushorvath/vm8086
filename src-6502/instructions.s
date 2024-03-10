@@ -82,7 +82,7 @@
 .IMPORT indirect16
 .IMPORT relative
 
-# From pushpull.s
+# From pushpop.s
 .IMPORT execute_php
 .IMPORT execute_plp
 .IMPORT execute_pha

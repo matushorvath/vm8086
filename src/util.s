@@ -1,7 +1,8 @@
 # TODO .EXPORT check_8bit
 .EXPORT check_16bit
 # TODO .EXPORT mod_8bit
-# TODO .EXPORT mod_16bit
+.EXPORT mod_16bit
+.EXPORT mod_20bit
 # TODO .EXPORT split_16_8_8
 # TODO .EXPORT split_8_4_4
 
@@ -110,6 +111,37 @@ mod_16bit_negative_loop:
     jz  0, mod_16bit_negative_loop
 
 mod_16bit_done:
+    add [rb + value], 0, [rb + tmp]
+
+    arb 1
+    ret 1
+.ENDFRAME
+
+##########
+# Calculate value mod 0x100000, should only be used if the input is close to output
+mod_20bit:
+.FRAME value; tmp                                   # returns tmp
+    arb -1
+
+    # Handle negative value
+    lt  [rb + value], 0, [rb + tmp]
+    jnz [rb + tmp], mod_20bit_negative_loop
+
+mod_20bit_positive_loop:
+    lt  [rb + value], 1048576, [rb + tmp]
+    jnz [rb + tmp], mod_20bit_done
+
+    add [rb + value], -1048576, [rb + value]
+    jz  0, mod_20bit_positive_loop
+
+mod_20bit_negative_loop:
+    lt  [rb + value], 0, [rb + tmp]
+    jz  [rb + tmp], mod_20bit_done
+
+    add [rb + value], 1048576, [rb + value]
+    jz  0, mod_20bit_negative_loop
+
+mod_20bit_done:
     add [rb + value], 0, [rb + tmp]
 
     arb 1

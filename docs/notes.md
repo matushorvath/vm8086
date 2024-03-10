@@ -4,25 +4,6 @@ Decoding
 Instruction set 2-51 p70  
 Instruction encoding 4-22 p259
 
-Reset
-=====
-
-FFFF0H through FFFFFH (16 bytes) system reset
-2-29
-
-```
-CPU COMPONENT CONTENT
-Flags Clear
-Instruction Pointer OOOOH
-CS Register FFFFH
-DS Register OOOOH
-SS Register OOOOH
-ES Register OOOOH
-Queue Empty
-```
-
-first instruction is FFFF0H
-
 Memory
 ======
 

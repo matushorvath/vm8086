@@ -1,8 +1,9 @@
 .EXPORT init_memory
+.EXPORT calc_ea
 .EXPORT read
 .EXPORT write
 .EXPORT push
-.EXPORT pull
+.EXPORT pop
 
 # From binary.s
 .IMPORT binary
@@ -12,13 +13,12 @@
 
 # From state.s
 .IMPORT reg_sp
+.IMPORT reg_ss
 
 # From util.s
 .IMPORT check_16bit
-.IMPORT mod_8bit
-
-# Where IO is mapped in 8086 memory
-.SYMBOL IOPORT                          65520       # 0xfff0;
+.IMPORT mod_16bit
+.IMPORT mod_20bit
 
 ##########
 init_memory:
@@ -79,110 +79,97 @@ init_memory_done:
 .ENDFRAME
 
 ##########
-read:
-.FRAME addr; value, tmp                 # returns value
-    arb -2
-
-    # Is this IO?
-    eq  [rb + addr], IOPORT, [rb + tmp]
-    jz  [rb + tmp], read_mem
-
-    # Yes, do we need to simulate a 0x0d?
-    jnz [read_io_simulate_0d_flag], read_io_simulate_0d
-
-read_io_next_char:
-    # No, regular input
-    in  [rb + value]
-
-    # Drop any 0x0d characters, we simulate those after a 0x0a automatically
-    eq  [rb + value], 13, [rb + tmp]
-    jnz [rb + tmp], read_io_next_char
-
-    # If 0x0a, next input char should be 0x0d
-    eq  [rb + value], 10, [read_io_simulate_0d_flag]
-
-    jz  0, read_done
-
-read_io_simulate_0d:
-    # If the last character we got was 0x0a, simulate a following 0x0d
-    add 0, 0, [read_io_simulate_0d_flag]
-    add 13, 0, [rb + value]
-
-    jz  0, read_done
-
-read_mem:
-    # No, regular memory read
-    add [mem], [rb + addr], [ip + 1]
-    add [0], 0, [rb + value]
-
-read_done:
-    arb 2
-    ret 1
-
-read_io_simulate_0d_flag:
-    db  0
-.ENDFRAME
-
-##########
-write:
-.FRAME addr, value; tmp
+calc_ea:
+.FRAME seg, off; ea                     # returns ea
     arb -1
 
-    # Is this IO?
-    eq  [rb + addr], IOPORT, [rb + tmp]
-    jz  [rb + tmp], write_mem
+    # Calculate the EA
+    mul [reg_ss], 16, [rb + ea]
+    add [reg_sp], [rb + ea], [rb - 1]   # store to param 0
 
-    # Yes, drop any 0x0a characters
-    eq  [rb + value], 13, [rb + tmp]
-    jnz [rb + tmp], write_done
+    # Wrap around to 20-bit address
+    arb -1
+    call mod_20bit
+    add [rb - 3], 0, [rb + ea]
 
-    # Output the character
-    out [rb + value]
-    jz  0, write_done
-
-write_mem:
-    # No, regular memory write
-    add [mem], [rb + addr], [ip + 3]
-    add [rb + value], 0, [0]
-
-write_done:
     arb 1
     ret 2
 .ENDFRAME
 
 ##########
-push:
-.FRAME value; tmp
+read:
+.FRAME addr; value                      # returns value
     arb -1
 
-    add 256, [reg_sp], [rb - 1]         # stack starts at 0x100 = 256
-    add [rb + value], 0, [rb - 2]
-    arb -2
-    call write
+    # TODO support memory mapped IO
 
-    add [reg_sp], -1, [rb - 1]
-    arb -1
-    call mod_8bit
-    add [rb - 3], 0, [reg_sp]
+    # Regular memory read
+    add [mem], [rb + addr], [ip + 1]
+    add [0], 0, [rb + value]
 
     arb 1
     ret 1
 .ENDFRAME
 
 ##########
-pull:
-.FRAME tmp                              # returns tmp
-    arb -1
+write:
+.FRAME addr, value;
+    # TODO support memory mapped IO
+    # TODO handle not being able to write to ROM
 
-    add [reg_sp], 1, [rb - 1]
+    # Regular memory write
+    add [mem], [rb + addr], [ip + 3]
+    add [rb + value], 0, [0]
+
+    ret 2
+.ENDFRAME
+
+##########
+push:
+.FRAME value;
+    # Decrement sp by 2
+    add [reg_sp], -2, [rb - 1]
     arb -1
-    call mod_8bit
+    call mod_16bit
     add [rb - 3], 0, [reg_sp]
 
-    add 256, [reg_sp], [rb - 1]         # stack starts at 0x100 = 256
+    # Calculate EA
+    add [reg_ss], 0, [rb - 1]
+    add [reg_sp], 0, [rb - 2]
+    arb -2
+    call calc_ea
+    add [rb - 4], 0, [rb - 1]           # return -> param 0
+
+    # Store the value
+    add [rb + value], 0, [rb - 2]
+    arb -2
+    call write
+
+    ret 1
+.ENDFRAME
+
+##########
+pop:
+.FRAME value                            # returns value
+    arb -1
+
+    # Calculate EA
+    add [reg_ss], 0, [rb - 1]
+    add [reg_sp], 0, [rb - 2]
+    arb -2
+    call calc_ea
+    add [rb - 4], 0, [rb - 1]           # return -> param 0
+
+    # Read the value
     arb -1
     call read
-    add [rb - 3], 0, [rb + tmp]
+    add [rb - 3], 0, [rb + value]
+
+    # Increment sp by 2
+    add [reg_sp], 2, [rb - 1]
+    arb -1
+    call mod_16bit
+    add [rb - 3], 0, [reg_sp]
 
     arb 1
     ret 0

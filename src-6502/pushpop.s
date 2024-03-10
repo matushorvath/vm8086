@@ -4,7 +4,7 @@
 .EXPORT execute_pla
 
 # From memory.s
-.IMPORT pull
+.IMPORT pop
 .IMPORT push
 
 # From state.s
@@ -30,7 +30,7 @@ execute_php:
 execute_plp:
 .FRAME
     # Pull sr and unpack it into flags_*
-    call pull
+    call pop
     add [rb - 2], 0, [rb - 1]
     arb -1
     call unpack_sr
@@ -53,7 +53,7 @@ execute_pha:
 execute_pla:
 .FRAME
     # Pull reg_a
-    call pull
+    call pop
     add [rb - 2], 0, [reg_a]
 
     # Update flags

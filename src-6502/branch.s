@@ -15,7 +15,7 @@
 
 # From memory.s
 .IMPORT push
-.IMPORT pull
+.IMPORT pop
 .IMPORT read
 
 # From state.s
@@ -95,7 +95,7 @@ execute_jsr:
 .FRAME addr; ret_hi, ret_lo
     arb -2
 
-    # JSR pushes ip - 1 to the stack, and rts adds + 1 to the address after it's pulled
+    # JSR pushes ip - 1 to the stack, and rts adds + 1 to the address after it's popped
     # (JSR <addr-lo> ^<addr-hi> - the address pushed to stack is marked with a "^").
 
     # Decrement ip with wraparound
@@ -131,16 +131,16 @@ execute_jsr:
 execute_rti:
 .FRAME
     # Pull sr and unpack it into flags_*
-    call pull
+    call pop
     add [rb - 2], 0, [rb - 1]
     arb -1
     call unpack_sr
 
     # Pull return addres lo and hi and update reg_ip
-    call pull
+    call pop
     add [rb - 2], 0, [reg_ip]
 
-    call pull
+    call pop
     mul [rb - 2], 256, [rb - 2]
     add [reg_ip], [rb - 2], [reg_ip]
 
@@ -151,10 +151,10 @@ execute_rti:
 execute_rts:
 .FRAME
     # Pull return addres lo and hi and update reg_ip
-    call pull
+    call pop
     add [rb - 2], 0, [reg_ip]
 
-    call pull
+    call pop
     mul [rb - 2], 256, [rb - 2]
     add [reg_ip], [rb - 2], [reg_ip]
 
