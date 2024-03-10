@@ -1,10 +1,10 @@
-# This the header for the 6502 functional test binary.
+# This the header for the 8086 functional test binary.
 # It needs to be linked immediately after binary.o and immediately before the functional test binary itself.
 
-# The binary is available in git repository https://github.com/Klaus2m5/6502_65C02_functional_tests
+# The binary is available in git repository https://github.com/Klaus2m5/8086_65C02_functional_tests
 
 # Start address for the functional test binary
-# Can be found using bin_files/6502_functional_test.lst, search for "Program start address is at"
+# Can be found using bin_files/8086_functional_test.lst, search for "Program start address is at"
     db  1024        # 0x0400
 
 # Load address for the functional test binary

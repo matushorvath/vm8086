@@ -1,21 +1,11 @@
-# ICDIR=~/xzintbit MSBASICDIR=~/vm6502/msbasic FUNCTESTDIR=~/vm6502/6502_65C02_functional_tests make
+# ICDIR=~/xzintbit make
 
 ICVM_TYPE ?= c
 
 ICDIR ?= $(abspath ../xzintbit)
-MSBASICDIR ?= $(abspath ../msbasic)
-FUNCTESTDIR ?= $(abspath ../6502_65C02_functional_tests)
 
 ifeq ($(shell test -d $(ICDIR) || echo error),error)
 	$(error ICDIR variable is invalid; point it where https://github.com/matushorvath/xzintbit is built)
-endif
-
-ifeq ($(shell test -d $(MSBASICDIR) || echo error),error)
-	$(error MSBASICDIR variable is invalid; point it where https://github.com/matushorvath/msbasic is built)
-endif
-
-ifeq ($(shell test -d $(FUNCTESTDIR) || echo error),error)
-	$(error FUNCTESTDIR variable is invalid; point it where https://github.com/Klaus2m5/6502_65C02_functional_tests is cloned)
 endif
 
 ICVM ?= $(abspath $(ICDIR)/vms)/$(ICVM_TYPE)/ic
@@ -47,33 +37,20 @@ endef
 
 # Build
 .PHONY: build
-build: build-prep $(BINDIR)/vm6502.input $(BINDIR)/msbasic.input $(BINDIR)/func_test.input
+build: build-prep $(BINDIR)/vm8086.input
 
 .PHONY: build-prep
 build-prep:
 	mkdir -p "$(BINDIR)" "$(OBJDIR)"
 
-# Test
-.PHONY: test
-test: build msbasic_test func_test
-
-.PHONY: msbasic_test
-msbasic_test: $(BINDIR)/msbasic.input
-	< $(SRCDIR)/msbasic_test.in $(ICVM) $(BINDIR)/msbasic.input 2> /dev/null | diff -r - $(SRCDIR)/msbasic_test.out
-
-.PHONY: func_test
-func_test: $(BINDIR)/func_test.input
-	$(ICVM) $(BINDIR)/func_test.input < /dev/null
-
 # The order of the object files matters: First include all the code in any order, then binary.o,
-# then the (optional) 6502 image header and data.
+# then the (optional) 8086 image header and data.
 
-BASE_OBJS = vm6502.o arithmetic.o bits.o bitwise.o branch.o error.o exec.o flags.o incdec.o \
-	instructions.o loadstore.o memory.o params.o pushpull.o shift.o state.o trace.o util.o
+BASE_OBJS = vm8086.o error.o
 
-VM6502_OBJS = $(BASE_OBJS) binary.o
+VM8086_OBJS = $(BASE_OBJS) binary.o
 
-$(BINDIR)/vm6502.input: $(addprefix $(OBJDIR)/, $(VM6502_OBJS)) $(LIBXIB)
+$(BINDIR)/vm8086.input: $(addprefix $(OBJDIR)/, $(VM8086_OBJS)) $(LIBXIB)
 	$(run-ld)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.s
@@ -88,22 +65,6 @@ $(OBJDIR)/bits.o: $(OBJDIR)/bits.s
 
 $(OBJDIR)/bits.s: $(BINDIR)/gen_bits.input
 	$(ICVM) $(BINDIR)/gen_bits.input > $@ || ( cat $@ ; false )
-
-MSBASIC_OBJS = $(BASE_OBJS) binary.o msbasic_header.o msbasic_binary.o
-
-$(BINDIR)/msbasic.input: $(addprefix $(OBJDIR)/, $(MSBASIC_OBJS)) $(LIBXIB)
-	$(run-ld)
-
-$(OBJDIR)/msbasic_binary.o: $(MSBASICDIR)/tmp/vm6502.bin $(BINDIR)/bin2obj.input
-	$(run-bin2obj)
-
-FUNC_TEST_OBJS = $(BASE_OBJS) func_test_callback.o binary.o func_test_header.o func_test_binary.o
-
-$(BINDIR)/func_test.input: $(addprefix $(OBJDIR)/, $(FUNC_TEST_OBJS)) $(LIBXIB)
-	$(run-ld)
-
-$(OBJDIR)/func_test_binary.o: $(FUNCTESTDIR)/bin_files/6502_functional_test.bin $(BINDIR)/bin2obj.input
-	$(run-bin2obj)
 
 GEN_BITS_OBJS = gen_bits.o
 

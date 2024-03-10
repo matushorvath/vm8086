@@ -17,7 +17,7 @@
 .IMPORT check_16bit
 .IMPORT mod_8bit
 
-# Where IO is mapped in 6502 memory
+# Where IO is mapped in 8086 memory
 .SYMBOL IOPORT                          65520       # 0xfff0;
 
 ##########
@@ -25,7 +25,7 @@ init_memory:
 .FRAME tmp, src, tgt, cnt
     arb -4
 
-    # Initialize memory space for the 6502.
+    # Initialize memory space for the 8086.
 
     # Validate the load address is a valid 16-bit number
     add [binary + 1], 0, [rb - 1]
@@ -42,7 +42,7 @@ init_memory:
     call report_error
 
 init_memory_load_address_ok:
-    # The 6502 memory space will start where the binary starts now
+    # The 8086 memory space will start where the binary starts now
     add binary + 5, 0, [mem]
 
     # Do we need to move the binary to a different load address?

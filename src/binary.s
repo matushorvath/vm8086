@@ -3,7 +3,7 @@
 ##########
 # start of the binary to execute
 #
-# This needs to be the last object file linked into the VM, except for the 6502 binary to be executed.
+# This needs to be the last object file linked into the VM, except for the 8086 binary to be executed.
 # It exports the "binary" symbol that will either be followed by the linked-in binary, or by the
 # concatenated binary in case no binary is linked in.
 #
@@ -21,10 +21,10 @@ binary:
 #
 # binary_start_address:
 #    db  12345        # start at address 12345; or
-#    db  -1           # start at the reset vector (default 6502 behavior)
+#    db  -1           # start at the reset vector (default 8086 behavior)
 #
 # binary_load_address:
-#    db  49152        # load address of the binary image in 6502 memory
+#    db  49152        # load address of the binary image in 8086 memory
 #
 # tracing:
 #    db  1            # 0 - disable tracing, -1 - trace always, >0 - start tracing after passing that address

@@ -1,4 +1,4 @@
-# Callback function called by the VM for every 6502 instruction executed.
+# Callback function called by the VM for every 8086 instruction executed.
 
 .EXPORT func_test_callback
 
@@ -18,7 +18,7 @@ func_test_prev_pc:
     db  -1
 
 # Test success address
-# Can be found using bin_files/6502_functional_test.lst, search for "test passed, no errors"
+# Can be found using bin_files/8086_functional_test.lst, search for "test passed, no errors"
 .SYMBOL SUCCESS_ADDRESS                 13417       # 0x3469
 
 func_test_callback:
