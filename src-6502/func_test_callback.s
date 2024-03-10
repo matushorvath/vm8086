@@ -3,7 +3,7 @@
 .EXPORT func_test_callback
 
 # From state.s
-.IMPORT reg_pc
+.IMPORT reg_ip
 
 # From libxib.a
 .IMPORT print_num_radix
@@ -13,8 +13,8 @@
 # We use this to detect a failed/successful test run and halt the VM, since the functional test
 # itself never finishes, it just enters a tight endless loop.
 
-# Previous value of the pc register
-func_test_prev_pc:
+# Previous value of the ip register
+func_test_prev_ip:
     db  -1
 
 # Test success address
@@ -26,15 +26,15 @@ func_test_callback:
     arb -1
 
     # Have we reached the successful end of the test?
-    eq  [reg_pc], SUCCESS_ADDRESS, [rb + tmp]
+    eq  [reg_ip], SUCCESS_ADDRESS, [rb + tmp]
     jnz [rb + tmp], func_test_callback_passed
 
     # Are we in a tight loop?
-    eq  [reg_pc], [func_test_prev_pc], [rb + tmp]
+    eq  [reg_ip], [func_test_prev_ip], [rb + tmp]
     jnz [rb + tmp], func_test_callback_failed
 
-    # Save previous pc value
-    add [reg_pc], 0, [func_test_prev_pc]
+    # Save previous ip value
+    add [reg_ip], 0, [func_test_prev_ip]
 
     # Return 1 to keep running
     add 1, 0, [rb + tmp]
@@ -56,7 +56,7 @@ func_test_callback_failed:
     arb -1
     call print_str
 
-    add [reg_pc], 0, [rb - 1]
+    add [reg_ip], 0, [rb - 1]
     add 16, 0, [rb - 2]
     arb -2
     call print_num_radix

@@ -1,7 +1,8 @@
 .EXPORT report_error
 
 # From state.s
-.IMPORT reg_pc
+.IMPORT reg_ip
+.IMPORT reg_cs
 
 # From libxib.s
 .IMPORT print_num_radix
@@ -18,11 +19,18 @@ report_error:
     arb -1
     call print_str
 
-    add report_error_msg_pc, 0, [rb - 1]
+    add report_error_msg_cs_ip, 0, [rb - 1]
     arb -1
     call print_str
 
-    add [reg_pc], 0, [rb - 1]
+    add [reg_cs], 0, [rb - 1]
+    add 16, 0, [rb - 2]
+    arb -2
+    call print_num_radix
+
+    out ':'
+
+    add [reg_ip], 0, [rb - 1]
     add 16, 0, [rb - 2]
     arb -2
     call print_num_radix
@@ -37,8 +45,8 @@ report_error:
 
 report_error_msg_start:
     db "vm8086 error: ", 0
-report_error_msg_pc:
-    db " (pc: ", 0
+report_error_msg_cs_ip:
+    db " (cs:ip ", 0
 report_error_msg_end:
     db ")", 0
 .ENDFRAME

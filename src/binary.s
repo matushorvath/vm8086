@@ -19,9 +19,11 @@ binary:
 
 # After this we expect:
 #
-# binary_start_address:
-#    db  12345        # start at address 12345; or
-#    db  -1           # start at the reset vector (default 8086 behavior)
+# binary_start_address_ip:
+#    db  0            # starting ip value is 0 = 0x0000 (default for real hardware)
+#
+# binary_start_address_cs:
+#    db  65535        # starting cs value is 65535 = 0xffff (default for real hardware)
 #
 # binary_load_address:
 #    db  49152        # load address of the binary image in 8086 memory

@@ -1,4 +1,5 @@
 # Utility convert a binary file into an intcode object file
+# TODO move to xzintbit
 
 # File format:
 # binary_length:

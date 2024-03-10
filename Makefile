@@ -46,7 +46,7 @@ build-prep:
 # The order of the object files matters: First include all the code in any order, then binary.o,
 # then the (optional) 8086 image header and data.
 
-BASE_OBJS = vm8086.o error.o
+BASE_OBJS = vm8086.o error.o state.o util.o
 
 VM8086_OBJS = $(BASE_OBJS) binary.o
 
@@ -55,21 +55,6 @@ $(BINDIR)/vm8086.input: $(addprefix $(OBJDIR)/, $(VM8086_OBJS)) $(LIBXIB)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.s
 	$(run-as)
-
-# Intcode does not have a convenient way to access individual bits of a byte.
-# For speed and convenience we will sacrifice 256 * 8 = 2048 bytes and memoize the operation.
-# The table for that is generated using gen_bits.s and can be found in file $(OBJDIR)/bits.s.
-
-$(OBJDIR)/bits.o: $(OBJDIR)/bits.s
-	$(run-as)
-
-$(OBJDIR)/bits.s: $(BINDIR)/gen_bits.input
-	$(ICVM) $(BINDIR)/gen_bits.input > $@ || ( cat $@ ; false )
-
-GEN_BITS_OBJS = gen_bits.o
-
-$(BINDIR)/gen_bits.input: $(addprefix $(OBJDIR)/, $(GEN_BITS_OBJS)) $(LIBXIB)
-	$(run-ld)
 
 BIN2OBJ_OBJS = bin2obj.o
 

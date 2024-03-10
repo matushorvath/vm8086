@@ -14,12 +14,12 @@
 .IMPORT read
 
 # From state.s
-.IMPORT reg_pc
+.IMPORT inc_ip
+.IMPORT reg_ip
 .IMPORT reg_x
 .IMPORT reg_y
 
 # From util.s
-.IMPORT incpc
 .IMPORT mod_8bit
 .IMPORT mod_16bit
 
@@ -28,8 +28,8 @@ immediate:
 .FRAME addr                                         # addr is returned
     arb -1
 
-    add [reg_pc], 0, [rb + addr]                    # [reg_pc] -> [addr]
-    call incpc
+    add [reg_ip], 0, [rb + addr]                    # [reg_ip] -> [addr]
+    call inc_ip
 
     arb 1
     ret 0
@@ -55,16 +55,16 @@ zeropage_y:
     add [reg_y], 0, [rb + reg]
 
 zeropage_generic:
-    add [reg_pc], 0, [rb - 1]
+    add [reg_ip], 0, [rb - 1]
     arb -1
     call read
-    add [rb - 3], [rb + reg], [rb - 1]              # read([reg_pc]) + [reg] -> [param0]
+    add [rb - 3], [rb + reg], [rb - 1]              # read([reg_ip]) + [reg] -> [param0]
 
     arb -1
     call mod_8bit
-    add [rb - 3], 0, [rb + addr]                    # (read([reg_pc]) + [reg]) % 0x100 -> [addr]
+    add [rb - 3], 0, [rb + addr]                    # (read([reg_ip]) + [reg]) % 0x100 -> [addr]
 
-    call incpc
+    call inc_ip
 
     arb 2
     ret 0
@@ -90,24 +90,24 @@ absolute_y:
     add [reg_y], 0, [rb + reg]
 
 absolute_generic:
-    add [reg_pc], 0, [rb - 1]
+    add [reg_ip], 0, [rb - 1]
     arb -1
     call read
-    add [rb - 3], [rb + reg], [rb + addr]           # read([reg_pc]) + [reg] -> [addr]
+    add [rb - 3], [rb + reg], [rb + addr]           # read([reg_ip]) + [reg] -> [addr]
 
-    call incpc
+    call inc_ip
 
-    add [reg_pc], 0, [rb - 1]
+    add [reg_ip], 0, [rb - 1]
     arb -1
     call read
-    mul [rb - 3], 256, [rb - 1]                     # read([reg_pc]) * 0x100 -> [param0]
+    mul [rb - 3], 256, [rb - 1]                     # read([reg_ip]) * 0x100 -> [param0]
     add [rb - 1], [rb + addr], [rb - 1]             # [param0] + [addr] -> [param0]
 
     arb -1
     call mod_16bit
-    add [rb - 3], 0, [rb + addr]                    # (read([reg_pc]) + [reg] + read([reg_pc]) * 0x100) % 0x10000 -> [addr]
+    add [rb - 3], 0, [rb + addr]                    # (read([reg_ip]) + [reg] + read([reg_ip]) * 0x100) % 0x10000 -> [addr]
 
-    call incpc
+    call inc_ip
 
     arb 2
     ret 0
@@ -122,16 +122,16 @@ indirect8_x:
 .FRAME addr, tmp                                    # addr is returned
     arb -2
 
-    add [reg_pc], 0, [rb - 1]
+    add [reg_ip], 0, [rb - 1]
     arb -1
     call read
-    add [rb - 3], [reg_x], [rb - 1]                 # read([reg_pc]) + [reg_x] -> [param0]
+    add [rb - 3], [reg_x], [rb - 1]                 # read([reg_ip]) + [reg_x] -> [param0]
 
     arb -1
     call mod_8bit
-    add [rb - 3], 0, [rb + tmp]                     # (read([reg_pc]) + [reg_x]) % 0x100 -> [tmp]
+    add [rb - 3], 0, [rb + tmp]                     # (read([reg_ip]) + [reg_x]) % 0x100 -> [tmp]
 
-    call incpc
+    call inc_ip
 
     add [rb + tmp], 1, [rb - 1]                     # [tmp] + 1 -> param0
     arb -1
@@ -152,12 +152,12 @@ indirect8_y:
 .FRAME addr, tmp                                    # addr is returned
     arb -2
 
-    add [reg_pc], 0, [rb - 1]
+    add [reg_ip], 0, [rb - 1]
     arb -1
     call read
-    add [rb - 3], 0, [rb + tmp]                     # read([reg_pc]) -> [tmp]
+    add [rb - 3], 0, [rb + tmp]                     # read([reg_ip]) -> [tmp]
 
-    call incpc
+    call inc_ip
 
     add [rb + tmp], 1, [rb - 1]                     # [tmp] + 1 -> param0
     arb -1
@@ -183,19 +183,19 @@ indirect16:
 .FRAME addr, lo, hi                                 # addr is returned
     arb -3
 
-    add [reg_pc], 0, [rb - 1]
+    add [reg_ip], 0, [rb - 1]
     arb -1
     call read
-    add [rb - 3], 0, [rb + lo]                      # read([reg_pc]) -> [lo]
+    add [rb - 3], 0, [rb + lo]                      # read([reg_ip]) -> [lo]
 
-    call incpc
+    call inc_ip
 
-    add [reg_pc], 0, [rb - 1]
+    add [reg_ip], 0, [rb - 1]
     arb -1
     call read
-    add [rb - 3], 0, [rb + hi]                      # read([reg_pc]) -> [hi]
+    add [rb - 3], 0, [rb + hi]                      # read([reg_ip]) -> [hi]
 
-    call incpc
+    call inc_ip
 
     # Special way of incrementing the address to get the second byte:
     # Increment the low byte without carry to the high byte
@@ -229,12 +229,12 @@ relative:
 .FRAME addr, tmp                                    # addr is returned
     arb -2
 
-    add [reg_pc], 0, [rb - 1]
+    add [reg_ip], 0, [rb - 1]
     arb -1
     call read
-    add [rb - 3], 0, [rb + addr]                    # read([reg_pc]) -> [addr]
+    add [rb - 3], 0, [rb + addr]                    # read([reg_ip]) -> [addr]
 
-    call incpc
+    call inc_ip
 
     lt  [rb + addr], 128, [rb + tmp]
     jnz [rb + tmp], relative_offset_ready
@@ -243,11 +243,11 @@ relative:
     add [rb + addr], -256, [rb + addr]
 
 relative_offset_ready:
-    add [reg_pc], [rb + addr], [rb - 1]             # [reg_pc] + [addr] -> [param0]
+    add [reg_ip], [rb + addr], [rb - 1]             # [reg_ip] + [addr] -> [param0]
 
     arb -1
     call mod_16bit
-    add [rb - 3], 0, [rb + addr]                    # ([reg_pc] + [addr]) % 0x10000 -> [addr]
+    add [rb - 3], 0, [rb + addr]                    # ([reg_ip] + [addr]) % 0x10000 -> [addr]
 
     arb 2
     ret 0

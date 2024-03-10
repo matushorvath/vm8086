@@ -1,34 +1,12 @@
-.EXPORT incpc
-.EXPORT check_8bit
+# TODO .EXPORT check_8bit
 .EXPORT check_16bit
-.EXPORT mod_8bit
-.EXPORT mod_16bit
-.EXPORT split_16_8_8
-.EXPORT split_8_4_4
+# TODO .EXPORT mod_8bit
+# TODO .EXPORT mod_16bit
+# TODO .EXPORT split_16_8_8
+# TODO .EXPORT split_8_4_4
 
 # From error.s
 .IMPORT report_error
-
-# From state.s
-.IMPORT reg_pc
-
-##########
-# Increase pc with wrap around
-incpc:
-.FRAME tmp
-    arb -1
-
-    add [reg_pc], 1, [reg_pc]
-
-    eq  [reg_pc], 65536, [rb + tmp]
-    jz  [rb + tmp], incpc_done
-
-    add 0, 0, [reg_pc]
-
-incpc_done:
-    arb 1
-    ret 0
-.ENDFRAME
 
 ##########
 # Halt if the parameter is not between 0 and 255

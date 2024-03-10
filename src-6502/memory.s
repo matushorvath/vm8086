@@ -28,12 +28,12 @@ init_memory:
     # Initialize memory space for the 8086.
 
     # Validate the load address is a valid 16-bit number
-    add [binary + 1], 0, [rb - 1]
+    add [binary + 2], 0, [rb - 1]
     arb -1
     call check_16bit
 
     # Validate the image will fit to 16-bits when loaded there
-    add [binary + 1], [binary + 4], [rb + tgt]
+    add [binary + 2], [binary + 5], [rb + tgt]
     lt  65536, [rb + tgt], [rb + tmp]
     jz  [rb + tmp], init_memory_load_address_ok
 
@@ -43,19 +43,19 @@ init_memory:
 
 init_memory_load_address_ok:
     # The 8086 memory space will start where the binary starts now
-    add binary + 5, 0, [mem]
+    add binary + 6, 0, [mem]
 
     # Do we need to move the binary to a different load address?
-    jz  [binary + 1], init_memory_done
+    jz  [binary + 2], init_memory_done
 
     # Yes, calculate beginning address of the source (binary),
-    add binary + 5, 0, [rb + src]
+    add binary + 6, 0, [rb + src]
 
     # Calculate the beginning address of the target ([mem] + [load])
-    add [mem], [binary + 1], [rb + tgt]
+    add [mem], [binary + 2], [rb + tgt]
 
     # Number of bytes to copy
-    add [binary + 4], 0, [rb + cnt]
+    add [binary + 5], 0, [rb + cnt]
 
 init_memory_loop:
     # Move the image from src to tgt (iterating in reverse direction)

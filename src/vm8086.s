@@ -1,8 +1,8 @@
 # From exec.s
-.IMPORT execute
+# TODO .IMPORT execute
 
-# From init.s
-.IMPORT init_memory
+# From memory.s
+# TODO .IMPORT init_memory
 
 # From state.s
 .IMPORT init_state
@@ -17,10 +17,10 @@
 ##########
 main:
 .FRAME
-    call init_memory
+# TODO    call init_memory
     call init_state
 
-    call execute
+# TODO    call execute
 
     ret 0
 .ENDFRAME

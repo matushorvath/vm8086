@@ -15,13 +15,11 @@
 .IMPORT read
 
 # From state.s
-.IMPORT reg_pc
+.IMPORT reg_ip
+.IMPORT inc_ip
 
 # From trace.s
 .IMPORT print_trace
-
-# From util.s
-.IMPORT incpc
 
 ##########
 execute:
@@ -30,28 +28,28 @@ execute:
 
 execute_loop:
     # Skip tracing if disabled
-    jz  [binary + 2], execute_tracing_done
+    jz  [binary + 3], execute_tracing_done
 
-    # If the [binary + 2] flag is positive, we use it as an address
+    # If the [binary + 3] flag is positive, we use it as an address
     # starting from where we should turn on tracing
-    eq  [binary + 2], [reg_pc], [rb + tmp]
+    eq  [binary + 3], [reg_ip], [rb + tmp]
     jz  [rb + tmp], execute_tracing_different_address
 
     # Address match, turn on tracing
-    add -1, 0, [binary + 2]
+    add -1, 0, [binary + 3]
 
 execute_tracing_different_address:
     # Print trace if enabled
-    eq  [binary + 2], -1, [rb + tmp]
+    eq  [binary + 3], -1, [rb + tmp]
     jz  [rb + tmp], execute_tracing_done
 
     call print_trace
 
 execute_tracing_done:
     # Call the callback if enabled
-    jz  [binary + 3], execute_callback_done
+    jz  [binary + 4], execute_callback_done
 
-    call [binary + 3]
+    call [binary + 4]
     jnz [rb - 2], execute_callback_done
 
     # Callback returned 0, halt
@@ -59,13 +57,13 @@ execute_tracing_done:
 
 execute_callback_done:
     # Read op code
-    add [reg_pc], 0, [rb - 1]
+    add [reg_ip], 0, [rb - 1]
     arb -1
     call read
     add [rb - 3], 0, [rb + op]
 
-    # Increase pc
-    call incpc
+    # Increase ip
+    call inc_ip
 
     # Process hlt
     eq  [rb + op], 2, [rb + tmp]

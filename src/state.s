@@ -1,20 +1,39 @@
-.EXPORT reg_pc
+.EXPORT reg_ip
+
+.EXPORT reg_al
+.EXPORT reg_ah
+.EXPORT reg_bl
+.EXPORT reg_bh
+.EXPORT reg_cl
+.EXPORT reg_ch
+.EXPORT reg_dl
+.EXPORT reg_dh
+
 .EXPORT reg_sp
+.EXPORT reg_bp
+.EXPORT reg_si
+.EXPORT reg_di
 
-.EXPORT reg_a
-.EXPORT reg_x
-.EXPORT reg_y
+.EXPORT reg_cs
+.EXPORT reg_ds
+.EXPORT reg_ss
+.EXPORT reg_es
 
-.EXPORT flag_negative
-.EXPORT flag_overflow
-.EXPORT flag_decimal
-.EXPORT flag_interrupt
-.EXPORT flag_zero
 .EXPORT flag_carry
+.EXPORT flag_parity
+.EXPORT flag_auxiliary_carry
+.EXPORT flag_zero
+.EXPORT flag_sign
+.EXPORT flag_overflow
+
+.EXPORT flag_interrupt_enable
+.EXPORT flag_direction
+.EXPORT flag_trap
 
 .EXPORT init_state
-.EXPORT pack_sr
-.EXPORT unpack_sr
+# TODO .EXPORT pack_sr TODO rename sr
+# TODO .EXPORT unpack_sr TODO rename sr
+# TODO .EXPORT inc_ip
 
 # From binary.s
 .IMPORT binary
@@ -23,7 +42,7 @@
 .IMPORT report_error
 
 # From memory.s
-.IMPORT read
+# TODO .IMPORT read
 
 # From util.s
 .IMPORT check_16bit
@@ -31,29 +50,63 @@
 ##########
 # vm state
 
-reg_pc:
+reg_ip:
     db  0
+
+reg_al:
+    db  0
+reg_ah:
+    db  0
+reg_bl:
+    db  0
+reg_bh:
+    db  0
+reg_cl:
+    db  0
+reg_ch:
+    db  0
+reg_dl:
+    db  0
+reg_dh:
+    db  0
+
 reg_sp:
-    db  255                 # 0xff
+    db  0
+reg_bp:
+    db  0
+reg_si:
+    db  0
+reg_di:
+    db  0
 
-reg_a:
+reg_cs:
     db  0
-reg_x:
+reg_ds:
     db  0
-reg_y:
+reg_ss:
+    db  0
+reg_es:
     db  0
 
-flag_negative:              # N
+# FLAGS: ----ODIT SZ-A-P-C
+
+flag_carry:                             # CF
     db  0
-flag_overflow:              # V
+flag_parity:                            # PF
     db  0
-flag_decimal:               # D
+flag_auxiliary_carry:                   # AF
     db  0
-flag_interrupt:             # I
+flag_zero:                              # ZF
     db  0
-flag_zero:                  # Z
+flag_sign:                              # SF
     db  0
-flag_carry:                 # C
+flag_overflow:                          # OF
+    db  0
+flag_interrupt_enable:                  # IF
+    db  0
+flag_direction:                         # DF
+    db  0
+flag_trap:                              # TF
     db  0
 
 ##########
@@ -61,27 +114,16 @@ init_state:
 .FRAME tmp
     arb -1
 
-    # Load the start address to pc
-    add [binary + 0], 0, [reg_pc]
+    # Load the start address to cs:ip
+    add [binary + 0], 0, [reg_ip]
+    add [binary + 1], 0, [reg_cs]
 
-    # If it is -1, use the reset vector
-    eq  [reg_pc], -1, [rb + tmp]
-    jz  [rb + tmp], init_state_skip_reset_vec
-
-    # Read the reset vector from 0xfffc and 0xfffd
-    add 65533, 0, [rb - 1]
+    # Check if cs:ip is a sane value
+    add [reg_ip], 0, [rb - 1]
     arb -1
-    call read
-    mul [rb - 3], 256, [rb + tmp]           # read(0xfffd) * 0x100 -> [tmp]
+    call check_16bit
 
-    add 65532, 0, [rb - 1]
-    arb -1
-    call read
-    add [rb - 3], [rb + tmp], [reg_pc]      # read(0xfffc) + read(0xfffd) * 0x100 -> [reg_pc]
-
-init_state_skip_reset_vec:
-    # Check if pc is a sane value
-    add [reg_pc], 0, [rb - 1]
+    add [reg_cs], 0, [rb - 1]
     arb -1
     call check_16bit
 
@@ -89,8 +131,28 @@ init_state_skip_reset_vec:
     ret 0
 .ENDFRAME
 
+.EOF
+
 ##########
-pack_sr:
+# Increase ip with wrap around
+inc_ip:
+.FRAME tmp
+    arb -1
+
+    add [reg_ip], 1, [reg_ip]
+
+    eq  [reg_ip], 65536, [rb + tmp]
+    jz  [rb + tmp], inc_ip_done
+
+    add 0, 0, [reg_ip]
+
+inc_ip_done:
+    arb 1
+    ret 0
+.ENDFRAME
+
+##########
+pack_sr: # TODO rename sr
 .FRAME sr                                           # returns sr
     arb -1
 
@@ -125,7 +187,7 @@ pack_sr_after_negative:
 .ENDFRAME
 
 ##########
-unpack_sr:
+unpack_sr: # TODO rename sr
 .FRAME sr;
     lt  127, [rb + sr], [flag_negative]             # 0b1000_0000
     jz  [flag_negative], unpack_sr_after_negative
@@ -166,5 +228,3 @@ unpack_sr_after_zero:
 
     ret 1
 .ENDFRAME
-
-.EOF

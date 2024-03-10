@@ -7,7 +7,7 @@
 .IMPORT instructions
 
 # From state.s
-.IMPORT reg_pc
+.IMPORT reg_ip
 
 # From libxib.a
 .IMPORT print_num_radix
@@ -19,7 +19,7 @@ print_trace:
     arb -5
 
     # Load information from instructions
-    add [reg_pc], 0, [rb - 1]
+    add [reg_ip], 0, [rb - 1]
     arb -1
     call read
     add [rb - 3], 0, [rb + opcode]
@@ -31,7 +31,7 @@ print_trace:
     add [0], 0, [rb + length]
 
     # Print address
-    add [reg_pc], 0, [rb - 1]
+    add [reg_ip], 0, [rb - 1]
     add 16, 0, [rb - 2]
     arb -2
     call print_num_radix
@@ -61,7 +61,7 @@ print_trace_data_loop:
 
     out ' '
 
-    add [reg_pc], [rb + idx], [rb - 1]
+    add [reg_ip], [rb + idx], [rb - 1]
     arb -1
     call read
 
