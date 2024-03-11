@@ -10,6 +10,7 @@ endif
 
 ICVM ?= $(abspath $(ICDIR)/vms)/$(ICVM_TYPE)/ic
 ICAS ?= $(abspath $(ICDIR)/bin/as.input)
+ICBIN2OBJ ?= $(abspath $(ICDIR)/bin/bin2obj.input)
 ICLD ?= $(abspath $(ICDIR)/bin/ld.input)
 ICLDMAP ?= $(abspath $(ICDIR)/bin/ldmap.input)
 LIBXIB ?= $(abspath $(ICDIR)/bin/libxib.a)
@@ -32,7 +33,7 @@ define run-ld
 endef
 
 define run-bin2obj
-	ls -n $< | awk '{ printf "%s ", $$5 }' | cat - $< | $(ICVM) $(BINDIR)/bin2obj.input > $@ || ( cat $@ ; false )
+	ls -n $< | awk '{ printf "%s ", $$5 }' | cat - $< | $(ICVM) $(ICBIN2OBJ) > $@ || ( cat $@ ; false )
 endef
 
 # Build
@@ -55,11 +56,6 @@ $(BINDIR)/vm8086.input: $(addprefix $(OBJDIR)/, $(VM8086_OBJS)) $(LIBXIB)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.s
 	$(run-as)
-
-BIN2OBJ_OBJS = bin2obj.o
-
-$(BINDIR)/bin2obj.input: $(addprefix $(OBJDIR)/, $(BIN2OBJ_OBJS)) $(LIBXIB)
-	$(run-ld)
 
 # Clean
 .PHONY: clean

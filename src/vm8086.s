@@ -2,7 +2,7 @@
 # TODO .IMPORT execute
 
 # From memory.s
-# TODO .IMPORT init_memory
+.IMPORT init_memory
 
 # From state.s
 .IMPORT init_state
@@ -17,7 +17,7 @@
 ##########
 main:
 .FRAME
-# TODO    call init_memory
+    call init_memory
     call init_state
 
 # TODO    call execute
