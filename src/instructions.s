@@ -8,6 +8,8 @@
 # TODO .IMPORT immediate
 # TODO .IMPORT zeropage
 
+# TODO what should arg_mod_reg_mem_dst_w do when the r/m field is a register, not memory? e.g. for LEA
+
 # iAPX 86, 88 User's Manual; August 1981; pages 4-27 to 4-35
 
 instructions:
@@ -15,8 +17,8 @@ instructions:
     db  exec_add_w, arg_mod_reg_rm_src_w            # 0x01 ADD REG16/MEM16, REG16
     db  exec_add_b, arg_mod_reg_rm_dst_b            # 0x02 ADD REG8, REG8/MEM8
     db  exec_add_w, arg_mod_reg_rm_dst_w            # 0x03 ADD REG16, REG16/MEM16
-    db  exec_add_b, arg_al_data_b                   # 0x04 ADD AL, IMMED8
-    db  exec_add_w, arg_ax_data_w                   # 0x05 ADD AX, IMMED16
+    db  exec_add_b, arg_al_immediate_b              # 0x04 ADD AL, IMMED8
+    db  exec_add_w, arg_ax_immediate_w              # 0x05 ADD AX, IMMED16
 
     db  exec_push_w, arg_reg_es                     # 0x06 PUSH ES
     db  exec_pop_w, arg_reg_es                      # 0x07 POP ES
@@ -25,8 +27,8 @@ instructions:
     db  exec_or_w, arg_mod_reg_rm_src_w             # 0x09 OR REG16/MEM16, REG16
     db  exec_or_b, arg_mod_reg_rm_dst_b             # 0x0a OR REG8, REG8/MEM8
     db  exec_or_w, arg_mod_reg_rm_dst_w             # 0x0b OR REG16, REG16/MEM16
-    db  exec_or_b, arg_al_data_b                    # 0x0c OR AL, IMMED8
-    db  exec_or_w, arg_ax_data_w                    # 0x0d OR AX, IMMED16
+    db  exec_or_b, arg_al_immediate_b               # 0x0c OR AL, IMMED8
+    db  exec_or_w, arg_ax_immediate_w               # 0x0d OR AX, IMMED16
 
     db  exec_push_w, arg_reg_cs                     # 0x0e PUSH CS
     db  invalid_opcode, 0                           # 0x0f
@@ -35,8 +37,8 @@ instructions:
     db  exec_adc_w, arg_mod_reg_rm_src_w            # 0x11 ADC REG16/MEM16, REG16
     db  exec_adc_b, arg_mod_reg_rm_dst_b            # 0x12 ADC REG8, REG8/MEM8
     db  exec_adc_w, arg_mod_reg_rm_dst_w            # 0x13 ADC REG16, REG16/MEM16
-    db  exec_adc_b, arg_al_data_b                   # 0x14 ADC AL, IMMED8
-    db  exec_adc_w, arg_ax_data_w                   # 0x15 ADC AX, IMMED16
+    db  exec_adc_b, arg_al_immediate_b              # 0x14 ADC AL, IMMED8
+    db  exec_adc_w, arg_ax_immediate_w              # 0x15 ADC AX, IMMED16
 
     db  exec_push_w, arg_reg_ss                     # 0x16 PUSH SS
     db  exec_pop_w, arg_reg_ss                      # 0x17 POP SS
@@ -45,8 +47,8 @@ instructions:
     db  exec_sbb_w, arg_mod_reg_rm_src_w            # 0x19 SBB REG16/MEM16, REG16
     db  exec_sbb_b, arg_mod_reg_rm_dst_b            # 0x1a SBB REG8, REG8/MEM8
     db  exec_sbb_w, arg_mod_reg_rm_dst_w            # 0x1b SBB REG16, REG16/MEM16
-    db  exec_sbb_b, arg_al_data_b                   # 0x1c SBB AL, IMMED8
-    db  exec_sbb_w, arg_ax_data_w                   # 0x1d SBB AX, IMMED16
+    db  exec_sbb_b, arg_al_immediate_b              # 0x1c SBB AL, IMMED8
+    db  exec_sbb_w, arg_ax_immediate_w              # 0x1d SBB AX, IMMED16
 
     db  exec_push_w, arg_reg_ds                     # 0x1e PUSH SDS
     db  exec_pop_w, arg_reg_ds                      # 0x1f POP DS
@@ -55,8 +57,8 @@ instructions:
     db  exec_and_w, arg_mod_reg_rm_src_w            # 0x21 AND REG16/MEM16, REG16
     db  exec_and_b, arg_mod_reg_rm_dst_b            # 0x22 AND REG8, REG8/MEM8
     db  exec_and_w, arg_mod_reg_rm_dst_w            # 0x23 AND REG16, REG16/MEM16
-    db  exec_and_b, arg_al_data_b                   # 0x24 AND AL, IMMED8
-    db  exec_and_w, arg_ax_data_w                   # 0x25 AND AX, IMMED16
+    db  exec_and_b, arg_al_immediate_b              # 0x24 AND AL, IMMED8
+    db  exec_and_w, arg_ax_immediate_w              # 0x25 AND AX, IMMED16
 
     db  exec_segment_prefix, arg_reg_es             # 0x26 ES: (segment override prefix)
     db  exec_daa, 0                                 # 0x27 DAA
@@ -65,8 +67,8 @@ instructions:
     db  exec_sub_w, arg_mod_reg_rm_src_w            # 0x29 SUB REG16/MEM16, REG16
     db  exec_sub_b, arg_mod_reg_rm_dst_b            # 0x2a SUB REG8, REG8/MEM8
     db  exec_sub_w, arg_mod_reg_rm_dst_w            # 0x2b SUB REG16, REG16/MEM16
-    db  exec_sub_b, arg_al_data_b                   # 0x2c SUB AL, IMMED8
-    db  exec_sub_w, arg_ax_data_w                   # 0x2d SUB AX, IMMED16
+    db  exec_sub_b, arg_al_immediate_b              # 0x2c SUB AL, IMMED8
+    db  exec_sub_w, arg_ax_immediate_w              # 0x2d SUB AX, IMMED16
 
     db  exec_segment_prefix, arg_reg_cs             # 0x2e CS: (segment override prefix)
     db  exec_das, 0                                 # 0x2f DAS
@@ -75,8 +77,8 @@ instructions:
     db  exec_xor_w, arg_mod_reg_rm_src_w            # 0x31 XOR REG16/MEM16, REG16
     db  exec_xor_b, arg_mod_reg_rm_dst_b            # 0x32 XOR REG8, REG8/MEM8
     db  exec_xor_w, arg_mod_reg_rm_dst_w            # 0x33 XOR REG16, REG16/MEM16
-    db  exec_xor_b, arg_al_data_b                   # 0x34 XOR AL, IMMED8
-    db  exec_xor_w, arg_ax_data_w                   # 0x35 XOR AX, IMMED16
+    db  exec_xor_b, arg_al_immediate_b              # 0x34 XOR AL, IMMED8
+    db  exec_xor_w, arg_ax_immediate_w              # 0x35 XOR AX, IMMED16
 
     db  exec_segment_prefix, arg_reg_ss             # 0x36 SS: (segment override prefix)
     db  exec_aaa, 0                                 # 0x37 AAA
@@ -85,8 +87,8 @@ instructions:
     db  exec_cmp_w, arg_mod_reg_rm_src_w            # 0x39 CMP REG16/MEM16, REG16
     db  exec_cmp_b, arg_mod_reg_rm_dst_b            # 0x3a CMP REG8, REG8/MEM8
     db  exec_cmp_w, arg_mod_reg_rm_dst_w            # 0x3b CMP REG16, REG16/MEM16
-    db  exec_cmp_b, arg_al_data_b                   # 0x3c CMP AL, IMMED8
-    db  exec_cmp_w, arg_ax_data_w                   # 0x3d CMP AX, IMMED16
+    db  exec_cmp_b, arg_al_immediate_b              # 0x3c CMP AL, IMMED8
+    db  exec_cmp_w, arg_ax_immediate_w              # 0x3d CMP AX, IMMED16
 
     db  exec_segment_prefix, arg_reg_ds             # 0x3e DS: (segment override prefix)
     db  exec_aas, 0                                 # 0x3f AAS
@@ -181,7 +183,7 @@ instructions:
     db  exec_mov_w, arg_mod_reg_rm_dst_w            # 0x8b MOV REG16, REG16/MEM16
 
     db  exec_mov_w, arg_mod_1sr_rm_src              # 0x8c MOV REG16/MEM16, SEGREG
-    db  exec_lea_w, arg_mod_reg_mem_dst_w           # 0x8d LEA REG16, MEM16             # TODO what should LEA REG16, REG16 do?
+    db  exec_lea_w, arg_mod_reg_mem_dst_w           # 0x8d LEA REG16, MEM16
     db  exec_mov_w, arg_mod_1sr_rm_dst              # 0x8e MOV SEGREG, REG16/MEM16
     db  exec_pop_w, arg_mod_000_rm_w                # 0x8f POP REG16/MEM16
 
@@ -203,74 +205,70 @@ instructions:
     db  exec_sahf, 0                                # 0x9e SAHF
     db  exec_lahf, 0                                # 0x9f LAHF
 
+    db  exec_mov_b, arg_al_near_ptr_dst_b           # 0xa0 MOV AL, MEM8
+    db  exec_mov_w, arg_ax_near_ptr_dst_w           # 0xa1 MOV AX, MEM16
+    db  exec_mov_b, arg_al_near_ptr_src_b           # 0xa2 MOV MEM8, AL
+    db  exec_mov_w, arg_ax_near_ptr_src_w           # 0xa3 MOV MEM16, AX
+
+    db  exec_movs_b, 0                              # 0xa4 MOVS DEST-STR8, SRC-STR8
+    db  exec_movs_w, 0                              # 0xa5 MOVS DEST-STR16, SRC-STR16
+    db  exec_cmps_b, 0                              # 0xa6 CMPS DEST-STR8, SRC-STR8
+    db  exec_cmps_w, 0                              # 0xa7 CMPS DEST-STR16, SRC-STR16
+
+    db  exec_test_b, arg_al_immediate_b             # 0xa8 TEST AL, IMMED8
+    db  exec_test_w, arg_ax_immediate_w             # 0xa9 TEST AX, IMMED16
+
+    db  exec_stos_b, 0                              # 0xaa STOS DEST-STR8
+    db  exec_stos_w, 0                              # 0xab STOS DEST-STR16
+    db  exec_lods_b, 0                              # 0xac LODS SRC-STR8
+    db  exec_lods_w, 0                              # 0xad LODS SRC-STR16
+    db  exec_scas_b, 0                              # 0xae SCAS DEST-STR8
+    db  exec_scas_w, 0                              # 0xaf SCAS DEST-STR16
+
+    db  exec_mov_b, arg_al_immediate_b              # 0xb0 MOV AL, IMMED8
+    db  exec_mov_b, arg_cl_immediate_b              # 0xb1 MOV CL, IMMED8
+    db  exec_mov_b, arg_dl_immediate_b              # 0xb2 MOV DL, IMMED8
+    db  exec_mov_b, arg_bl_immediate_b              # 0xb3 MOV BL, IMMED8
+    db  exec_mov_b, arg_ah_immediate_b              # 0xb4 MOV AH, IMMED8
+    db  exec_mov_b, arg_ch_immediate_b              # 0xb5 MOV CH, IMMED8
+    db  exec_mov_b, arg_dh_immediate_b              # 0xb6 MOV DH, IMMED8
+    db  exec_mov_b, arg_bh_immediate_b              # 0xb7 MOV BH, IMMED8
+
+    db  exec_mov_w, arg_ax_immediate_w              # 0xb8 MOV AX, IMMED16
+    db  exec_mov_w, arg_cx_immediate_w              # 0xb9 MOV CX, IMMED16
+    db  exec_mov_w, arg_dx_immediate_w              # 0xba MOV DX, IMMED16
+    db  exec_mov_w, arg_bx_immediate_w              # 0xbb MOV BX, IMMED16
+    db  exec_mov_w, arg_sp_immediate_w              # 0xbc MOV SP, IMMED16
+    db  exec_mov_w, arg_bp_immediate_w              # 0xbd MOV BP, IMMED16
+    db  exec_mov_w, arg_si_immediate_w              # 0xbe MOV SI, IMMED16
+    db  exec_mov_w, arg_di_immediate_w              # 0xbf MOV DI, IMMED16
+
+    db  invalid_opcode, 0                           # 0xc0
+    db  invalid_opcode, 0                           # 0xc1
+
+    db  exec_ret_near, arg_immediate_w              # 0xc2 RET IMMED16 (within segment)
+    db  exec_ret_near, arg_zero                     # 0xc3 RET (within segment)
+
+    db  exec_les_w, arg_mod_reg_mem_dst_w           # 0xc4 LES REG16, MEM16
+    db  exec_lds_w, arg_mod_reg_mem_dst_w           # 0xc5 LDS REG16, MEM16
+
+    db  exec_mov_b, arg_mod_000_rm_immediate_b      # 0xc6 MOV MEM8, IMMED8
+    db  exec_mov_w, arg_mod_000_rm_immediate_w      # 0xc7 MOV MEM16, IMMED16
+
+    db  invalid_opcode, 0                           # 0xc8
+    db  invalid_opcode, 0                           # 0xc9
+
+    db  exec_ret_far, arg_immediate_w               # 0xca RET IMMED16 (intersegment)
+    db  exec_ret_far, arg_zero                      # 0xcb RET (intersegment)
+
+    db  exec_int3, 0                                # 0xcc INT 3
+    db  exec_int, arg_immediate_b                   # 0xcd INT IMMED8
+
+    db  exec_into, 0                                # 0xce INTO
+    db  exec_iret, 0                                # 0xcf IRET
+
 .EOF
 
-AD 1010 0000 ADDR-LO ADDR-HI MOV AL,MEMB
-A1 1010 0001 ADDR-LO ADDR-HI MOV AX,MEM16
-A2 1010 0010 ADDR-LO ADDR-HI MOV MEMB,AL
-A3 1010 0011 ADDR-LO ADDR-HI MOV MEM16,AL
-A4 1010 0100 MOVS DEST-STRB,SRC-STRB
-A5 1010 0101 MOVS DEST -STR16,SRC-STR16
-A6 1010 0110 CMPS DEST-STRB,SRC-STRB
-A7 1010 0111 CMPS DEST-STR16,SRC-STR16
-AB 1010 1000 DATA-B TEST AL,IMMEDB
-A9 1010 1001 DATA-LO DATA-HI TEST AX,IMMED16
-AA 1010 1010 STOS DEST-STAB
-AB 1010 1011 STOS DEST-STR16
-AC 1010 1100 LODS SRC-STAB
-AO 1010 1101 LODS SRC-STR16
-AE 1010 1110 SCAS DEST-STRB
-AF 1010 1111 SCAS DEST-STR16
-BO 1011 0000 DATA-B MOV AL,IMMEDB
-B1 1011 0001 DATA-B MOV CL,IMMEDB
-B2 1011 0010 DATA-B MOV DL,IMMEOB
-B3 1011 1011 DATA-B MOV BL,IMMEDB
-B4 . 1011 0100 DATA-B MOV AH,IMMEDB
-B5 1011 0101 DATA-B MOV CH,IMMEDB
-B6 1011 0110 DATA-B MOV DH,IMMEDB
-B7 1011 0111 DATA-B MOV BH,IMMEDB
-BB 1011 1000 DATA-LO DATA-HI MOV AX,IMMED16
-B9 1011 1001 DATA-LO DATA-HI MOV CX,IMMED16
-BA 1011 1010 DATA-LO DATA-HI MOV DX,IMMED16
-BB 1011 1011 DATA-LO DATA-HI MOV BX,IMMED16
-
-
-BC 1011 1100 DATA-LO DATA-HI MOV SP,IMMED16
-BD 1011 1101 DATA-LO DATA-HI MOV BP,IMMED16
-BE 1011 1110 DATA-LO DATA-HI MOV SI,IMMED16
-BF 1011 1111 DATA-LO DATA-HI MOV DI,IMMED16
-CO 1100 0000 (not used)
-C1 1100 0001 (not used)
-C2 1100 0010 DATA-LO DATA-HI RET IMMED16 (intraseg)
-C3 1100 0011 RET (intrasegment)
-C4 1100 0100 MOD REG RIM (DISP-LO),(DISP-HI) LES REG16,MEM16
-C5 1100 0101 MOD REG RIM (DISP-LO),(DISP-HI) LOS REG16,MEM16
-C6 1100 0110 MODOOO RIM (DISP-LO),(DISP-HI), MOV MEM8,IMMED8
-. DATA-8
-C6 1100 0110 MOD001 RIM . (not used)
-C6 1100 0110 MOD010 RIM (not used)
-C6 1100 0110 MOD 011 RIM (not used)
-C6 1100 0110 MOD100 RIM (not used)
-C6 1100 0110 MOD101 RIM (not used)
-C6 1100 0110 MOD110 RIM (not used)
-C6 1100 0110 MOD 111 RIM (not used)
-C7 1100 0111 MODOOO RIM (DISP-LO),(DISP-HI), MOV MEM16,IMMED16
-DATA-LO,DATA-HI
-C7 1100 0111 MOD001 RIM (not used)
-C7 1100 0111 MOD010 RIM (not used).
-C7 1100 0111 MOD011 RIM (not used)
-C7 1100 0111 MOD100 RIM (not used)
-C7 1100 0111 MOD101R/M (not used)
-C7 1100 0111 MOD 110 RIM (not used)
-C7 1100 0111 MOD111 RIM (not used
-C8 1100 1000 (not used)
-C9 1100 1001 (not used)
-CA 1100 1010 DATA-LO DATA-HI RET IMMED16 (intersegment)
-CB 1100 1011 RET (intersegment)
-CC 1100 1100 INT 3
-CD 1100 1101 DATA-8 INT IMMED8
-CE 1100 1110 INTO
-CF 1100 1111 IRET
 DO 1101 0000 MOD 000 RIM (DISP-LO),(DISP-HI) ROL REG8/MEM8,1
 DO 1101 0000 MOD 001 RIM (DISP-LO),(DISP-HI) ROR REG8/MEM8,1
 DO 1101 0000 MOD010 RIM (DISP-LO),(DISP-HI) RCL REG8/MEM8,1
