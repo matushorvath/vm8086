@@ -11,138 +11,142 @@
 # iAPX 86, 88 User's Manual; August 1981; pages 4-27 to 4-35
 
 instructions:
-    db  exec_add_s_b, reg_mod_rm            # 0x00 ADD REG8/MEM8, REG8
-    db  exec_add_s_w, reg_mod_rm            # 0x01 ADD REG16/MEM16, REG16
-    db  exec_add_d_b, reg_mod_rm            # 0x02 ADD REG8, REG8/MEM8
-    db  exec_add_d_w, reg_mod_rm            # 0x03 ADD REG16, REG16/MEM16
-    db  exec_add_al, data8                  # 0x04 ADD AL, IMMED8
-    db  exec_add_ax, data16                 # 0x05 ADD AX, IMMED16
+    db  exec_add_b, arg_reg_mod_rm_sb               # 0x00 ADD REG8/MEM8, REG8
+    db  exec_add_w, arg_reg_mod_rm_sw               # 0x01 ADD REG16/MEM16, REG16
+    db  exec_add_b, arg_reg_mod_rm_db               # 0x02 ADD REG8, REG8/MEM8
+    db  exec_add_w, arg_reg_mod_rm_dw               # 0x03 ADD REG16, REG16/MEM16
+    db  exec_add_b, arg_al_data_b                   # 0x04 ADD AL, IMMED8
+    db  exec_add_w, arg_ax_data_w                   # 0x05 ADD AX, IMMED16
 
-    db  exec_push_es, 0                     # 0x06 PUSH ES
-    db  exec_pop_es, 0                      # 0x07 POP ES
+    db  exec_push_w, arg_reg_es                     # 0x06 PUSH ES
+    db  exec_pop_w, arg_reg_es                      # 0x07 POP ES
 
-    db  exec_or_s_b, reg_mod_rm             # 0x08 OR REG8/MEM8, REG8
-    db  exec_or_s_w, reg_mod_rm             # 0x09 OR REG16/MEM16, REG16
-    db  exec_or_d_b, reg_mod_rm             # 0x0a OR REG8, REG8/MEM8
-    db  exec_or_d_w, reg_mod_rm             # 0x0b OR REG16, REG16/MEM16
-    db  exec_or_al, data8                   # 0x0c OR AL, IMMED8
-    db  exec_or_ax, data16                  # 0x0d OR AX, IMMED16
+    db  exec_or_b, arg_reg_mod_rm_sb                # 0x08 OR REG8/MEM8, REG8
+    db  exec_or_w, arg_reg_mod_rm_sw                # 0x09 OR REG16/MEM16, REG16
+    db  exec_or_b, arg_reg_mod_rm_db                # 0x0a OR REG8, REG8/MEM8
+    db  exec_or_w, arg_reg_mod_rm_dw                # 0x0b OR REG16, REG16/MEM16
+    db  exec_or_b, arg_al_data_b                    # 0x0c OR AL, IMMED8
+    db  exec_or_w, arg_ax_data_w                    # 0x0d OR AX, IMMED16
 
-    db  exec_push_cs, 0                     # 0x0e PUSH CS
-    db  invalid_opcode, 0                   # 0x0f
+    db  exec_push_w, arg_reg_cs                     # 0x0e PUSH CS
+    db  invalid_opcode, 0                           # 0x0f
 
-    db  exec_adc_s_b, reg_mod_rm            # 0x10 ADC REG8/MEM8, REG8
-    db  exec_adc_s_w, reg_mod_rm            # 0x11 ADC REG16/MEM16, REG16
-    db  exec_adc_d_b, reg_mod_rm            # 0x12 ADC REG8, REG8/MEM8
-    db  exec_adc_d_w, reg_mod_rm            # 0x13 ADC REG16, REG16/MEM16
-    db  exec_adc_al, data8                  # 0x14 ADC AL, IMMED8
-    db  exec_adc_ax, data16                 # 0x15 ADC AX, IMMED16
+    db  exec_adc_b, arg_reg_mod_rm_sb               # 0x10 ADC REG8/MEM8, REG8
+    db  exec_adc_w, arg_reg_mod_rm_sw               # 0x11 ADC REG16/MEM16, REG16
+    db  exec_adc_b, arg_reg_mod_rm_db               # 0x12 ADC REG8, REG8/MEM8
+    db  exec_adc_w, arg_reg_mod_rm_dw               # 0x13 ADC REG16, REG16/MEM16
+    db  exec_adc_b, arg_al_data_b                   # 0x14 ADC AL, IMMED8
+    db  exec_adc_w, arg_ax_data_w                   # 0x15 ADC AX, IMMED16
 
-    db  exec_push_ss, 0                     # 0x16 PUSH SS
-    db  exec_pop_ss, 0                      # 0x17 POP SS
+    db  exec_push_w, arg_reg_ss                     # 0x16 PUSH SS
+    db  exec_pop_w, arg_reg_ss                      # 0x17 POP SS
 
-    db  exec_sbb_s_b, reg_mod_rm            # 0x18 SBB REG8/MEM8, REG8
-    db  exec_sbb_s_w, reg_mod_rm            # 0x19 SBB REG16/MEM16, REG16
-    db  exec_sbb_d_b, reg_mod_rm            # 0x1a SBB REG8, REG8/MEM8
-    db  exec_sbb_d_w, reg_mod_rm            # 0x1b SBB REG16, REG16/MEM16
-    db  exec_sbb_al, data8                  # 0x1c SBB AL, IMMED8
-    db  exec_sbb_ax, data16                 # 0x1d SBB AX, IMMED16
+    db  exec_sbb_b, arg_reg_mod_rm_sb               # 0x18 SBB REG8/MEM8, REG8
+    db  exec_sbb_w, arg_reg_mod_rm_sw               # 0x19 SBB REG16/MEM16, REG16
+    db  exec_sbb_b, arg_reg_mod_rm_db               # 0x1a SBB REG8, REG8/MEM8
+    db  exec_sbb_w, arg_reg_mod_rm_dw               # 0x1b SBB REG16, REG16/MEM16
+    db  exec_sbb_b, arg_al_data_b                   # 0x1c SBB AL, IMMED8
+    db  exec_sbb_w, arg_ax_data_w                   # 0x1d SBB AX, IMMED16
 
-    db  exec_push_ds, 0                     # 0x1e PUSH SDS
-    db  exec_pop_ds, 0                      # 0x1f POP DS
+    db  exec_push_w, arg_reg_ds                     # 0x1e PUSH SDS
+    db  exec_pop_w, arg_reg_ds                      # 0x1f POP DS
 
-    db  exec_and_s_b, reg_mod_rm            # 0x20 AND REG8/MEM8, REG8
-    db  exec_and_s_w, reg_mod_rm            # 0x21 AND REG16/MEM16, REG16
-    db  exec_and_d_b, reg_mod_rm            # 0x22 AND REG8, REG8/MEM8
-    db  exec_and_d_w, reg_mod_rm            # 0x23 AND REG16, REG16/MEM16
-    db  exec_and_al, data8                  # 0x24 AND AL, IMMED8
-    db  exec_and_ax, data16                 # 0x25 AND AX, IMMED16
+    db  exec_and_b, arg_reg_mod_rm_sb               # 0x20 AND REG8/MEM8, REG8
+    db  exec_and_w, arg_reg_mod_rm_sw               # 0x21 AND REG16/MEM16, REG16
+    db  exec_and_b, arg_reg_mod_rm_db               # 0x22 AND REG8, REG8/MEM8
+    db  exec_and_w, arg_reg_mod_rm_dw               # 0x23 AND REG16, REG16/MEM16
+    db  exec_and_b, arg_al_data_b                   # 0x24 AND AL, IMMED8
+    db  exec_and_w, arg_ax_data_w                   # 0x25 AND AX, IMMED16
 
-    db  exec_overrride_es, 0                # 0x26, ES: (segment override prefix)
-    db  exec_daa, 0                         # 0x27, DAA
+    db  exec_segment_prefix, arg_reg_es             # 0x26, ES: (segment override prefix)
+    db  exec_daa, 0                                 # 0x27, DAA
 
-    db  exec_sub_s_b, reg_mod_rm            # 0x28 SUB REG8/MEM8, REG8
-    db  exec_sub_s_w, reg_mod_rm            # 0x29 SUB REG16/MEM16, REG16
-    db  exec_sub_d_b, reg_mod_rm            # 0x2a SUB REG8, REG8/MEM8
-    db  exec_sub_d_w, reg_mod_rm            # 0x2b SUB REG16, REG16/MEM16
-    db  exec_sub_al, data8                  # 0x2c SUB AL, IMMED8
-    db  exec_sub_ax, data16                 # 0x2d SUB AX, IMMED16
+    db  exec_sub_b, arg_reg_mod_rm_sb               # 0x28 SUB REG8/MEM8, REG8
+    db  exec_sub_w, arg_reg_mod_rm_sw               # 0x29 SUB REG16/MEM16, REG16
+    db  exec_sub_b, arg_reg_mod_rm_db               # 0x2a SUB REG8, REG8/MEM8
+    db  exec_sub_w, arg_reg_mod_rm_dw               # 0x2b SUB REG16, REG16/MEM16
+    db  exec_sub_b, arg_al_data_b                   # 0x2c SUB AL, IMMED8
+    db  exec_sub_w, arg_ax_data_w                   # 0x2d SUB AX, IMMED16
 
-    db  exec_overrride_cs, 0                # 0x2e, CS: (segment override prefix)
-    db  exec_das, 0                         # 0x2f, DAS
+    db  exec_segment_prefix, arg_reg_cs             # 0x2e, CS: (segment override prefix)
+    db  exec_das, 0                                 # 0x2f, DAS
 
-    db  exec_xor_s_b, reg_mod_rm            # 0x30 XOR REG8/MEM8, REG8
-    db  exec_xor_s_w, reg_mod_rm            # 0x31 XOR REG16/MEM16, REG16
-    db  exec_xor_d_b, reg_mod_rm            # 0x32 XOR REG8, REG8/MEM8
-    db  exec_xor_d_w, reg_mod_rm            # 0x33 XOR REG16, REG16/MEM16
-    db  exec_xor_al, data8                  # 0x34 XOR AL, IMMED8
-    db  exec_xor_ax, data16                 # 0x35 XOR AX, IMMED16
+    db  exec_xor_b, arg_reg_mod_rm_sb               # 0x30 XOR REG8/MEM8, REG8
+    db  exec_xor_w, arg_reg_mod_rm_sw               # 0x31 XOR REG16/MEM16, REG16
+    db  exec_xor_b, arg_reg_mod_rm_db               # 0x32 XOR REG8, REG8/MEM8
+    db  exec_xor_w, arg_reg_mod_rm_dw               # 0x33 XOR REG16, REG16/MEM16
+    db  exec_xor_b, arg_al_data_b                   # 0x34 XOR AL, IMMED8
+    db  exec_xor_w, arg_ax_data_w                   # 0x35 XOR AX, IMMED16
 
-    db  exec_overrride_ss, 0                # 0x36, SS: (segment override prefix)
-    db  exec_aaa, 0                         # 0x37, AAA
+    db  exec_segment_prefix, arg_reg_ss             # 0x36, SS: (segment override prefix)
+    db  exec_aaa, 0                                 # 0x37, AAA
 
-    db  exec_cmp_s_b, reg_mod_rm            # 0x38 CMP REG8/MEM8, REG8
-    db  exec_cmp_s_w, reg_mod_rm            # 0x39 CMP REG16/MEM16, REG16
-    db  exec_cmp_d_b, reg_mod_rm            # 0x3a CMP REG8, REG8/MEM8
-    db  exec_cmp_d_w, reg_mod_rm            # 0x3b CMP REG16, REG16/MEM16
-    db  exec_cmp_al, data8                  # 0x3c CMP AL, IMMED8
-    db  exec_cmp_ax, data16                 # 0x3d CMP AX, IMMED16
+    db  exec_cmp_b, arg_reg_mod_rm_sb               # 0x38 CMP REG8/MEM8, REG8
+    db  exec_cmp_w, arg_reg_mod_rm_sw               # 0x39 CMP REG16/MEM16, REG16
+    db  exec_cmp_b, arg_reg_mod_rm_db               # 0x3a CMP REG8, REG8/MEM8
+    db  exec_cmp_w, arg_reg_mod_rm_dw               # 0x3b CMP REG16, REG16/MEM16
+    db  exec_cmp_b, arg_al_data_b                   # 0x3c CMP AL, IMMED8
+    db  exec_cmp_w, arg_ax_data_w                   # 0x3d CMP AX, IMMED16
 
-    db  exec_overrride_ds, 0                # 0x3e, DS: (segment override prefix)
-    db  exec_aas, 0                         # 0x3f, AAS
+    db  exec_segment_prefix, arg_reg_ds             # 0x3e, DS: (segment override prefix)
+    db  exec_aas, 0                                 # 0x3f, AAS
+
+    db  exec_inc_w, arg_reg_ax                      # 0x40, INC AX
+    db  exec_inc_w, arg_reg_cx                      # 0x41, INC CX
+    db  exec_inc_w, arg_reg_dx                      # 0x42, INC DX
+    db  exec_inc_w, arg_reg_bx                      # 0x43, INC BX
+    db  exec_inc_w, arg_reg_sp                      # 0x44, INC SP
+    db  exec_inc_w, arg_reg_bp                      # 0x45, INC BP
+    db  exec_inc_w, arg_reg_si                      # 0x46, INC SI
+    db  exec_inc_w, arg_reg_di                      # 0x47, INC DI
+
+    db  exec_dec_w, arg_reg_ax                      # 0x48, DEC AX
+    db  exec_dec_w, arg_reg_cx                      # 0x49, DEC CX
+    db  exec_dec_w, arg_reg_dx                      # 0x4a, DEC DX
+    db  exec_dec_w, arg_reg_bx                      # 0x4b, DEC BX
+    db  exec_dec_w, arg_reg_sp                      # 0x4c, DEC SP
+    db  exec_dec_w, arg_reg_bp                      # 0x4d, DEC BP
+    db  exec_dec_w, arg_reg_si                      # 0x4e, DEC SI
+    db  exec_dec_w, arg_reg_di                      # 0x4f, DEC DI
+
+    db  exec_push_w, arg_reg_ax                     # 0x50, PUSH AX
+    db  exec_push_w, arg_reg_cx                     # 0x51, PUSH CX
+    db  exec_push_w, arg_reg_dx                     # 0x52, PUSH DX
+    db  exec_push_w, arg_reg_bx                     # 0x53, PUSH BX
+    db  exec_push_w, arg_reg_sp                     # 0x54, PUSH SP
+    db  exec_push_w, arg_reg_bp                     # 0x55, PUSH BP
+    db  exec_push_w, arg_reg_si                     # 0x56, PUSH SI
+    db  exec_push_w, arg_reg_di                     # 0x57, PUSH DI
+
+    db  exec_pop_w, arg_reg_ax                      # 0x58, POP AX
+    db  exec_pop_w, arg_reg_cx                      # 0x59, POP CX
+    db  exec_pop_w, arg_reg_dx                      # 0x5a, POP DX
+    db  exec_pop_w, arg_reg_bx                      # 0x5b, POP BX
+    db  exec_pop_w, arg_reg_sp                      # 0x5c, POP SP
+    db  exec_pop_w, arg_reg_bp                      # 0x5d, POP BP
+    db  exec_pop_w, arg_reg_si                      # 0x5e, POP SI
+    db  exec_pop_w, arg_reg_di                      # 0x5f, POP DI
+
+    db  invalid_opcode, 0                           # 0x60
+    db  invalid_opcode, 0                           # 0x61
+    db  invalid_opcode, 0                           # 0x62
+    db  invalid_opcode, 0                           # 0x63
+    db  invalid_opcode, 0                           # 0x64
+    db  invalid_opcode, 0                           # 0x65
+    db  invalid_opcode, 0                           # 0x66
+    db  invalid_opcode, 0                           # 0x67
+
+    db  invalid_opcode, 0                           # 0x68
+    db  invalid_opcode, 0                           # 0x69
+    db  invalid_opcode, 0                           # 0x6a
+    db  invalid_opcode, 0                           # 0x6b
+    db  invalid_opcode, 0                           # 0x6c
+    db  invalid_opcode, 0                           # 0x6d
+    db  invalid_opcode, 0                           # 0x6e
+    db  invalid_opcode, 0                           # 0x6f
 
 .EOF
 
-40 0100 0000 INC AX
-41 0100 0001 INC CX
-42 0100 0010 INC DX
-43 0100 0011 INC BX
-44 0100 0100 INC SP
-45 0100 0101 INC BP
-46 0100 0110 INC SI
-47 0100 0111 INC DI
-48 0100 1000 DEC AX
-49 0100 1001 DEC CX
-4A 0100 1010 DEC DX
-4B 0100 1011 DEC BX
-4C 0100 1100 DEC SP
-4D 0100 1101 DEC BP
-4E 0100 1110 DEC SI
-. 4F 0100 1111 DEC DI·
-. 50 0101 ·0000 PUSH AX
-51 0101 0001 PUSH CX
-52 0101 0010 ·PUSH DX
-53 0101 0011 PUSH BX
-54 0101 0100 PUSH SP·
-55 0101 0101 PUSH BP
-56 0101 0110 PUSH SI
-57 0101 0111 PUSH DI
-58 0101 1000 POP AX
-59 0101 1001 POP CX
-5A 0101 1010 POP DX
-5B 0101 1011 POP BX
-5C 0101 1100 . POP SP
-5D 0101 1101 POP BP
-5E 0101 1110 POP SI
-5F 0101 1111 POP DI
-60 0110 0000 (not used) .
-61 0110 0001 (not used)
-62 0110 0010 (not used)
-63 0110 0011 (not used)
-64 0110 0100 (not used)
-65 0110 0101 (not used)
-66 0110 0110 (not used)
-67 0110 0111 (not used)
-
-
-68 0110 1000 (not used)
-69 0110 1001 (not used)
-6A 0110 1010 (not used)
-6B 0110 1011 (not used)
-6C 0110 1100 (not used)
-60 0110 1101 (not used)
-6E 0110 1110 (not used)
-6F 0110 11.11 (not used)
 70 0111 0000 IP-INC8 JO SHORT-LABEL
 71 0111 0001 IP-INC8 JNO SHORT-LABEL
 72 0111 0010 IP-INC8 JB/JNAEI SHORT-LABEL
