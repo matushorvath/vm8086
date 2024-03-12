@@ -147,30 +147,30 @@ instructions:
     db  invalid_opcode, 0                           # 0x6e
     db  invalid_opcode, 0                           # 0x6f
 
-    db  exec_jo, arg_ip_inc_b                       # 0x70 JO SHORT-LABEL
-    db  exec_jno, arg_ip_inc_b                      # 0x71 JNO SHORT-LABEL
-    db  exec_jb, arg_ip_inc_b                       # 0x72 JB/JNAEI/JC SHORT-LABEL
-    db  exec_jnb, arg_ip_inc_b                      # 0x73 JNB/JAEI/JNC SHORT-LABEL
-    db  exec_jz, arg_ip_inc_b                       # 0x74 JE/JZ SHORT-LABEL
-    db  exec_jnz, arg_ip_inc_b                      # 0x75 JNE/JNZ SHORT-LABEL
-    db  exec_jna, arg_ip_inc_b                      # 0x76 JBE/JNA SHORT-LABEL
-    db  exec_ja, arg_ip_inc_b                       # 0x77 JNBE/JA SHORT-LABEL
-    db  exec_js, arg_ip_inc_b                       # 0x78 JS SHORT-LABEL
-    db  exec_jns, arg_ip_inc_b                      # 0x79 JNS SHORT-LABEL
-    db  exec_jp, arg_ip_inc_b                       # 0x7a JP/JPE SHORT-LABEL
-    db  exec_jnp, arg_ip_inc_b                      # 0x7b JNP/JPO SHORT-LABEL
-    db  exec_jl, arg_ip_inc_b                       # 0x7c JL/JNGE SHORT-LABEL
-    db  exec_jnl, arg_ip_inc_b                      # 0x7d JNL/JGE SHORT-LABEL
-    db  exec_jng, arg_ip_inc_b                      # 0x7e JLE/JNG SHORT-LABEL
-    db  exec_jg, arg_ip_inc_b                       # 0x7f JNLE/JG SHORT-LABEL
+    db  exec_jo, arg_short_ptr                      # 0x70 JO SHORT-LABEL
+    db  exec_jno, arg_short_ptr                     # 0x71 JNO SHORT-LABEL
+    db  exec_jb, arg_short_ptr                      # 0x72 JB/JNAEI/JC SHORT-LABEL
+    db  exec_jnb, arg_short_ptr                     # 0x73 JNB/JAEI/JNC SHORT-LABEL
+    db  exec_jz, arg_short_ptr                      # 0x74 JE/JZ SHORT-LABEL
+    db  exec_jnz, arg_short_ptr                     # 0x75 JNE/JNZ SHORT-LABEL
+    db  exec_jna, arg_short_ptr                     # 0x76 JBE/JNA SHORT-LABEL
+    db  exec_ja, arg_short_ptr                      # 0x77 JNBE/JA SHORT-LABEL
+    db  exec_js, arg_short_ptr                      # 0x78 JS SHORT-LABEL
+    db  exec_jns, arg_short_ptr                     # 0x79 JNS SHORT-LABEL
+    db  exec_jp, arg_short_ptr                      # 0x7a JP/JPE SHORT-LABEL
+    db  exec_jnp, arg_short_ptr                     # 0x7b JNP/JPO SHORT-LABEL
+    db  exec_jl, arg_short_ptr                      # 0x7c JL/JNGE SHORT-LABEL
+    db  exec_jnl, arg_short_ptr                     # 0x7d JNL/JGE SHORT-LABEL
+    db  exec_jng, arg_short_ptr                     # 0x7e JLE/JNG SHORT-LABEL
+    db  exec_jg, arg_short_ptr                      # 0x7f JNLE/JG SHORT-LABEL
 
-    # <op>: 000 ADD, 001 OR, 010 ADC, 011 SBB, 100 AND, 101 SUB, 110 XOR, 111 CMP
-    db  exec_op_b, arg_mod_op_rm_b                  # 0x80 <op> REG8/MEM8, IMMED8
-    db  exec_op_w, arg_mod_op_rm_w                  # 0x81 <op> REG16/MEM16, IMMED16
+    # <alop>: 000 ADD, 001 OR, 010 ADC, 011 SBB, 100 AND, 101 SUB, 110 XOR, 111 CMP
+    db  exec_alop_b, arg_mod_alop_rm_b              # 0x80 <alop> REG8/MEM8, IMMED8
+    db  exec_alop_w, arg_mod_alop_rm_w              # 0x81 <alop> REG16/MEM16, IMMED16
 
-    # <op>: 000 ADD,         010 ADC, 011 SBB,          101 SUB,          111 CMP
-    db  exec_op_b, arg_mod_op_rm_ext_b              # 0x82 <op> REG8/MEM8, IMMED8
-    db  exec_op_w, arg_mod_op_rm_ext_w              # 0x83 <op> REG16/MEM16, IMMED8 (sign extend)
+    # <alop>: 000 ADD,         010 ADC, 011 SBB,          101 SUB,          111 CMP
+    db  exec_alop_b, arg_mod_alop_rm_ext_b          # 0x82 <alop> REG8/MEM8, IMMED8
+    db  exec_alop_w, arg_mod_alop_rm_ext_w          # 0x83 <alop> REG16/MEM16, IMMED8 (sign extend)
 
     db  exec_test_b, arg_mod_reg_rm_src_b           # 0x84 TEST REG8/MEM8, REG8
     db  exec_test_w, arg_mod_reg_rm_src_w           # 0x85 TEST REG16/MEM16, REG16
@@ -198,7 +198,7 @@ instructions:
 
     db  exec_cbw, 0                                 # 0x98 CBW
     db  exec_cwd, 0                                 # 0x99 CWD
-    db  exec_call, arg_far_ptr                      # 0x9a CALL FAR_PROC
+    db  exec_call, arg_far_ptr                      # 0x9a CALL FAR-PROC
     db  exec_wait, 0                                # 0x9b WAIT
     db  exec_pushf, 0                               # 0x9c PUSHF
     db  exec_popf, 0                                # 0x9d POPF
@@ -267,113 +267,88 @@ instructions:
     db  exec_into, 0                                # 0xce INTO
     db  exec_iret, 0                                # 0xcf IRET
 
+    # <rsop>: 000 ROL, 001 ROR, 010 RCL, 011 RCR, 100 SAL/SHL, 101 SHR,          111 SAR
+    db  exec_rsop_b, arg_mod_rsop_rm_1_b            # 0xd0 <rsop> REG8/MEM8, 1
+    db  exec_rsop_w, arg_mod_rsop_rm_1_w            # 0xd1 <rsop> REG16/MEM16, 1
+    db  exec_rsop_b, arg_mod_rsop_rm_cl_b           # 0xd2 <rsop> REG8/MEM8, CL
+    db  exec_rsop_w, arg_mod_rsop_rm_cl_w           # 0xd3 <rsop> REG16/MEM16, CL
+
+    db  exec_aam, 0                                 # 0xd4 AAM
+    db  exec_aad, 0                                 # 0xd5 AAD
+    db  invalid_opcode, 0                           # 0xd6
+    db  exec_xlat, 0                                # 0xd7 XLAT SOURCE-TABLE
+
+    db  exec_esc, arg_esc_000                       # 0xd8 ESC OPCODE, SOURCE (2 bytes)
+    db  exec_esc, arg_esc_yyy                       # 0xd9 ESC OPCODE, SOURCE (4 bytes)
+    db  exec_esc, arg_esc_yyy                       # 0xda ESC OPCODE, SOURCE (4 bytes)
+    db  exec_esc, arg_esc_yyy                       # 0xdb ESC OPCODE, SOURCE (4 bytes)
+    db  exec_esc, arg_esc_yyy                       # 0xdc ESC OPCODE, SOURCE (4 bytes)
+    db  exec_esc, arg_esc_yyy                       # 0xdd ESC OPCODE, SOURCE (4 bytes)
+    db  exec_esc, arg_esc_yyy                       # 0xde ESC OPCODE, SOURCE (4 bytes)
+    db  exec_esc, arg_esc_111                       # 0xdf ESC OPCODE, SOURCE (2 bytes)
+
+    db  exec_loopne, arg_short_ptr                  # 0xe0 LOOPNE/LOOPNZ SHORT-LABEL
+    db  exec_loope, arg_short_ptr                   # 0xe1 LOOPE/LOOPZ SHORT-LABEL
+    db  exec_loop, arg_short_ptr                    # 0xe2 LOOP SHORT-LABEL
+    db  exec_jcxz, arg_short_ptr                    # 0xe3 JCXZ SHORT-LABEL
+
+    db  exec_in_b, arg_al_immediate_b               # 0xe4 IN AL, IMMED8
+    db  exec_in_w, arg_ax_immediate_w               # 0xe5 IN AX, IMMED8
+    db  exec_out_b, arg_al_immediate_b              # 0xe6 OUT AL, IMMED8
+    db  exec_out_w, arg_ax_immediate_w              # 0xe7 OUT AX, IMMED8
+
+    db  exec_call, arg_near_ptr                     # 0xe8 CALL NEAR-PROC
+    db  exec_jmp, arg_near_ptr                      # 0xe9 JMP NEAR-LABEL
+    db  exec_jmp, arg_far_ptr                       # 0xea JMP FAR-LABEL
+    db  exec_jmp, arg_short_ptr                     # 0xeb JMP SHORT-LABEL
+
+    db  exec_in_b, arg_al_dx_b                      # 0xe4 IN AL, DX
+    db  exec_in_w, arg_ax_dx_w                      # 0xe5 IN AX, DX
+    db  exec_out_b, arg_al_dx_b                     # 0xe6 OUT AL, DX
+    db  exec_out_w, arg_ax_dx_w                     # 0xe7 OUT AX, DX
+
+    db  exec_lock, 0                                # 0xf0 LOCK (prefix)
+    db  invalid_opcode, 0                           # 0xf1
+    db  exec_repnz, 0                               # 0xf2 REPNE/REPNZ
+    db  exec_repz, 0                                # 0xf3 REP/REPE/REPZ
+
+    db  exec_hlt, 0                                 # 0xf4 HLT
+    db  exec_cmc, 0                                 # 0xf5 CMC
+
+    # <tnmd>:
+    # 000 TEST REG/MEM, IMMED
+    # 001 (not used)
+    # 010 NOT REG/MEM
+    # 011 NEG REG/MEM
+    # 100 MUL REG/MEM
+    # 101 IMUL REG/MEM
+    # 110 DIV REG/MEM
+    # 111 IDIV REG/MEM
+    db  exec_tnmd_b, arg_mod_tnmd_rm_b              # 0xf6 <tnmd> 8-bit
+    db  exec_tnmd_w, arg_mod_tnmd_rm_w              # 0xf7 <tnmd> 16-bit
+
+    db  exec_clc, 0                                 # 0xf8 CLC
+    db  exec_stc, 0                                 # 0xf9 STC
+    db  exec_cli, 0                                 # 0xfa CLI
+    db  exec_sti, 0                                 # 0xfb STI
+    db  exec_cld, 0                                 # 0xfc CLD
+    db  exec_std, 0                                 # 0xfd STD
+
+    # <feop>:
+    # 000 INC REG8/MEM8
+    # 001 DEC REG8/MEM8
+    # (rest not used)
+    db  exec_feop_b, arg_mod_feop_rm_b              # 0xfe <feop> REG8/MEM8
+
+    # <fdop>:
+    # 000 INC MEM16
+    # 001 DEC MEM16
+    # 010 CALL REG16/MEM16 (within segment)
+    # 011 CALL MEM16 (intersegment)
+    # 100 JMP REG16/MEM16 (within segment)
+    # 101 JMP MEM16 (intersegment)
+    # 110 PUSH MEM16
+    # 111 (not used)
+    db  exec_ffop_w, arg_mod_ffop_rm_w              # 0xff <ffop> REG16/MEM16
+
 .EOF
-
-DO 1101 0000 MOD 000 RIM (DISP-LO),(DISP-HI) ROL REG8/MEM8,1
-DO 1101 0000 MOD 001 RIM (DISP-LO),(DISP-HI) ROR REG8/MEM8,1
-DO 1101 0000 MOD010 RIM (DISP-LO),(DISP-HI) RCL REG8/MEM8,1
-DO 1101 0000 MOD011 RIM (DISP-LO),(DISP-HI) RCR REG8/MEM8,1
-DO 1101 0000 MOD 100 RIM (DISP-LO),(DISP-HI) SALISHL REG8/MEM8,1
-DO 1101 0000 MOD101 RIM (DISP-LO),(DISP-HI) SHR REG8/MEM8,1
-DO 1101 0000 MOD110R/M (not used)
-DO 1101 0000 MOD111 RIM (DISP-LO),(DISP-HI) SAR REG8/MEM8,1
-01 1101 0001 MODOOOR/M (DISP-LO),(DISP-HI) ROL REG16/MEM16,1
-01 1101 0001 MOD 001 RIM (DISP-LO),(DISP-HI) ROR REG16/MEM16,1
-01 1101 0001 MOD 010 RIM (DISP-LO),(DISP-HI) RCL REG16/MEM16,1
-01 1101 0001 MOD011 RIM (DISP-LO),(DISP-HI) RCR REG16/MEM16,1
-01 1101 0001 MOD 100 RIM (DISP-LO),(DISP-HI) SALISHL REG16/MEM16,1
-4
-
-
-01 1101 0001 MOD101 RIM (DISP-LO),(DISP-HI) SHR REG16/MEM16,1
-01 1101 0001 MOD 110 RIM (not used)
-01 1101 0001 MOD111 RIM (DISP-LO),(DISP-HI) SAR REG16/MEM16,1
-02 1101 0010 MOD 000 RIM . (DISP-LO),(DISP-HI) ROL REG8/MEM8,CL
-02 1101 0010 MOD001 RIM (DISP-LO),(DISP-HI) ROR REG8/MEM8,CL
-D2 1101 0010 MOD010 RIM (DISP~LO),(DISP~HI) RCL REG8/MEM8,CL
-D2 1101 ·0010 MOD011 RIM (DISP-LO),(DISP-HI) RCR REG8/MEM8,CL
-D2 1101 0010 MOD100 RIM (DISP-LO),(DISP-HI) SALISHL REG8/MEM8,CL
-D2 1101 0010 MOD101 RIM (DISP-LO),(DISP-HI) SHR REG8/MEM8,CL
-D2 1101 0010 MOD110 RIM (not used)
-D2 1101 0010 MOD11t RIM (DISP-LO) ,(DISP-H I) SAR REG8/MEM8,CL
-D3 1101 0011 MOD 000 RIM (DISP-LO),(DISP-HI) ROL REG16/MEM16,CL
-D3 1101 0011 MOD 001 RIM (DISP-LO),(DISP-HI) ROR REG16/MEM16,CL
-D3 1101 0011 MOD010 RIM (DISP-LO),(DISP-HI) RCL REG16/MEM16,CL
-03 1101 0011 MOD011 RIM (DISP~LO),(DISP-HI) RCR REG16/MEM16,CL
-03 1101 0011 MOD100 RIM (DISP-LO),(DISP-HI) SALISHL REG16/MEM16,CL
-03 1101 0011 MOD101 RIM (DISP-LO),(DISP-HI) SHR REG16/MEM16,CL
-03 1101 0011 MOD110 RIM (not used) .
-03 1101 0011 MOD 111 RIM (DISP~LO),(DISP-HI) SAR REG16/MEM16,CL
-04 1101 0100 00001010 AAM
-D5 1101 0101 00001010 AAD
-D6 1101 0110 (not used) .
-D7 1101 0111 XLAT . SOURCE-TABLE
-D8 1101 1000 MOD 000 RIM
-1XXX MODYYYR/M (DISP-LO), (DISP-HI) ESC OPCODE;SOURCE
-DF 1101 1111 MOD 111 RIM
-EO 1110 0000 IP-INC-8 LOOPNEI SHORT~ABEL
-LOOPNZ
-E1 1110 0001 IP-INC-8 LOOPEI SHORT-LABEL
-LOOPZ
-E2 1110 0010 IP-INC-B LOOP SHORT-LABEL
-E3 1110 0011 IP-INC-8 JCXZ SHORT-LABEL
-E4 1110 0100 DATA-8 IN AL,IMMED8 . ,
-E5 1110 0101 DATA-8 IN AX,IMMED8
-E6 1110 0110 DATA-8 OUT AL,IMMED8
-E7 1110 0111 DATA-8 OUT AX,IMMED8
-E8 1110 1000 IP-INC-LO IP-INC-HI CALL . NEAR-PROC
-E9 1110 1001 IP-INC-LO IP-INC-HI JMP NEAR-LABEL
-EA 1110 1010 IP-LO I P-H I, CS-LO, CS-H I JMP FAR-LABEL
-EB 1110 1011 IP-INC8 JMP . SHORT-LABEL
-EC 1110 1100 IN AL,DX
-ED 1110 1101 IN AX,DX
-EE 1110 1110 OUT AL,DX
-EF 1110 1111 OUT AX,DX
-FO 1111 0000 LOCK (prefix)
-F1 1111 0001 (not used)
-F2 1111 0010 REPNEJREPNZ
-F3 1111 0011 REP/REPE/REPZ
-F4 1111 0100 HLT
-F5 1111 0101 CMC
-
-
-F6 1111 0110 MOD 000 RIM (DISP-LO),(DISP-HI), TEST REGBI M EMB,IM M EDB
-DATA-B
-F6 1111 0110 MOD 001 RIM (not used)
-F6 1111 0110 MOD010 RIM (DISP-LO),(DISP-HI) NOT REGB/MEMB
-F6 1111 0110 MOD011 RIM (DISP-LO),(DISP-HI) NEG REGB/MEMB
-F6 1111 0110 MOD100 RIM (DISP-LO) ,(DISP-H I) MUL REGB/MEMB
-F6 1111 0110 MOD101 RIM (DISP-LO),(DISP-HI) IMUL REGB/MEMB
-F6 1111 0110 MOD110 RIM (DISP-LO),(DISP-HI) DIV REGB/MEMB
-F6 1111 0110 MOD 111 RIM (DISP-LO),(DISP-HI) IDIV REGB/MEMB
-F7 1111 0111 MODOOOR/M (DISP-LO),(DISP-HI), TEST REG16/MEM16.IMMED16
-DATA-LO,DATA-HI
-F7 1111 0111 MOD 001 RIM (not used)
-F7 1111 0111 MOD010R/M (DISP-LO),(DISP-HI) NOT REG16/MEM16
-F7 1111 0111 MOD011 RIM (DISP-LO),(DISP-HI) NEG REG16/MEM16
-F7 1111 0111 MOD100 RIM (DISP-LO),(DISP-HI) MUL REG16/MEM16
-F7 1111 0111 MOD101 RIM (DISP-LO),(DISP-HI) IMUL REG16/MEM16
-F7 1111 0111 MOD110 RIM (DISP-LO),(DISP-HI) DIV REG16/MEM16
-F7 1111 0111 MOD111 RIM (DISP-LO),(DISP-HI) IDIV REG16/MEM16
-FB 1111 1000 CLC
-F9 1111 1001 STC
-FA 1111 1010 CLI
-FB 1111 1,011 STI
-FC 1111 1100 CLD
-FD 1111 1101 STD
-FE 1111 1110 MOD 000 RIM (DISP-LO),(DISP-HI) INC REGB/MEMB
-FE 1111 1110 MOD 001 RIM (DISP-LO),(DISP-HI) DEC REGB/MEMB
-FE 1111 1110 MOD010R/M (not used)
-FE 1111 1110 MOD011 RIM (not used)
-FE 1111 1110 MOD100R/M (not used)
-FE 1111 1110 MOD101 RIM (not used)
-FE 1111 1110 MOD110R/M (not used)
-FE 1111 1110 MOD111 RIM (not used)
-FF 1111 1111 MODOOOR/M (DISP-LO),(DISP-HI) INC MEM16
-FF 1111 1111 MOD 001 RIM (DISP-LO).(DISP-HI) DEC MEM16
-FF 1111 1111 MOD010 RIM (DISP-LO),(DISP-HI) CALL REG16/MEM16 (intra)
-FF 1111 1111 MOD011 RIM (DISP-LO),(DISP-HI) CALL MEM16 (intersegment)
-FF 1111 1111 MOD100 RIM (DISP-LO),(DISP-HI) JMP REG16/MEM16 (intra)
-FF 1111 1111 MOD101 RIM (DISP-LO).(DISP-HI) JMP MEM16 (intersegment)
-FF 1111 1111 MOD 110 RIM (DISP-LO).(DISP-HI) PUSH MEM16
-FF 1111 1111 MOD 111 RIM (not used)
