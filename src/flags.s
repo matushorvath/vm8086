@@ -1,17 +1,17 @@
 .EXPORT execute_clc
-.EXPORT execute_cld
-.EXPORT execute_cli
-.EXPORT execute_clv
+.EXPORT execute_stc
+.EXPORT execute_cmc
 
-.EXPORT execute_sec
-.EXPORT execute_sed
-.EXPORT execute_sei
+.EXPORT execute_cld
+.EXPORT execute_std
+
+.EXPORT execute_cli
+.EXPORT execute_sti
 
 # From state.s
-.IMPORT flag_overflow
-.IMPORT flag_decimal
-.IMPORT flag_interrupt
 .IMPORT flag_carry
+.IMPORT flag_direction
+.IMPORT flag_interrupt
 
 ##########
 execute_clc:
@@ -21,9 +21,30 @@ execute_clc:
 .ENDFRAME
 
 ##########
+execute_stc:
+.FRAME
+    add 1, 0, [flag_carry]
+    ret 0
+.ENDFRAME
+
+##########
+execute_cmc:
+.FRAME
+    eq  [flag_carry], 0, [flag_carry]
+    ret 0
+.ENDFRAME
+
+##########
 execute_cld:
 .FRAME
-    add 0, 0, [flag_decimal]
+    add 0, 0, [flag_direction]
+    ret 0
+.ENDFRAME
+
+##########
+execute_std:
+.FRAME
+    add 1, 0, [flag_direction]
     ret 0
 .ENDFRAME
 
@@ -35,28 +56,7 @@ execute_cli:
 .ENDFRAME
 
 ##########
-execute_clv:
-.FRAME
-    add 0, 0, [flag_overflow]
-    ret 0
-.ENDFRAME
-
-##########
-execute_sec:
-.FRAME
-    add 1, 0, [flag_carry]
-    ret 0
-.ENDFRAME
-
-##########
-execute_sed:
-.FRAME
-    add 1, 0, [flag_decimal]
-    ret 0
-.ENDFRAME
-
-##########
-execute_sei:
+execute_sti:
 .FRAME
     add 1, 0, [flag_interrupt]
     ret 0

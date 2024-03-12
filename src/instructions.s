@@ -4,6 +4,15 @@
 .IMPORT execute_nop
 .IMPORT invalid_opcode
 
+# From flags.s
+.IMPORT execute_clc
+.IMPORT execute_stc
+.IMPORT execute_cmc
+.IMPORT execute_cld
+.IMPORT execute_std
+.IMPORT execute_cli
+.IMPORT execute_sti
+
 # From params.s
 # TODO .IMPORT immediate
 # TODO .IMPORT zeropage
@@ -312,7 +321,7 @@ instructions:
 
     # HLT instruction is processed as part of the 'execute' loop
     db  invalid_opcode, 0                               # 0xf4 HLT
-    ds 2, 0 # TODO    db  execute_cmc, 0                                  # 0xf5 CMC
+    db  execute_cmc, 0                                  # 0xf5 CMC
 
     # <tnmd>:
     # 000 TEST REG/MEM, IMMED
@@ -326,12 +335,12 @@ instructions:
     ds 2, 0 # TODO    db  execute_tnmd_b, arg_mod_tnmd_rm_b               # 0xf6 <tnmd> 8-bit
     ds 2, 0 # TODO    db  execute_tnmd_w, arg_mod_tnmd_rm_w               # 0xf7 <tnmd> 16-bit
 
-    ds 2, 0 # TODO    db  execute_clc, 0                                  # 0xf8 CLC
-    ds 2, 0 # TODO    db  execute_stc, 0                                  # 0xf9 STC
-    ds 2, 0 # TODO    db  execute_cli, 0                                  # 0xfa CLI
-    ds 2, 0 # TODO    db  execute_sti, 0                                  # 0xfb STI
-    ds 2, 0 # TODO    db  execute_cld, 0                                  # 0xfc CLD
-    ds 2, 0 # TODO    db  execute_std, 0                                  # 0xfd STD
+    db  execute_clc, 0                                  # 0xf8 CLC
+    db  execute_stc, 0                                  # 0xf9 STC
+    db  execute_cli, 0                                  # 0xfa CLI
+    db  execute_sti, 0                                  # 0xfb STI
+    db  execute_cld, 0                                  # 0xfc CLD
+    db  execute_std, 0                                  # 0xfd STD
 
     # <feop>:
     # 000 INC REG8/MEM8

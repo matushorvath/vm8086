@@ -26,7 +26,7 @@
 .EXPORT flag_sign
 .EXPORT flag_overflow
 
-.EXPORT flag_interrupt_enable
+.EXPORT flag_interrupt
 .EXPORT flag_direction
 .EXPORT flag_trap
 
@@ -102,7 +102,7 @@ flag_sign:                              # SF
     db  0
 flag_overflow:                          # OF
     db  0
-flag_interrupt_enable:                  # IF
+flag_interrupt:                         # IF
     db  0
 flag_direction:                         # DF
     db  0
