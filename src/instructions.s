@@ -8,81 +8,91 @@
 # TODO .IMPORT immediate
 # TODO .IMPORT zeropage
 
-instructions:
-
 # iAPX 86, 88 User's Manual; August 1981; pages 4-27 to 4-35
 
-00 0000 0000 MOD REG RIM (DISP-LO),(DISP-HI) ADD REG81 MEM8, REG8
-01 0000 0001 MOD REG RIM (DISP-LO),(DISP-HI) ADD REG161 M EM16, REG16
-02 0000 0010 MOD REG RIM (DISP-LO),(DISP-HI) ADD REG8, REG81 M EM8
-03 0000 0011 MOD REG RIM (DISP-LO),(DISP-HI) ADD REG16,REG16/MEM16
-04 0000 0100 DATA-8 ADD AL,IMMEDB
-05 0000 0101 DATA-LO DATA-HI ADD AX,IMMED16
-06 0000 0110 PUSH ES
-07 0000 0111 POP ES
+instructions:
+    db  exec_add_s_b, reg_mod_rm            # 0x00 ADD REG8/MEM8, REG8
+    db  exec_add_s_w, reg_mod_rm            # 0x01 ADD REG16/MEM16, REG16
+    db  exec_add_d_b, reg_mod_rm            # 0x02 ADD REG8, REG8/MEM8
+    db  exec_add_d_w, reg_mod_rm            # 0x03 ADD REG16, REG16/MEM16
+    db  exec_add_al, data8                  # 0x04 ADD AL, IMMED8
+    db  exec_add_ax, data16                 # 0x05 ADD AX, IMMED16
 
+    db  exec_push_es, 0                     # 0x06 PUSH ES
+    db  exec_pop_es, 0                      # 0x07 POP ES
 
-08 0000 1000 MOD REG RIM (DISP-LO),(DISP-HI) OR REG8/MEM8,REG8
-09 0000 1001 MOD REG RIM (DISP-LO),(DISP-HI) OR REG16/MEM16,REG16
-OA 0000 1010 MOD REG RIM (DISP-LO),(DISP-HI) OR REG8,REG8/MEM8
-OB 0000 1011 MOD REG RIM (DISP-LO),(DISP-HI) OR REG16,REG16/MEM16
-OC 0000 1100 DATA-8 OR AL,IMMED8
-OD 0000 1101 DATA-LO DATA-HI OR AX,IMMED16
-OE 0000 1110 PUSH CS
-OF 0000 1111 (not used)
-10 0001 0000 MOD REG RIM (DISP-LO),(DISP-HI) ADC REG8/MEM8,REG8
-11 0001 0001 MOD REG RIM (DISP-LO),(DISP-HI) ADC REG16/MEM16,REG16
-12 0001 0010 MOD REG RIM (DISP-LO),(DISP-HI) ADC REG8,REG8/MEM8
-13 0001 0011 MOD REG RIM (DISP-LO),(DISP-HI) ADC REG16,REG16/MEM16
-14 0001 0100 DATA-8 ADC AL,IMMED8
-15 0001 0101 DATA-LO DATA-HI ADC AX,IMMED16
-16 0001 0110 PUSH SS
-17 0001 0111 POP SS
-18 0001 1000 MOD REG RIM (DISP-LO),(DISP-HI) SSS REG8/MEM8,REG8
-19 0001 1001 MOD REG RIM (DISP-LO),(DISP-HI) SSB REG16/MEM16,REG16
-1A 0001 1010 MOD REG RIM (DISP-LO),(DISP-HI) SBB REG8,REG8/MEM8
-18 0001 1011 MOD REG RIM (DISP-LO),(DISP-HI) SBS REG16,REG16/MEM16
-1C 0001 1100 DATA-8 SBB AL,IMMED8
-10 0001 1101 DATA-LO DATA-HI SSS AX,IMMED16
-1E 0001 1110 PUSH DS
-1F 0001 1111 POP OS
-20 0010 0000 MOD REG RIM (DISP-LO),(DISP-HI) AND REG8/MEM8,REG8
-21 0010 0001 MOD REG RIM (DISP-LO),(DISP-HI) AND REG16/MEM16,REG16
-22 0010 0010 MOD REG RIM (DISP-LO),(DISP-HI) AND REG8,REG8/MEM8
-23 0010 0011 MOD REG RIM (DISP-LO),(DISP-HI) AND REG16,REG16/MEM16
-24 0010 0100 DATA-8 AND AL,IMMED8
-25 0010 0101 DATA-LO DATA-HI AND AX,IMMED16
-26 0010 0110 ES: (segment override
-prefix)
-27 0010 0111 DAA
-28 0010 1000 MOD REG RIM (DISP-LO),(DISP-HI) SUS REG8/MEM8,REG8
-29 0010 1001 MOD REG RIM (DISP-LO),(DISP-HI) SUB REG16/MEM16,REG16
-2A 0010 1010 MOD REG RIM (DISP-LO),(DISP-HI) SUB REG8,REG81 MEM8
-2B 0010 1011 MOD REG RIM (DISP-LO,(DISP-HI) SUB REG16,REG16/MEM16
-2C 0010 1100 DATA~8 SUB AL,IMMED8
-2D 0010 1101 DATA-LO DATA-HI SUB AX,IMMED16
-2E 0010 1110 CS: (segment override
-prefix)
-2F 00.10 1111 DAS
-30 0011 0000 MOD REG RIM (DISP-LO),(DISP-HI) XOR REG8/MEM8,REG8
-31 0011 0001 MOD REG RIM (DISP-LO),(DISP-HI) XOR REG161 MEM16,REG16
-32 0011 0010 MOD REG RIM (DISP-LO),(DISP-HI) XOR REG8, REG81 M EM8
-33 0011 0011 .MOD REG RIM (DISP-LO),(DISP-HI) XOR REG16,REG161 MEM16
-34 0011 0100 DATA-8 XOR AL,IMMED8
-35 0011 0101 DATA-LO DATA-HI XOR AX,IMMED16
-36 0011 0110 SS: (segment override
-prefix)
+    db  exec_or_s_b, reg_mod_rm             # 0x08 OR REG8/MEM8, REG8
+    db  exec_or_s_w, reg_mod_rm             # 0x09 OR REG16/MEM16, REG16
+    db  exec_or_d_b, reg_mod_rm             # 0x0a OR REG8, REG8/MEM8
+    db  exec_or_d_w, reg_mod_rm             # 0x0b OR REG16, REG16/MEM16
+    db  exec_or_al, data8                   # 0x0c OR AL, IMMED8
+    db  exec_or_ax, data16                  # 0x0d OR AX, IMMED16
 
-37 0011 0110 AAA
-38 0011 1000 MOD REG RIM (DISP-LO),(DISP-HI) CMP REG8/MEM8,REG8
-39 0011 1001 MOD REG RIM (DISP-LO),(DISP-HI) CMP REG161 MEM16,REG1.6
-3A 0011 1010 MOD REG RIM (DISP-LO),(DISP-HI) CMP REG8, REGSI M EM8
-3B 0011 1011 MOD REG RIM (DISP-LO),(DISP-HI) CMP REG16,REG16/MEM16
-3C 0011 1100 DATA-8 CMP AL,IMMEDS
-3D 0011 1101 DATA-LO DATA-HI CMP AX,IMMED16
-3E 0011 1110 DS: (segment override
-prefix)
-3F 0011 1111 AAS
+    db  exec_push_cs, 0                     # 0x0e PUSH CS
+    db  invalid_opcode, 0                   # 0x0f
+
+    db  exec_adc_s_b, reg_mod_rm            # 0x10 ADC REG8/MEM8, REG8
+    db  exec_adc_s_w, reg_mod_rm            # 0x11 ADC REG16/MEM16, REG16
+    db  exec_adc_d_b, reg_mod_rm            # 0x12 ADC REG8, REG8/MEM8
+    db  exec_adc_d_w, reg_mod_rm            # 0x13 ADC REG16, REG16/MEM16
+    db  exec_adc_al, data8                  # 0x14 ADC AL, IMMED8
+    db  exec_adc_ax, data16                 # 0x15 ADC AX, IMMED16
+
+    db  exec_push_ss, 0                     # 0x16 PUSH SS
+    db  exec_pop_ss, 0                      # 0x17 POP SS
+
+    db  exec_sbb_s_b, reg_mod_rm            # 0x18 SBB REG8/MEM8, REG8
+    db  exec_sbb_s_w, reg_mod_rm            # 0x19 SBB REG16/MEM16, REG16
+    db  exec_sbb_d_b, reg_mod_rm            # 0x1a SBB REG8, REG8/MEM8
+    db  exec_sbb_d_w, reg_mod_rm            # 0x1b SBB REG16, REG16/MEM16
+    db  exec_sbb_al, data8                  # 0x1c SBB AL, IMMED8
+    db  exec_sbb_ax, data16                 # 0x1d SBB AX, IMMED16
+
+    db  exec_push_ds, 0                     # 0x1e PUSH SDS
+    db  exec_pop_ds, 0                      # 0x1f POP DS
+
+    db  exec_and_s_b, reg_mod_rm            # 0x20 AND REG8/MEM8, REG8
+    db  exec_and_s_w, reg_mod_rm            # 0x21 AND REG16/MEM16, REG16
+    db  exec_and_d_b, reg_mod_rm            # 0x22 AND REG8, REG8/MEM8
+    db  exec_and_d_w, reg_mod_rm            # 0x23 AND REG16, REG16/MEM16
+    db  exec_and_al, data8                  # 0x24 AND AL, IMMED8
+    db  exec_and_ax, data16                 # 0x25 AND AX, IMMED16
+
+    db  exec_overrride_es, 0                # 0x26, ES: (segment override prefix)
+    db  exec_daa, 0                         # 0x27, DAA
+
+    db  exec_sub_s_b, reg_mod_rm            # 0x28 SUB REG8/MEM8, REG8
+    db  exec_sub_s_w, reg_mod_rm            # 0x29 SUB REG16/MEM16, REG16
+    db  exec_sub_d_b, reg_mod_rm            # 0x2a SUB REG8, REG8/MEM8
+    db  exec_sub_d_w, reg_mod_rm            # 0x2b SUB REG16, REG16/MEM16
+    db  exec_sub_al, data8                  # 0x2c SUB AL, IMMED8
+    db  exec_sub_ax, data16                 # 0x2d SUB AX, IMMED16
+
+    db  exec_overrride_cs, 0                # 0x2e, CS: (segment override prefix)
+    db  exec_das, 0                         # 0x2f, DAS
+
+    db  exec_xor_s_b, reg_mod_rm            # 0x30 XOR REG8/MEM8, REG8
+    db  exec_xor_s_w, reg_mod_rm            # 0x31 XOR REG16/MEM16, REG16
+    db  exec_xor_d_b, reg_mod_rm            # 0x32 XOR REG8, REG8/MEM8
+    db  exec_xor_d_w, reg_mod_rm            # 0x33 XOR REG16, REG16/MEM16
+    db  exec_xor_al, data8                  # 0x34 XOR AL, IMMED8
+    db  exec_xor_ax, data16                 # 0x35 XOR AX, IMMED16
+
+    db  exec_overrride_ss, 0                # 0x36, SS: (segment override prefix)
+    db  exec_aaa, 0                         # 0x37, AAA
+
+    db  exec_cmp_s_b, reg_mod_rm            # 0x38 CMP REG8/MEM8, REG8
+    db  exec_cmp_s_w, reg_mod_rm            # 0x39 CMP REG16/MEM16, REG16
+    db  exec_cmp_d_b, reg_mod_rm            # 0x3a CMP REG8, REG8/MEM8
+    db  exec_cmp_d_w, reg_mod_rm            # 0x3b CMP REG16, REG16/MEM16
+    db  exec_cmp_al, data8                  # 0x3c CMP AL, IMMED8
+    db  exec_cmp_ax, data16                 # 0x3d CMP AX, IMMED16
+
+    db  exec_overrride_ds, 0                # 0x3e, DS: (segment override prefix)
+    db  exec_aas, 0                         # 0x3f, AAS
+
+.EOF
+
 40 0100 0000 INC AX
 41 0100 0001 INC CX
 42 0100 0010 INC DX
@@ -424,15 +434,3 @@ FF 1111 1111 MOD100 RIM (DISP-LO),(DISP-HI) JMP REG16/MEM16 (intra)
 FF 1111 1111 MOD101 RIM (DISP-LO).(DISP-HI) JMP MEM16 (intersegment)
 FF 1111 1111 MOD 110 RIM (DISP-LO).(DISP-HI) PUSH MEM16
 FF 1111 1111 MOD 111 RIM (not used)
-
-
-                                                             # 100010dw, MOV reg r/m
-
-#    db  "BRK", 0, 1,    execute_brk, 0                      #   0 = 0x00, BRK (Implied)
-#    db  "ORA", 0, 2,    execute_ora, indirect8_x            #   1 = 0x01, ORA (Indirect,X)
-#    db  "HLT", 0, 1,    invalid_opcode, 0                   #   2 = 0x02, HLT
-#    db  0, 0, 0, 0, 0,  invalid_opcode, 0                   #   3 = 0x03
-#    db  0, 0, 0, 0, 0,  invalid_opcode, 0                   #   4 = 0x04
-#    db  "ORA", 0, 2,    execute_ora, zeropage               #   5 = 0x05, ORA (Zero Page)
-
-.EOF
