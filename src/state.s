@@ -33,7 +33,7 @@
 .EXPORT init_state
 # TODO .EXPORT pack_sr TODO rename sr
 # TODO .EXPORT unpack_sr TODO rename sr
-# TODO .EXPORT inc_ip
+.EXPORT inc_ip
 
 # From binary.s
 .IMPORT binary
@@ -131,8 +131,6 @@ init_state:
     ret 0
 .ENDFRAME
 
-.EOF
-
 ##########
 # Increase ip with wrap around
 inc_ip:
@@ -150,6 +148,8 @@ inc_ip_done:
     arb 1
     ret 0
 .ENDFRAME
+
+.EOF
 
 ##########
 pack_sr: # TODO rename sr
