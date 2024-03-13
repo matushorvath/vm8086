@@ -47,7 +47,7 @@ build-prep:
 # The order of the object files matters: First include all the code in any order, then binary.o,
 # then the (optional) 8086 image header and data.
 
-BASE_OBJS = vm8086.o error.o exec.o flags.o instructions.o memory.o nibbles.o parity.o state.o util.o
+BASE_OBJS = vm8086.o bits.o error.o exec.o flags.o instructions.o memory.o nibbles.o parity.o state.o util.o
 
 VM8086_OBJS = $(BASE_OBJS) binary.o
 
@@ -62,6 +62,12 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.s
 
 $(OBJDIR)/%.o: $(OBJDIR)/%.s
 	$(run-as)
+
+$(OBJDIR)/bits.s: $(BINDIR)/gen_bits.input
+	$(ICVM) $(BINDIR)/gen_bits.input > $@ || ( cat $@ ; false )
+
+$(BINDIR)/gen_bits.input: $(OBJDIR)/gen_bits.o $(LIBXIB)
+	$(run-ld)
 
 $(OBJDIR)/nibbles.s: $(BINDIR)/gen_nibbles.input
 	$(ICVM) $(BINDIR)/gen_nibbles.input > $@ || ( cat $@ ; false )
