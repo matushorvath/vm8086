@@ -30,7 +30,7 @@
 .IMPORT unpack_sr
 
 # From util.s
-.IMPORT mod_16bit
+.IMPORT mod
 .IMPORT split_16_8_8
 
 ##########
@@ -100,11 +100,12 @@ execute_jsr:
 
     # Decrement ip with wraparound
     add [reg_ip], -1, [rb - 1]
-    arb -1
-    call mod_16bit
+    add 0x10000, 0, [rb - 2]
+    arb -2
+    call mod
 
     # Split the return addres into high and low part
-    add [rb - 3], 0, [rb - 1]
+    add [rb - 4], 0, [rb - 1]
     arb -1
     call split_16_8_8
 
@@ -160,9 +161,10 @@ execute_rts:
 
     # Increment reg_ip by 1 with wraparound
     add [reg_ip], 1, [rb - 1]
-    arb -1
-    call mod_16bit
-    add [rb - 3], 0, [reg_ip]
+    add 0x10000, 0, [rb - 2]
+    arb -2
+    call mod
+    add [rb - 4], 0, [reg_ip]
 
     ret 0
 .ENDFRAME

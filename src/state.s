@@ -45,7 +45,7 @@
 # TODO .IMPORT read
 
 # From util.s
-.IMPORT check_16bit
+.IMPORT check_range
 
 ##########
 # vm state
@@ -120,12 +120,14 @@ init_state:
 
     # Check if cs:ip is a sane value
     add [reg_ip], 0, [rb - 1]
-    arb -1
-    call check_16bit
+    add 0xffff, 0, [rb - 2]
+    arb -2
+    call check_range
 
     add [reg_cs], 0, [rb - 1]
-    arb -1
-    call check_16bit
+    add 0xffff, 0, [rb - 2]
+    arb -2
+    call check_range
 
     arb 1
     ret 0

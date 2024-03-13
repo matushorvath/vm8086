@@ -16,9 +16,8 @@
 .IMPORT reg_ss
 
 # From util.s
-.IMPORT check_16bit
-.IMPORT mod_16bit
-.IMPORT mod_20bit
+.IMPORT check_range
+.IMPORT mod
 
 ##########
 init_memory:
@@ -29,8 +28,9 @@ init_memory:
 
     # Validate the load address is a valid 16-bit number
     add [binary + 2], 0, [rb - 1]
-    arb -1
-    call check_16bit
+    add 0xffff, 0, [rb - 2]
+    arb -2
+    call check_range
 
     # Validate the image will fit to 16-bits when loaded there
     add [binary + 2], [binary + 5], [rb + tgt]
@@ -88,9 +88,10 @@ calc_ea:
     add [reg_sp], [rb + ea], [rb - 1]   # store to param 0
 
     # Wrap around to 20-bit address
-    arb -1
-    call mod_20bit
-    add [rb - 3], 0, [rb + ea]
+    add 0x100000, 0, [rb - 2]
+    arb -2
+    call mod
+    add [rb - 4], 0, [rb + ea]
 
     arb 1
     ret 2
@@ -129,9 +130,10 @@ push:
 .FRAME value;
     # Decrement sp by 2
     add [reg_sp], -2, [rb - 1]
-    arb -1
-    call mod_16bit
-    add [rb - 3], 0, [reg_sp]
+    add 0x10000, 0, [rb - 2]
+    arb -2
+    call mod
+    add [rb - 4], 0, [reg_sp]
 
     # Calculate EA
     add [reg_ss], 0, [rb - 1]
@@ -167,9 +169,10 @@ pop:
 
     # Increment sp by 2
     add [reg_sp], 2, [rb - 1]
-    arb -1
-    call mod_16bit
-    add [rb - 3], 0, [reg_sp]
+    add 0x10000, 0, [rb - 2]
+    arb -2
+    call mod
+    add [rb - 4], 0, [reg_sp]
 
     arb 1
     ret 0

@@ -19,7 +19,7 @@
 .IMPORT reg_y
 
 # From util
-.IMPORT mod_8bit
+.IMPORT mod
 .IMPORT split_8_4_4
 
 ##########
@@ -247,9 +247,10 @@ execute_cmp_cpr_generic:
 
     # Wrap around diff to 8 bits
     add [rb + diff], 0, [rb - 1]
-    arb -1
-    call mod_8bit
-    add [rb - 3], 0, [rb + diff]
+    add 0x100, 0, [rb - 2]
+    arb -2
+    call mod
+    add [rb - 4], 0, [rb + diff]
 
     # Update flags
     lt  127, [rb + diff], [flag_negative]
