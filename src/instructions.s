@@ -1,5 +1,15 @@
 .EXPORT instructions
 
+# From arg_reg.s
+.IMPORT arg_reg_ax
+.IMPORT arg_reg_cx
+.IMPORT arg_reg_dx
+.IMPORT arg_reg_bx
+.IMPORT arg_reg_sp
+.IMPORT arg_reg_bp
+.IMPORT arg_reg_si
+.IMPORT arg_reg_di
+
 # From exec.s
 .IMPORT execute_nop
 .IMPORT invalid_opcode
@@ -13,9 +23,9 @@
 .IMPORT execute_cli
 .IMPORT execute_sti
 
-# From params.s
-# TODO .IMPORT immediate
-# TODO .IMPORT zeropage
+# From inc_dec.s
+.IMPORT execute_inc_w
+.IMPORT execute_dec_w
 
 # iAPX 86, 88 User's Manual; August 1981; pages 4-27 to 4-35
 
@@ -100,23 +110,23 @@ instructions:
     ds 2, 0 # TODO    db  execute_segment_prefix, arg_reg_ds              # 0x3e DS: (segment override prefix)
     ds 2, 0 # TODO    db  execute_aas, 0                                  # 0x3f AAS
 
-    ds 2, 0 # TODO    db  execute_inc_w, arg_reg_ax                       # 0x40 INC AX
-    ds 2, 0 # TODO    db  execute_inc_w, arg_reg_cx                       # 0x41 INC CX
-    ds 2, 0 # TODO    db  execute_inc_w, arg_reg_dx                       # 0x42 INC DX
-    ds 2, 0 # TODO    db  execute_inc_w, arg_reg_bx                       # 0x43 INC BX
-    ds 2, 0 # TODO    db  execute_inc_w, arg_reg_sp                       # 0x44 INC SP
-    ds 2, 0 # TODO    db  execute_inc_w, arg_reg_bp                       # 0x45 INC BP
-    ds 2, 0 # TODO    db  execute_inc_w, arg_reg_si                       # 0x46 INC SI
-    ds 2, 0 # TODO    db  execute_inc_w, arg_reg_di                       # 0x47 INC DI
+    db  execute_inc_w, arg_reg_ax                       # 0x40 INC AX
+    db  execute_inc_w, arg_reg_cx                       # 0x41 INC CX
+    db  execute_inc_w, arg_reg_dx                       # 0x42 INC DX
+    db  execute_inc_w, arg_reg_bx                       # 0x43 INC BX
+    db  execute_inc_w, arg_reg_sp                       # 0x44 INC SP
+    db  execute_inc_w, arg_reg_bp                       # 0x45 INC BP
+    db  execute_inc_w, arg_reg_si                       # 0x46 INC SI
+    db  execute_inc_w, arg_reg_di                       # 0x47 INC DI
 
-    ds 2, 0 # TODO    db  execute_dec_w, arg_reg_ax                       # 0x48 DEC AX
-    ds 2, 0 # TODO    db  execute_dec_w, arg_reg_cx                       # 0x49 DEC CX
-    ds 2, 0 # TODO    db  execute_dec_w, arg_reg_dx                       # 0x4a DEC DX
-    ds 2, 0 # TODO    db  execute_dec_w, arg_reg_bx                       # 0x4b DEC BX
-    ds 2, 0 # TODO    db  execute_dec_w, arg_reg_sp                       # 0x4c DEC SP
-    ds 2, 0 # TODO    db  execute_dec_w, arg_reg_bp                       # 0x4d DEC BP
-    ds 2, 0 # TODO    db  execute_dec_w, arg_reg_si                       # 0x4e DEC SI
-    ds 2, 0 # TODO    db  execute_dec_w, arg_reg_di                       # 0x4f DEC DI
+    db  execute_dec_w, arg_reg_ax                       # 0x48 DEC AX
+    db  execute_dec_w, arg_reg_cx                       # 0x49 DEC CX
+    db  execute_dec_w, arg_reg_dx                       # 0x4a DEC DX
+    db  execute_dec_w, arg_reg_bx                       # 0x4b DEC BX
+    db  execute_dec_w, arg_reg_sp                       # 0x4c DEC SP
+    db  execute_dec_w, arg_reg_bp                       # 0x4d DEC BP
+    db  execute_dec_w, arg_reg_si                       # 0x4e DEC SI
+    db  execute_dec_w, arg_reg_di                       # 0x4f DEC DI
 
     ds 2, 0 # TODO    db  execute_push_w, arg_reg_ax                      # 0x50 PUSH AX
     ds 2, 0 # TODO    db  execute_push_w, arg_reg_cx                      # 0x51 PUSH CX

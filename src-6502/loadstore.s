@@ -147,7 +147,7 @@ execute_tya:
 ##########
 execute_txs:
 .FRAME
-    add [reg_x], 0, [reg_sp]
+    add [reg_x], 0, [reg_spxxx]
 
     ret 0
 .ENDFRAME
@@ -155,7 +155,7 @@ execute_txs:
 ##########
 execute_tsx:
 .FRAME
-    add [reg_sp], 0, [reg_x]
+    add [reg_spxxx], 0, [reg_x]
 
     lt  0x7f, [reg_x], [flag_negative]
     eq  [reg_x], 0, [flag_zero]

@@ -1,11 +1,18 @@
 .EXPORT reg_ip
 
+.EXPORT reg_ax
 .EXPORT reg_al
 .EXPORT reg_ah
+
+.EXPORT reg_bx
 .EXPORT reg_bl
 .EXPORT reg_bh
+
+.EXPORT reg_cx
 .EXPORT reg_cl
 .EXPORT reg_ch
+
+.EXPORT reg_dx
 .EXPORT reg_dl
 .EXPORT reg_dh
 
@@ -53,18 +60,25 @@
 reg_ip:
     db  0
 
+reg_ax:
 reg_al:
     db  0
 reg_ah:
     db  0
+
+reg_bx:
 reg_bl:
     db  0
 reg_bh:
     db  0
+
+reg_cx:
 reg_cl:
     db  0
 reg_ch:
     db  0
+
+reg_dx:
 reg_dl:
     db  0
 reg_dh:
@@ -72,11 +86,18 @@ reg_dh:
 
 reg_sp:
     db  0
+    db  0
+
 reg_bp:
     db  0
+    db  0
+
 reg_si:
     db  0
+    db  0
+
 reg_di:
+    db  0
     db  0
 
 reg_cs:

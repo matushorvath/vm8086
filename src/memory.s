@@ -1,5 +1,5 @@
 .EXPORT init_memory
-.EXPORT calc_ea
+#.EXPORT calc_ea
 
 .EXPORT read_b
 .EXPORT read_w
@@ -83,25 +83,6 @@ init_memory_done:
 .ENDFRAME
 
 ##########
-calc_ea:
-.FRAME seg, off; ea                     # returns ea
-    arb -1
-
-    # Calculate the EA
-    mul [reg_ss], 16, [rb + ea]
-    add [reg_sp], [rb + ea], [rb - 1]   # store to param 0
-
-    # Wrap around to 20-bit address
-    add 0x100000, 0, [rb - 2]
-    arb -2
-    call mod
-    add [rb - 4], 0, [rb + ea]
-
-    arb 1
-    ret 2
-.ENDFRAME
-
-##########
 read_b:
 .FRAME addr; value                      # returns value
     arb -1
@@ -174,21 +155,42 @@ image_too_big_error:
 .EOF
 
 
-TODO
+
+TODO code below doesn't work with split 16-bit registers
+
+##########
+calc_ea:
+.FRAME seg, off; ea                     # returns ea
+    arb -1
+
+    # Calculate the EA
+    mul [reg_ss], 16, [rb + ea]
+    add [reg_spxxx], [rb + ea], [rb - 1]   # store to param 0
+
+    # Wrap around to 20-bit address
+    add 0x100000, 0, [rb - 2]
+    arb -2
+    call mod
+    add [rb - 4], 0, [rb + ea]
+
+    arb 1
+    ret 2
+.ENDFRAME
+
 
 ##########
 push:
 .FRAME value;
     # Decrement sp by 2
-    add [reg_sp], -2, [rb - 1]
+    add [reg_spxxx], -2, [rb - 1]
     add 0x10000, 0, [rb - 2]
     arb -2
     call mod
-    add [rb - 4], 0, [reg_sp]
+    add [rb - 4], 0, [reg_spxxx]
 
     # Calculate EA
     add [reg_ss], 0, [rb - 1]
-    add [reg_sp], 0, [rb - 2]
+    add [reg_spxxx], 0, [rb - 2]
     arb -2
     call calc_ea
     add [rb - 4], 0, [rb - 1]           # return -> param 0
@@ -208,7 +210,7 @@ pop:
 
     # Calculate EA
     add [reg_ss], 0, [rb - 1]
-    add [reg_sp], 0, [rb - 2]
+    add [reg_spxxx], 0, [rb - 2]
     arb -2
     call calc_ea
     add [rb - 4], 0, [rb - 1]           # return -> param 0
@@ -219,11 +221,11 @@ pop:
     add [rb - 3], 0, [rb + value]
 
     # Increment sp by 2
-    add [reg_sp], 2, [rb - 1]
+    add [reg_spxxx], 2, [rb - 1]
     add 0x10000, 0, [rb - 2]
     arb -2
     call mod
-    add [rb - 4], 0, [reg_sp]
+    add [rb - 4], 0, [reg_spxxx]
 
     arb 1
     ret 0
