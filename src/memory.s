@@ -34,7 +34,7 @@ init_memory:
 
     # Validate the image will fit to 16-bits when loaded there
     add [binary + 2], [binary + 5], [rb + tgt]
-    lt  65536, [rb + tgt], [rb + tmp]
+    lt  0x10000, [rb + tgt], [rb + tmp]
     jz  [rb + tmp], init_memory_load_address_ok
 
     add image_too_big_error, 0, [rb - 1]

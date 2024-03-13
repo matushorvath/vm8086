@@ -57,7 +57,7 @@ execute_pla:
     add [rb - 2], 0, [reg_a]
 
     # Update flags
-    lt  127, [reg_a], [flag_negative]
+    lt  0x7f, [reg_a], [flag_negative]
     eq  [reg_a], 0, [flag_zero]
 
     ret 0

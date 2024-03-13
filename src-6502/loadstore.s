@@ -33,7 +33,7 @@ execute_lda:
     call read
     add [rb - 3], 0, [reg_a]
 
-    lt  127, [reg_a], [flag_negative]
+    lt  0x7f, [reg_a], [flag_negative]
     eq  [reg_a], 0, [flag_zero]
 
     ret 1
@@ -47,7 +47,7 @@ execute_ldx:
     call read
     add [rb - 3], 0, [reg_x]
 
-    lt  127, [reg_x], [flag_negative]
+    lt  0x7f, [reg_x], [flag_negative]
     eq  [reg_x], 0, [flag_zero]
 
     ret 1
@@ -61,7 +61,7 @@ execute_ldy:
     call read
     add [rb - 3], 0, [reg_y]
 
-    lt  127, [reg_y], [flag_negative]
+    lt  0x7f, [reg_y], [flag_negative]
     eq  [reg_y], 0, [flag_zero]
 
     ret 1
@@ -105,7 +105,7 @@ execute_tax:
 .FRAME
     add [reg_a], 0, [reg_x]
 
-    lt  127, [reg_x], [flag_negative]
+    lt  0x7f, [reg_x], [flag_negative]
     eq  [reg_x], 0, [flag_zero]
 
     ret 0
@@ -116,7 +116,7 @@ execute_tay:
 .FRAME
     add [reg_a], 0, [reg_y]
 
-    lt  127, [reg_y], [flag_negative]
+    lt  0x7f, [reg_y], [flag_negative]
     eq  [reg_y], 0, [flag_zero]
 
     ret 0
@@ -127,7 +127,7 @@ execute_txa:
 .FRAME
     add [reg_x], 0, [reg_a]
 
-    lt  127, [reg_a], [flag_negative]
+    lt  0x7f, [reg_a], [flag_negative]
     eq  [reg_a], 0, [flag_zero]
 
     ret 0
@@ -138,7 +138,7 @@ execute_tya:
 .FRAME
     add [reg_y], 0, [reg_a]
 
-    lt  127, [reg_a], [flag_negative]
+    lt  0x7f, [reg_a], [flag_negative]
     eq  [reg_a], 0, [flag_zero]
 
     ret 0
@@ -157,7 +157,7 @@ execute_tsx:
 .FRAME
     add [reg_sp], 0, [reg_x]
 
-    lt  127, [reg_x], [flag_negative]
+    lt  0x7f, [reg_x], [flag_negative]
     eq  [reg_x], 0, [flag_zero]
 
     ret 0

@@ -5,7 +5,7 @@
 
 # Start address for the functional test binary
 # Can be found using bin_files/8086_functional_test.lst, search for "Program start address is at"
-    db  1024        # 0x0400
+    db  0x0400
 TODO cs:ip
 
 # Load address for the functional test binary

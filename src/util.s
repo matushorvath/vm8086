@@ -38,24 +38,24 @@ mod:
 
     # Handle negative value
     lt  [rb + value], 0, [rb + tmp]
-    jnz [rb + tmp], mod_8bit_negative_loop
+    jnz [rb + tmp], mod_negative_loop
 
-mod_8bit_positive_loop:
+mod_positive_loop:
     lt  [rb + value], [rb + divisor], [rb + tmp]
-    jnz [rb + tmp], mod_8bit_done
+    jnz [rb + tmp], mod_done
 
     mul [rb + divisor], -1, [rb + tmp]
     add [rb + value], [rb + tmp], [rb + value]
-    jz  0, mod_8bit_positive_loop
+    jz  0, mod_positive_loop
 
-mod_8bit_negative_loop:
+mod_negative_loop:
     lt  [rb + value], 0, [rb + tmp]
-    jz  [rb + tmp], mod_8bit_done
+    jz  [rb + tmp], mod_done
 
     add [rb + value], [rb + divisor], [rb + value]
-    jz  0, mod_8bit_negative_loop
+    jz  0, mod_negative_loop
 
-mod_8bit_done:
+mod_done:
     add [rb + value], 0, [rb + tmp]
 
     arb 1
@@ -63,7 +63,7 @@ mod_8bit_done:
 .ENDFRAME
 
 ##########
-split_8_4_4:
+split_8_4_4:        # TODO use nibbles.s to implement this much faster
 .FRAME v8; v4h, v4l                                 # returns v4h, v4l
     arb -2
 
@@ -80,7 +80,7 @@ split_8_4_4:
 .ENDFRAME
 
 ##########
-split_16_8_8:
+split_16_8_8:       # TODO this should not be needed, let's store everything as bytes instead, including registers
 .FRAME v16; v8h, v8l                                # returns v8h, v8l
     arb -2
 
@@ -134,7 +134,8 @@ split_hi_lo_zero:
     ret 2
 
 split_hi_lo_pow:
-    db  1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768
+    db  0x0001, 0x0002, 0x0004, 0x0008, 0x0010, 0x0020, 0x0040, 0x0080
+    db  0x0100, 0x0200, 0x0400, 0x0800, 0x1000, 0x2000, 0x4000, 0x8000
 .ENDFRAME
 
 .EOF

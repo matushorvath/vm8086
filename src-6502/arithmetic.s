@@ -87,12 +87,12 @@ execute_adc_not_decimal:
     add [reg_a], [rb + b], [rb + sum]
     add [rb + sum], [flag_carry], [rb + sum]
 
-    # Set carry flag if sum > 255
-    lt 255, [rb + sum], [flag_carry]
+    # Set carry flag if sum > 0xff
+    lt 0xff, [rb + sum], [flag_carry]
 
-    # If carry, reduce sum by 256
+    # If carry, reduce sum by 0x100
     jz  [flag_carry], execute_adc_update_flags
-    add [rb + sum], -256, [rb + sum]
+    add [rb + sum], -0x100, [rb + sum]
 
 execute_adc_update_flags:
     # Update overflow flag
@@ -105,7 +105,7 @@ execute_adc_update_flags:
     # Save the result and update rest of flags
     add [rb + sum], 0, [reg_a]
 
-    lt  127, [reg_a], [flag_negative]
+    lt  0x7f, [reg_a], [flag_negative]
     eq  [reg_a], 0, [flag_zero]
 
     arb 6
@@ -188,9 +188,9 @@ execute_sbc_not_decimal:
     # Set carry flag if diff >= 0
     lt  -1, [rb + diff], [flag_carry]
 
-    # If carry, increase a_hi by 256
+    # If carry, increase a_hi by 0x100
     jnz [flag_carry], execute_sbc_update_flags
-    add [rb + diff], 256, [rb + diff]
+    add [rb + diff], 0x100, [rb + diff]
 
 execute_sbc_update_flags:
     # Update overflow flag
@@ -203,7 +203,7 @@ execute_sbc_update_flags:
     # Save the result and update rest of flags
     add [rb + diff], 0, [reg_a]
 
-    lt  127, [reg_a], [flag_negative]
+    lt  0x7f, [reg_a], [flag_negative]
     eq  [reg_a], 0, [flag_zero]
 
     arb 7
@@ -253,7 +253,7 @@ execute_cmp_cpr_generic:
     add [rb - 4], 0, [rb + diff]
 
     # Update flags
-    lt  127, [rb + diff], [flag_negative]
+    lt  0x7f, [rb + diff], [flag_negative]
     eq  [rb + diff], 0, [flag_zero]
 
     arb 3
@@ -265,9 +265,9 @@ update_overflow:
 .FRAME op1, op2, res; tmp
     arb -1
 
-    lt  127, [rb + op1], [rb + op1]
-    lt  127, [rb + op2], [rb + op2]
-    lt  127, [rb + res], [rb + res]
+    lt  0x7f, [rb + op1], [rb + op1]
+    lt  0x7f, [rb + op2], [rb + op2]
+    lt  0x7f, [rb + res], [rb + res]
 
     eq  [rb + op1], [rb + op2], [rb + tmp]
     jnz [rb + tmp], update_overflow_same_sign

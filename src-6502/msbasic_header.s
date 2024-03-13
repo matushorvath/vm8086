@@ -6,7 +6,7 @@
 TODO cs:ip
 
 # Load address for the MS Basic binary, needs to match the BASROM memory region in $(MSBASICDIR)/vm8086.cfg.
-    db  49152       # 0xc000
+    db  0xc000
 
 # Disable tracing
     db  0
