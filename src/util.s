@@ -55,6 +55,8 @@ check_16bit_invalid_message:
     db  "invalid 16 bit value", 0
 .ENDFRAME
 
+# TODO generic mod function mod(value, divisor)
+
 ##########
 # Calculate value mod 0x100, should only be used if the input is close to output
 mod_8bit:
