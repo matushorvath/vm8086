@@ -1,9 +1,13 @@
 .EXPORT init_memory
 .EXPORT calc_ea
-.EXPORT read
-.EXPORT write
-.EXPORT push
-.EXPORT pop
+
+.EXPORT read_b
+.EXPORT read_w
+.EXPORT write_b
+.EXPORT write_w
+
+#.EXPORT push
+#.EXPORT pop
 
 # From binary.s
 .IMPORT binary
@@ -98,7 +102,7 @@ calc_ea:
 .ENDFRAME
 
 ##########
-read:
+read_b:
 .FRAME addr; value                      # returns value
     arb -1
 
@@ -113,7 +117,26 @@ read:
 .ENDFRAME
 
 ##########
-write:
+read_w:
+.FRAME addr; value_lo, value_hi         # returns value_lo, value_hi
+    arb -2
+
+    add [rb + addr], 0, [rb - 1]
+    arb -1
+    call read_b
+    add [rb - 3], 0, [rb + value_lo]
+
+    add [rb + addr], 1, [rb - 1]
+    arb -1
+    call read_b
+    add [rb - 3], 0, [rb + value_hi]
+
+    arb 2
+    ret 1
+.ENDFRAME
+
+##########
+write_b:
 .FRAME addr, value;
     # TODO support memory mapped IO
     # TODO handle not being able to write to ROM
@@ -124,6 +147,34 @@ write:
 
     ret 2
 .ENDFRAME
+
+##########
+write_w:
+.FRAME addr, value_lo, value_hi;
+    add [rb + addr], 0, [rb - 1]
+    add [rb + value_lo], 0, [rb - 2]
+    arb -2
+    call write_b
+
+    add [rb + addr], 1, [rb - 1]
+    add [rb + value_hi], 0, [rb - 2]
+    arb -2
+    call write_b
+
+    ret 3
+.ENDFRAME
+
+##########
+mem:
+    db 0
+
+image_too_big_error:
+    db  "image too big to load at specified address", 0
+
+.EOF
+
+
+TODO
 
 ##########
 push:
@@ -164,7 +215,7 @@ pop:
 
     # Read the value
     arb -1
-    call read
+    call read_b
     add [rb - 3], 0, [rb + value]
 
     # Increment sp by 2
@@ -177,12 +228,5 @@ pop:
     arb 1
     ret 0
 .ENDFRAME
-
-##########
-mem:
-    db 0
-
-image_too_big_error:
-    db  "image too big to load at specified address", 0
 
 .EOF

@@ -31,7 +31,7 @@
 
 # From util.s
 .IMPORT mod
-.IMPORT split_16_8_8
+.IMPORT split_16_8_8    # split_16_8_8 was removed, hopefully it's not needed for 8086
 
 ##########
 execute_brk:

@@ -12,7 +12,7 @@
 .IMPORT instructions
 
 # From memory.s
-.IMPORT read
+.IMPORT read_b
 
 # From state.s
 .IMPORT reg_ip
@@ -60,7 +60,7 @@ execute_loop:
     # Read op code
     add [reg_ip], 0, [rb - 1]
     arb -1
-    call read
+    call read_b
     add [rb - 3], 0, [rb + op]
 
     # Increase ip
