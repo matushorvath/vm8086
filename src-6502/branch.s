@@ -30,8 +30,8 @@
 .IMPORT unpack_sr
 
 # From util.s
-.IMPORT mod_16bit
-.IMPORT split_16_8_8
+.IMPORT mod
+.IMPORT split_16_8_8    # split_16_8_8 was removed, hopefully it's not needed for 8086
 
 ##########
 execute_brk:
@@ -69,12 +69,12 @@ execute_brk:
     add 1, 0, [flag_interrupt]
 
     # Read the IRQ vector from 0xfffe and 0xffff
-    add 65535, 0, [rb - 1]
+    add 0xffff, 0, [rb - 1]
     arb -1
     call read
-    mul [rb - 3], 256, [reg_ip]           # read(0xffff) * 0x100 -> [reg_ip]
+    mul [rb - 3], 0x100, [reg_ip]           # read(0xffff) * 0x100 -> [reg_ip]
 
-    add 65534, 0, [rb - 1]
+    add 0xfffe, 0, [rb - 1]
     arb -1
     call read
     add [rb - 3], [reg_ip], [reg_ip]      # read(0xfffe) + read(0xffff) * 0x100 -> [reg_ip]
@@ -100,11 +100,12 @@ execute_jsr:
 
     # Decrement ip with wraparound
     add [reg_ip], -1, [rb - 1]
-    arb -1
-    call mod_16bit
+    add 0x10000, 0, [rb - 2]
+    arb -2
+    call mod
 
     # Split the return addres into high and low part
-    add [rb - 3], 0, [rb - 1]
+    add [rb - 4], 0, [rb - 1]
     arb -1
     call split_16_8_8
 
@@ -141,7 +142,7 @@ execute_rti:
     add [rb - 2], 0, [reg_ip]
 
     call pop
-    mul [rb - 2], 256, [rb - 2]
+    mul [rb - 2], 0x100, [rb - 2]
     add [reg_ip], [rb - 2], [reg_ip]
 
     ret 0
@@ -155,14 +156,15 @@ execute_rts:
     add [rb - 2], 0, [reg_ip]
 
     call pop
-    mul [rb - 2], 256, [rb - 2]
+    mul [rb - 2], 0x100, [rb - 2]
     add [reg_ip], [rb - 2], [reg_ip]
 
     # Increment reg_ip by 1 with wraparound
     add [reg_ip], 1, [rb - 1]
-    arb -1
-    call mod_16bit
-    add [rb - 3], 0, [reg_ip]
+    add 0x10000, 0, [rb - 2]
+    arb -2
+    call mod
+    add [rb - 4], 0, [reg_ip]
 
     ret 0
 .ENDFRAME

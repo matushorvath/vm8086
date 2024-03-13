@@ -1,6 +1,7 @@
 # Utility to generate bits.s
 
 .IMPORT print_num
+.IMPORT print_num_radix
 .IMPORT print_str
 
     arb stack
@@ -17,12 +18,12 @@ b7_loop:
                     b2_loop:
                         b1_loop:
                             b0_loop:
-                                # Beginning of the line
+                                # Print line start
                                 add line_start, 0, [rb - 1]
                                 arb -1
                                 call print_str
 
-                                # Print the bits '0, 0, 0, 0, 0, 0, 0, 0'
+                                # Print the bits like '0, 0, 0, 0, 0, 0, 0, 0'
                                 add [b0], 0, [rb - 1]
                                 arb -1
                                 call print_num
@@ -76,30 +77,40 @@ b7_loop:
                                 arb -1
                                 call print_num
 
-                                # End of the line
+                                # Print line end
                                 add line_end, 0, [rb - 1]
                                 arb -1
                                 call print_str
 
-                                # Print the number
-                                add [b7], 0, [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b6], [tmp], [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b5], [tmp], [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b4], [tmp], [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b3], [tmp], [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b2], [tmp], [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b1], [tmp], [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b0], [tmp], [rb - 1]
+                                # Calculate the number
+                                add [b7], 0, [number]
+                                mul [number], 2, [number]
+                                add [b6], [number], [number]
+                                mul [number], 2, [number]
+                                add [b5], [number], [number]
+                                mul [number], 2, [number]
+                                add [b4], [number], [number]
+                                mul [number], 2, [number]
+                                add [b3], [number], [number]
+                                mul [number], 2, [number]
+                                add [b2], [number], [number]
+                                mul [number], 2, [number]
+                                add [b1], [number], [number]
+                                mul [number], 2, [number]
+                                add [b0], [number], [number]
 
-                                arb -1
-                                call print_num
+                                # Pad with zero if needed
+                                lt  [number], 0x10, [tmp]
+                                jz  [tmp], skip_padding
+
+                                out '0'
+
+                            skip_padding:
+                                # Print the number
+                                add [number], 0, [rb - 1]
+                                add 16, 0, [rb - 2]
+                                arb -2
+                                call print_num_radix
 
                                 out 10
 
@@ -149,6 +160,8 @@ b7_loop:
 
     hlt
 
+number:
+    db  0
 b0:
     db  0
 b1:
@@ -173,7 +186,7 @@ header:
 line_start:
     db  "    db  ", 0
 line_end:
-    db  "          # ", 0
+    db  "          # 0x", 0
 footer:
     db  10, ".EOF", 10, 0
 

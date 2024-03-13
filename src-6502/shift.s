@@ -53,15 +53,15 @@ execute_asl_rol_generic:
 
     # Determine new carry
     add 0, 0, [flag_carry]
-    lt  [rb + value], 256, [rb + tmp]
+    lt  [rb + value], 0x100, [rb + tmp]
     jnz [rb + tmp], execute_asl_rol_no_carry
 
     add 1, 0, [flag_carry]
-    add [rb + value], -256, [rb + value]
+    add [rb + value], -0x100, [rb + value]
 
 execute_asl_rol_no_carry:
     # Update flags
-    lt  127, [rb + value], [flag_negative]
+    lt  0x7f, [rb + value], [flag_negative]
     eq  [rb + value], 0, [flag_zero]
 
     # Write back to memory
@@ -84,15 +84,15 @@ execute_asl_a:
 
     # Determine new carry
     add 0, 0, [flag_carry]
-    lt  [reg_a], 256, [rb + tmp]
+    lt  [reg_a], 0x100, [rb + tmp]
     jnz [rb + tmp], execute_asl_a_no_carry
 
     add 1, 0, [flag_carry]
-    add [reg_a], -256, [reg_a]
+    add [reg_a], -0x100, [reg_a]
 
 execute_asl_a_no_carry:
     # Update flags
-    lt  127, [reg_a], [flag_negative]
+    lt  0x7f, [reg_a], [flag_negative]
     eq  [reg_a], 0, [flag_zero]
 
     arb 1
@@ -110,15 +110,15 @@ execute_rol_a:
 
     # Determine new carry
     add 0, 0, [flag_carry]
-    lt  [reg_a], 256, [rb + tmp]
+    lt  [reg_a], 0x100, [rb + tmp]
     jnz [rb + tmp], execute_rol_a_no_carry
 
     add 1, 0, [flag_carry]
-    add [reg_a], -256, [reg_a]
+    add [reg_a], -0x100, [reg_a]
 
 execute_rol_a_no_carry:
     # Update flags
-    lt  127, [reg_a], [flag_negative]
+    lt  0x7f, [reg_a], [flag_negative]
     eq  [reg_a], 0, [flag_zero]
 
     arb 1
@@ -242,7 +242,7 @@ shift_right:
     add [0], 0, [flag_carry]                                # flag_carry = old_value bit 0
 
     # Update flags
-    lt  127, [rb + new_value], [flag_negative]
+    lt  0x7f, [rb + new_value], [flag_negative]
     eq  [rb + new_value], 0, [flag_zero]
 
     # Return new_value (using value_bits)

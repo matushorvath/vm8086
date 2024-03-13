@@ -1,9 +1,13 @@
 .EXPORT init_memory
-.EXPORT calc_ea
-.EXPORT read
-.EXPORT write
-.EXPORT push
-.EXPORT pop
+#.EXPORT calc_ea
+
+.EXPORT read_b
+.EXPORT read_w
+.EXPORT write_b
+.EXPORT write_w
+
+#.EXPORT push
+#.EXPORT pop
 
 # From binary.s
 .IMPORT binary
@@ -16,9 +20,8 @@
 .IMPORT reg_ss
 
 # From util.s
-.IMPORT check_16bit
-.IMPORT mod_16bit
-.IMPORT mod_20bit
+.IMPORT check_range
+.IMPORT mod
 
 ##########
 init_memory:
@@ -29,12 +32,13 @@ init_memory:
 
     # Validate the load address is a valid 16-bit number
     add [binary + 2], 0, [rb - 1]
-    arb -1
-    call check_16bit
+    add 0xffff, 0, [rb - 2]
+    arb -2
+    call check_range
 
     # Validate the image will fit to 16-bits when loaded there
     add [binary + 2], [binary + 5], [rb + tgt]
-    lt  65536, [rb + tgt], [rb + tmp]
+    lt  0x10000, [rb + tgt], [rb + tmp]
     jz  [rb + tmp], init_memory_load_address_ok
 
     add image_too_big_error, 0, [rb - 1]
@@ -79,25 +83,7 @@ init_memory_done:
 .ENDFRAME
 
 ##########
-calc_ea:
-.FRAME seg, off; ea                     # returns ea
-    arb -1
-
-    # Calculate the EA
-    mul [reg_ss], 16, [rb + ea]
-    add [reg_sp], [rb + ea], [rb - 1]   # store to param 0
-
-    # Wrap around to 20-bit address
-    arb -1
-    call mod_20bit
-    add [rb - 3], 0, [rb + ea]
-
-    arb 1
-    ret 2
-.ENDFRAME
-
-##########
-read:
+read_b:
 .FRAME addr; value                      # returns value
     arb -1
 
@@ -112,7 +98,26 @@ read:
 .ENDFRAME
 
 ##########
-write:
+read_w:
+.FRAME addr; value_lo, value_hi         # returns value_lo, value_hi
+    arb -2
+
+    add [rb + addr], 0, [rb - 1]
+    arb -1
+    call read_b
+    add [rb - 3], 0, [rb + value_lo]
+
+    add [rb + addr], 1, [rb - 1]
+    arb -1
+    call read_b
+    add [rb - 3], 0, [rb + value_hi]
+
+    arb 2
+    ret 1
+.ENDFRAME
+
+##########
+write_b:
 .FRAME addr, value;
     # TODO support memory mapped IO
     # TODO handle not being able to write to ROM
@@ -125,17 +130,67 @@ write:
 .ENDFRAME
 
 ##########
+write_w:
+.FRAME addr, value_lo, value_hi;
+    add [rb + addr], 0, [rb - 1]
+    add [rb + value_lo], 0, [rb - 2]
+    arb -2
+    call write_b
+
+    add [rb + addr], 1, [rb - 1]
+    add [rb + value_hi], 0, [rb - 2]
+    arb -2
+    call write_b
+
+    ret 3
+.ENDFRAME
+
+##########
+mem:
+    db 0
+
+image_too_big_error:
+    db  "image too big to load at specified address", 0
+
+.EOF
+
+
+
+TODO code below doesn't work with split 16-bit registers
+
+##########
+calc_ea:
+.FRAME seg, off; ea                     # returns ea
+    arb -1
+
+    # Calculate the EA
+    mul [reg_ss], 16, [rb + ea]
+    add [reg_spxxx], [rb + ea], [rb - 1]   # store to param 0
+
+    # Wrap around to 20-bit address
+    add 0x100000, 0, [rb - 2]
+    arb -2
+    call mod
+    add [rb - 4], 0, [rb + ea]
+
+    arb 1
+    ret 2
+.ENDFRAME
+
+
+##########
 push:
 .FRAME value;
     # Decrement sp by 2
-    add [reg_sp], -2, [rb - 1]
-    arb -1
-    call mod_16bit
-    add [rb - 3], 0, [reg_sp]
+    add [reg_spxxx], -2, [rb - 1]
+    add 0x10000, 0, [rb - 2]
+    arb -2
+    call mod
+    add [rb - 4], 0, [reg_spxxx]
 
     # Calculate EA
     add [reg_ss], 0, [rb - 1]
-    add [reg_sp], 0, [rb - 2]
+    add [reg_spxxx], 0, [rb - 2]
     arb -2
     call calc_ea
     add [rb - 4], 0, [rb - 1]           # return -> param 0
@@ -155,31 +210,25 @@ pop:
 
     # Calculate EA
     add [reg_ss], 0, [rb - 1]
-    add [reg_sp], 0, [rb - 2]
+    add [reg_spxxx], 0, [rb - 2]
     arb -2
     call calc_ea
     add [rb - 4], 0, [rb - 1]           # return -> param 0
 
     # Read the value
     arb -1
-    call read
+    call read_b
     add [rb - 3], 0, [rb + value]
 
     # Increment sp by 2
-    add [reg_sp], 2, [rb - 1]
-    arb -1
-    call mod_16bit
-    add [rb - 3], 0, [reg_sp]
+    add [reg_spxxx], 2, [rb - 1]
+    add 0x10000, 0, [rb - 2]
+    arb -2
+    call mod
+    add [rb - 4], 0, [reg_spxxx]
 
     arb 1
     ret 0
 .ENDFRAME
-
-##########
-mem:
-    db 0
-
-image_too_big_error:
-    db  "image too big to load at specified address", 0
 
 .EOF

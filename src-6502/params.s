@@ -20,8 +20,7 @@
 .IMPORT reg_y
 
 # From util.s
-.IMPORT mod_8bit
-.IMPORT mod_16bit
+.IMPORT mod
 
 ##########
 immediate:
@@ -60,9 +59,10 @@ zeropage_generic:
     call read
     add [rb - 3], [rb + reg], [rb - 1]              # read([reg_ip]) + [reg] -> [param0]
 
-    arb -1
-    call mod_8bit
-    add [rb - 3], 0, [rb + addr]                    # (read([reg_ip]) + [reg]) % 0x100 -> [addr]
+    add 0x100, 0, [rb - 2]
+    arb -2
+    call mod
+    add [rb - 4], 0, [rb + addr]                    # (read([reg_ip]) + [reg]) % 0x100 -> [addr]
 
     call inc_ip
 
@@ -100,12 +100,13 @@ absolute_generic:
     add [reg_ip], 0, [rb - 1]
     arb -1
     call read
-    mul [rb - 3], 256, [rb - 1]                     # read([reg_ip]) * 0x100 -> [param0]
+    mul [rb - 3], 0x100, [rb - 1]                   # read([reg_ip]) * 0x100 -> [param0]
     add [rb - 1], [rb + addr], [rb - 1]             # [param0] + [addr] -> [param0]
 
-    arb -1
-    call mod_16bit
-    add [rb - 3], 0, [rb + addr]                    # (read([reg_ip]) + [reg] + read([reg_ip]) * 0x100) % 0x10000 -> [addr]
+    add 0x10000, 0, [rb - 2]
+    arb -2
+    call mod
+    add [rb - 4], 0, [rb + addr]                    # (read([reg_ip]) + [reg] + read([reg_ip]) * 0x100) % 0x10000 -> [addr]
 
     call inc_ip
 
@@ -127,16 +128,17 @@ indirect8_x:
     call read
     add [rb - 3], [reg_x], [rb - 1]                 # read([reg_ip]) + [reg_x] -> [param0]
 
-    arb -1
-    call mod_8bit
-    add [rb - 3], 0, [rb + tmp]                     # (read([reg_ip]) + [reg_x]) % 0x100 -> [tmp]
+    add 0x100, 0, [rb - 2]
+    arb -2
+    call mod
+    add [rb - 4], 0, [rb + tmp]                     # (read([reg_ip]) + [reg_x]) % 0x100 -> [tmp]
 
     call inc_ip
 
     add [rb + tmp], 1, [rb - 1]                     # [tmp] + 1 -> param0
     arb -1
     call read
-    mul [rb - 3], 256, [rb + addr]                  # read([tmp] + 1) * 0x100 -> [addr]
+    mul [rb - 3], 0x100, [rb + addr]                # read([tmp] + 1) * 0x100 -> [addr]
 
     add [rb + tmp], 0, [rb - 1]
     arb -1
@@ -162,7 +164,7 @@ indirect8_y:
     add [rb + tmp], 1, [rb - 1]                     # [tmp] + 1 -> param0
     arb -1
     call read
-    mul [rb - 3], 256, [rb + addr]                  # read([tmp] + 1) * 0x100 -> [addr]
+    mul [rb - 3], 0x100, [rb + addr]                # read([tmp] + 1) * 0x100 -> [addr]
 
     add [rb + tmp], 0, [rb - 1]
     arb -1
@@ -170,9 +172,10 @@ indirect8_y:
     add [rb - 3], [rb + addr], [rb + addr]          # read([tmp]) + read([tmp] + 1) * 0x100 -> [addr]
     add [rb + addr], [reg_y], [rb - 1]              # read([tmp]) + read([tmp] + 1) * 0x100 + [reg_y] -> [param0]
 
-    arb -1
-    call mod_16bit
-    add [rb - 3], 0, [rb + addr]                    # (read([tmp]) + read([tmp] + 1) * 0x100 + [reg_y]) % 0x10000 -> [addr]
+    add 0x10000, 0, [rb - 2]
+    arb -2
+    call mod
+    add [rb - 4], 0, [rb + addr]                    # (read([tmp]) + read([tmp] + 1) * 0x100 + [reg_y]) % 0x10000 -> [addr]
 
     arb 2
     ret 0
@@ -200,20 +203,21 @@ indirect16:
     # Special way of incrementing the address to get the second byte:
     # Increment the low byte without carry to the high byte
 
-    mul [rb + hi], 256, [rb + hi]                   # [hi] * 0x100 -> [hi]
+    mul [rb + hi], 0x100, [rb + hi]                 # [hi] * 0x100 -> [hi]
     add [rb + lo], 1, [rb - 1]                      # [lo] + 1 -> [param0]
     add [rb + hi], [rb + lo], [rb + lo]             # [hi] + [lo] -> [lo]
 
-    arb -1
-    call mod_8bit
-    add [rb + hi], [rb - 3], [rb + hi]              # [hi] + ([lo] + 1) % 256 -> [hi]
+    add 0x100, 0, [rb - 2]
+    arb -2
+    call mod
+    add [rb + hi], [rb - 4], [rb + hi]              # [hi] + ([lo] + 1) % 0x100 -> [hi]
 
     # Second indirection
 
     add [rb + hi], 0, [rb - 1]
     arb -1
     call read
-    mul [rb - 3], 256, [rb + addr]                  # read([hi]) * 0x100 -> [addr]
+    mul [rb - 3], 0x100, [rb + addr]                # read([hi]) * 0x100 -> [addr]
 
     add [rb + lo], 0, [rb - 1]
     arb -1
@@ -236,18 +240,19 @@ relative:
 
     call inc_ip
 
-    lt  [rb + addr], 128, [rb + tmp]
+    lt  [rb + addr], 0x80, [rb + tmp]
     jnz [rb + tmp], relative_offset_ready
 
     # Negative offset for 0x80-0xff
-    add [rb + addr], -256, [rb + addr]
+    add [rb + addr], -0x100, [rb + addr]
 
 relative_offset_ready:
     add [reg_ip], [rb + addr], [rb - 1]             # [reg_ip] + [addr] -> [param0]
 
-    arb -1
-    call mod_16bit
-    add [rb - 3], 0, [rb + addr]                    # ([reg_ip] + [addr]) % 0x10000 -> [addr]
+    add 0x10000, 0, [rb - 2]
+    arb -2
+    call mod
+    add [rb - 4], 0, [rb + addr]                    # ([reg_ip] + [addr]) % 0x10000 -> [addr]
 
     arb 2
     ret 0

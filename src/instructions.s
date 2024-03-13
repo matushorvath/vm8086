@@ -1,438 +1,372 @@
 .EXPORT instructions
 
+# From arg_reg.s
+.IMPORT arg_reg_ax
+.IMPORT arg_reg_cx
+.IMPORT arg_reg_dx
+.IMPORT arg_reg_bx
+.IMPORT arg_reg_sp
+.IMPORT arg_reg_bp
+.IMPORT arg_reg_si
+.IMPORT arg_reg_di
+
 # From exec.s
-# TODO .IMPORT execute_nop
-# TODO .IMPORT invalid_opcode
+.IMPORT execute_nop
+.IMPORT invalid_opcode
 
-# From params.s
-# TODO .IMPORT immediate
-# TODO .IMPORT zeropage
+# From flags.s
+.IMPORT execute_clc
+.IMPORT execute_stc
+.IMPORT execute_cmc
+.IMPORT execute_cld
+.IMPORT execute_std
+.IMPORT execute_cli
+.IMPORT execute_sti
 
-instructions:
+# From inc_dec.s
+.IMPORT execute_inc_w
+.IMPORT execute_dec_w
 
 # iAPX 86, 88 User's Manual; August 1981; pages 4-27 to 4-35
 
-00 0000 0000 MOD REG RIM (DISP-LO),(DISP-HI) ADD REG81 MEM8, REG8
-01 0000 0001 MOD REG RIM (DISP-LO),(DISP-HI) ADD REG161 M EM16, REG16
-02 0000 0010 MOD REG RIM (DISP-LO),(DISP-HI) ADD REG8, REG81 M EM8
-03 0000 0011 MOD REG RIM (DISP-LO),(DISP-HI) ADD REG16,REG16/MEM16
-04 0000 0100 DATA-8 ADD AL,IMMEDB
-05 0000 0101 DATA-LO DATA-HI ADD AX,IMMED16
-06 0000 0110 PUSH ES
-07 0000 0111 POP ES
+instructions:
+    ds 2, 0 # TODO    db  execute_add_b, arg_mod_reg_rm_src_b             # 0x00 ADD REG8/MEM8, REG8
+    ds 2, 0 # TODO    db  execute_add_w, arg_mod_reg_rm_src_w             # 0x01 ADD REG16/MEM16, REG16
+    ds 2, 0 # TODO    db  execute_add_b, arg_mod_reg_rm_dst_b             # 0x02 ADD REG8, REG8/MEM8
+    ds 2, 0 # TODO    db  execute_add_w, arg_mod_reg_rm_dst_w             # 0x03 ADD REG16, REG16/MEM16
+    ds 2, 0 # TODO    db  execute_add_b, arg_al_immediate_b               # 0x04 ADD AL, IMMED8
+    ds 2, 0 # TODO    db  execute_add_w, arg_ax_immediate_w               # 0x05 ADD AX, IMMED16
 
+    ds 2, 0 # TODO    db  execute_push_w, arg_reg_es                      # 0x06 PUSH ES
+    ds 2, 0 # TODO    db  execute_pop_w, arg_reg_es                       # 0x07 POP ES
 
-08 0000 1000 MOD REG RIM (DISP-LO),(DISP-HI) OR REG8/MEM8,REG8
-09 0000 1001 MOD REG RIM (DISP-LO),(DISP-HI) OR REG16/MEM16,REG16
-OA 0000 1010 MOD REG RIM (DISP-LO),(DISP-HI) OR REG8,REG8/MEM8
-OB 0000 1011 MOD REG RIM (DISP-LO),(DISP-HI) OR REG16,REG16/MEM16
-OC 0000 1100 DATA-8 OR AL,IMMED8
-OD 0000 1101 DATA-LO DATA-HI OR AX,IMMED16
-OE 0000 1110 PUSH CS
-OF 0000 1111 (not used)
-10 0001 0000 MOD REG RIM (DISP-LO),(DISP-HI) ADC REG8/MEM8,REG8
-11 0001 0001 MOD REG RIM (DISP-LO),(DISP-HI) ADC REG16/MEM16,REG16
-12 0001 0010 MOD REG RIM (DISP-LO),(DISP-HI) ADC REG8,REG8/MEM8
-13 0001 0011 MOD REG RIM (DISP-LO),(DISP-HI) ADC REG16,REG16/MEM16
-14 0001 0100 DATA-8 ADC AL,IMMED8
-15 0001 0101 DATA-LO DATA-HI ADC AX,IMMED16
-16 0001 0110 PUSH SS
-17 0001 0111 POP SS
-18 0001 1000 MOD REG RIM (DISP-LO),(DISP-HI) SSS REG8/MEM8,REG8
-19 0001 1001 MOD REG RIM (DISP-LO),(DISP-HI) SSB REG16/MEM16,REG16
-1A 0001 1010 MOD REG RIM (DISP-LO),(DISP-HI) SBB REG8,REG8/MEM8
-18 0001 1011 MOD REG RIM (DISP-LO),(DISP-HI) SBS REG16,REG16/MEM16
-1C 0001 1100 DATA-8 SBB AL,IMMED8
-10 0001 1101 DATA-LO DATA-HI SSS AX,IMMED16
-1E 0001 1110 PUSH DS
-1F 0001 1111 POP OS
-20 0010 0000 MOD REG RIM (DISP-LO),(DISP-HI) AND REG8/MEM8,REG8
-21 0010 0001 MOD REG RIM (DISP-LO),(DISP-HI) AND REG16/MEM16,REG16
-22 0010 0010 MOD REG RIM (DISP-LO),(DISP-HI) AND REG8,REG8/MEM8
-23 0010 0011 MOD REG RIM (DISP-LO),(DISP-HI) AND REG16,REG16/MEM16
-24 0010 0100 DATA-8 AND AL,IMMED8
-25 0010 0101 DATA-LO DATA-HI AND AX,IMMED16
-26 0010 0110 ES: (segment override
-prefix)
-27 0010 0111 DAA
-28 0010 1000 MOD REG RIM (DISP-LO),(DISP-HI) SUS REG8/MEM8,REG8
-29 0010 1001 MOD REG RIM (DISP-LO),(DISP-HI) SUB REG16/MEM16,REG16
-2A 0010 1010 MOD REG RIM (DISP-LO),(DISP-HI) SUB REG8,REG81 MEM8
-2B 0010 1011 MOD REG RIM (DISP-LO,(DISP-HI) SUB REG16,REG16/MEM16
-2C 0010 1100 DATA~8 SUB AL,IMMED8
-2D 0010 1101 DATA-LO DATA-HI SUB AX,IMMED16
-2E 0010 1110 CS: (segment override
-prefix)
-2F 00.10 1111 DAS
-30 0011 0000 MOD REG RIM (DISP-LO),(DISP-HI) XOR REG8/MEM8,REG8
-31 0011 0001 MOD REG RIM (DISP-LO),(DISP-HI) XOR REG161 MEM16,REG16
-32 0011 0010 MOD REG RIM (DISP-LO),(DISP-HI) XOR REG8, REG81 M EM8
-33 0011 0011 .MOD REG RIM (DISP-LO),(DISP-HI) XOR REG16,REG161 MEM16
-34 0011 0100 DATA-8 XOR AL,IMMED8
-35 0011 0101 DATA-LO DATA-HI XOR AX,IMMED16
-36 0011 0110 SS: (segment override
-prefix)
+    ds 2, 0 # TODO    db  execute_or_b, arg_mod_reg_rm_src_b              # 0x08 OR REG8/MEM8, REG8
+    ds 2, 0 # TODO    db  execute_or_w, arg_mod_reg_rm_src_w              # 0x09 OR REG16/MEM16, REG16
+    ds 2, 0 # TODO    db  execute_or_b, arg_mod_reg_rm_dst_b              # 0x0a OR REG8, REG8/MEM8
+    ds 2, 0 # TODO    db  execute_or_w, arg_mod_reg_rm_dst_w              # 0x0b OR REG16, REG16/MEM16
+    ds 2, 0 # TODO    db  execute_or_b, arg_al_immediate_b                # 0x0c OR AL, IMMED8
+    ds 2, 0 # TODO    db  execute_or_w, arg_ax_immediate_w                # 0x0d OR AX, IMMED16
 
-37 0011 0110 AAA
-38 0011 1000 MOD REG RIM (DISP-LO),(DISP-HI) CMP REG8/MEM8,REG8
-39 0011 1001 MOD REG RIM (DISP-LO),(DISP-HI) CMP REG161 MEM16,REG1.6
-3A 0011 1010 MOD REG RIM (DISP-LO),(DISP-HI) CMP REG8, REGSI M EM8
-3B 0011 1011 MOD REG RIM (DISP-LO),(DISP-HI) CMP REG16,REG16/MEM16
-3C 0011 1100 DATA-8 CMP AL,IMMEDS
-3D 0011 1101 DATA-LO DATA-HI CMP AX,IMMED16
-3E 0011 1110 DS: (segment override
-prefix)
-3F 0011 1111 AAS
-40 0100 0000 INC AX
-41 0100 0001 INC CX
-42 0100 0010 INC DX
-43 0100 0011 INC BX
-44 0100 0100 INC SP
-45 0100 0101 INC BP
-46 0100 0110 INC SI
-47 0100 0111 INC DI
-48 0100 1000 DEC AX
-49 0100 1001 DEC CX
-4A 0100 1010 DEC DX
-4B 0100 1011 DEC BX
-4C 0100 1100 DEC SP
-4D 0100 1101 DEC BP
-4E 0100 1110 DEC SI
-. 4F 0100 1111 DEC DI·
-. 50 0101 ·0000 PUSH AX
-51 0101 0001 PUSH CX
-52 0101 0010 ·PUSH DX
-53 0101 0011 PUSH BX
-54 0101 0100 PUSH SP·
-55 0101 0101 PUSH BP
-56 0101 0110 PUSH SI
-57 0101 0111 PUSH DI
-58 0101 1000 POP AX
-59 0101 1001 POP CX
-5A 0101 1010 POP DX
-5B 0101 1011 POP BX
-5C 0101 1100 . POP SP
-5D 0101 1101 POP BP
-5E 0101 1110 POP SI
-5F 0101 1111 POP DI
-60 0110 0000 (not used) .
-61 0110 0001 (not used)
-62 0110 0010 (not used)
-63 0110 0011 (not used)
-64 0110 0100 (not used)
-65 0110 0101 (not used)
-66 0110 0110 (not used)
-67 0110 0111 (not used)
+    ds 2, 0 # TODO    db  execute_push_w, arg_reg_cs                      # 0x0e PUSH CS
+    db  invalid_opcode, 0                               # 0x0f
 
+    ds 2, 0 # TODO    db  execute_adc_b, arg_mod_reg_rm_src_b             # 0x10 ADC REG8/MEM8, REG8
+    ds 2, 0 # TODO    db  execute_adc_w, arg_mod_reg_rm_src_w             # 0x11 ADC REG16/MEM16, REG16
+    ds 2, 0 # TODO    db  execute_adc_b, arg_mod_reg_rm_dst_b             # 0x12 ADC REG8, REG8/MEM8
+    ds 2, 0 # TODO    db  execute_adc_w, arg_mod_reg_rm_dst_w             # 0x13 ADC REG16, REG16/MEM16
+    ds 2, 0 # TODO    db  execute_adc_b, arg_al_immediate_b               # 0x14 ADC AL, IMMED8
+    ds 2, 0 # TODO    db  execute_adc_w, arg_ax_immediate_w               # 0x15 ADC AX, IMMED16
 
-68 0110 1000 (not used)
-69 0110 1001 (not used)
-6A 0110 1010 (not used)
-6B 0110 1011 (not used)
-6C 0110 1100 (not used)
-60 0110 1101 (not used)
-6E 0110 1110 (not used)
-6F 0110 11.11 (not used)
-70 0111 0000 IP-INC8 JO SHORT-LABEL
-71 0111 0001 IP-INC8 JNO SHORT-LABEL
-72 0111 0010 IP-INC8 JB/JNAEI SHORT-LABEL
-JC
-73 0111 0011 IP-INC8 JNB/JAEI SHORT-LABEL
-JNC
-74 0111 0100 IP-INC8 JE/JZ SHORT-LABEL
-75 0111 0101 IP-INC8 JNE/JNZ SHORT-LABEL
-76 0111 0110 IP-INC8 JBE/JNA SHORT-LABEL
-77 0111 0111 IP-INC8 JNBE/JA SHORT-LABEL
-78 0111 1000 IP-INC8 JS SHORT-LABEL
-79 0111 1001 IP-INC8 JNS SHORT-LABEL
-7A 0111 1010 IP-INC8 JP/JPE SHORT-LABEL
-7B 0111 1011 IP-INC8 JNP/JPO SHORT-LABEL
-7C 0111 1100 IP-INC8 JLlJNGE SHORT-LABEL
-70 0111 1101 IP-INC8 JNLlJGE SHORT-LABEL
-7E 0111 1110 IP-INC8 JLE/JNG SHORT-LABEL
-7F 0111 1111 IP-INC8 JNLE/JG SHORT-LABEL
-80 1000 0000 MOD 000 RIM (DISP-LO),(OISP-HI), ADD REG8/MEM8,IMMED8
-DATA-8
-80 1000 0000 MOD 001 RIM (DISP-LO),(DISP-HI), OR REG8/MEM8,IMMED8
-DATA-8
-80 1000 0000 MOD010 RIM (DISP-LO),(DISP-HI), ADC REG8/MEM8,IMMED8
-DATA-8
-80 1000 0000 MOD 011 RIM (DISP-LO),(DISP-HI), SBB REG8/MEM8,IMMED8
-OATA-8
-80 1000 0000 MOD100 RIM (DISP-LO),(DISP-HI), AND REG8/MEM8,IMMED8
-DATA-8
-80 1000 0000 MOD 101 RIM (DISP-LO),(DISP-HI), SUB REG8/MEM8,IMMED8
-DATA-8
-80 1000 0000 MOD110 RIM (DISP-LO),(DISP-HI), XOR REG8/MEM8,IMMED8
-DATA-8
-80 1000 0000 MOD 111 RIM (DISP-LO),(OISP-HI), CMP REG8/MEM8,IMMED8
-DATA-8
-81 1000 0001 MODOOO RIM (DISP-LO),(OISP-HI), ADD REG16/MEM16,IMMED16
-DATA-LO,DATA-HI
-81 1000 0001 MOD 001 RIM (DISP-LO),(DISP-HI), OR REG16/MEM16,IMMED16
-DATA-LO,DATA-HI
-81 1000 0001 MOD010 RIM (DISP-LO),(DISP-HI), AOC REG16/MEM16,IMMED16
-DATA-LO,DATA-HI
-81 1000 0001 MODOll RIM (DISP-LO),(OISP-HI), SBB REG16/MEM16,IMMED16
+    ds 2, 0 # TODO    db  execute_push_w, arg_reg_ss                      # 0x16 PUSH SS
+    ds 2, 0 # TODO    db  execute_pop_w, arg_reg_ss                       # 0x17 POP SS
 
+    ds 2, 0 # TODO    db  execute_sbb_b, arg_mod_reg_rm_src_b             # 0x18 SBB REG8/MEM8, REG8
+    ds 2, 0 # TODO    db  execute_sbb_w, arg_mod_reg_rm_src_w             # 0x19 SBB REG16/MEM16, REG16
+    ds 2, 0 # TODO    db  execute_sbb_b, arg_mod_reg_rm_dst_b             # 0x1a SBB REG8, REG8/MEM8
+    ds 2, 0 # TODO    db  execute_sbb_w, arg_mod_reg_rm_dst_w             # 0x1b SBB REG16, REG16/MEM16
+    ds 2, 0 # TODO    db  execute_sbb_b, arg_al_immediate_b               # 0x1c SBB AL, IMMED8
+    ds 2, 0 # TODO    db  execute_sbb_w, arg_ax_immediate_w               # 0x1d SBB AX, IMMED16
 
-81 1000 0001 MOD100 RIM (DISP-LO),(DISP-HI), AND REG16/MEM16,IMMED16
-DATA-LO,DATA-HI
-81 1000 0001 MOD 101 RIM (DISP-LO),(DISP-HI), SUB REG16/MEM16,IMMED16
-DATA-LO,DATA-HI
-81 1000 0001 MOD110R/M (DISP-LO),(DISP-HI), XOR REG16/MEM16,IMMED16
-DATA-LO,DATA-HI
-81 1000 0001 MOD111 RIM (DISP-LO),(DISP-HI), CMP REG16/MEM16,IMMED16
-DATA-LO,DATA-HI
-82 1000 0010 MODOOOR/M (DISP-LO),(DISP-HI), ADD REG8/MEM8,IMMED8
-DATA-8
-82 1000 0010 MOD 001 RIM (not used)
-82 1000 0010 MOD 010 RIM (DISP-LO),(DISP-HI), ADC REG8/MEM8,IMMED8
-DATA-8
-82 1000 0010 MOD 011 RIM (DISP-LO),(DISP.HI), SBB REG8/MEM8,IMMED8
-DATA-8
-82 1000 0010 MOD 100 RIM (not used)
-82 1000 0010 MOD 101 RIM (DISP-LO),(DISP-HI), SUB REG8/MEM8,IMMED8
-DATA-8
-82 1000 0010 MOD110 RIM (not used)
-82 1000 0010 MOD111 RIM (DISP-LO),(DISP-HI), CMP REG8/MEM8,IMMED8
-DATA-8
-83 1000 0011 MOD 000 RIM (DISP-LO),(DISP-HI), ADD REG16/MEM16,IMtylED8
-DATA-SX
-83 1000 0011 MOD 001 RIM (not used)
-83 1000 0011 MOD 010 RIM (DISP-LO), (DISP-HI), ADC REG16/MEM16,IMMED8
-DATA-SX
-83 1000 0011 MOD011 RIM (DISP-LO),(DISP-HI), SBB REG16/MEM16,IMMED8
-DATA-SX
-83 1000 0011 MOD100 RIM (not used)
-83 1000 0011 MOD101 RIM (DISP-LO),(DISP-HI), SUB REG16/MEM16,IMMED8
-DATA-SX
-83 1000 0011 MOD110 RIM (not used)
-83 1000 0011 MOD 111 RIM (DISP-LO),(DISP-HI), CMP REG16/MEM16,IMMED8
-DATA-SX
-84 1000 0100 MOD REG RIM (DISP-LO),(DISP-HI) TEST REG8/MEM8,REG8
-85 1000 0101 MOD REG RIM (DISP-LO),(DISP-HI) TEST REG16/MEM16,REG16
-86 1000 0110 MOD REG RIM (DISP-LO),(DISP-HI) XCHG REG8,REG8/MEM8
-87 1000 0111 MOD REG RIM (DISP-LO),(DISP-HI) XCHG REG16,REG16/MEM16
-88 1000 1000 MOD REG RIM (DISP-LO),(DISP-HI) MOV REG8/MEM8,REG8
-89 1000 1001 .MOD REG RIM (DISP-LO),(DISP-HI) MOV REG16/MEM16/REG16
-8A 1000 1010 MOD REG RIM (DISP-LO),(DISP-HI) MOV REG8,REG8/MEM8
-8B 1000 1011 MOD REG RIM (DISP-LO),(DISP-HI) MOV REG16,REG16/MEM16
-8C 1000 1100 MODOSRR/M (DISP-LO),(DISP-HI) MOV REG16/MEM16,SEGREG·
-8C 1000 1100 MOD1-R/M (not used)
-8D 1000 1101 MOD REG RIM (DISP-LO),(DISP-HI) LEA REG16,MEM16
-8E 1000 1110 MODOSRR/M (DISP-LO),(DISP-HI) MOV SEGREG,REG16/MEM16
-8E 1000 1110 MOD1-R/M (not used)
-8F 1000 1111 MOD 000 RIM (DISP-LO),(DISP-HI) POP REG16/MEM16
-8F 1000 1111 MOD 001 RIM (not used)
-8F 1000 1111 MOD 010 RIM (not used)
+    ds 2, 0 # TODO    db  execute_push_w, arg_reg_ds                      # 0x1e PUSH SDS
+    ds 2, 0 # TODO    db  execute_pop_w, arg_reg_ds                       # 0x1f POP DS
 
+    ds 2, 0 # TODO    db  execute_and_b, arg_mod_reg_rm_src_b             # 0x20 AND REG8/MEM8, REG8
+    ds 2, 0 # TODO    db  execute_and_w, arg_mod_reg_rm_src_w             # 0x21 AND REG16/MEM16, REG16
+    ds 2, 0 # TODO    db  execute_and_b, arg_mod_reg_rm_dst_b             # 0x22 AND REG8, REG8/MEM8
+    ds 2, 0 # TODO    db  execute_and_w, arg_mod_reg_rm_dst_w             # 0x23 AND REG16, REG16/MEM16
+    ds 2, 0 # TODO    db  execute_and_b, arg_al_immediate_b               # 0x24 AND AL, IMMED8
+    ds 2, 0 # TODO    db  execute_and_w, arg_ax_immediate_w               # 0x25 AND AX, IMMED16
 
-BF 1000 1111 MOD 011 RIM (not used)
-BF 1000 1111 MOD100 RIM (not used)
-BF 1000 1111 MOD 101 RIM (not used)
-BF 1000 1111 MOD110 RIM (not used)
-BF 1000 1111 MOD 111 RIM (not used)
-90 1001 0000 NOP (exchange AX,AX)
-91 1001 0001 XCHG AX,CX
-92 1001 0010 XCHG AX,DX
-93 1001 0011 XCHG AX,BX
-94 1001 0100 XCHG AX,SP
-95 1001 0101 XCHG AX,BP
-96 1001 0110 XCHG AX,SI
-97 1001 0111 XCHG AX,DI
-9B 1001 1000 CBW
-99 1001 1001 CWO
-9A 1001 1010 DISP-LO DISP-HI,SEG-LO, CALL FAR_PROC
-SEG-HI
-9B 1001 1011 WAIT
-9C 1001 1100 PUSHF
-90 1001 1101 POPF
-9E 1001 1110 SAHF
-9F 1001 1111 LAHF
-AD 1010 0000 ADDR-LO ADDR-HI MOV AL,MEMB
-A1 1010 0001 ADDR-LO ADDR-HI MOV AX,MEM16
-A2 1010 0010 ADDR-LO ADDR-HI MOV MEMB,AL
-A3 1010 0011 ADDR-LO ADDR-HI MOV MEM16,AL
-A4 1010 0100 MOVS DEST-STRB,SRC-STRB
-A5 1010 0101 MOVS DEST -STR16,SRC-STR16
-A6 1010 0110 CMPS DEST-STRB,SRC-STRB
-A7 1010 0111 CMPS DEST-STR16,SRC-STR16
-AB 1010 1000 DATA-B TEST AL,IMMEDB
-A9 1010 1001 DATA-LO DATA-HI TEST AX,IMMED16
-AA 1010 1010 STOS DEST-STAB
-AB 1010 1011 STOS DEST-STR16
-AC 1010 1100 LODS SRC-STAB
-AO 1010 1101 LODS SRC-STR16
-AE 1010 1110 SCAS DEST-STRB
-AF 1010 1111 SCAS DEST-STR16
-BO 1011 0000 DATA-B MOV AL,IMMEDB
-B1 1011 0001 DATA-B MOV CL,IMMEDB
-B2 1011 0010 DATA-B MOV DL,IMMEOB
-B3 1011 1011 DATA-B MOV BL,IMMEDB
-B4 . 1011 0100 DATA-B MOV AH,IMMEDB
-B5 1011 0101 DATA-B MOV CH,IMMEDB
-B6 1011 0110 DATA-B MOV DH,IMMEDB
-B7 1011 0111 DATA-B MOV BH,IMMEDB
-BB 1011 1000 DATA-LO DATA-HI MOV AX,IMMED16
-B9 1011 1001 DATA-LO DATA-HI MOV CX,IMMED16
-BA 1011 1010 DATA-LO DATA-HI MOV DX,IMMED16
-BB 1011 1011 DATA-LO DATA-HI MOV BX,IMMED16
+    ds 2, 0 # TODO    db  execute_segment_prefix, arg_reg_es              # 0x26 ES: (segment override prefix)
+    ds 2, 0 # TODO    db  execute_daa, 0                                  # 0x27 DAA
 
+    ds 2, 0 # TODO    db  execute_sub_b, arg_mod_reg_rm_src_b             # 0x28 SUB REG8/MEM8, REG8
+    ds 2, 0 # TODO    db  execute_sub_w, arg_mod_reg_rm_src_w             # 0x29 SUB REG16/MEM16, REG16
+    ds 2, 0 # TODO    db  execute_sub_b, arg_mod_reg_rm_dst_b             # 0x2a SUB REG8, REG8/MEM8
+    ds 2, 0 # TODO    db  execute_sub_w, arg_mod_reg_rm_dst_w             # 0x2b SUB REG16, REG16/MEM16
+    ds 2, 0 # TODO    db  execute_sub_b, arg_al_immediate_b               # 0x2c SUB AL, IMMED8
+    ds 2, 0 # TODO    db  execute_sub_w, arg_ax_immediate_w               # 0x2d SUB AX, IMMED16
 
-BC 1011 1100 DATA-LO DATA-HI MOV SP,IMMED16
-BD 1011 1101 DATA-LO DATA-HI MOV BP,IMMED16
-BE 1011 1110 DATA-LO DATA-HI MOV SI,IMMED16
-BF 1011 1111 DATA-LO DATA-HI MOV DI,IMMED16
-CO 1100 0000 (not used)
-C1 1100 0001 (not used)
-C2 1100 0010 DATA-LO DATA-HI RET IMMED16 (intraseg)
-C3 1100 0011 RET (intrasegment)
-C4 1100 0100 MOD REG RIM (DISP-LO),(DISP-HI) LES REG16,MEM16
-C5 1100 0101 MOD REG RIM (DISP-LO),(DISP-HI) LOS REG16,MEM16
-C6 1100 0110 MODOOO RIM (DISP-LO),(DISP-HI), MOV MEM8,IMMED8
-. DATA-8
-C6 1100 0110 MOD001 RIM . (not used)
-C6 1100 0110 MOD010 RIM (not used)
-C6 1100 0110 MOD 011 RIM (not used)
-C6 1100 0110 MOD100 RIM (not used)
-C6 1100 0110 MOD101 RIM (not used)
-C6 1100 0110 MOD110 RIM (not used)
-C6 1100 0110 MOD 111 RIM (not used)
-C7 1100 0111 MODOOO RIM (DISP-LO),(DISP-HI), MOV MEM16,IMMED16
-DATA-LO,DATA-HI
-C7 1100 0111 MOD001 RIM (not used)
-C7 1100 0111 MOD010 RIM (not used).
-C7 1100 0111 MOD011 RIM (not used)
-C7 1100 0111 MOD100 RIM (not used)
-C7 1100 0111 MOD101R/M (not used)
-C7 1100 0111 MOD 110 RIM (not used)
-C7 1100 0111 MOD111 RIM (not used
-C8 1100 1000 (not used)
-C9 1100 1001 (not used)
-CA 1100 1010 DATA-LO DATA-HI RET IMMED16 (intersegment)
-CB 1100 1011 RET (intersegment)
-CC 1100 1100 INT 3
-CD 1100 1101 DATA-8 INT IMMED8
-CE 1100 1110 INTO
-CF 1100 1111 IRET
-DO 1101 0000 MOD 000 RIM (DISP-LO),(DISP-HI) ROL REG8/MEM8,1
-DO 1101 0000 MOD 001 RIM (DISP-LO),(DISP-HI) ROR REG8/MEM8,1
-DO 1101 0000 MOD010 RIM (DISP-LO),(DISP-HI) RCL REG8/MEM8,1
-DO 1101 0000 MOD011 RIM (DISP-LO),(DISP-HI) RCR REG8/MEM8,1
-DO 1101 0000 MOD 100 RIM (DISP-LO),(DISP-HI) SALISHL REG8/MEM8,1
-DO 1101 0000 MOD101 RIM (DISP-LO),(DISP-HI) SHR REG8/MEM8,1
-DO 1101 0000 MOD110R/M (not used)
-DO 1101 0000 MOD111 RIM (DISP-LO),(DISP-HI) SAR REG8/MEM8,1
-01 1101 0001 MODOOOR/M (DISP-LO),(DISP-HI) ROL REG16/MEM16,1
-01 1101 0001 MOD 001 RIM (DISP-LO),(DISP-HI) ROR REG16/MEM16,1
-01 1101 0001 MOD 010 RIM (DISP-LO),(DISP-HI) RCL REG16/MEM16,1
-01 1101 0001 MOD011 RIM (DISP-LO),(DISP-HI) RCR REG16/MEM16,1
-01 1101 0001 MOD 100 RIM (DISP-LO),(DISP-HI) SALISHL REG16/MEM16,1
-4
+    ds 2, 0 # TODO    db  execute_segment_prefix, arg_reg_cs              # 0x2e CS: (segment override prefix)
+    ds 2, 0 # TODO    db  execute_das, 0                                  # 0x2f DAS
 
+    ds 2, 0 # TODO    db  execute_xor_b, arg_mod_reg_rm_src_b             # 0x30 XOR REG8/MEM8, REG8
+    ds 2, 0 # TODO    db  execute_xor_w, arg_mod_reg_rm_src_w             # 0x31 XOR REG16/MEM16, REG16
+    ds 2, 0 # TODO    db  execute_xor_b, arg_mod_reg_rm_dst_b             # 0x32 XOR REG8, REG8/MEM8
+    ds 2, 0 # TODO    db  execute_xor_w, arg_mod_reg_rm_dst_w             # 0x33 XOR REG16, REG16/MEM16
+    ds 2, 0 # TODO    db  execute_xor_b, arg_al_immediate_b               # 0x34 XOR AL, IMMED8
+    ds 2, 0 # TODO    db  execute_xor_w, arg_ax_immediate_w               # 0x35 XOR AX, IMMED16
 
-01 1101 0001 MOD101 RIM (DISP-LO),(DISP-HI) SHR REG16/MEM16,1
-01 1101 0001 MOD 110 RIM (not used)
-01 1101 0001 MOD111 RIM (DISP-LO),(DISP-HI) SAR REG16/MEM16,1
-02 1101 0010 MOD 000 RIM . (DISP-LO),(DISP-HI) ROL REG8/MEM8,CL
-02 1101 0010 MOD001 RIM (DISP-LO),(DISP-HI) ROR REG8/MEM8,CL
-D2 1101 0010 MOD010 RIM (DISP~LO),(DISP~HI) RCL REG8/MEM8,CL
-D2 1101 ·0010 MOD011 RIM (DISP-LO),(DISP-HI) RCR REG8/MEM8,CL
-D2 1101 0010 MOD100 RIM (DISP-LO),(DISP-HI) SALISHL REG8/MEM8,CL
-D2 1101 0010 MOD101 RIM (DISP-LO),(DISP-HI) SHR REG8/MEM8,CL
-D2 1101 0010 MOD110 RIM (not used)
-D2 1101 0010 MOD11t RIM (DISP-LO) ,(DISP-H I) SAR REG8/MEM8,CL
-D3 1101 0011 MOD 000 RIM (DISP-LO),(DISP-HI) ROL REG16/MEM16,CL
-D3 1101 0011 MOD 001 RIM (DISP-LO),(DISP-HI) ROR REG16/MEM16,CL
-D3 1101 0011 MOD010 RIM (DISP-LO),(DISP-HI) RCL REG16/MEM16,CL
-03 1101 0011 MOD011 RIM (DISP~LO),(DISP-HI) RCR REG16/MEM16,CL
-03 1101 0011 MOD100 RIM (DISP-LO),(DISP-HI) SALISHL REG16/MEM16,CL
-03 1101 0011 MOD101 RIM (DISP-LO),(DISP-HI) SHR REG16/MEM16,CL
-03 1101 0011 MOD110 RIM (not used) .
-03 1101 0011 MOD 111 RIM (DISP~LO),(DISP-HI) SAR REG16/MEM16,CL
-04 1101 0100 00001010 AAM
-D5 1101 0101 00001010 AAD
-D6 1101 0110 (not used) .
-D7 1101 0111 XLAT . SOURCE-TABLE
-D8 1101 1000 MOD 000 RIM
-1XXX MODYYYR/M (DISP-LO), (DISP-HI) ESC OPCODE;SOURCE
-DF 1101 1111 MOD 111 RIM
-EO 1110 0000 IP-INC-8 LOOPNEI SHORT~ABEL
-LOOPNZ
-E1 1110 0001 IP-INC-8 LOOPEI SHORT-LABEL
-LOOPZ
-E2 1110 0010 IP-INC-B LOOP SHORT-LABEL
-E3 1110 0011 IP-INC-8 JCXZ SHORT-LABEL
-E4 1110 0100 DATA-8 IN AL,IMMED8 . ,
-E5 1110 0101 DATA-8 IN AX,IMMED8
-E6 1110 0110 DATA-8 OUT AL,IMMED8
-E7 1110 0111 DATA-8 OUT AX,IMMED8
-E8 1110 1000 IP-INC-LO IP-INC-HI CALL . NEAR-PROC
-E9 1110 1001 IP-INC-LO IP-INC-HI JMP NEAR-LABEL
-EA 1110 1010 IP-LO I P-H I, CS-LO, CS-H I JMP FAR-LABEL
-EB 1110 1011 IP-INC8 JMP . SHORT-LABEL
-EC 1110 1100 IN AL,DX
-ED 1110 1101 IN AX,DX
-EE 1110 1110 OUT AL,DX
-EF 1110 1111 OUT AX,DX
-FO 1111 0000 LOCK (prefix)
-F1 1111 0001 (not used)
-F2 1111 0010 REPNEJREPNZ
-F3 1111 0011 REP/REPE/REPZ
-F4 1111 0100 HLT
-F5 1111 0101 CMC
+    ds 2, 0 # TODO    db  execute_segment_prefix, arg_reg_ss              # 0x36 SS: (segment override prefix)
+    ds 2, 0 # TODO    db  execute_aaa, 0                                  # 0x37 AAA
 
+    ds 2, 0 # TODO    db  execute_cmp_b, arg_mod_reg_rm_src_b             # 0x38 CMP REG8/MEM8, REG8
+    ds 2, 0 # TODO    db  execute_cmp_w, arg_mod_reg_rm_src_w             # 0x39 CMP REG16/MEM16, REG16
+    ds 2, 0 # TODO    db  execute_cmp_b, arg_mod_reg_rm_dst_b             # 0x3a CMP REG8, REG8/MEM8
+    ds 2, 0 # TODO    db  execute_cmp_w, arg_mod_reg_rm_dst_w             # 0x3b CMP REG16, REG16/MEM16
+    ds 2, 0 # TODO    db  execute_cmp_b, arg_al_immediate_b               # 0x3c CMP AL, IMMED8
+    ds 2, 0 # TODO    db  execute_cmp_w, arg_ax_immediate_w               # 0x3d CMP AX, IMMED16
 
-F6 1111 0110 MOD 000 RIM (DISP-LO),(DISP-HI), TEST REGBI M EMB,IM M EDB
-DATA-B
-F6 1111 0110 MOD 001 RIM (not used)
-F6 1111 0110 MOD010 RIM (DISP-LO),(DISP-HI) NOT REGB/MEMB
-F6 1111 0110 MOD011 RIM (DISP-LO),(DISP-HI) NEG REGB/MEMB
-F6 1111 0110 MOD100 RIM (DISP-LO) ,(DISP-H I) MUL REGB/MEMB
-F6 1111 0110 MOD101 RIM (DISP-LO),(DISP-HI) IMUL REGB/MEMB
-F6 1111 0110 MOD110 RIM (DISP-LO),(DISP-HI) DIV REGB/MEMB
-F6 1111 0110 MOD 111 RIM (DISP-LO),(DISP-HI) IDIV REGB/MEMB
-F7 1111 0111 MODOOOR/M (DISP-LO),(DISP-HI), TEST REG16/MEM16.IMMED16
-DATA-LO,DATA-HI
-F7 1111 0111 MOD 001 RIM (not used)
-F7 1111 0111 MOD010R/M (DISP-LO),(DISP-HI) NOT REG16/MEM16
-F7 1111 0111 MOD011 RIM (DISP-LO),(DISP-HI) NEG REG16/MEM16
-F7 1111 0111 MOD100 RIM (DISP-LO),(DISP-HI) MUL REG16/MEM16
-F7 1111 0111 MOD101 RIM (DISP-LO),(DISP-HI) IMUL REG16/MEM16
-F7 1111 0111 MOD110 RIM (DISP-LO),(DISP-HI) DIV REG16/MEM16
-F7 1111 0111 MOD111 RIM (DISP-LO),(DISP-HI) IDIV REG16/MEM16
-FB 1111 1000 CLC
-F9 1111 1001 STC
-FA 1111 1010 CLI
-FB 1111 1,011 STI
-FC 1111 1100 CLD
-FD 1111 1101 STD
-FE 1111 1110 MOD 000 RIM (DISP-LO),(DISP-HI) INC REGB/MEMB
-FE 1111 1110 MOD 001 RIM (DISP-LO),(DISP-HI) DEC REGB/MEMB
-FE 1111 1110 MOD010R/M (not used)
-FE 1111 1110 MOD011 RIM (not used)
-FE 1111 1110 MOD100R/M (not used)
-FE 1111 1110 MOD101 RIM (not used)
-FE 1111 1110 MOD110R/M (not used)
-FE 1111 1110 MOD111 RIM (not used)
-FF 1111 1111 MODOOOR/M (DISP-LO),(DISP-HI) INC MEM16
-FF 1111 1111 MOD 001 RIM (DISP-LO).(DISP-HI) DEC MEM16
-FF 1111 1111 MOD010 RIM (DISP-LO),(DISP-HI) CALL REG16/MEM16 (intra)
-FF 1111 1111 MOD011 RIM (DISP-LO),(DISP-HI) CALL MEM16 (intersegment)
-FF 1111 1111 MOD100 RIM (DISP-LO),(DISP-HI) JMP REG16/MEM16 (intra)
-FF 1111 1111 MOD101 RIM (DISP-LO).(DISP-HI) JMP MEM16 (intersegment)
-FF 1111 1111 MOD 110 RIM (DISP-LO).(DISP-HI) PUSH MEM16
-FF 1111 1111 MOD 111 RIM (not used)
+    ds 2, 0 # TODO    db  execute_segment_prefix, arg_reg_ds              # 0x3e DS: (segment override prefix)
+    ds 2, 0 # TODO    db  execute_aas, 0                                  # 0x3f AAS
 
+    db  execute_inc_w, arg_reg_ax                       # 0x40 INC AX
+    db  execute_inc_w, arg_reg_cx                       # 0x41 INC CX
+    db  execute_inc_w, arg_reg_dx                       # 0x42 INC DX
+    db  execute_inc_w, arg_reg_bx                       # 0x43 INC BX
+    db  execute_inc_w, arg_reg_sp                       # 0x44 INC SP
+    db  execute_inc_w, arg_reg_bp                       # 0x45 INC BP
+    db  execute_inc_w, arg_reg_si                       # 0x46 INC SI
+    db  execute_inc_w, arg_reg_di                       # 0x47 INC DI
 
-                                                             # 100010dw, MOV reg r/m
+    db  execute_dec_w, arg_reg_ax                       # 0x48 DEC AX
+    db  execute_dec_w, arg_reg_cx                       # 0x49 DEC CX
+    db  execute_dec_w, arg_reg_dx                       # 0x4a DEC DX
+    db  execute_dec_w, arg_reg_bx                       # 0x4b DEC BX
+    db  execute_dec_w, arg_reg_sp                       # 0x4c DEC SP
+    db  execute_dec_w, arg_reg_bp                       # 0x4d DEC BP
+    db  execute_dec_w, arg_reg_si                       # 0x4e DEC SI
+    db  execute_dec_w, arg_reg_di                       # 0x4f DEC DI
 
-#    db  "BRK", 0, 1,    execute_brk, 0                      #   0 = 0x00, BRK (Implied)
-#    db  "ORA", 0, 2,    execute_ora, indirect8_x            #   1 = 0x01, ORA (Indirect,X)
-#    db  "HLT", 0, 1,    invalid_opcode, 0                   #   2 = 0x02, HLT
-#    db  0, 0, 0, 0, 0,  invalid_opcode, 0                   #   3 = 0x03
-#    db  0, 0, 0, 0, 0,  invalid_opcode, 0                   #   4 = 0x04
-#    db  "ORA", 0, 2,    execute_ora, zeropage               #   5 = 0x05, ORA (Zero Page)
+    ds 2, 0 # TODO    db  execute_push_w, arg_reg_ax                      # 0x50 PUSH AX
+    ds 2, 0 # TODO    db  execute_push_w, arg_reg_cx                      # 0x51 PUSH CX
+    ds 2, 0 # TODO    db  execute_push_w, arg_reg_dx                      # 0x52 PUSH DX
+    ds 2, 0 # TODO    db  execute_push_w, arg_reg_bx                      # 0x53 PUSH BX
+    ds 2, 0 # TODO    db  execute_push_w, arg_reg_sp                      # 0x54 PUSH SP
+    ds 2, 0 # TODO    db  execute_push_w, arg_reg_bp                      # 0x55 PUSH BP
+    ds 2, 0 # TODO    db  execute_push_w, arg_reg_si                      # 0x56 PUSH SI
+    ds 2, 0 # TODO    db  execute_push_w, arg_reg_di                      # 0x57 PUSH DI
+
+    ds 2, 0 # TODO    db  execute_pop_w, arg_reg_ax                       # 0x58 POP AX
+    ds 2, 0 # TODO    db  execute_pop_w, arg_reg_cx                       # 0x59 POP CX
+    ds 2, 0 # TODO    db  execute_pop_w, arg_reg_dx                       # 0x5a POP DX
+    ds 2, 0 # TODO    db  execute_pop_w, arg_reg_bx                       # 0x5b POP BX
+    ds 2, 0 # TODO    db  execute_pop_w, arg_reg_sp                       # 0x5c POP SP
+    ds 2, 0 # TODO    db  execute_pop_w, arg_reg_bp                       # 0x5d POP BP
+    ds 2, 0 # TODO    db  execute_pop_w, arg_reg_si                       # 0x5e POP SI
+    ds 2, 0 # TODO    db  execute_pop_w, arg_reg_di                       # 0x5f POP DI
+
+    db  invalid_opcode, 0                               # 0x60
+    db  invalid_opcode, 0                               # 0x61
+    db  invalid_opcode, 0                               # 0x62
+    db  invalid_opcode, 0                               # 0x63
+    db  invalid_opcode, 0                               # 0x64
+    db  invalid_opcode, 0                               # 0x65
+    db  invalid_opcode, 0                               # 0x66
+    db  invalid_opcode, 0                               # 0x67
+
+    db  invalid_opcode, 0                               # 0x68
+    db  invalid_opcode, 0                               # 0x69
+    db  invalid_opcode, 0                               # 0x6a
+    db  invalid_opcode, 0                               # 0x6b
+    db  invalid_opcode, 0                               # 0x6c
+    db  invalid_opcode, 0                               # 0x6d
+    db  invalid_opcode, 0                               # 0x6e
+    db  invalid_opcode, 0                               # 0x6f
+
+    ds 2, 0 # TODO    db  execute_jo, arg_short_ptr                       # 0x70 JO SHORT-LABEL
+    ds 2, 0 # TODO    db  execute_jno, arg_short_ptr                      # 0x71 JNO SHORT-LABEL
+    ds 2, 0 # TODO    db  execute_jb, arg_short_ptr                       # 0x72 JB/JNAEI/JC SHORT-LABEL
+    ds 2, 0 # TODO    db  execute_jnb, arg_short_ptr                      # 0x73 JNB/JAEI/JNC SHORT-LABEL
+    ds 2, 0 # TODO    db  execute_jz, arg_short_ptr                       # 0x74 JE/JZ SHORT-LABEL
+    ds 2, 0 # TODO    db  execute_jnz, arg_short_ptr                      # 0x75 JNE/JNZ SHORT-LABEL
+    ds 2, 0 # TODO    db  execute_jna, arg_short_ptr                      # 0x76 JBE/JNA SHORT-LABEL
+    ds 2, 0 # TODO    db  execute_ja, arg_short_ptr                       # 0x77 JNBE/JA SHORT-LABEL
+    ds 2, 0 # TODO    db  execute_js, arg_short_ptr                       # 0x78 JS SHORT-LABEL
+    ds 2, 0 # TODO    db  execute_jns, arg_short_ptr                      # 0x79 JNS SHORT-LABEL
+    ds 2, 0 # TODO    db  execute_jp, arg_short_ptr                       # 0x7a JP/JPE SHORT-LABEL
+    ds 2, 0 # TODO    db  execute_jnp, arg_short_ptr                      # 0x7b JNP/JPO SHORT-LABEL
+    ds 2, 0 # TODO    db  execute_jl, arg_short_ptr                       # 0x7c JL/JNGE SHORT-LABEL
+    ds 2, 0 # TODO    db  execute_jnl, arg_short_ptr                      # 0x7d JNL/JGE SHORT-LABEL
+    ds 2, 0 # TODO    db  execute_jng, arg_short_ptr                      # 0x7e JLE/JNG SHORT-LABEL
+    ds 2, 0 # TODO    db  execute_jg, arg_short_ptr                       # 0x7f JNLE/JG SHORT-LABEL
+
+    # <alop>: 000 ADD, 001 OR, 010 ADC, 011 SBB, 100 AND, 101 SUB, 110 XOR, 111 CMP
+    ds 2, 0 # TODO    db  execute_alop_b, arg_mod_alop_rm_b               # 0x80 <alop> REG8/MEM8, IMMED8
+    ds 2, 0 # TODO    db  execute_alop_w, arg_mod_alop_rm_w               # 0x81 <alop> REG16/MEM16, IMMED16
+
+    # <alop>: 000 ADD,         010 ADC, 011 SBB,          101 SUB,          111 CMP
+    ds 2, 0 # TODO    db  execute_alop_b, arg_mod_alop_rm_ext_b           # 0x82 <alop> REG8/MEM8, IMMED8
+    ds 2, 0 # TODO    db  execute_alop_w, arg_mod_alop_rm_ext_w           # 0x83 <alop> REG16/MEM16, IMMED8 (sign extend)
+
+    ds 2, 0 # TODO    db  execute_test_b, arg_mod_reg_rm_src_b            # 0x84 TEST REG8/MEM8, REG8
+    ds 2, 0 # TODO    db  execute_test_w, arg_mod_reg_rm_src_w            # 0x85 TEST REG16/MEM16, REG16
+    ds 2, 0 # TODO    db  execute_xchg_b, arg_mod_reg_rm_dst_b            # 0x86 XCHG REG8, REG8/MEM8
+    ds 2, 0 # TODO    db  execute_xchg_w, arg_mod_reg_rm_dst_w            # 0x87 XCHG REG16, REG16/MEM16
+
+    ds 2, 0 # TODO    db  execute_mov_b, arg_mod_reg_rm_src_b             # 0x88 MOV REG8/MEM8, REG8
+    ds 2, 0 # TODO    db  execute_mov_w, arg_mod_reg_rm_src_w             # 0x89 MOV REG16/MEM16, REG16
+    ds 2, 0 # TODO    db  execute_mov_b, arg_mod_reg_rm_dst_b             # 0x8a MOV REG8, REG8/MEM8
+    ds 2, 0 # TODO    db  execute_mov_w, arg_mod_reg_rm_dst_w             # 0x8b MOV REG16, REG16/MEM16
+
+    ds 2, 0 # TODO    db  execute_mov_w, arg_mod_1sr_rm_src               # 0x8c MOV REG16/MEM16, SEGREG
+    ds 2, 0 # TODO    db  execute_lea_w, arg_mod_reg_mem_dst_w            # 0x8d LEA REG16, MEM16
+    ds 2, 0 # TODO    db  execute_mov_w, arg_mod_1sr_rm_dst               # 0x8e MOV SEGREG, REG16/MEM16
+    ds 2, 0 # TODO    db  execute_pop_w, arg_mod_000_rm_w                 # 0x8f POP REG16/MEM16
+
+    db  execute_nop, 0                                  # 0x90 NOP (= XCHG AX, AX)
+    ds 2, 0 # TODO    db  execute_xchg_w, arg_reg_cx                      # 0x91 XCHG AX, CX
+    ds 2, 0 # TODO    db  execute_xchg_w, arg_reg_dx                      # 0x92 XCHG AX, DX
+    ds 2, 0 # TODO    db  execute_xchg_w, arg_reg_bx                      # 0x93 XCHG AX, BX
+    ds 2, 0 # TODO    db  execute_xchg_w, arg_reg_sp                      # 0x94 XCHG AX, SP
+    ds 2, 0 # TODO    db  execute_xchg_w, arg_reg_bp                      # 0x95 XCHG AX, BP
+    ds 2, 0 # TODO    db  execute_xchg_w, arg_reg_si                      # 0x96 XCHG AX, SI
+    ds 2, 0 # TODO    db  execute_xchg_w, arg_reg_di                      # 0x97 XCHG AX, DI
+
+    ds 2, 0 # TODO    db  execute_cbw, 0                                  # 0x98 CBW
+    ds 2, 0 # TODO    db  execute_cwd, 0                                  # 0x99 CWD
+    ds 2, 0 # TODO    db  execute_call, arg_far_ptr                       # 0x9a CALL FAR-PROC
+    ds 2, 0 # TODO    db  execute_wait, 0                                 # 0x9b WAIT
+    ds 2, 0 # TODO    db  execute_pushf, 0                                # 0x9c PUSHF
+    ds 2, 0 # TODO    db  execute_popf, 0                                 # 0x9d POPF
+    ds 2, 0 # TODO    db  execute_sahf, 0                                 # 0x9e SAHF
+    ds 2, 0 # TODO    db  execute_lahf, 0                                 # 0x9f LAHF
+
+    ds 2, 0 # TODO    db  execute_mov_b, arg_al_near_ptr_dst_b            # 0xa0 MOV AL, MEM8
+    ds 2, 0 # TODO    db  execute_mov_w, arg_ax_near_ptr_dst_w            # 0xa1 MOV AX, MEM16
+    ds 2, 0 # TODO    db  execute_mov_b, arg_al_near_ptr_src_b            # 0xa2 MOV MEM8, AL
+    ds 2, 0 # TODO    db  execute_mov_w, arg_ax_near_ptr_src_w            # 0xa3 MOV MEM16, AX
+
+    ds 2, 0 # TODO    db  execute_movs_b, 0                               # 0xa4 MOVS DEST-STR8, SRC-STR8
+    ds 2, 0 # TODO    db  execute_movs_w, 0                               # 0xa5 MOVS DEST-STR16, SRC-STR16
+    ds 2, 0 # TODO    db  execute_cmps_b, 0                               # 0xa6 CMPS DEST-STR8, SRC-STR8
+    ds 2, 0 # TODO    db  execute_cmps_w, 0                               # 0xa7 CMPS DEST-STR16, SRC-STR16
+
+    ds 2, 0 # TODO    db  execute_test_b, arg_al_immediate_b              # 0xa8 TEST AL, IMMED8
+    ds 2, 0 # TODO    db  execute_test_w, arg_ax_immediate_w              # 0xa9 TEST AX, IMMED16
+
+    ds 2, 0 # TODO    db  execute_stos_b, 0                               # 0xaa STOS DEST-STR8
+    ds 2, 0 # TODO    db  execute_stos_w, 0                               # 0xab STOS DEST-STR16
+    ds 2, 0 # TODO    db  execute_lods_b, 0                               # 0xac LODS SRC-STR8
+    ds 2, 0 # TODO    db  execute_lods_w, 0                               # 0xad LODS SRC-STR16
+    ds 2, 0 # TODO    db  execute_scas_b, 0                               # 0xae SCAS DEST-STR8
+    ds 2, 0 # TODO    db  execute_scas_w, 0                               # 0xaf SCAS DEST-STR16
+
+    ds 2, 0 # TODO    db  execute_mov_b, arg_al_immediate_b               # 0xb0 MOV AL, IMMED8
+    ds 2, 0 # TODO    db  execute_mov_b, arg_cl_immediate_b               # 0xb1 MOV CL, IMMED8
+    ds 2, 0 # TODO    db  execute_mov_b, arg_dl_immediate_b               # 0xb2 MOV DL, IMMED8
+    ds 2, 0 # TODO    db  execute_mov_b, arg_bl_immediate_b               # 0xb3 MOV BL, IMMED8
+    ds 2, 0 # TODO    db  execute_mov_b, arg_ah_immediate_b               # 0xb4 MOV AH, IMMED8
+    ds 2, 0 # TODO    db  execute_mov_b, arg_ch_immediate_b               # 0xb5 MOV CH, IMMED8
+    ds 2, 0 # TODO    db  execute_mov_b, arg_dh_immediate_b               # 0xb6 MOV DH, IMMED8
+    ds 2, 0 # TODO    db  execute_mov_b, arg_bh_immediate_b               # 0xb7 MOV BH, IMMED8
+
+    ds 2, 0 # TODO    db  execute_mov_w, arg_ax_immediate_w               # 0xb8 MOV AX, IMMED16
+    ds 2, 0 # TODO    db  execute_mov_w, arg_cx_immediate_w               # 0xb9 MOV CX, IMMED16
+    ds 2, 0 # TODO    db  execute_mov_w, arg_dx_immediate_w               # 0xba MOV DX, IMMED16
+    ds 2, 0 # TODO    db  execute_mov_w, arg_bx_immediate_w               # 0xbb MOV BX, IMMED16
+    ds 2, 0 # TODO    db  execute_mov_w, arg_sp_immediate_w               # 0xbc MOV SP, IMMED16
+    ds 2, 0 # TODO    db  execute_mov_w, arg_bp_immediate_w               # 0xbd MOV BP, IMMED16
+    ds 2, 0 # TODO    db  execute_mov_w, arg_si_immediate_w               # 0xbe MOV SI, IMMED16
+    ds 2, 0 # TODO    db  execute_mov_w, arg_di_immediate_w               # 0xbf MOV DI, IMMED16
+
+    db  invalid_opcode, 0                               # 0xc0
+    db  invalid_opcode, 0                               # 0xc1
+
+    ds 2, 0 # TODO    db  execute_ret_near, arg_immediate_w               # 0xc2 RET IMMED16 (within segment)
+    ds 2, 0 # TODO    db  execute_ret_near, arg_zero                      # 0xc3 RET (within segment)
+
+    ds 2, 0 # TODO    db  execute_les_w, arg_mod_reg_mem_dst_w            # 0xc4 LES REG16, MEM16
+    ds 2, 0 # TODO    db  execute_lds_w, arg_mod_reg_mem_dst_w            # 0xc5 LDS REG16, MEM16
+
+    ds 2, 0 # TODO    db  execute_mov_b, arg_mod_000_rm_immediate_b       # 0xc6 MOV MEM8, IMMED8
+    ds 2, 0 # TODO    db  execute_mov_w, arg_mod_000_rm_immediate_w       # 0xc7 MOV MEM16, IMMED16
+
+    db  invalid_opcode, 0                               # 0xc8
+    db  invalid_opcode, 0                               # 0xc9
+
+    ds 2, 0 # TODO    db  execute_ret_far, arg_immediate_w                # 0xca RET IMMED16 (intersegment)
+    ds 2, 0 # TODO    db  execute_ret_far, arg_zero                       # 0xcb RET (intersegment)
+
+    ds 2, 0 # TODO    db  execute_int3, 0                                 # 0xcc INT 3
+    ds 2, 0 # TODO    db  execute_int, arg_immediate_b                    # 0xcd INT IMMED8
+
+    ds 2, 0 # TODO    db  execute_into, 0                                 # 0xce INTO
+    ds 2, 0 # TODO    db  execute_iret, 0                                 # 0xcf IRET
+
+    # <rsop>: 000 ROL, 001 ROR, 010 RCL, 011 RCR, 100 SAL/SHL, 101 SHR,          111 SAR
+    ds 2, 0 # TODO    db  execute_rsop_b, arg_mod_rsop_rm_1_b             # 0xd0 <rsop> REG8/MEM8, 1
+    ds 2, 0 # TODO    db  execute_rsop_w, arg_mod_rsop_rm_1_w             # 0xd1 <rsop> REG16/MEM16, 1
+    ds 2, 0 # TODO    db  execute_rsop_b, arg_mod_rsop_rm_cl_b            # 0xd2 <rsop> REG8/MEM8, CL
+    ds 2, 0 # TODO    db  execute_rsop_w, arg_mod_rsop_rm_cl_w            # 0xd3 <rsop> REG16/MEM16, CL
+
+    ds 2, 0 # TODO    db  execute_aam, 0                                  # 0xd4 AAM
+    ds 2, 0 # TODO    db  execute_aad, 0                                  # 0xd5 AAD
+    db  invalid_opcode, 0                               # 0xd6
+    ds 2, 0 # TODO    db  execute_xlat, 0                                 # 0xd7 XLAT SOURCE-TABLE
+
+    ds 2, 0 # TODO    db  execute_esc, arg_esc_000                        # 0xd8 ESC OPCODE, SOURCE (2 bytes)
+    ds 2, 0 # TODO    db  execute_esc, arg_esc_yyy                        # 0xd9 ESC OPCODE, SOURCE (4 bytes)
+    ds 2, 0 # TODO    db  execute_esc, arg_esc_yyy                        # 0xda ESC OPCODE, SOURCE (4 bytes)
+    ds 2, 0 # TODO    db  execute_esc, arg_esc_yyy                        # 0xdb ESC OPCODE, SOURCE (4 bytes)
+    ds 2, 0 # TODO    db  execute_esc, arg_esc_yyy                        # 0xdc ESC OPCODE, SOURCE (4 bytes)
+    ds 2, 0 # TODO    db  execute_esc, arg_esc_yyy                        # 0xdd ESC OPCODE, SOURCE (4 bytes)
+    ds 2, 0 # TODO    db  execute_esc, arg_esc_yyy                        # 0xde ESC OPCODE, SOURCE (4 bytes)
+    ds 2, 0 # TODO    db  execute_esc, arg_esc_111                        # 0xdf ESC OPCODE, SOURCE (2 bytes)
+
+    ds 2, 0 # TODO    db  execute_loopne, arg_short_ptr                   # 0xe0 LOOPNE/LOOPNZ SHORT-LABEL
+    ds 2, 0 # TODO    db  execute_loope, arg_short_ptr                    # 0xe1 LOOPE/LOOPZ SHORT-LABEL
+    ds 2, 0 # TODO    db  execute_loop, arg_short_ptr                     # 0xe2 LOOP SHORT-LABEL
+    ds 2, 0 # TODO    db  execute_jcxz, arg_short_ptr                     # 0xe3 JCXZ SHORT-LABEL
+
+    ds 2, 0 # TODO    db  execute_in_b, arg_al_immediate_b                # 0xe4 IN AL, IMMED8
+    ds 2, 0 # TODO    db  execute_in_w, arg_ax_immediate_w                # 0xe5 IN AX, IMMED8
+    ds 2, 0 # TODO    db  execute_out_b, arg_al_immediate_b               # 0xe6 OUT AL, IMMED8
+    ds 2, 0 # TODO    db  execute_out_w, arg_ax_immediate_w               # 0xe7 OUT AX, IMMED8
+
+    ds 2, 0 # TODO    db  execute_call, arg_near_ptr                      # 0xe8 CALL NEAR-PROC
+    ds 2, 0 # TODO    db  execute_jmp, arg_near_ptr                       # 0xe9 JMP NEAR-LABEL
+    ds 2, 0 # TODO    db  execute_jmp, arg_far_ptr                        # 0xea JMP FAR-LABEL
+    ds 2, 0 # TODO    db  execute_jmp, arg_short_ptr                      # 0xeb JMP SHORT-LABEL
+
+    ds 2, 0 # TODO    db  execute_in_b, arg_al_dx_b                       # 0xe4 IN AL, DX
+    ds 2, 0 # TODO    db  execute_in_w, arg_ax_dx_w                       # 0xe5 IN AX, DX
+    ds 2, 0 # TODO    db  execute_out_b, arg_al_dx_b                      # 0xe6 OUT AL, DX
+    ds 2, 0 # TODO    db  execute_out_w, arg_ax_dx_w                      # 0xe7 OUT AX, DX
+
+    ds 2, 0 # TODO    db  execute_lock, 0                                 # 0xf0 LOCK (prefix)
+    db  invalid_opcode, 0                               # 0xf1
+    ds 2, 0 # TODO    db  execute_repnz, 0                                # 0xf2 REPNE/REPNZ
+    ds 2, 0 # TODO    db  execute_repz, 0                                 # 0xf3 REP/REPE/REPZ
+
+    # HLT instruction is processed as part of the 'execute' loop
+    db  invalid_opcode, 0                               # 0xf4 HLT
+    db  execute_cmc, 0                                  # 0xf5 CMC
+
+    # <tnmd>:
+    # 000 TEST REG/MEM, IMMED
+    # 001 (not used)
+    # 010 NOT REG/MEM
+    # 011 NEG REG/MEM
+    # 100 MUL REG/MEM
+    # 101 IMUL REG/MEM
+    # 110 DIV REG/MEM
+    # 111 IDIV REG/MEM
+    ds 2, 0 # TODO    db  execute_tnmd_b, arg_mod_tnmd_rm_b               # 0xf6 <tnmd> 8-bit
+    ds 2, 0 # TODO    db  execute_tnmd_w, arg_mod_tnmd_rm_w               # 0xf7 <tnmd> 16-bit
+
+    db  execute_clc, 0                                  # 0xf8 CLC
+    db  execute_stc, 0                                  # 0xf9 STC
+    db  execute_cli, 0                                  # 0xfa CLI
+    db  execute_sti, 0                                  # 0xfb STI
+    db  execute_cld, 0                                  # 0xfc CLD
+    db  execute_std, 0                                  # 0xfd STD
+
+    # <feop>:
+    # 000 INC REG8/MEM8
+    # 001 DEC REG8/MEM8
+    # (rest not used)
+    ds 2, 0 # TODO    db  execute_feop_b, arg_mod_feop_rm_b               # 0xfe <feop> REG8/MEM8
+
+    # <fdop>:
+    # 000 INC MEM16
+    # 001 DEC MEM16
+    # 010 CALL REG16/MEM16 (within segment)
+    # 011 CALL MEM16 (intersegment)
+    # 100 JMP REG16/MEM16 (within segment)
+    # 101 JMP MEM16 (intersegment)
+    # 110 PUSH MEM16
+    # 111 (not used)
+    ds 2, 0 # TODO    db  execute_ffop_w, arg_mod_ffop_rm_w               # 0xff <ffop> REG16/MEM16
 
 .EOF

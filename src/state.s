@@ -1,11 +1,18 @@
 .EXPORT reg_ip
 
+.EXPORT reg_ax
 .EXPORT reg_al
 .EXPORT reg_ah
+
+.EXPORT reg_bx
 .EXPORT reg_bl
 .EXPORT reg_bh
+
+.EXPORT reg_cx
 .EXPORT reg_cl
 .EXPORT reg_ch
+
+.EXPORT reg_dx
 .EXPORT reg_dl
 .EXPORT reg_dh
 
@@ -26,14 +33,14 @@
 .EXPORT flag_sign
 .EXPORT flag_overflow
 
-.EXPORT flag_interrupt_enable
+.EXPORT flag_interrupt
 .EXPORT flag_direction
 .EXPORT flag_trap
 
 .EXPORT init_state
 # TODO .EXPORT pack_sr TODO rename sr
 # TODO .EXPORT unpack_sr TODO rename sr
-# TODO .EXPORT inc_ip
+.EXPORT inc_ip
 
 # From binary.s
 .IMPORT binary
@@ -45,7 +52,7 @@
 # TODO .IMPORT read
 
 # From util.s
-.IMPORT check_16bit
+.IMPORT check_range
 
 ##########
 # vm state
@@ -53,18 +60,25 @@
 reg_ip:
     db  0
 
+reg_ax:
 reg_al:
     db  0
 reg_ah:
     db  0
+
+reg_bx:
 reg_bl:
     db  0
 reg_bh:
     db  0
+
+reg_cx:
 reg_cl:
     db  0
 reg_ch:
     db  0
+
+reg_dx:
 reg_dl:
     db  0
 reg_dh:
@@ -72,11 +86,18 @@ reg_dh:
 
 reg_sp:
     db  0
+    db  0
+
 reg_bp:
     db  0
+    db  0
+
 reg_si:
     db  0
+    db  0
+
 reg_di:
+    db  0
     db  0
 
 reg_cs:
@@ -102,7 +123,7 @@ flag_sign:                              # SF
     db  0
 flag_overflow:                          # OF
     db  0
-flag_interrupt_enable:                  # IF
+flag_interrupt:                         # IF
     db  0
 flag_direction:                         # DF
     db  0
@@ -120,18 +141,18 @@ init_state:
 
     # Check if cs:ip is a sane value
     add [reg_ip], 0, [rb - 1]
-    arb -1
-    call check_16bit
+    add 0xffff, 0, [rb - 2]
+    arb -2
+    call check_range
 
     add [reg_cs], 0, [rb - 1]
-    arb -1
-    call check_16bit
+    add 0xffff, 0, [rb - 2]
+    arb -2
+    call check_range
 
     arb 1
     ret 0
 .ENDFRAME
-
-.EOF
 
 ##########
 # Increase ip with wrap around
@@ -141,7 +162,7 @@ inc_ip:
 
     add [reg_ip], 1, [reg_ip]
 
-    eq  [reg_ip], 65536, [rb + tmp]
+    eq  [reg_ip], 0x10000, [rb + tmp]
     jz  [rb + tmp], inc_ip_done
 
     add 0, 0, [reg_ip]
@@ -151,36 +172,39 @@ inc_ip_done:
     ret 0
 .ENDFRAME
 
+.EOF
+
 ##########
 pack_sr: # TODO rename sr
 .FRAME sr                                           # returns sr
     arb -1
 
-    add 16, 32, [rb + sr]                           # 0b0011_0000
+    add 0b00110000, 0, [rb + sr]
 
     jz  [flag_carry], pack_sr_after_carry
-    add [rb + sr], 1, [rb + sr]                     # 0b0000_0001
+    add [rb + sr], 0b00000001, [rb + sr]
 pack_sr_after_carry:
 
     jz  [flag_zero], pack_sr_after_zero
-    add [rb + sr], 2, [rb + sr]                     # 0b0000_0010
+    add [rb + sr], 0b00000010, [rb + sr]
 pack_sr_after_zero:
 
     jz  [flag_interrupt], pack_sr_after_interrupt
-    add [rb + sr], 4, [rb + sr]                     # 0b0000_0100
+    add [rb + sr], 0b00000100, [rb + sr]
 pack_sr_after_interrupt:
 
     jz  [flag_decimal], pack_sr_after_decimal
-    add [rb + sr], 8, [rb + sr]                     # 0b0000_1000
+    add [rb + sr], 0b00001000, [rb + sr]
 pack_sr_after_decimal:
 
     jz  [flag_overflow], pack_sr_after_overflow
-    add [rb + sr], 64, [rb + sr]                    # 0b0100_0000
+    add [rb + sr], 0b01000000, [rb + sr]
 pack_sr_after_overflow:
 
     jz  [flag_negative], pack_sr_after_negative
-    add [rb + sr], 128, [rb + sr]                   # 0b1000_0000
+    add [rb + sr], 0b10000000, [rb + sr]
 pack_sr_after_negative:
+
 
     arb 1
     ret 0
@@ -189,42 +213,42 @@ pack_sr_after_negative:
 ##########
 unpack_sr: # TODO rename sr
 .FRAME sr;
-    lt  127, [rb + sr], [flag_negative]             # 0b1000_0000
+    lt  0b01111111, [rb + sr], [flag_negative]
     jz  [flag_negative], unpack_sr_after_negative
-    add [rb + sr], -128, [rb + sr]
+    add [rb + sr], -0b10000000, [rb + sr]
 unpack_sr_after_negative:
 
-    lt  63, [rb + sr], [flag_overflow]              # 0b0100_0000
+    lt  0b00111111, [rb + sr], [flag_overflow]
     jz  [flag_overflow], unpack_sr_after_overflow
-    add [rb + sr], -64, [rb + sr]
+    add [rb + sr], -0b01000000, [rb + sr]
 unpack_sr_after_overflow:
 
-    lt  31, [rb + sr], [flag_decimal]               # 0b0010_0000; flag_decimal used as tmp
+    lt  0b00011111, [rb + sr], [flag_decimal]               # flag_decimal used as tmp
     jz  [flag_decimal], unpack_sr_after_ignored
-    add [rb + sr], -32, [rb + sr]
+    add [rb + sr], -0b00100000, [rb + sr]
 unpack_sr_after_ignored:
 
-    lt  15, [rb + sr], [flag_decimal]               # 0b0001_0000; flag_decimal used as tmp
+    lt  0b00001111, [rb + sr], [flag_decimal]               # flag_decimal used as tmp
     jz  [flag_decimal], unpack_sr_after_break
-    add [rb + sr], -16, [rb + sr]
+    add [rb + sr], -0b00010000, [rb + sr]
 unpack_sr_after_break:
 
-    lt  7, [rb + sr], [flag_decimal]                # 0b0000_1000
+    lt  0b00000111, [rb + sr], [flag_decimal]
     jz  [flag_decimal], unpack_sr_after_decimal
-    add [rb + sr], -8, [rb + sr]
+    add [rb + sr], -0b00001000, [rb + sr]
 unpack_sr_after_decimal:
 
-    lt  3, [rb + sr], [flag_interrupt]              # 0b0000_0100
+    lt  0b00000011, [rb + sr], [flag_interrupt]
     jz  [flag_interrupt], unpack_sr_after_interrupt
-    add [rb + sr], -4, [rb + sr]
+    add [rb + sr], -0b00000100, [rb + sr]
 unpack_sr_after_interrupt:
 
-    lt  1, [rb + sr], [flag_zero]                   # 0b0000_0010
+    lt  0b00000001, [rb + sr], [flag_zero]
     jz  [flag_zero], unpack_sr_after_zero
-    add [rb + sr], -2, [rb + sr]
+    add [rb + sr], -0b00000010, [rb + sr]
 unpack_sr_after_zero:
 
-    lt  0, [rb + sr], [flag_carry]                  # 0b0000_0001
+    lt  0, [rb + sr], [flag_carry]
 
     ret 1
 .ENDFRAME
