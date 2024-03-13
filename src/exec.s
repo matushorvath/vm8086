@@ -109,8 +109,6 @@ execute_nop:
 ##########
 invalid_opcode:
 .FRAME
-    arb -0
-
     add invalid_opcode_message, 0, [rb - 1]
     arb -1
     call report_error

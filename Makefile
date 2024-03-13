@@ -48,7 +48,7 @@ build-prep:
 # then the (optional) 8086 image header and data.
 
 BASE_OBJS = vm8086.o arg_reg.o bits.o error.o exec.o flags.o inc_dec.o instructions.o memory.o \
-	nibbles.o parity.o state.o util.o
+	nibbles.o parity.o split233.o state.o util.o
 
 VM8086_OBJS = $(BASE_OBJS) binary.o
 
@@ -80,6 +80,12 @@ $(OBJDIR)/parity.s: $(BINDIR)/gen_parity.input
 	$(ICVM) $(BINDIR)/gen_parity.input > $@ || ( cat $@ ; false )
 
 $(BINDIR)/gen_parity.input: $(OBJDIR)/gen_parity.o $(LIBXIB)
+	$(run-ld)
+
+$(OBJDIR)/split233.s: $(BINDIR)/gen_split233.input
+	$(ICVM) $(BINDIR)/gen_split233.input > $@ || ( cat $@ ; false )
+
+$(BINDIR)/gen_split233.input: $(OBJDIR)/gen_split233.o $(LIBXIB)
 	$(run-ld)
 
 # Clean
