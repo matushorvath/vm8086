@@ -5,6 +5,9 @@
 .IMPORT read_w
 .IMPORT write_w
 
+# From nibbles.s
+.IMPORT nibbles
+
 # From parity.s
 .IMPORT parity
 
@@ -20,9 +23,6 @@
 execute_inc_w:
     arb -3
 
-    add 0, 0, [flag_auxiliary_carry]
-    add 0, 0, [flag_overflow]
-
     # Read the value
     add [rb + addr], 0, [rb - 1]
     arb -1
@@ -35,30 +35,36 @@ execute_inc_w:
 
     # Check for carry out of low byte
     lt  [rb + value_lo], 0x100, [rb + tmp]
-    jz  [rb + tmp], execute_inc_w_after_carry_overflow
+    jz  [rb + tmp], execute_inc_w_after_carry
 
-    add 1, 0, [flag_auxiliary_carry]
     add 0, 0, [rb + value_lo]
     add 1, [rb + value_hi], [rb + value_hi]
 
-    # Check for overflow (carry out of high byte)
+    # Check for carry out of high byte
     lt [rb + value_hi], 0x100, [rb + tmp]
-    jz [rb + tmp], execute_inc_w_after_carry_overflow
+    jz [rb + tmp], execute_inc_w_after_carry
 
-    add 1, 0, [flag_overflow]                       # TODO handle INTO
+    # Documentation says this does not update CF
     add 0, 0, [rb + value_hi]
 
-execute_inc_w_after_carry_overflow:
-    # Update other flags
+execute_inc_w_after_carry:
+    # Update flags
     lt  0x7f, [rb + value_hi], [flag_sign]
 
     add [rb + value_lo], [rb + value_hi], [rb + tmp]
     eq  [rb + tmp], 0, [flag_zero]
 
+    # Parity of the low byte only, docs say
     add parity, [rb + value_lo], [ip + 1]
-    eq  [0], 0, [flag_parity]
-    add parity, [rb + value_hi], [ip + 1]
-    eq  [0], [flag_parity], [flag_parity]
+    add [0], 0, [flag_parity]
+
+    # If the low-order half-byte of result is 0x0, it must have been 0xf before
+    mul [rb + value_lo], 2, [ip + 1]
+    add [0], nibbles, [ip + 1]
+    eq  [0], 0, [flag_auxiliary_carry]
+
+    # If the high byte of result is 0x80, it must have been 0x7f before
+    eq  [rb + value_hi], 0x80, [flag_overflow]              # TODO handle INTO
 
     # Write the result
     add [rb + addr], 0, [rb - 1]
@@ -68,46 +74,6 @@ execute_inc_w_after_carry_overflow:
     call write_w
 
     arb 3
-    ret 1
-.ENDFRAME
-
-.EOF
-
-##########
-.FRAME addr; delta
-execute_inc_w:
-    arb -1
-    add 1, 0, [rb + delta]
-
-    jz 0, execute_inc_dec_w
-
-execute_dec_w:
-    arb -1
-    add -1, 0, [rb + delta]
-
-execute_inc_dec_w:
-    add [rb + addr], 0, [rb - 1]
-    arb -1
-    call read
-
-    add [rb - 3], [rb + delta], [rb - 1]            # read() + delta -> param0
-    add 0x10000, 0, [rb - 2]
-    arb -2
-    call mod
-
-    # If lower 
-
-    # TODO AF OF PF
-
-    lt  0x7f, [rb - 4], [flag_sign]
-    eq  [rb - 4], 0, [flag_zero]
-
-    add [rb + addr], 0, [rb - 1]
-    add [rb - 4], 0, [rb - 2]                       # mod() -> param1
-    arb -2
-    call write
-
-    arb 1
     ret 1
 .ENDFRAME
 
