@@ -1,7 +1,5 @@
 .EXPORT decode_mod_rm
-
-# From error.s
-.IMPORT report_error
+.EXPORT decode_reg
 
 # From memory.s
 .IMPORT read_b
@@ -45,20 +43,8 @@
 
 ##########
 decode_mod_rm:
-.FRAME w; loc_type, loc_addr, mod, reg, rm, disp, tmp       # return loc_type, loc_addr
-    arb -7
-
-    # Read the MOD REG R/M byte and split it
-    add [reg_ip], 0, [rb - 1]
-    arb -1
-    call read_b
-    mul [rb - 3], 3, [rb + tmp]
-
-    call inc_ip
-
-    add split233 + 0, [rb + tmp], [rb + rm]
-    add split233 + 1, [rb + tmp], [rb + reg]
-    add split233 + 2, [rb + tmp], [rb + mod]
+.FRAME mod, rm, w; loc_type, loc_addr, disp, tmp       # return loc_type, loc_addr
+    arb -4
 
     # Decode the mod field
     add decode_mod_rm_mod_table, [rb + rm], [ip + 2]
@@ -213,105 +199,10 @@ decode_mod_rm_memory_bx:
 
 decode_mod_rm_memory_direct:
     mul [reg_ds], 0xf, [rb + loc_addr]
-    jz  0, decode_mod_rm_mem_calc
-
-decode_mod_rm_reg:
-    # Register mode, no displacement
-    add 1, 0, [rb + loc_type]                               # return an intcode address of an 8086 register
-
-    # Jump to handling of this R/M value
-    mul [rb + w], 2, [rb + tmp]
-    add [rb + tmp], [rb + rm], [rb + tmp]
-    add decode_mod_rm_reg_table, [rb + tmp], [ip + 2]
-    jz  0, [0]
-
-decode_mod_rm_reg_table:
-    # Map each R/M value to the label that handles it
-    db  decode_mod_rm_reg_al
-    db  decode_mod_rm_reg_cl
-    db  decode_mod_rm_reg_dl
-    db  decode_mod_rm_reg_bl
-    db  decode_mod_rm_reg_ah
-    db  decode_mod_rm_reg_ch
-    db  decode_mod_rm_reg_dh
-    db  decode_mod_rm_reg_bh
-
-    db  decode_mod_rm_reg_ax
-    db  decode_mod_rm_reg_cx
-    db  decode_mod_rm_reg_dx
-    db  decode_mod_rm_reg_bx
-    db  decode_mod_rm_reg_sp
-    db  decode_mod_rm_reg_bp
-    db  decode_mod_rm_reg_si
-    db  decode_mod_rm_reg_di
-
-decode_mod_rm_reg_al:
-    add reg_al, 0, [rb + loc_addr]
-    jz  0, decode_mod_rm_end
-
-decode_mod_rm_reg_cl:
-    add reg_cl, 0, [rb + loc_addr]
-    jz  0, decode_mod_rm_end
-
-decode_mod_rm_reg_dl:
-    add reg_dl, 0, [rb + loc_addr]
-    jz  0, decode_mod_rm_end
-
-decode_mod_rm_reg_bl:
-    add reg_bl, 0, [rb + loc_addr]
-    jz  0, decode_mod_rm_end
-
-decode_mod_rm_reg_ah:
-    add reg_ah, 0, [rb + loc_addr]
-    jz  0, decode_mod_rm_end
-
-decode_mod_rm_reg_ch:
-    add reg_ch, 0, [rb + loc_addr]
-    jz  0, decode_mod_rm_end
-
-decode_mod_rm_reg_dh:
-    add reg_dh, 0, [rb + loc_addr]
-    jz  0, decode_mod_rm_end
-
-decode_mod_rm_reg_bh:
-    add reg_bh, 0, [rb + loc_addr]
-    jz  0, decode_mod_rm_end
-
-decode_mod_rm_reg_ax:
-    add reg_ax, 0, [rb + loc_addr]
-    jz  0, decode_mod_rm_end
-
-decode_mod_rm_reg_cx:
-    add reg_cx, 0, [rb + loc_addr]
-    jz  0, decode_mod_rm_end
-
-decode_mod_rm_reg_dx:
-    add reg_dx, 0, [rb + loc_addr]
-    jz  0, decode_mod_rm_end
-
-decode_mod_rm_reg_bx:
-    add reg_bx, 0, [rb + loc_addr]
-    jz  0, decode_mod_rm_end
-
-decode_mod_rm_reg_sp:
-    add reg_sp, 0, [rb + loc_addr]
-    jz  0, decode_mod_rm_end
-
-decode_mod_rm_reg_bp:
-    add reg_bp, 0, [rb + loc_addr]
-    jz  0, decode_mod_rm_end
-
-decode_mod_rm_reg_si:
-    add reg_si, 0, [rb + loc_addr]
-    jz  0, decode_mod_rm_end
-
-decode_mod_rm_reg_di:
-    add reg_di, 0, [rb + loc_addr]
-    jz  0, decode_mod_rm_end
 
 decode_mod_rm_mem_calc:
-    # Finish calculating the 8086 physical memory address
-    add 1, 0, [rb + loc_type]                               # return an 8086 memory address
+    # Return an 8086 physical memory address
+    add 1, 0, [rb + loc_type]
 
     # Add displacement and wrap around to 20 bits
     add [rb + loc_addr], [rb + disp], [rb - 1]
@@ -320,13 +211,62 @@ decode_mod_rm_mem_calc:
     call mod
     add [rb - 4], 0, [rb + loc_addr]
 
+    jz  0, decode_mod_rm_end
+
+decode_mod_rm_reg:
+    # Register mode, use the same algorithm that is used to decode REG
+
+    add [rb + rm], 0, [rb - 1]
+    add [rb + w], 0, [rb - 2]
+    arb -2
+    call decode_reg
+
+    add [rb - 4], 0, [rb + loc_type]
+    add [rb - 5], 0, [rb + loc_addr]
+
 decode_mod_rm_end:
-    arb 7
-    ret 1
+    arb 4
+    ret 3
+.ENDFRAME
 
-decode_mod_rm_invalid_message:
-    db  "invalid instruction while decoding MOD REG R/M", 0
+##########
+decode_reg:
+.FRAME reg, w; loc_type, loc_addr, tmp                      # return loc_type, loc_addr
+    arb -3
 
+    # Expect reg to be 0-7, w to be 0-1
+
+    # Return the intcode address of an 8086 register
+    add 0, 0, [rb + loc_type]
+
+    # Map the REG value to an intocode address of the corresponding 8086 register
+    mul [rb + w], 2, [rb + tmp]
+    add [rb + tmp], [rb + reg], [rb + tmp]
+    add decode_reg_table, [rb + tmp], [ip + 1]
+    add [0], 0, [rb + loc_addr]
+
+    arb 3
+    ret 2
+
+decode_reg_table:
+    # Map each REG value to the intcode address of corresponding register
+    db  reg_al
+    db  reg_cl
+    db  reg_dl
+    db  reg_bl
+    db  reg_ah
+    db  reg_ch
+    db  reg_dh
+    db  reg_bh
+
+    db  reg_ax
+    db  reg_cx
+    db  reg_dx
+    db  reg_bx
+    db  reg_sp
+    db  reg_bp
+    db  reg_si
+    db  reg_di
 .ENDFRAME
 
 .EOF
