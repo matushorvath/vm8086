@@ -30,15 +30,15 @@ init_memory:
 
     # Initialize memory space for the 8086.
 
-    # Validate the load address is a valid 16-bit number
+    # Validate the load address is a valid 20-bit number
     add [binary + 2], 0, [rb - 1]
-    add 0xffff, 0, [rb - 2]
+    add 0xfffff, 0, [rb - 2]
     arb -2
     call check_range
 
-    # Validate the image will fit to 16-bits when loaded there
+    # Validate the image will fit to 20-bits when loaded there
     add [binary + 2], [binary + 5], [rb + tgt]
-    lt  0x10000, [rb + tgt], [rb + tmp]
+    lt  0x100000, [rb + tgt], [rb + tmp]
     jz  [rb + tmp], init_memory_load_address_ok
 
     add image_too_big_error, 0, [rb - 1]

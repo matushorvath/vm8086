@@ -136,16 +136,16 @@ init_state:
     arb -1
 
     # Load the start address to cs:ip
-    add [binary + 0], 0, [reg_ip]
-    add [binary + 1], 0, [reg_cs]
+    add [binary + 0], 0, [reg_cs]
+    add [binary + 1], 0, [reg_ip]
 
     # Check if cs:ip is a sane value
-    add [reg_ip], 0, [rb - 1]
+    add [reg_cs], 0, [rb - 1]
     add 0xffff, 0, [rb - 2]
     arb -2
     call check_range
 
-    add [reg_cs], 0, [rb - 1]
+    add [reg_ip], 0, [rb - 1]
     add 0xffff, 0, [rb - 2]
     arb -2
     call check_range

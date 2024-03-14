@@ -1,5 +1,5 @@
 # From exec.s
-# TODO .IMPORT execute
+.IMPORT execute
 
 # From memory.s
 .IMPORT init_memory
@@ -20,7 +20,7 @@ main:
     call init_memory
     call init_state
 
-# TODO    call execute
+    call execute
 
     ret 0
 .ENDFRAME

@@ -19,14 +19,14 @@ binary:
 
 # After this we expect:
 #
-# binary_start_address_ip:
-#    db  0x0000       # starting ip value is 0x0000 (default for real hardware)
-#
 # binary_start_address_cs:
 #    db  0xffff       # starting cs value is 0xffff (default for real hardware)
 #
+# binary_start_address_ip:
+#    db  0x0000       # starting ip value is 0x0000 (default for real hardware)
+#
 # binary_load_address:
-#    db  0xc000       # load address of the binary image in 8086 memory
+#    db  0xc0000      # load address of the binary image in 8086 memory
 #
 # tracing:
 #    db  1            # 0 - disable tracing, -1 - trace always, >0 - start tracing after passing that address
