@@ -21,90 +21,98 @@
 # We return address of the first byte of the register.
 
 ##########
-.FRAME addr                             # addr is returned
+.FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
 arg_reg_ax:
-    arb -1
+    arb -2
 
-    add reg_ax, 0, [rb + addr]
+    add 0, 0, [rb + loc_type]
+    add reg_ax, 0, [rb + loc_addr]
 
-    arb 1
+    arb 2
     ret 0
 .ENDFRAME
 
 ##########
-.FRAME addr                             # addr is returned
+.FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
 arg_reg_bx:
-    arb -1
+    arb -2
 
-    add reg_bx, 0, [rb + addr]
+    add 0, 0, [rb + loc_type]
+    add reg_bx, 0, [rb + loc_addr]
 
-    arb 1
+    arb 2
     ret 0
 .ENDFRAME
 
 ##########
-.FRAME addr                             # addr is returned
+.FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
 arg_reg_cx:
-    arb -1
+    arb -2
 
-    add reg_cx, 0, [rb + addr]
+    add 0, 0, [rb + loc_type]
+    add reg_cx, 0, [rb + loc_addr]
 
-    arb 1
+    arb 2
     ret 0
 .ENDFRAME
 
 ##########
-.FRAME addr                             # addr is returned
+.FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
 arg_reg_dx:
-    arb -1
+    arb -2
 
-    add reg_dx, 0, [rb + addr]
+    add 0, 0, [rb + loc_type]
+    add reg_dx, 0, [rb + loc_addr]
 
-    arb 1
+    arb 2
     ret 0
 .ENDFRAME
 
 ##########
-.FRAME addr                             # addr is returned
+.FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
 arg_reg_sp:
-    arb -1
+    arb -2
 
-    add reg_sp, 0, [rb + addr]
+    add 0, 0, [rb + loc_type]
+    add reg_sp, 0, [rb + loc_addr]
 
-    arb 1
+    arb 2
     ret 0
 .ENDFRAME
 
 ##########
-.FRAME addr                             # addr is returned
+.FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
 arg_reg_bp:
-    arb -1
+    arb -2
 
-    add reg_bp, 0, [rb + addr]
+    add 0, 0, [rb + loc_type]
+    add reg_bp, 0, [rb + loc_addr]
 
-    arb 1
+    arb 2
     ret 0
 .ENDFRAME
 
 ##########
-.FRAME addr                             # addr is returned
+.FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
 arg_reg_si:
-    arb -1
+    arb -2
 
-    add reg_si, 0, [rb + addr]
+    add 0, 0, [rb + loc_type]
+    add reg_si, 0, [rb + loc_addr]
 
-    arb 1
+    arb 2
     ret 0
 .ENDFRAME
 
 ##########
-.FRAME addr                             # addr is returned
+.FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
 arg_reg_di:
-    arb -1
+    arb -2
 
-    add reg_di, 0, [rb + addr]
+    add 0, 0, [rb + loc_type]
+    add reg_di, 0, [rb + loc_addr]
 
-    arb 1
+    arb 2
     ret 0
 .ENDFRAME
 

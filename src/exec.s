@@ -79,13 +79,20 @@ execute_loop:
     add instructions + 1, [rb + tmp], [ip + 1]              # args function is at index 1 in the record
     add [0], 0, [rb + args_fn]
 
-    # If there is an args_fn, call it; then call exec_fn with the result as a parameter
+    # If there is an args_fn, call it; then call exec_fn
     jz  [rb + args_fn], execute_no_args_fn
+
+    # Forward 4 return values from args_fn() as parameters to exec_fn. Now, some args_fn() have
+    # fewer than 4 return values, and that does not matter, the unused ones will just contain garbage.
+    # But all exec_fn must have 4 args if they use an args_fn, for the stack arithmetics to work.
 
     call [rb + args_fn]
     add [rb - 2], 0, [rb - 1]
-    arb -1
-    call [rb + exec_fn + 1]     # +1 to compensate for arb -1
+    add [rb - 3], 0, [rb - 2]
+    add [rb - 4], 0, [rb - 3]
+    add [rb - 5], 0, [rb - 4]
+    arb -4
+    call [rb + exec_fn + 4]     # +4 to compensate for the arb -4
 
     jz  0, execute_loop
 
@@ -103,7 +110,7 @@ execute_hlt:
 ##########
 execute_nop:
 .FRAME
-    ret 0
+    ret 4
 .ENDFRAME
 
 ##########

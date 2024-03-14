@@ -35,12 +35,6 @@
 .IMPORT reg_ip
 .IMPORT inc_ip
 
-# loc_type: 0
-# loc_addr: intcode address of an 8086 register
-#
-# loc_type: 1
-# loc_addr: 8086 physical memory address
-
 ##########
 decode_mod_rm:
 .FRAME mod, rm, w; loc_type, loc_addr, disp, tmp       # return loc_type, loc_addr
