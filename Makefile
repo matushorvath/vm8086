@@ -47,8 +47,8 @@ build-prep:
 # The order of the object files matters: First include all the code in any order, then binary.o,
 # then the (optional) 8086 image header and data.
 
-BASE_OBJS = vm8086.o arg_reg.o bits.o error.o exec.o flags.o inc_dec.o instructions.o memory.o \
-	nibbles.o parity.o split233.o state.o util.o
+BASE_OBJS = vm8086.o arg_reg.o bits.o decode.o error.o exec.o flags.o inc_dec.o instructions.o \
+	location.o memory.o nibbles.o parity.o split233.o state.o util.o
 
 VM8086_OBJS = $(BASE_OBJS) binary.o
 
@@ -61,31 +61,16 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.s
 # Intcode does not have a convenient way to manipulate individual bits of a number.
 # For speed and convenience we will sacrifice some memory and memoize a few useful bit operations.
 
+.PRECIOUS: $(OBJDIR)/%.o
 $(OBJDIR)/%.o: $(OBJDIR)/%.s
 	$(run-as)
 
-$(OBJDIR)/bits.s: $(BINDIR)/gen_bits.input
-	$(ICVM) $(BINDIR)/gen_bits.input > $@ || ( cat $@ ; false )
+.PRECIOUS: $(OBJDIR)/%.s
+$(OBJDIR)/%.s: $(OBJDIR)/gen_%.input
+	$(ICVM) $< > $@ || ( cat $@ ; false )
 
-$(BINDIR)/gen_bits.input: $(OBJDIR)/gen_bits.o $(LIBXIB)
-	$(run-ld)
-
-$(OBJDIR)/nibbles.s: $(BINDIR)/gen_nibbles.input
-	$(ICVM) $(BINDIR)/gen_nibbles.input > $@ || ( cat $@ ; false )
-
-$(BINDIR)/gen_nibbles.input: $(OBJDIR)/gen_nibbles.o $(LIBXIB)
-	$(run-ld)
-
-$(OBJDIR)/parity.s: $(BINDIR)/gen_parity.input
-	$(ICVM) $(BINDIR)/gen_parity.input > $@ || ( cat $@ ; false )
-
-$(BINDIR)/gen_parity.input: $(OBJDIR)/gen_parity.o $(LIBXIB)
-	$(run-ld)
-
-$(OBJDIR)/split233.s: $(BINDIR)/gen_split233.input
-	$(ICVM) $(BINDIR)/gen_split233.input > $@ || ( cat $@ ; false )
-
-$(BINDIR)/gen_split233.input: $(OBJDIR)/gen_split233.o $(LIBXIB)
+.PRECIOUS: $(OBJDIR)/gen_%.input
+$(OBJDIR)/gen_%.input: $(OBJDIR)/gen_%.o $(LIBXIB)
 	$(run-ld)
 
 # Clean

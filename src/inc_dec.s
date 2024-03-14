@@ -1,9 +1,9 @@
 .EXPORT execute_inc_w
 .EXPORT execute_dec_w
 
-# From memory.s
-.IMPORT read_w
-.IMPORT write_w
+# From location.s
+.IMPORT read_location_w
+.IMPORT write_location_w
 
 # From nibbles.s
 .IMPORT nibbles
@@ -19,16 +19,17 @@
 .IMPORT flag_overflow
 
 ##########
-.FRAME addr; value_lo, value_hi, tmp
+.FRAME loc_type, loc_addr, _unused_type, _unused_addr; value_lo, value_hi, tmp
 execute_inc_w:
     arb -3
 
     # Read the value
-    add [rb + addr], 0, [rb - 1]
-    arb -1
-    call read_w
-    add [rb - 3], 0, [rb + value_lo]
-    add [rb - 4], 0, [rb + value_hi]
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    arb -2
+    call read_location_w
+    add [rb - 4], 0, [rb + value_lo]
+    add [rb - 5], 0, [rb + value_hi]
 
     # Increment the value
     add [rb + value_lo], 1, [rb + value_lo]
@@ -67,27 +68,29 @@ execute_inc_w_after_carry:
     eq  [rb + value_hi], 0x80, [flag_overflow]              # TODO handle INTO
 
     # Write the result
-    add [rb + addr], 0, [rb - 1]
-    add [rb + value_lo], 0, [rb - 2]
-    add [rb + value_hi], 0, [rb - 3]
-    arb -3
-    call write_w
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + value_lo], 0, [rb - 3]
+    add [rb + value_hi], 0, [rb - 4]
+    arb -4
+    call write_location_w
 
     arb 3
-    ret 1
+    ret 4
 .ENDFRAME
 
 ##########
-.FRAME addr; value_lo, value_hi, tmp
+.FRAME loc_type, loc_addr, _unused_type, _unused_addr; value_lo, value_hi, tmp
 execute_dec_w:
     arb -3
 
     # Read the value
-    add [rb + addr], 0, [rb - 1]
-    arb -1
-    call read_w
-    add [rb - 3], 0, [rb + value_lo]
-    add [rb - 4], 0, [rb + value_hi]
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    arb -2
+    call read_location_w
+    add [rb - 4], 0, [rb + value_lo]
+    add [rb - 5], 0, [rb + value_hi]
 
     # Decrement the value
     add [rb + value_lo], -1, [rb + value_lo]
@@ -126,14 +129,15 @@ execute_dec_w_after_borrow:
     eq  [rb + value_hi], 0x7f, [flag_overflow]              # TODO handle INTO
 
     # Write the result
-    add [rb + addr], 0, [rb - 1]
-    add [rb + value_lo], 0, [rb - 2]
-    add [rb + value_hi], 0, [rb - 3]
-    arb -3
-    call write_w
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + value_lo], 0, [rb - 3]
+    add [rb + value_hi], 0, [rb - 4]
+    arb -4
+    call write_location_w
 
     arb 3
-    ret 1
+    ret 4
 .ENDFRAME
 
 .EOF
