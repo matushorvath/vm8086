@@ -24,7 +24,7 @@ define run-as
 endef
 
 define run-ar
-	echo .L | cat - $^ > $@ || ( cat $@ ; false )
+	cat $^ | sed 's/^.C$$/.L/g' > $@ || ( cat $@ ; false )
 endef
 
 define run-ld
@@ -50,9 +50,9 @@ build-prep:
 BASE_OBJS = vm8086.o arg_reg.o bits.o decode.o error.o exec.o flags.o inc_dec.o instructions.o \
 	location.o memory.o nibbles.o parity.o split233.o state.o util.o
 
-VM8086_OBJS = $(BASE_OBJS) binary.o
+VM8086_OBJS = $(BASE_OBJS) $(LIBXIB) binary.o
 
-$(BINDIR)/vm8086.input: $(addprefix $(OBJDIR)/, $(VM8086_OBJS)) $(LIBXIB)
+$(BINDIR)/vm8086.input: $(VM8086_OBJS:%.o=$(OBJDIR)/%.o)
 	$(run-ld)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.s
