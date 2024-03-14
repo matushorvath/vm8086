@@ -61,31 +61,16 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.s
 # Intcode does not have a convenient way to manipulate individual bits of a number.
 # For speed and convenience we will sacrifice some memory and memoize a few useful bit operations.
 
+.PRECIOUS: $(OBJDIR)/%.o
 $(OBJDIR)/%.o: $(OBJDIR)/%.s
 	$(run-as)
 
-$(OBJDIR)/bits.s: $(BINDIR)/gen_bits.input
-	$(ICVM) $(BINDIR)/gen_bits.input > $@ || ( cat $@ ; false )
+.PRECIOUS: $(OBJDIR)/%.s
+$(OBJDIR)/%.s: $(OBJDIR)/gen_%.input
+	$(ICVM) $< > $@ || ( cat $@ ; false )
 
-$(BINDIR)/gen_bits.input: $(OBJDIR)/gen_bits.o $(LIBXIB)
-	$(run-ld)
-
-$(OBJDIR)/nibbles.s: $(BINDIR)/gen_nibbles.input
-	$(ICVM) $(BINDIR)/gen_nibbles.input > $@ || ( cat $@ ; false )
-
-$(BINDIR)/gen_nibbles.input: $(OBJDIR)/gen_nibbles.o $(LIBXIB)
-	$(run-ld)
-
-$(OBJDIR)/parity.s: $(BINDIR)/gen_parity.input
-	$(ICVM) $(BINDIR)/gen_parity.input > $@ || ( cat $@ ; false )
-
-$(BINDIR)/gen_parity.input: $(OBJDIR)/gen_parity.o $(LIBXIB)
-	$(run-ld)
-
-$(OBJDIR)/split233.s: $(BINDIR)/gen_split233.input
-	$(ICVM) $(BINDIR)/gen_split233.input > $@ || ( cat $@ ; false )
-
-$(BINDIR)/gen_split233.input: $(OBJDIR)/gen_split233.o $(LIBXIB)
+.PRECIOUS: $(OBJDIR)/gen_%.input
+$(OBJDIR)/gen_%.input: $(OBJDIR)/gen_%.o $(LIBXIB)
 	$(run-ld)
 
 # Clean
