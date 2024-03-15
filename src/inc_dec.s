@@ -19,8 +19,8 @@
 .IMPORT flag_overflow
 
 ##########
-.FRAME loc_type, loc_addr, _unused_type, _unused_addr; value_lo, value_hi, tmp
 execute_inc_w:
+.FRAME loc_type, loc_addr, _unused_type, _unused_addr; value_lo, value_hi, tmp
     arb -3
 
     # Read the value
@@ -65,7 +65,7 @@ execute_inc_w_after_carry:
     eq  [0], 0, [flag_auxiliary_carry]
 
     # If the high byte of result is 0x80, it must have been 0x7f before
-    eq  [rb + value_hi], 0x80, [flag_overflow]              # TODO handle INTO
+    eq  [rb + value_hi], 0x80, [flag_overflow]
 
     # Write the result
     add [rb + loc_type], 0, [rb - 1]
@@ -80,8 +80,8 @@ execute_inc_w_after_carry:
 .ENDFRAME
 
 ##########
-.FRAME loc_type, loc_addr, _unused_type, _unused_addr; value_lo, value_hi, tmp
 execute_dec_w:
+.FRAME loc_type, loc_addr, _unused_type, _unused_addr; value_lo, value_hi, tmp
     arb -3
 
     # Read the value
@@ -126,7 +126,7 @@ execute_dec_w_after_borrow:
     eq  [0], 0xf, [flag_auxiliary_carry]
 
     # If the high byte of result is 0x7f, it must have been 0x80 before
-    eq  [rb + value_hi], 0x7f, [flag_overflow]              # TODO handle INTO
+    eq  [rb + value_hi], 0x7f, [flag_overflow]
 
     # Write the result
     add [rb + loc_type], 0, [rb - 1]

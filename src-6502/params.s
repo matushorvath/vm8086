@@ -37,7 +37,7 @@ immediate:
 ##########
 .FRAME addr, reg                                    # addr is returned
     # Multiple entry points for this function, to share the common code without having to add
-    # a parameter (which would not work with the exec.s instructions table mechanism).
+    # a parameter (which would not work with the instruction table mechanism).
 
 zeropage:
     arb -2
@@ -73,7 +73,7 @@ zeropage_generic:
 ##########
 .FRAME addr, reg                                    # addr is returned
     # Multiple entry points for this function, to share the common code without having to add
-    # a parameter (which would not work with the exec.s instructions table mechanism).
+    # a parameter (which would not work with the instruction table mechanism).
 
 absolute:
     arb -2

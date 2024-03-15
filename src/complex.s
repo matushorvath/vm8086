@@ -18,8 +18,8 @@
 # TODO Documentation calls these Immed, Shift, Grp 1 and Grp 2
 
 ##########
-.FRAME addr, mod, reg, rm, tmp          # returns addr
 arg_mod_feop_rm_b:
+.FRAME addr, mod, reg, rm, tmp          # returns addr
     arb -5
 
     # Read the MOD REG R/M byte and split it

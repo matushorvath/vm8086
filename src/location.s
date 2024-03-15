@@ -17,8 +17,8 @@
 # loc_addr: 8086 physical memory address
 
 ##########
-.FRAME loc_type, loc_addr; value                            # returns value
 read_location_b:
+.FRAME loc_type, loc_addr; value                            # returns value
     arb -1
 
     jz  [rb + loc_type], read_location_b_register
@@ -42,8 +42,8 @@ read_location_b_done:
 .ENDFRAME
 
 ##########
-.FRAME loc_type, loc_addr; value_lo, value_hi               # returns value_lo, value_hi
 read_location_w:
+.FRAME loc_type, loc_addr; value_lo, value_hi               # returns value_lo, value_hi
     arb -2
 
     jz  [rb + loc_type], read_location_w_register
@@ -75,8 +75,8 @@ read_location_w_done:
 .ENDFRAME
 
 ##########
-.FRAME loc_type, loc_addr, value;
 write_location_b:
+.FRAME loc_type, loc_addr, value;
     jz  [rb + loc_type], write_location_b_register
 
     # Write to an 8086 address
@@ -97,8 +97,8 @@ write_location_b_done:
 .ENDFRAME
 
 ##########
-.FRAME loc_type, loc_addr, value_lo, value_hi;
 write_location_w:
+.FRAME loc_type, loc_addr, value_lo, value_hi;
     jz  [rb + loc_type], write_location_w_register
 
     # Write to an 8086 address

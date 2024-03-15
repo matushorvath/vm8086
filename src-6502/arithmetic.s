@@ -213,7 +213,7 @@ execute_sbc_update_flags:
 ##########
 .FRAME addr; reg, b, diff
     # Multiple entry points for this function, to share the common code without having to add
-    # a parameter (which would not work with the exec.s instructions table mechanism).
+    # a parameter (which would not work with the instruction table mechanism).
 
 execute_cpx:
     arb -3
