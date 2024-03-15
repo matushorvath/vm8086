@@ -33,55 +33,6 @@
 .IMPORT mod
 .IMPORT split_16_8_8    # split_16_8_8 was removed, hopefully it's not needed for 8086
 
-##########
-execute_brk:
-.FRAME ip_hi, ip_lo
-    arb -2
-
-    # Increment ip with wraparound, since we need to push that value. We will overwrite ip soon anyway.
-    # This implements a one byte gap after a BRK instruction (BRK <gap for handler use> <RTI returns here>).
-    call inc_ip
-
-    # Split ip into high and low part
-    add [reg_ip], 0, [rb - 1]
-    arb -1
-    call split_16_8_8
-
-    add [rb - 3], 0, [rb + ip_hi]
-    add [rb - 4], 0, [rb + ip_lo]
-
-    # Push both parts of ip
-    add [rb + ip_hi], 0, [rb - 1]
-    arb -1
-    call push
-
-    add [rb + ip_lo], 0, [rb - 1]
-    arb -1
-    call push
-
-    # Pack sr and push it too
-    call pack_sr
-    add [rb - 2], 0, [rb - 1]
-    arb -1
-    call push
-
-    # Set the interrupt flag
-    add 1, 0, [flag_interrupt]
-
-    # Read the IRQ vector from 0xfffe and 0xffff
-    add 0xffff, 0, [rb - 1]
-    arb -1
-    call read
-    mul [rb - 3], 0x100, [reg_ip]           # read(0xffff) * 0x100 -> [reg_ip]
-
-    add 0xfffe, 0, [rb - 1]
-    arb -1
-    call read
-    add [rb - 3], [reg_ip], [reg_ip]      # read(0xfffe) + read(0xffff) * 0x100 -> [reg_ip]
-
-    arb 2
-    ret 0
-.ENDFRAME
 
 ##########
 execute_jmp:
@@ -128,25 +79,6 @@ execute_jsr:
     ret 1
 .ENDFRAME
 
-##########
-execute_rti:
-.FRAME
-    # Pull sr and unpack it into flags_*
-    call pop
-    add [rb - 2], 0, [rb - 1]
-    arb -1
-    call unpack_sr
-
-    # Pull return addres lo and hi and update reg_ip
-    call pop
-    add [rb - 2], 0, [reg_ip]
-
-    call pop
-    mul [rb - 2], 0x100, [rb - 2]
-    add [reg_ip], [rb - 2], [reg_ip]
-
-    ret 0
-.ENDFRAME
 
 ##########
 execute_rts:
