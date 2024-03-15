@@ -36,14 +36,14 @@ execute_inc_w:
 
     # Check for carry out of low byte
     lt  [rb + value_lo], 0x100, [rb + tmp]
-    jz  [rb + tmp], execute_inc_w_after_carry
+    jnz [rb + tmp], execute_inc_w_after_carry
 
     add 0, 0, [rb + value_lo]
     add [rb + value_hi], 1, [rb + value_hi]
 
     # Check for carry out of high byte
-    lt [rb + value_hi], 0x100, [rb + tmp]
-    jz [rb + tmp], execute_inc_w_after_carry
+    lt  [rb + value_hi], 0x100, [rb + tmp]
+    jnz [rb + tmp], execute_inc_w_after_carry
 
     # Documentation says this does not update CF
     add 0, 0, [rb + value_hi]
@@ -60,8 +60,8 @@ execute_inc_w_after_carry:
     add [0], 0, [flag_parity]
 
     # If the low-order half-byte of result is 0x0, it must have been 0xf before
-    mul [rb + value_lo], 2, [ip + 1]
-    add [0], nibbles, [ip + 1]
+    mul [rb + value_lo], 2, [rb + tmp]
+    add nibbles, [rb + tmp], [ip + 1]
     eq  [0], 0, [flag_auxiliary_carry]
 
     # If the high byte of result is 0x80, it must have been 0x7f before
@@ -103,8 +103,8 @@ execute_dec_w:
     add [rb + value_hi], -1, [rb + value_hi]
 
     # Check for borrow into high byte
-    lt [rb + value_hi], 0, [rb + tmp]
-    jz [rb + tmp], execute_dec_w_after_borrow
+    lt  [rb + value_hi], 0, [rb + tmp]
+    jz  [rb + tmp], execute_dec_w_after_borrow
 
     # Documentation says this does not update CF
     add 0xff, 0, [rb + value_hi]
@@ -121,8 +121,8 @@ execute_dec_w_after_borrow:
     add [0], 0, [flag_parity]
 
     # If the low-order half-byte of result is 0xf, it must have been 0x0 before
-    mul [rb + value_lo], 2, [ip + 1]
-    add [0], nibbles, [ip + 1]
+    mul [rb + value_lo], 2, [rb + tmp]
+    add nibbles, [rb + tmp], [ip + 1]
     eq  [0], 0xf, [flag_auxiliary_carry]
 
     # If the high byte of result is 0x7f, it must have been 0x80 before
