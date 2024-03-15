@@ -34,6 +34,17 @@ jobs:
           CC: gcc
         run: make build-vm
 
+      - name: Install nasm
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            sudo apt install -y nasm
+          elif [ "$RUNNER_OS" == "Windows" ]; then
+            choco install nasm
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            brew install nasm
+          fi
+        shell: bash
+
       - name: Build
         run: make build
         shell: bash
