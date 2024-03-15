@@ -120,7 +120,7 @@ tmp:
     db  0
 
 header:
-    db ".EXPORT parity", 10, 10, "# Generated using gen_parity.s", 10, 10, "parity:", 10, 0
+    db  ".EXPORT parity", 10, 10, "# Generated using gen_parity.s", 10, 10, "parity:", 10, 0
 line_start:
     db  "    db  ", 0
 footer:

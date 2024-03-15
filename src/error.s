@@ -44,11 +44,11 @@ report_error:
     hlt
 
 report_error_msg_start:
-    db "vm8086 error: ", 0
+    db  "vm8086 error: ", 0
 report_error_msg_cs_ip:
-    db " (cs:ip ", 0
+    db  " (cs:ip ", 0
 report_error_msg_end:
-    db ")", 0
+    db  ")", 0
 .ENDFRAME
 
 .EOF

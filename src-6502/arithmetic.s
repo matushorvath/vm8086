@@ -34,7 +34,7 @@ execute_adc:
     add [rb - 3], 0, [rb + b]
 
     # Decimal flag?
-    jz [flag_decimal], execute_adc_not_decimal
+    jz  [flag_decimal], execute_adc_not_decimal
 
     # Split a into high and low part
     add [reg_a], 0, [rb - 1]
@@ -80,7 +80,7 @@ execute_adc_bcd_hi_no_carry:
     mul [rb + a_hi], 16, [rb + sum]
     add [rb + sum], [rb + a_lo], [rb + sum]
 
-    jz 0, execute_adc_update_flags
+    jz  0, execute_adc_update_flags
 
 execute_adc_not_decimal:
     # Sum [reg_a] + [b] + [flag_carry]
@@ -124,7 +124,7 @@ execute_sbc:
     add [rb - 3], 0, [rb + b]
 
     # Decimal flag?
-    jz [flag_decimal], execute_sbc_not_decimal
+    jz  [flag_decimal], execute_sbc_not_decimal
 
     # Split a into high and low part
     add [reg_a], 0, [rb - 1]
@@ -176,7 +176,7 @@ execute_sbc_bcd_hi_no_carry:
     mul [rb + a_hi], 16, [rb + diff]
     add [rb + diff], [rb + a_lo], [rb + diff]
 
-    jz 0, execute_sbc_update_flags
+    jz  0, execute_sbc_update_flags
 
 execute_sbc_not_decimal:
     # Subtract [reg_a] - [b] + [flag_carry] - 1
