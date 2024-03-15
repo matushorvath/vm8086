@@ -263,7 +263,7 @@ write_seg_off_w:
 
 ##########
 mem:
-    db 0
+    db  0
 
 image_too_big_error:
     db  "image too big to load at specified address", 0

@@ -182,7 +182,7 @@ tmp:
     db  0
 
 header:
-    db ".EXPORT bits", 10, 10, "# Generated using gen_bits.s", 10, 10, "bits:", 10, 0
+    db  ".EXPORT bits", 10, 10, "# Generated using gen_bits.s", 10, 10, "bits:", 10, 0
 line_start:
     db  "    db  ", 0
 line_end:

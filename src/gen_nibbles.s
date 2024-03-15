@@ -139,7 +139,7 @@ tmp:
     db  0
 
 header:
-    db ".EXPORT nibbles", 10, 10, "# Generated using gen_nibbles.s", 10, 10, "nibbles:", 10, 0
+    db  ".EXPORT nibbles", 10, 10, "# Generated using gen_nibbles.s", 10, 10, "nibbles:", 10, 0
 line_start:
     db  "    db  0x", 0
 separator:

@@ -149,7 +149,7 @@ tmp:
     db  0
 
 header:
-    db ".EXPORT split233", 10, 10, "# Generated using gen_split233.s", 10, 10, "split233:", 10, 0
+    db  ".EXPORT split233", 10, 10, "# Generated using gen_split233.s", 10, 10, "split233:", 10, 0
 line_start:
     db  "    db  0x", 0
 separator:

@@ -23,7 +23,7 @@
 ##########
 .FRAME addr; value, increment, tmp
     # Multiple entry points for this function, to share the common code without having to add
-    # a parameter (which would not work with the exec.s instructions table mechanism).
+    # a parameter (which would not work with the instruction table mechanism).
 
 execute_rol:
     arb -3

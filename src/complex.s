@@ -18,8 +18,8 @@
 # TODO Documentation calls these Immed, Shift, Grp 1 and Grp 2
 
 ##########
-.FRAME addr, mod, reg, rm, tmp          # returns addr
 arg_mod_feop_rm_b:
+.FRAME addr, mod, reg, rm, tmp          # returns addr
     arb -5
 
     # Read the MOD REG R/M byte and split it
@@ -59,7 +59,7 @@ arg_mod_feop_rm_b_end:
     # 000 INC REG8/MEM8
     # 001 DEC REG8/MEM8
     # (rest not used)
-    ds 2, 0 # TODO    db  execute_feop_b, arg_mod_feop_rm_b               # 0xfe <feop> REG8/MEM8
+    ds  2, 0 # TODO    db  execute_feop_b, arg_mod_feop_rm_b               # 0xfe <feop> REG8/MEM8
 
 
     arb 5
