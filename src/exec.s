@@ -2,8 +2,9 @@
 .EXPORT execute_nop
 .EXPORT invalid_opcode
 
-# From binary.s
-.IMPORT binary
+# From the linked 8086 binary
+.IMPORT binary_enable_tracing
+.IMPORT binary_vm_callback
 
 # From error.s
 .IMPORT report_error
@@ -29,28 +30,28 @@ execute:
 execute_loop:
 # TODO tracing
 #    # Skip tracing if disabled
-#    jz  [binary + 3], execute_tracing_done
+#    jz  [binary_enable_tracing], execute_tracing_done
 #
-#    # If the [binary + 3] flag is positive, we use it as an address
+#    # If the [binary_enable_tracing] flag is positive, we use it as an address
 #    # starting from where we should turn on tracing
-#    eq  [binary + 3], [reg_ip], [rb + tmp]
+#    eq  [binary_enable_tracing], [reg_ip], [rb + tmp]
 #    jz  [rb + tmp], execute_tracing_different_address
 #
 #    # Address match, turn on tracing
-#    add -1, 0, [binary + 3]
+#    add -1, 0, [binary_enable_tracing]
 #
 #execute_tracing_different_address:
 #    # Print trace if enabled
-#    eq  [binary + 3], -1, [rb + tmp]
+#    eq  [binary_enable_tracing], -1, [rb + tmp]
 #    jz  [rb + tmp], execute_tracing_done
 #
 #    call print_trace
 #
 #execute_tracing_done:
 #    # Call the callback if enabled
-#    jz  [binary + 4], execute_callback_done
+#    jz  [binary_vm_callback], execute_callback_done
 #
-#    call [binary + 4]
+#    call [binary_vm_callback]
 #    jnz [rb - 2], execute_callback_done
 #
 #    # Callback returned 0, halt

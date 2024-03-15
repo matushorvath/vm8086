@@ -42,8 +42,9 @@
 # TODO .EXPORT unpack_sr TODO rename sr
 .EXPORT inc_ip
 
-# From binary.s
-.IMPORT binary
+# From the linked 8086 binary
+.IMPORT binary_start_address_cs
+.IMPORT binary_start_address_ip
 
 # From error.s
 .IMPORT report_error
@@ -136,8 +137,8 @@ init_state:
     arb -1
 
     # Load the start address to cs:ip
-    add [binary + 0], 0, [reg_cs]
-    add [binary + 1], 0, [reg_ip]
+    add [binary_start_address_cs], 0, [reg_cs]
+    add [binary_start_address_ip], 0, [reg_ip]
 
     # Check if cs:ip is a sane value
     add [reg_cs], 0, [rb - 1]

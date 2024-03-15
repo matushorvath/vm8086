@@ -9,8 +9,10 @@
 #.EXPORT push
 #.EXPORT pop
 
-# From binary.s
-.IMPORT binary
+# From the linked 8086 binary
+.IMPORT binary_load_address
+.IMPORT binary_length
+.IMPORT binary_data
 
 # From error.s
 .IMPORT report_error
@@ -31,13 +33,13 @@ init_memory:
     # Initialize memory space for the 8086.
 
     # Validate the load address is a valid 20-bit number
-    add [binary + 2], 0, [rb - 1]
+    add [binary_load_address], 0, [rb - 1]
     add 0xfffff, 0, [rb - 2]
     arb -2
     call check_range
 
     # Validate the image will fit to 20-bits when loaded there
-    add [binary + 2], [binary + 5], [rb + tgt]
+    add [binary_load_address], [binary_length], [rb + tgt]
     lt  0x100000, [rb + tgt], [rb + tmp]
     jz  [rb + tmp], init_memory_load_address_ok
 
@@ -47,19 +49,19 @@ init_memory:
 
 init_memory_load_address_ok:
     # The 8086 memory space will start where the binary starts now
-    add binary + 6, 0, [mem]
+    add binary_data, 0, [mem]
 
     # Do we need to move the binary to a different load address?
-    jz  [binary + 2], init_memory_done
+    jz  [binary_load_address], init_memory_done
 
     # Yes, calculate beginning address of the source (binary),
-    add binary + 6, 0, [rb + src]
+    add binary_data, 0, [rb + src]
 
     # Calculate the beginning address of the target ([mem] + [load])
-    add [mem], [binary + 2], [rb + tgt]
+    add [mem], [binary_load_address], [rb + tgt]
 
     # Number of bytes to copy
-    add [binary + 5], 0, [rb + cnt]
+    add [binary_length], 0, [rb + cnt]
 
 init_memory_loop:
     # Move the image from src to tgt (iterating in reverse direction)
