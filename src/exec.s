@@ -1,9 +1,11 @@
 .EXPORT execute
 .EXPORT execute_nop
 .EXPORT invalid_opcode
+.EXPORT not_implemented             # TODO remove
 
-# From binary.s
-.IMPORT binary
+# From the linked 8086 binary
+.IMPORT binary_enable_tracing
+.IMPORT binary_vm_callback
 
 # From error.s
 .IMPORT report_error
@@ -12,9 +14,10 @@
 .IMPORT instructions
 
 # From memory.s
-.IMPORT read_b
+.IMPORT read_seg_off_b
 
 # From state.s
+.IMPORT reg_cs
 .IMPORT reg_ip
 .IMPORT inc_ip
 
@@ -29,28 +32,28 @@ execute:
 execute_loop:
 # TODO tracing
 #    # Skip tracing if disabled
-#    jz  [binary + 3], execute_tracing_done
+#    jz  [binary_enable_tracing], execute_tracing_done
 #
-#    # If the [binary + 3] flag is positive, we use it as an address
+#    # If the [binary_enable_tracing] flag is positive, we use it as an address
 #    # starting from where we should turn on tracing
-#    eq  [binary + 3], [reg_ip], [rb + tmp]
+#    eq  [binary_enable_tracing], [reg_ip], [rb + tmp]
 #    jz  [rb + tmp], execute_tracing_different_address
 #
 #    # Address match, turn on tracing
-#    add -1, 0, [binary + 3]
+#    add -1, 0, [binary_enable_tracing]
 #
 #execute_tracing_different_address:
 #    # Print trace if enabled
-#    eq  [binary + 3], -1, [rb + tmp]
+#    eq  [binary_enable_tracing], -1, [rb + tmp]
 #    jz  [rb + tmp], execute_tracing_done
 #
 #    call print_trace
 #
 #execute_tracing_done:
 #    # Call the callback if enabled
-#    jz  [binary + 4], execute_callback_done
+#    jz  [binary_vm_callback], execute_callback_done
 #
-#    call [binary + 4]
+#    call [binary_vm_callback]
 #    jnz [rb - 2], execute_callback_done
 #
 #    # Callback returned 0, halt
@@ -58,10 +61,11 @@ execute_loop:
 #
 #execute_callback_done:
     # Read op code
-    add [reg_ip], 0, [rb - 1]
-    arb -1
-    call read_b
-    add [rb - 3], 0, [rb + op]
+    add [reg_cs], 0, [rb - 1]
+    add [reg_ip], 0, [rb - 2]
+    arb -2
+    call read_seg_off_b
+    add [rb - 4], 0, [rb + op]
 
     # Increase ip
     call inc_ip
@@ -110,7 +114,7 @@ execute_hlt:
 ##########
 execute_nop:
 .FRAME
-    ret 4
+    ret 0
 .ENDFRAME
 
 ##########
@@ -122,6 +126,17 @@ invalid_opcode:
 
 invalid_opcode_message:
     db  "invalid opcode", 0
+.ENDFRAME
+
+##########
+not_implemented:            # TODO remove
+.FRAME
+    add not_implemented_message, 0, [rb - 1]
+    arb -1
+    call report_error
+
+not_implemented_message:
+    db  "opcode not implemented", 0
 .ENDFRAME
 
 .EOF

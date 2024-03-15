@@ -1,5 +1,3 @@
-.EXPORT binary
-
 ##########
 # start of the binary to execute
 #
@@ -15,29 +13,36 @@
 # also used by heap.s in libxib. The VM without a binary must not use the heap unless it takes
 # care the overlap between the heap and the appended binary image.
 
-binary:
+# Header of the binary to execute. In this case there is no built-in binary,
+# so we just define the symbols to make the VM compile
 
-# After this we expect:
-#
-# binary_start_address_cs:
-#    db  0xffff       # starting cs value is 0xffff (default for real hardware)
-#
-# binary_start_address_ip:
-#    db  0x0000       # starting ip value is 0x0000 (default for real hardware)
-#
-# binary_load_address:
-#    db  0xc0000      # load address of the binary image in 8086 memory
-#
-# tracing:
-#    db  1            # 0 - disable tracing, -1 - trace always, >0 - start tracing after passing that address
-#
-# vm_callback:
-#    db  0xabcde      # optional callback function to call before each instruction
-#
-# binary_length:
-#    db  0x4000       # size of the binary image
-#
-# binary_data:
-#    ds  0x4000, 0    # binary image data
+.EXPORT binary_start_address_cs
+.EXPORT binary_start_address_ip
+.EXPORT binary_load_address
+.EXPORT binary_enable_tracing
+.EXPORT binary_vm_callback
+.EXPORT binary_length
+.EXPORT binary_data
+
+# Initial cs value (default for real hardware is 0xffff)
++0 = binary_start_address_cs:
+
+# Initial ip value (default for real hardware is 0x0000)
++1 = binary_start_address_ip:
+
+# Load address of the binary image in 8086 memory
++2 = binary_load_address:
+
+# Tracing (0 - disable tracing, -1 - trace always, >0 - tracing past given address)
++3 = binary_enable_tracing:
+
+# Optional callback function to call before each instruction, zero if not used
++4 = binary_vm_callback:
+
+# Size of the binary image
++5 = binary_length:
+
+# Binary image data
++6 = binary_data:
 
 .EOF

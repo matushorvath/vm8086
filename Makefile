@@ -38,7 +38,7 @@ endef
 
 # Build
 .PHONY: build
-build: build-prep $(BINDIR)/vm8086.input
+build: build-prep $(BINDIR)/vm8086.input $(BINDIR)/simple_test.input
 
 .PHONY: build-prep
 build-prep:
@@ -73,7 +73,21 @@ $(OBJDIR)/%.s: $(OBJDIR)/gen_%.input
 $(OBJDIR)/gen_%.input: $(OBJDIR)/gen_%.o $(LIBXIB)
 	$(run-ld)
 
+# Simple test
+SIMPLE_TEST_OBJS = $(BASE_OBJS) $(LIBXIB) simple_test_header.o simple_test_binary.o
+
+$(BINDIR)/simple_test.input: $(SIMPLE_TEST_OBJS:%.o=$(OBJDIR)/%.o)
+	$(run-ld)
+
+$(OBJDIR)/simple_test_binary.o: test/test.bin
+	$(run-bin2obj)
+
+.PHONY: FORCE
+test/test.bin: FORCE
+	$(MAKE) -C test
+
 # Clean
 .PHONY: clean
 clean:
 	rm -rf $(BINDIR) $(OBJDIR)
+	$(MAKE) -C test clean
