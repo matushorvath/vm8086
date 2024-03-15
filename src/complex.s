@@ -25,7 +25,7 @@ arg_mod_feop_rm_b:
     # Read the MOD REG R/M byte and split it
     add [rb + addr], 0, [rb - 1]
     arb -1
-    call read_b
+    call read_b TODO cs:ip
     mul [rb - 3], 3, [rb + tmp]
 
     call inc_ip

@@ -14,9 +14,10 @@
 .IMPORT instructions
 
 # From memory.s
-.IMPORT read_b
+.IMPORT read_seg_off_b
 
 # From state.s
+.IMPORT reg_cs
 .IMPORT reg_ip
 .IMPORT inc_ip
 
@@ -60,10 +61,11 @@ execute_loop:
 #
 #execute_callback_done:
     # Read op code
-    add [reg_ip], 0, [rb - 1]
-    arb -1
-    call read_b
-    add [rb - 3], 0, [rb + op]
+    add [reg_cs], 0, [rb - 1]
+    add [reg_ip], 0, [rb - 2]
+    arb -2
+    call read_seg_off_b
+    add [rb - 4], 0, [rb + op]
 
     # Increase ip
     call inc_ip
@@ -112,7 +114,7 @@ execute_hlt:
 ##########
 execute_nop:
 .FRAME
-    ret 4
+    ret 0
 .ENDFRAME
 
 ##########

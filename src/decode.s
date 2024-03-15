@@ -2,8 +2,8 @@
 .EXPORT decode_reg
 
 # From memory.s
-.IMPORT read_b
-.IMPORT read_w
+.IMPORT read_seg_off_b
+.IMPORT read_seg_off_w
 
 # From split233.s
 .IMPORT split233
@@ -29,6 +29,7 @@
 .IMPORT reg_si
 .IMPORT reg_di
 
+.IMPORT reg_cs
 .IMPORT reg_ds
 .IMPORT reg_ss
 
@@ -72,10 +73,11 @@ decode_mod_rm_mem_disp8:
     # Memory mode with 8-bit displacement
 
     # Read 8-bit displacement
-    add [reg_ip], 0, [rb - 1]
-    arb -1
-    call read_b
-    add [rb - 3], 0, [rb + disp]
+    add [reg_cs], 0, [rb - 1]
+    add [reg_ip], 0, [rb - 2]
+    arb -2
+    call read_seg_off_b
+    add [rb - 4], 0, [rb + disp]
 
     call inc_ip
 
@@ -94,11 +96,12 @@ decode_mod_rm_mem_disp16:
     # Memory mode with 16-bit displacement
 
     # Read 16-bit displacement
-    add [reg_ip], 0, [rb - 1]
-    arb -1
-    call read_w
-    mul [rb - 4], 0xff, [rb + disp]
-    add [rb + disp], [rb - 3], [rb + disp]
+    add [reg_cs], 0, [rb - 1]
+    add [reg_ip], 0, [rb - 2]
+    arb -2
+    call read_seg_off_w
+    mul [rb - 5], 0xff, [rb + disp]
+    add [rb + disp], [rb - 4], [rb + disp]
 
     call inc_ip
     call inc_ip
