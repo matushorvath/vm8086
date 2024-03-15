@@ -1,6 +1,7 @@
 .EXPORT execute
 .EXPORT execute_nop
 .EXPORT invalid_opcode
+.EXPORT not_implemented             # TODO remove
 
 # From the linked 8086 binary
 .IMPORT binary_enable_tracing
@@ -123,6 +124,17 @@ invalid_opcode:
 
 invalid_opcode_message:
     db  "invalid opcode", 0
+.ENDFRAME
+
+##########
+not_implemented:            # TODO remove
+.FRAME
+    add not_implemented_message, 0, [rb - 1]
+    arb -1
+    call report_error
+
+not_implemented_message:
+    db  "opcode not implemented", 0
 .ENDFRAME
 
 .EOF
