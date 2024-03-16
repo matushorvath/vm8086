@@ -11,7 +11,8 @@ section interrupts start=0x00000
 section .text start=0x80000
     ; INT 3 handler
     nop
-    hlt
+    iret
 
 section boot start=0xffff0     ; needs to match simple_test_header.s
     int3
+    hlt
