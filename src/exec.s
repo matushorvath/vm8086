@@ -64,7 +64,7 @@ execute_loop:
     call read_cs_ip_b
     add [rb - 2], 0, [rb + op]
 
-    # Increase ip
+    # Increment ip
     call inc_ip
 
     # Process hlt

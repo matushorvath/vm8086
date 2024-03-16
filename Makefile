@@ -48,7 +48,7 @@ build-prep:
 # then the (optional) 8086 image header and data.
 
 BASE_OBJS = vm8086.o arg_reg.o bits.o decode.o error.o exec.o flags.o inc_dec.o instructions.o \
-	interrupt.o location.o memory.o nibbles.o parity.o split233.o state.o util.o
+	interrupt.o location.o memory.o nibbles.o parity.o split233.o stack.o state.o util.o
 
 VM8086_OBJS = $(BASE_OBJS) $(LIBXIB) binary.o
 

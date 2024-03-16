@@ -38,19 +38,11 @@
 .EXPORT flag_trap
 
 .EXPORT init_state
-# TODO .EXPORT pack_sr TODO rename sr
-# TODO .EXPORT unpack_sr TODO rename sr
 .EXPORT inc_ip
 
 # From the linked 8086 binary
 .IMPORT binary_start_address_cs
 .IMPORT binary_start_address_ip
-
-# From error.s
-.IMPORT report_error
-
-# From memory.s
-# TODO .IMPORT read
 
 # From util.s
 .IMPORT check_range
@@ -168,7 +160,7 @@ init_state:
 .ENDFRAME
 
 ##########
-# Increase ip with wrap around
+# Increment ip with wrap around
 inc_ip:
 .FRAME tmp
     arb -1
@@ -180,7 +172,7 @@ inc_ip:
     lt  [reg_ip + 0], 0x100, [rb + tmp]
     jnz [rb + tmp], inc_ip_done
 
-    add 0, 0, [reg_ip + 0]
+    add [reg_ip + 0], -0x100, [reg_ip + 0]
     add [reg_ip + 1], 1, [reg_ip + 1]
 
     # Check for carry out of high byte
@@ -188,7 +180,7 @@ inc_ip:
     jnz [rb + tmp], inc_ip_done
 
     # Overflow to zero
-    add 0, 0, [reg_ip + 1]
+    add [reg_ip + 1], -0x100, [reg_ip + 1]
 
 inc_ip_done:
     arb 1
@@ -196,82 +188,3 @@ inc_ip_done:
 .ENDFRAME
 
 .EOF
-
-##########
-pack_sr: # TODO rename sr
-.FRAME sr                                           # returns sr
-    arb -1
-
-    add 0b00110000, 0, [rb + sr]
-
-    jz  [flag_carry], pack_sr_after_carry
-    add [rb + sr], 0b00000001, [rb + sr]
-pack_sr_after_carry:
-
-    jz  [flag_zero], pack_sr_after_zero
-    add [rb + sr], 0b00000010, [rb + sr]
-pack_sr_after_zero:
-
-    jz  [flag_interrupt], pack_sr_after_interrupt
-    add [rb + sr], 0b00000100, [rb + sr]
-pack_sr_after_interrupt:
-
-    jz  [flag_decimal], pack_sr_after_decimal
-    add [rb + sr], 0b00001000, [rb + sr]
-pack_sr_after_decimal:
-
-    jz  [flag_overflow], pack_sr_after_overflow
-    add [rb + sr], 0b01000000, [rb + sr]
-pack_sr_after_overflow:
-
-    jz  [flag_negative], pack_sr_after_negative
-    add [rb + sr], 0b10000000, [rb + sr]
-pack_sr_after_negative:
-
-
-    arb 1
-    ret 0
-.ENDFRAME
-
-##########
-unpack_sr: # TODO rename sr
-.FRAME sr;
-    lt  0b01111111, [rb + sr], [flag_negative]
-    jz  [flag_negative], unpack_sr_after_negative
-    add [rb + sr], -0b10000000, [rb + sr]
-unpack_sr_after_negative:
-
-    lt  0b00111111, [rb + sr], [flag_overflow]
-    jz  [flag_overflow], unpack_sr_after_overflow
-    add [rb + sr], -0b01000000, [rb + sr]
-unpack_sr_after_overflow:
-
-    lt  0b00011111, [rb + sr], [flag_decimal]               # flag_decimal used as tmp
-    jz  [flag_decimal], unpack_sr_after_ignored
-    add [rb + sr], -0b00100000, [rb + sr]
-unpack_sr_after_ignored:
-
-    lt  0b00001111, [rb + sr], [flag_decimal]               # flag_decimal used as tmp
-    jz  [flag_decimal], unpack_sr_after_break
-    add [rb + sr], -0b00010000, [rb + sr]
-unpack_sr_after_break:
-
-    lt  0b00000111, [rb + sr], [flag_decimal]
-    jz  [flag_decimal], unpack_sr_after_decimal
-    add [rb + sr], -0b00001000, [rb + sr]
-unpack_sr_after_decimal:
-
-    lt  0b00000011, [rb + sr], [flag_interrupt]
-    jz  [flag_interrupt], unpack_sr_after_interrupt
-    add [rb + sr], -0b00000100, [rb + sr]
-unpack_sr_after_interrupt:
-
-    lt  0b00000001, [rb + sr], [flag_zero]
-    jz  [flag_zero], unpack_sr_after_zero
-    add [rb + sr], -0b00000010, [rb + sr]
-unpack_sr_after_zero:
-
-    lt  0, [rb + sr], [flag_carry]
-
-    ret 1
-.ENDFRAME
