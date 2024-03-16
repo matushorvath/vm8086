@@ -11,7 +11,7 @@
 # The location has a type and an address.
 
 # loc_type: 0
-# loc_addr: intcode address of an 8086 register
+# loc_addr: intcode address of an 8-bit 8086 register, or of the lo byte of a 16-bit 8086 register
 #
 # loc_type: 1
 # loc_addr: 8086 physical memory address

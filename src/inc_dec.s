@@ -20,7 +20,7 @@
 
 ##########
 execute_inc_w:
-.FRAME loc_type, loc_addr, _unused_type, _unused_addr; value_lo, value_hi, tmp
+.FRAME loc_type, loc_addr; value_lo, value_hi, tmp
     arb -3
 
     # Read the value
@@ -38,7 +38,7 @@ execute_inc_w:
     lt  [rb + value_lo], 0x100, [rb + tmp]
     jnz [rb + tmp], execute_inc_w_after_carry
 
-    add 0, 0, [rb + value_lo]
+    add [rb + value_lo], -0x100, [rb + value_lo]
     add [rb + value_hi], 1, [rb + value_hi]
 
     # Check for carry out of high byte
@@ -46,7 +46,7 @@ execute_inc_w:
     jnz [rb + tmp], execute_inc_w_after_carry
 
     # Documentation says this does not update CF
-    add 0, 0, [rb + value_hi]
+    add [rb + value_hi], -0x100, [rb + value_hi]
 
 execute_inc_w_after_carry:
     # Update flags
@@ -76,12 +76,12 @@ execute_inc_w_after_carry:
     call write_location_w
 
     arb 3
-    ret 4
+    ret 2
 .ENDFRAME
 
 ##########
 execute_dec_w:
-.FRAME loc_type, loc_addr, _unused_type, _unused_addr; value_lo, value_hi, tmp
+.FRAME loc_type, loc_addr; value_lo, value_hi, tmp
     arb -3
 
     # Read the value
@@ -99,7 +99,7 @@ execute_dec_w:
     lt  [rb + value_lo], 0, [rb + tmp]
     jz  [rb + tmp], execute_dec_w_after_borrow
 
-    add 0xff, 0, [rb + value_lo]
+    add [rb + value_lo], 0x100, [rb + value_lo]
     add [rb + value_hi], -1, [rb + value_hi]
 
     # Check for borrow into high byte
@@ -107,7 +107,7 @@ execute_dec_w:
     jz  [rb + tmp], execute_dec_w_after_borrow
 
     # Documentation says this does not update CF
-    add 0xff, 0, [rb + value_hi]
+    add [rb + value_hi], 0x100, [rb + value_hi]
 
 execute_dec_w_after_borrow:
     # Update flags
@@ -137,7 +137,7 @@ execute_dec_w_after_borrow:
     call write_location_w
 
     arb 3
-    ret 4
+    ret 2
 .ENDFRAME
 
 .EOF

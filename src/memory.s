@@ -11,6 +11,9 @@
 .EXPORT write_seg_off_b
 .EXPORT write_seg_off_w
 
+.EXPORT read_cs_ip_b
+.EXPORT read_cs_ip_w
+
 #.EXPORT push
 #.EXPORT pop
 
@@ -23,8 +26,8 @@
 .IMPORT report_error
 
 # From state.s
-.IMPORT reg_sp
-.IMPORT reg_ss
+.IMPORT reg_cs
+.IMPORT reg_ip
 
 # From util.s
 .IMPORT check_range
@@ -262,90 +265,45 @@ write_seg_off_w:
 .ENDFRAME
 
 ##########
+read_cs_ip_b:
+.FRAME value                                                # returns value
+    arb -1
+
+    mul [reg_cs + 1], 0x100, [rb - 1]
+    add [reg_cs + 0], [rb - 1], [rb - 1]
+    mul [reg_ip + 1], 0x100, [rb - 2]
+    add [reg_ip + 0], [rb - 2], [rb - 2]
+    arb -2
+    call read_seg_off_b
+    add [rb - 4], 0, [rb + value]
+
+    arb 1
+    ret 0
+.ENDFRAME
+
+##########
+read_cs_ip_w:
+.FRAME value_lo, value_hi                                   # returns value_lo, value_hi
+    arb -2
+
+    mul [reg_cs + 1], 0x100, [rb - 1]
+    add [reg_cs + 0], [rb - 1], [rb - 1]
+    mul [reg_ip + 1], 0x100, [rb - 2]
+    add [reg_ip + 0], [rb - 2], [rb - 2]
+    arb -2
+    call read_seg_off_w
+    add [rb - 4], 0, [rb + value_lo]
+    add [rb - 5], 0, [rb + value_hi]
+
+    arb 2
+    ret 0
+.ENDFRAME
+
+##########
 mem:
     db  0
 
 image_too_big_error:
     db  "image too big to load at specified address", 0
-
-.EOF
-
-
-
-TODO code below doesn't work with split 16-bit registers
-TODO move push, pull to stack.s
-
-##########
-calc_ea:
-.FRAME seg, off; ea                     # returns ea
-    arb -1
-
-    # Calculate the EA
-    mul [reg_ss], 16, [rb + ea]
-    add [reg_spxxx], [rb + ea], [rb - 1]   # store to param 0
-
-    # Wrap around to 20-bit address
-    add 0x100000, 0, [rb - 2]
-    arb -2
-    call mod
-    add [rb - 4], 0, [rb + ea]
-
-    arb 1
-    ret 2
-.ENDFRAME
-
-
-##########
-push:
-.FRAME value;
-    # Decrement sp by 2
-    add [reg_spxxx], -2, [rb - 1]
-    add 0x10000, 0, [rb - 2]
-    arb -2
-    call mod
-    add [rb - 4], 0, [reg_spxxx]
-
-    # Calculate EA
-    add [reg_ss], 0, [rb - 1]
-    add [reg_spxxx], 0, [rb - 2]
-    arb -2
-    call calc_ea
-    add [rb - 4], 0, [rb - 1]           # return -> param 0
-
-    # Store the value
-    add [rb + value], 0, [rb - 2]
-    arb -2
-    call write TODO combine with calc_ea
-
-    ret 1
-.ENDFRAME
-
-##########
-pop:
-.FRAME value                            # returns value
-    arb -1
-
-    # Calculate EA
-    add [reg_ss], 0, [rb - 1]
-    add [reg_spxxx], 0, [rb - 2]
-    arb -2
-    call calc_ea
-    add [rb - 4], 0, [rb - 1]           # return -> param 0
-
-    # Read the value
-    arb -1
-    call read_b TODO combine with calc_ea
-    add [rb - 3], 0, [rb + value]
-
-    # Increment sp by 2
-    add [reg_spxxx], 2, [rb - 1]
-    add 0x10000, 0, [rb - 2]
-    arb -2
-    call mod
-    add [rb - 4], 0, [reg_spxxx]
-
-    arb 1
-    ret 0
-.ENDFRAME
 
 .EOF

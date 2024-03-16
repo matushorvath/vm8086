@@ -9,15 +9,15 @@
 
 # Initial cs value, use the default
 binary_start_address_cs:
-    db  0xffff
+    db  0xff, 0xff
 
 # Initial ip value, use the default
 binary_start_address_ip:
-    db  0x0000
+    db  0x00, 0x00
 
 # Load address of the simple test binary in 8086 memory
 binary_load_address:
-    db  0xffff0         # needs to match test.asm
+    db  0x00000
 
 # Tracing (0 - disable tracing, -1 - trace always, >0 - tracing past given address)
 binary_enable_tracing:

@@ -23,14 +23,16 @@ report_error:
     arb -1
     call print_str
 
-    add [reg_cs], 0, [rb - 1]
+    mul [reg_cs + 1], 0x100, [rb - 1]
+    add [reg_cs + 0], [rb - 1], [rb - 1]
     add 16, 0, [rb - 2]
     arb -2
     call print_num_radix
 
     out ':'
 
-    add [reg_ip], 0, [rb - 1]
+    mul [reg_ip + 1], 0x100, [rb - 1]
+    add [reg_ip + 0], [rb - 1], [rb - 1]
     add 16, 0, [rb - 2]
     arb -2
     call print_num_radix
