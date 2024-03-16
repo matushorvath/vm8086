@@ -1,6 +1,6 @@
+.EXPORT execute_int
 .EXPORT execute_int3
 .EXPORT execute_into
-.EXPORT execute_int
 .EXPORT execute_iret
 
 # From memory.s
@@ -61,8 +61,7 @@ execute_int:
 
     # Load new CS from the interrupt vector (physical address type * 4 + 2)
     mul [rb + type], 4, [rb + tmp]
-    add [rb + tmp], 2, [ip + 1]
-    add [0], 0, [rb - 1]
+    add [rb + tmp], 2, [rb - 1]
     arb -1
     call read_w
 
@@ -76,8 +75,7 @@ execute_int:
     call push_w
 
     # Load new IP from the interrupt vector (physical address type * 4 + 0)
-    mul type, 4, [ip + 1]
-    add [0], 0, [rb - 1]
+    mul type, 4, [rb - 1]
     arb -1
     call read_w
 

@@ -28,6 +28,12 @@
 .IMPORT execute_inc_w
 .IMPORT execute_dec_w
 
+# From interrupt.s
+.IMPORT execute_int
+.IMPORT execute_int3
+.IMPORT execute_into
+.IMPORT execute_iret
+
 # iAPX 86, 88 User's Manual; August 1981; pages 4-27 to 4-35
 
 instructions:
@@ -279,11 +285,11 @@ instructions:
     db  not_implemented, 0, 0 # TODO    db  execute_ret_far, arg_immediate_w                # 0xca RET IMMED16 (intersegment)
     db  not_implemented, 0, 0 # TODO    db  execute_ret_far, arg_zero                       # 0xcb RET (intersegment)
 
-    db  not_implemented, 0, 0 # TODO    db  execute_int3, 0                                 # 0xcc INT 3
+    db  execute_int3, 0, 0                              # 0xcc INT 3
     db  not_implemented, 0, 0 # TODO    db  execute_int, arg_immediate_b                    # 0xcd INT IMMED8
 
-    db  not_implemented, 0, 0 # TODO    db  execute_into, 0                                 # 0xce INTO
-    db  not_implemented, 0, 0 # TODO    db  execute_iret, 0                                 # 0xcf IRET
+    db  execute_into, 0, 0                              # 0xce INTO
+    db  execute_iret, 0, 0                              # 0xcf IRET
 
     # <rsop>: 000 ROL, 001 ROR, 010 RCL, 011 RCR, 100 SAL/SHL, 101 SHR,          111 SAR
     db  not_implemented, 0, 0 # TODO    db  execute_rsop_b, arg_mod_rsop_rm_1_b             # 0xd0 <rsop> REG8/MEM8, 1

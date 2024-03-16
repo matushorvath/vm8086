@@ -134,7 +134,7 @@ pushf:
     mul [reg_ss + 1], 0x100, [rb - 1]
     add [reg_ss + 0], [rb - 1], [rb - 1]
     mul [reg_sp + 1], 0x100, [rb - 2]
-    add [reg_sp + 0], [rb - 1], [rb - 2]
+    add [reg_sp + 0], [rb - 2], [rb - 2]
     add [rb + flags_lo], 0, [rb - 3]
     add [rb + flags_hi], 0, [rb - 4]
     arb -4
