@@ -73,7 +73,8 @@ decode_mod_rm_mem_disp8:
     # Memory mode with 8-bit displacement
 
     # Read 8-bit displacement
-    add [reg_cs], 0, [rb - 1]
+    mul [reg_cs + 1], 0x100, [rb - 1]
+    add [reg_cs + 0], [rb - 1], [rb - 1]
     add [reg_ip], 0, [rb - 2]
     arb -2
     call read_seg_off_b
@@ -96,7 +97,8 @@ decode_mod_rm_mem_disp16:
     # Memory mode with 16-bit displacement
 
     # Read 16-bit displacement
-    add [reg_cs], 0, [rb - 1]
+    mul [reg_cs + 1], 0x100, [rb - 1]
+    add [reg_cs + 0], [rb - 1], [rb - 1]
     add [reg_ip], 0, [rb - 2]
     arb -2
     call read_seg_off_w
@@ -123,79 +125,106 @@ decode_mod_rm_mem_table:
     db  decode_mod_rm_memory_direct
 
 decode_mod_rm_memory_bx_si:
-    add [reg_bx + 1], [reg_si + 1], [rb + loc_addr]
-    mul [rb + loc_addr], 0xf, [rb + loc_addr]
-    add [rb + loc_addr], [reg_ds], [rb + loc_addr]
-    mul [rb + loc_addr], 0xf, [rb + loc_addr]
-    add [rb + loc_addr], [reg_bx + 0], [rb + loc_addr]
-    add [rb + loc_addr], [reg_si + 0], [rb + loc_addr]
+    # Calculations below work like this:
+    # loc_addr = (ds << 4) + bx + si
+    #
+    #      3210|7654 3210|7654 3210
+    # ds = ---dsh--- ---dsl---
+    # bx =      ---bxh--- ---bxl---
+    # si =      ---sih--- ---sil---
+    #
+    # loc_addr = (((dsh << 4) + bxh + sih) << 4 + dsl) << 4 + bxl + sil;
+
+    mul [reg_ds + 1], 0x10, [rb + loc_addr]
+    add [reg_bx + 1], [rb + loc_addr], [rb + loc_addr]
+    add [reg_si + 1], [rb + loc_addr], [rb + loc_addr]
+    mul [rb + loc_addr], 0x10, [rb + loc_addr]
+    add [reg_ds + 0], [rb + loc_addr], [rb + loc_addr]
+    mul [rb + loc_addr], 0x10, [rb + loc_addr]
+    add [reg_bx + 0], [rb + loc_addr], [rb + loc_addr]
+    add [reg_si + 0], [rb + loc_addr], [rb + loc_addr]
 
     jz  0, decode_mod_rm_mem_calc
 
 decode_mod_rm_memory_bx_di:
-    add [reg_bx + 1], [reg_di + 1], [rb + loc_addr]
-    mul [rb + loc_addr], 0xf, [rb + loc_addr]
-    add [rb + loc_addr], [reg_ds], [rb + loc_addr]
-    mul [rb + loc_addr], 0xf, [rb + loc_addr]
-    add [rb + loc_addr], [reg_bx + 0], [rb + loc_addr]
-    add [rb + loc_addr], [reg_di + 0], [rb + loc_addr]
+    mul [reg_ds + 1], 0x10, [rb + loc_addr]
+    add [reg_bx + 1], [rb + loc_addr], [rb + loc_addr]
+    add [reg_di + 1], [rb + loc_addr], [rb + loc_addr]
+    mul [rb + loc_addr], 0x10, [rb + loc_addr]
+    add [reg_ds + 0], [rb + loc_addr], [rb + loc_addr]
+    mul [rb + loc_addr], 0x10, [rb + loc_addr]
+    add [reg_bx + 0], [rb + loc_addr], [rb + loc_addr]
+    add [reg_di + 0], [rb + loc_addr], [rb + loc_addr]
 
     jz  0, decode_mod_rm_mem_calc
 
 decode_mod_rm_memory_bp_si:
-    add [reg_bp + 1], [reg_si + 1], [rb + loc_addr]
-    mul [rb + loc_addr], 0xf, [rb + loc_addr]
-    add [rb + loc_addr], [reg_ss], [rb + loc_addr]
-    mul [rb + loc_addr], 0xf, [rb + loc_addr]
-    add [rb + loc_addr], [reg_bp + 0], [rb + loc_addr]
-    add [rb + loc_addr], [reg_si + 0], [rb + loc_addr]
+    mul [reg_ss + 1], 0x10, [rb + loc_addr]
+    add [reg_bp + 1], [rb + loc_addr], [rb + loc_addr]
+    add [reg_si + 1], [rb + loc_addr], [rb + loc_addr]
+    mul [rb + loc_addr], 0x10, [rb + loc_addr]
+    add [reg_ss + 0], [rb + loc_addr], [rb + loc_addr]
+    mul [rb + loc_addr], 0x10, [rb + loc_addr]
+    add [reg_bp + 0], [rb + loc_addr], [rb + loc_addr]
+    add [reg_si + 0], [rb + loc_addr], [rb + loc_addr]
 
     jz  0, decode_mod_rm_mem_calc
 
 decode_mod_rm_memory_bp_di:
-    add [reg_bp + 1], [reg_di + 1], [rb + loc_addr]
-    mul [rb + loc_addr], 0xf, [rb + loc_addr]
-    add [rb + loc_addr], [reg_ss], [rb + loc_addr]
-    mul [rb + loc_addr], 0xf, [rb + loc_addr]
-    add [rb + loc_addr], [reg_bp + 0], [rb + loc_addr]
-    add [rb + loc_addr], [reg_di + 0], [rb + loc_addr]
+    mul [reg_ss + 1], 0x10, [rb + loc_addr]
+    add [reg_bp + 1], [rb + loc_addr], [rb + loc_addr]
+    add [reg_di + 1], [rb + loc_addr], [rb + loc_addr]
+    mul [rb + loc_addr], 0x10, [rb + loc_addr]
+    add [reg_ss + 0], [rb + loc_addr], [rb + loc_addr]
+    mul [rb + loc_addr], 0x10, [rb + loc_addr]
+    add [reg_bp + 0], [rb + loc_addr], [rb + loc_addr]
+    add [reg_di + 0], [rb + loc_addr], [rb + loc_addr]
 
     jz  0, decode_mod_rm_mem_calc
 
 decode_mod_rm_memory_si:
-    mul [reg_si + 1], 0xf, [rb + loc_addr]
-    add [rb + loc_addr], [reg_ds], [rb + loc_addr]
-    mul [rb + loc_addr], 0xf, [rb + loc_addr]
-    add [rb + loc_addr], [reg_si + 0], [rb + loc_addr]
+    mul [reg_ds + 1], 0x10, [rb + loc_addr]
+    add [reg_si + 1], [rb + loc_addr], [rb + loc_addr]
+    mul [rb + loc_addr], 0x10, [rb + loc_addr]
+    add [reg_ds + 0], [rb + loc_addr], [rb + loc_addr]
+    mul [rb + loc_addr], 0x10, [rb + loc_addr]
+    add [reg_si + 0], [rb + loc_addr], [rb + loc_addr]
 
     jz  0, decode_mod_rm_mem_calc
 
 decode_mod_rm_memory_di:
-    mul [reg_di + 1], 0xf, [rb + loc_addr]
-    add [rb + loc_addr], [reg_ds], [rb + loc_addr]
-    mul [rb + loc_addr], 0xf, [rb + loc_addr]
-    add [rb + loc_addr], [reg_di + 0], [rb + loc_addr]
+    mul [reg_ds + 1], 0x10, [rb + loc_addr]
+    add [reg_di + 1], [rb + loc_addr], [rb + loc_addr]
+    mul [rb + loc_addr], 0x10, [rb + loc_addr]
+    add [reg_ds + 0], [rb + loc_addr], [rb + loc_addr]
+    mul [rb + loc_addr], 0x10, [rb + loc_addr]
+    add [reg_di + 0], [rb + loc_addr], [rb + loc_addr]
 
     jz  0, decode_mod_rm_mem_calc
 
 decode_mod_rm_memory_bp:
-    mul [reg_bp + 1], 0xf, [rb + loc_addr]
-    add [rb + loc_addr], [reg_ss], [rb + loc_addr]
-    mul [rb + loc_addr], 0xf, [rb + loc_addr]
-    add [rb + loc_addr], [reg_bp + 0], [rb + loc_addr]
+    mul [reg_ss + 1], 0x10, [rb + loc_addr]
+    add [reg_bp + 1], [rb + loc_addr], [rb + loc_addr]
+    mul [rb + loc_addr], 0x10, [rb + loc_addr]
+    add [reg_ss + 0], [rb + loc_addr], [rb + loc_addr]
+    mul [rb + loc_addr], 0x10, [rb + loc_addr]
+    add [reg_bp + 0], [rb + loc_addr], [rb + loc_addr]
 
     jz  0, decode_mod_rm_mem_calc
 
 decode_mod_rm_memory_bx:
-    mul [reg_bx + 1], 0xf, [rb + loc_addr]
-    add [rb + loc_addr], [reg_ds], [rb + loc_addr]
-    mul [rb + loc_addr], 0xf, [rb + loc_addr]
-    add [rb + loc_addr], [reg_bx + 0], [rb + loc_addr]
+    mul [reg_ds + 1], 0x10, [rb + loc_addr]
+    add [reg_bx + 1], [rb + loc_addr], [rb + loc_addr]
+    mul [rb + loc_addr], 0x10, [rb + loc_addr]
+    add [reg_ds + 0], [rb + loc_addr], [rb + loc_addr]
+    mul [rb + loc_addr], 0x10, [rb + loc_addr]
+    add [reg_bx + 0], [rb + loc_addr], [rb + loc_addr]
 
     jz  0, decode_mod_rm_mem_calc
 
 decode_mod_rm_memory_direct:
-    mul [reg_ds], 0xf, [rb + loc_addr]
+    mul [reg_ds + 1], 0x100, [rb + loc_addr]
+    add [reg_ds + 0], [rb + loc_addr], [rb + loc_addr]
 
 decode_mod_rm_mem_calc:
     # Return an 8086 physical memory address

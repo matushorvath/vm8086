@@ -46,7 +46,8 @@ execute_int:
     add 0, 0, [flag_interrupt]
 
     # Push CS
-    add [reg_cs], 0, [rb - 1]
+    mul [reg_cs + 1], 0x100, [rb - 1]
+    add [reg_cs + 0], [rb - 1], [rb - 1]
     arb -1
     call push_w
 
@@ -57,8 +58,8 @@ execute_int:
     arb -1
     call read_w
 
-    mul [rb - 4], 0x100, [reg_cs]
-    add [reg_cs], [rb - 3], [reg_cs]
+    add [rb - 3], 0, [reg_cs + 0]
+    add [rb - 4], 0, [reg_cs + 1]
 
     # Push IP
     add [reg_ip], 0, [rb - 1]
@@ -104,7 +105,8 @@ popf
     add 0, 0, [flag_interrupt]
 
     # Push CS
-    add [reg_cs], 0, [rb - 1]
+    mul [reg_cs + 1], 0x100, [rb - 1]
+    add [reg_cs + 0], [rb - 1], [rb - 1]
     arb -1
     call push_w
 
@@ -115,8 +117,8 @@ popf
     arb -1
     call read_w
 
-    mul [rb - 4], 0x100, [reg_cs]
-    add [reg_cs], [rb - 3], [reg_cs]
+    add [rb - 3], 0, [reg_cs + 0]
+    add [rb - 4], 0, [reg_cs + 1]
 
     # Push IP
     add [reg_ip], 0, [rb - 1]

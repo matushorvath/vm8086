@@ -60,6 +60,7 @@
 
 reg_ip:
     db  0
+#    TODO 16 bit
 
 reg_ax:
 reg_al:
@@ -103,11 +104,18 @@ reg_di:
 
 reg_cs:
     db  0
+    db  0
+
 reg_ds:
     db  0
+    db  0
+
 reg_ss:
     db  0
+    db  0
+
 reg_es:
+    db  0
     db  0
 
 # FLAGS: ----ODIT SZ-A-P-C
@@ -137,11 +145,13 @@ init_state:
     arb -1
 
     # Load the start address to cs:ip
-    add [binary_start_address_cs], 0, [reg_cs]
+    add [binary_start_address_cs + 0], 0, [reg_cs + 0]
+    add [binary_start_address_cs + 1], 0, [reg_cs + 1]
     add [binary_start_address_ip], 0, [reg_ip]
 
     # Check if cs:ip is a sane value
-    add [reg_cs], 0, [rb - 1]
+    mul [reg_cs + 1], 0x100, [rb - 1]
+    add [reg_cs + 0], [rb - 1], [rb - 1]
     add 0xffff, 0, [rb - 2]
     arb -2
     call check_range

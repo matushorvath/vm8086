@@ -61,7 +61,8 @@ execute_loop:
 #
 #execute_callback_done:
     # Read op code
-    add [reg_cs], 0, [rb - 1]
+    mul [reg_cs + 1], 0x100, [rb - 1]
+    add [reg_cs + 0], [rb - 1], [rb - 1]
     add [reg_ip], 0, [rb - 2]
     arb -2
     call read_seg_off_b

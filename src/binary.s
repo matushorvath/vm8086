@@ -24,25 +24,25 @@
 .EXPORT binary_length
 .EXPORT binary_data
 
-# Initial cs value (default for real hardware is 0xffff)
+# Initial cs value split into two 8-bit numbers (default for real hardware is 0xff, 0xff)
 +0 = binary_start_address_cs:
 
 # Initial ip value (default for real hardware is 0x0000)
-+1 = binary_start_address_ip:
++2 = binary_start_address_ip:
 
 # Load address of the binary image in 8086 memory
-+2 = binary_load_address:
++3 = binary_load_address:
 
 # Tracing (0 - disable tracing, -1 - trace always, >0 - tracing past given address)
-+3 = binary_enable_tracing:
++4 = binary_enable_tracing:
 
 # Optional callback function to call before each instruction, zero if not used
-+4 = binary_vm_callback:
++5 = binary_vm_callback:
 
 # Size of the binary image
-+5 = binary_length:
++6 = binary_length:
 
 # Binary image data
-+6 = binary_data:
++7 = binary_data:
 
 .EOF

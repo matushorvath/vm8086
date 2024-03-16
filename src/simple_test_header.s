@@ -9,7 +9,7 @@
 
 # Initial cs value, use the default
 binary_start_address_cs:
-    db  0xffff
+    db  0xff, 0xff
 
 # Initial ip value, use the default
 binary_start_address_ip:

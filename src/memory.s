@@ -11,6 +11,8 @@
 .EXPORT write_seg_off_b
 .EXPORT write_seg_off_w
 
+# TODO read_cs_ip_b
+
 #.EXPORT push
 #.EXPORT pop
 
@@ -21,10 +23,6 @@
 
 # From error.s
 .IMPORT report_error
-
-# From state.s
-.IMPORT reg_sp
-.IMPORT reg_ss
 
 # From util.s
 .IMPORT check_range
@@ -281,7 +279,7 @@ calc_ea:
     arb -1
 
     # Calculate the EA
-    mul [reg_ss], 16, [rb + ea]
+    mul [reg_ssxxx], 16, [rb + ea]
     add [reg_spxxx], [rb + ea], [rb - 1]   # store to param 0
 
     # Wrap around to 20-bit address
@@ -306,7 +304,7 @@ push:
     add [rb - 4], 0, [reg_spxxx]
 
     # Calculate EA
-    add [reg_ss], 0, [rb - 1]
+    add [reg_ssxxx], 0, [rb - 1]
     add [reg_spxxx], 0, [rb - 2]
     arb -2
     call calc_ea
@@ -326,7 +324,7 @@ pop:
     arb -1
 
     # Calculate EA
-    add [reg_ss], 0, [rb - 1]
+    add [reg_ssxxx], 0, [rb - 1]
     add [reg_spxxx], 0, [rb - 2]
     arb -2
     call calc_ea

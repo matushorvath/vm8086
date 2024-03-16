@@ -26,7 +26,7 @@ arg_reg_ax:
     arb -2
 
     add 0, 0, [rb + loc_type]
-    add reg_ax, 0, [rb + loc_addr]
+    add reg_ax + 0, 0, [rb + loc_addr]
 
     arb 2
     ret 0
@@ -38,7 +38,7 @@ arg_reg_bx:
     arb -2
 
     add 0, 0, [rb + loc_type]
-    add reg_bx, 0, [rb + loc_addr]
+    add reg_bx + 0, 0, [rb + loc_addr]
 
     arb 2
     ret 0
@@ -50,7 +50,7 @@ arg_reg_cx:
     arb -2
 
     add 0, 0, [rb + loc_type]
-    add reg_cx, 0, [rb + loc_addr]
+    add reg_cx + 0, 0, [rb + loc_addr]
 
     arb 2
     ret 0
@@ -62,7 +62,7 @@ arg_reg_dx:
     arb -2
 
     add 0, 0, [rb + loc_type]
-    add reg_dx, 0, [rb + loc_addr]
+    add reg_dx + 0, 0, [rb + loc_addr]
 
     arb 2
     ret 0
@@ -74,7 +74,7 @@ arg_reg_sp:
     arb -2
 
     add 0, 0, [rb + loc_type]
-    add reg_sp, 0, [rb + loc_addr]
+    add reg_sp + 0, 0, [rb + loc_addr]
 
     arb 2
     ret 0
@@ -86,7 +86,7 @@ arg_reg_bp:
     arb -2
 
     add 0, 0, [rb + loc_type]
-    add reg_bp, 0, [rb + loc_addr]
+    add reg_bp + 0, 0, [rb + loc_addr]
 
     arb 2
     ret 0
@@ -98,7 +98,7 @@ arg_reg_si:
     arb -2
 
     add 0, 0, [rb + loc_type]
-    add reg_si, 0, [rb + loc_addr]
+    add reg_si + 0, 0, [rb + loc_addr]
 
     arb 2
     ret 0
@@ -110,7 +110,7 @@ arg_reg_di:
     arb -2
 
     add 0, 0, [rb + loc_type]
-    add reg_di, 0, [rb + loc_addr]
+    add reg_di + 0, 0, [rb + loc_addr]
 
     arb 2
     ret 0
