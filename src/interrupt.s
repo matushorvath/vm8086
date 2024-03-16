@@ -6,6 +6,12 @@
 # From memory.s
 .IMPORT read_w
 
+# From stack.s
+.IMPORT pop_w
+.IMPORT popf
+.IMPORT push_w
+.IMPORT pushf
+
 # From state.s
 .IMPORT reg_cs
 .IMPORT reg_ip
@@ -38,21 +44,23 @@ execute_into_done:
 
 ##########
 execute_int:
-.FRAME type;
+.FRAME type; tmp
+    arb -1
+
     # Push flags, then disable TF and IF
-    call execute_pushf
+    call pushf
 
     add 0, 0, [flag_trap]
     add 0, 0, [flag_interrupt]
 
     # Push CS
-    mul [reg_cs + 1], 0x100, [rb - 1]
-    add [reg_cs + 0], [rb - 1], [rb - 1]
-    arb -1
+    add [reg_cs + 0], 0, [rb - 1]
+    add [reg_cs + 1], 0, [rb - 2]
+    arb -2
     call push_w
 
     # Load new CS from the interrupt vector (physical address type * 4 + 2)
-    mul type, 4, [rb + tmp]
+    mul [rb + type], 4, [rb + tmp]
     add [rb + tmp], 2, [ip + 1]
     add [0], 0, [rb - 1]
     arb -1
@@ -62,9 +70,9 @@ execute_int:
     add [rb - 4], 0, [reg_cs + 1]
 
     # Push IP
-    mul [reg_ip + 1], 0x100, [rb - 1]
-    add [reg_ip + 0], [rb - 1], [rb - 1]
-    arb -1
+    add [reg_ip + 0], 0, [rb - 1]
+    add [reg_ip + 1], 0, [rb - 2]
+    arb -2
     call push_w
 
     # Load new IP from the interrupt vector (physical address type * 4 + 0)
@@ -76,150 +84,25 @@ execute_int:
     add [rb - 3], 0, [reg_ip + 0]
     add [rb - 4], 0, [reg_ip + 1]
 
+    arb 1
     ret 1
 .ENDFRAME
 
 ##########
 execute_iret:
 .FRAME
-    # Pop IP
+    # Pop IP, CS and flags
+    call pop_w
+    add [rb - 2], 0, [reg_ip + 0]
+    add [rb - 3], 0, [reg_ip + 1]
 
-    mul type, 4, [ip + 1]
-    add [0], 0, [rb - 1]
-    arb -1
-    call read_w
+    call pop_w
+    add [rb - 2], 0, [reg_cs + 0]
+    add [rb - 3], 0, [reg_cs + 1]
 
-    add [rb - 3], 0, [reg_ip + 0]
-    add [rb - 4], 0, [reg_ip + 1]
+    call popf
 
-
-pop ip
-pop cs
-popf
-
-
-    # Push flags, then disable TF and IF
-    call execute_pushf
-
-    add 0, 0, [flag_trap]
-    add 0, 0, [flag_interrupt]
-
-    # Push CS
-    mul [reg_cs + 1], 0x100, [rb - 1]
-    add [reg_cs + 0], [rb - 1], [rb - 1]
-    arb -1
-    call push_w
-
-    # Load new CS from the interrupt vector (physical address type * 4 + 2)
-    mul type, 4, [rb + tmp]
-    add [rb + tmp], 2, [ip + 1]
-    add [0], 0, [rb - 1]
-    arb -1
-    call read_w
-
-    add [rb - 3], 0, [reg_cs + 0]
-    add [rb - 4], 0, [reg_cs + 1]
-
-    # Push IP
-    mul [reg_ip + 1], 0x100, [rb - 1]
-    add [reg_ip + 0], [rb - 1], [rb - 1]
-    arb -1
-    call push_w
-
-    # Load new IP from the interrupt vector (physical address type * 4 + 0)
-    mul type, 4, [ip + 1]
-    add [0], 0, [rb - 1]
-    arb -1
-    call read_w
-
-    add [rb - 3], 0, [reg_ip + 0]
-    add [rb - 4], 0, [reg_ip + 1]
-
-    ret 1
+    ret 0
 .ENDFRAME
-
 
 .EOF
-
-# TODO
-    db  not_implemented, 0 # TODO    db  execute_int3, 0                                 # 0xcc INT 3
-    db  not_implemented, 0 # TODO    db  execute_int, arg_immediate_b                    # 0xcd INT IMMED8
-    db  not_implemented, 0 # TODO    db  execute_into, 0                                 # 0xce INTO
-    db  not_implemented, 0 # TODO    db  execute_iret, 0                                 # 0xcf IRET
-
-
-
-
-##########
-execute_brk:
-.FRAME ip_hi, ip_lo
-    arb -2
-
-    # Increment ip with wraparound, since we need to push that value. We will overwrite ip soon anyway.
-    # This implements a one byte gap after a BRK instruction (BRK <gap for handler use> <RTI returns here>).
-    call inc_ip
-
-    # Split ip into high and low part
-    add [reg_ipxxx], 0, [rb - 1]
-    arb -1
-    call split_16_8_8
-
-    add [rb - 3], 0, [rb + ip_hi]
-    add [rb - 4], 0, [rb + ip_lo]
-
-    # Push both parts of ip
-    add [rb + ip_hi], 0, [rb - 1]
-    arb -1
-    call push
-
-    add [rb + ip_lo], 0, [rb - 1]
-    arb -1
-    call push
-
-    # Pack sr and push it too
-    call pack_sr
-    add [rb - 2], 0, [rb - 1]
-    arb -1
-    call push
-
-    # Set the interrupt flag
-    add 1, 0, [flag_interrupt]
-
-    # Read the IRQ vector from 0xfffe and 0xffff
-    add 0xffff, 0, [rb - 1]
-    arb -1
-    call read
-    mul [rb - 3], 0x100, [reg_ipxxx]           # read(0xffff) * 0x100 -> [reg_ip]
-
-    add 0xfffe, 0, [rb - 1]
-    arb -1
-    call read
-    add [rb - 3], [reg_ipxxx], [reg_ipxxx]      # read(0xfffe) + read(0xffff) * 0x100 -> [reg_ip]
-
-    arb 2
-    ret 0
-.ENDFRAME
-
-
-
-
-##########
-execute_rti:
-.FRAME
-    # Pull sr and unpack it into flags_*
-    call pop
-    add [rb - 2], 0, [rb - 1]
-    arb -1
-    call unpack_sr
-
-    # Pull return addres lo and hi and update reg_ip
-    call pop
-    add [rb - 2], 0, [reg_ipxxx]
-
-    call pop
-    mul [rb - 2], 0x100, [rb - 2]
-    add [reg_ipxxx], [rb - 2], [reg_ipxxx]
-
-    ret 0
-.ENDFRAME
-

@@ -25,6 +25,10 @@
 # From error.s
 .IMPORT report_error
 
+# From state.s
+.IMPORT reg_cs
+.IMPORT reg_ip
+
 # From util.s
 .IMPORT check_range
 .IMPORT mod

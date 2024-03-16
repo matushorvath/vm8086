@@ -14,7 +14,7 @@
 .IMPORT instructions
 
 # From memory.s
-.IMPORT read_seg_off_b
+.IMPORT read_cs_ip_b
 
 # From state.s
 .IMPORT reg_cs
