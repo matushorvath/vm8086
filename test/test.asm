@@ -11,6 +11,8 @@ section interrupts start=0x00000
 section .text start=0x80000
     ; INT 3 handler
     nop
+    inc ax
+    inc ax
     out 0x42, ax
     iret
 

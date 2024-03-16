@@ -96,7 +96,7 @@ execute_loop:
 
     # Warning: Messed up stack below this line
     arb [execute_args_count]            # execute_args_count is already negative, see the "mul [0], -1" above
-    arb 1                              # adjust rb as explained above
+    arb -1                              # adjust rb as explained above
 
     # Another issue here is that we need to read the exec_fn pointer after doing an arb -(args_count - 1).
     # If exec_fn is on stack, we would have to compensate for the changed rb pointer when calling exec_fn.
@@ -104,7 +104,7 @@ execute_loop:
     # args_fn, exec_fn and args_count. Those don't depend on rb, so we can easily access them with messed up stack.
 
     call [execute_exec_fn]
-    arb -1                              # undo the adjustment explained above, stack is now safe to use
+    arb 1                               # undo the adjustment explained above, stack is now safe to use
 
     jz  0, execute_loop
 
