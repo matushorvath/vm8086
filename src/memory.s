@@ -11,7 +11,8 @@
 .EXPORT write_seg_off_b
 .EXPORT write_seg_off_w
 
-# TODO read_cs_ip_b
+.EXPORT read_cs_ip_b
+.EXPORT read_cs_ip_w
 
 #.EXPORT push
 #.EXPORT pop
@@ -257,6 +258,41 @@ write_seg_off_w:
 
     arb 1
     ret 4
+.ENDFRAME
+
+##########
+read_cs_ip_b:
+.FRAME value                                                # returns value
+    arb -1
+
+    mul [reg_cs + 1], 0x100, [rb - 1]
+    add [reg_cs + 0], [rb - 1], [rb - 1]
+    mul [reg_ip + 1], 0x100, [rb - 2]
+    add [reg_ip + 0], [rb - 2], [rb - 2]
+    arb -2
+    call read_seg_off_b
+    add [rb - 4], 0, [rb + value]
+
+    arb 1
+    ret 0
+.ENDFRAME
+
+##########
+read_cs_ip_w:
+.FRAME value_lo, value_hi                                   # returns value_lo, value_hi
+    arb -2
+
+    mul [reg_cs + 1], 0x100, [rb - 1]
+    add [reg_cs + 0], [rb - 1], [rb - 1]
+    mul [reg_ip + 1], 0x100, [rb - 2]
+    add [reg_ip + 0], [rb - 2], [rb - 2]
+    arb -2
+    call read_seg_off_w
+    add [rb - 4], 0, [rb + value_lo]
+    add [rb - 5], 0, [rb + value_hi]
+
+    arb 2
+    ret 0
 .ENDFRAME
 
 ##########

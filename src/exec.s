@@ -61,13 +61,8 @@ execute_loop:
 #
 #execute_callback_done:
     # Read op code
-    mul [reg_cs + 1], 0x100, [rb - 1]
-    add [reg_cs + 0], [rb - 1], [rb - 1]
-    mul [reg_ip + 1], 0x100, [rb - 2]
-    add [reg_ip + 0], [rb - 2], [rb - 2]
-    arb -2
-    call read_seg_off_b
-    add [rb - 4], 0, [rb + op]
+    call read_cs_ip_b
+    add [rb - 2], 0, [rb + op]
 
     # Increase ip
     call inc_ip
