@@ -32,7 +32,6 @@
 .EXPORT flag_zero
 .EXPORT flag_sign
 .EXPORT flag_overflow
-
 .EXPORT flag_interrupt
 .EXPORT flag_direction
 .EXPORT flag_trap
@@ -109,8 +108,6 @@ reg_ss:
 reg_es:
     db  0
     db  0
-
-# FLAGS: ----ODIT SZ-A-P-C
 
 flag_carry:                             # CF
     db  0

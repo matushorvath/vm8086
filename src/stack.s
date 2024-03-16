@@ -1,8 +1,14 @@
 .EXPORT push_w
 .EXPORT pop_w
 
-# TODO .EXPORT pushf
-# TODO .EXPORT popf
+.EXPORT pushf
+.EXPORT popf
+
+# From flags.s
+.IMPORT pack_flags_lo
+.IMPORT pack_flags_hi
+.IMPORT unpack_flags_lo
+.IMPORT unpack_flags_hi
 
 # From memory.s
 .IMPORT read_seg_off_w
@@ -109,87 +115,64 @@ pop_w:
     ret 0
 .ENDFRAME
 
-.EOF
-
-
-
-
-
 ##########
-pack_sr: # TODO rename sr
-.FRAME sr                                           # returns sr
-    arb -1
+pushf:
+.FRAME flags_lo, flags_hi
+    arb -2
 
-    add 0b00110000, 0, [rb + sr]
+    # Decrement sp by 2
+    call dec_2_sp
 
-    jz  [flag_carry], pack_sr_after_carry
-    add [rb + sr], 0b00000001, [rb + sr]
-pack_sr_after_carry:
+    # Pack the flags
+    call pack_flags_lo
+    add [rb - 2], 0, [rb + flags_lo]
 
-    jz  [flag_zero], pack_sr_after_zero
-    add [rb + sr], 0b00000010, [rb + sr]
-pack_sr_after_zero:
+    call pack_flags_hi
+    add [rb - 2], 0, [rb + flags_hi]
 
-    jz  [flag_interrupt], pack_sr_after_interrupt
-    add [rb + sr], 0b00000100, [rb + sr]
-pack_sr_after_interrupt:
+    # Store the value
+    mul [reg_ss + 1], 0x100, [rb - 1]
+    add [reg_ss + 0], [rb - 1], [rb - 1]
+    mul [reg_sp + 1], 0x100, [rb - 2]
+    add [reg_sp + 0], [rb - 1], [rb - 2]
+    add [rb + flags_lo], 0, [rb - 3]
+    add [rb + flags_hi], 0, [rb - 4]
+    arb -4
+    call write_seg_off_w
 
-    jz  [flag_decimal], pack_sr_after_decimal
-    add [rb + sr], 0b00001000, [rb + sr]
-pack_sr_after_decimal:
-
-    jz  [flag_overflow], pack_sr_after_overflow
-    add [rb + sr], 0b01000000, [rb + sr]
-pack_sr_after_overflow:
-
-    jz  [flag_negative], pack_sr_after_negative
-    add [rb + sr], 0b10000000, [rb + sr]
-pack_sr_after_negative:
-
-
-    arb 1
+    arb 2
     ret 0
 .ENDFRAME
 
 ##########
-unpack_sr: # TODO rename sr
-.FRAME sr;
-    lt  0b01111111, [rb + sr], [flag_negative]
-    jz  [flag_negative], unpack_sr_after_negative
-    add [rb + sr], -0b10000000, [rb + sr]
-unpack_sr_after_negative:
+popf:
+.FRAME flags_lo, flags_hi
+    arb -2
 
-    lt  0b00111111, [rb + sr], [flag_overflow]
-    jz  [flag_overflow], unpack_sr_after_overflow
-    add [rb + sr], -0b01000000, [rb + sr]
-unpack_sr_after_overflow:
+    # Read the value
+    mul [reg_ss + 1], 0x100, [rb - 1]
+    add [reg_ss + 0], [rb - 1], [rb - 1]
+    mul [reg_sp + 1], 0x100, [rb - 2]
+    add [reg_sp + 0], [rb - 2], [rb - 2]
+    arb -2
+    call read_seg_off_w
+    add [rb - 4], 0, [rb + flags_lo]
+    add [rb - 5], 0, [rb + flags_hi]
 
-    lt  0b00011111, [rb + sr], [flag_decimal]               # flag_decimal used as tmp
-    jz  [flag_decimal], unpack_sr_after_ignored
-    add [rb + sr], -0b00100000, [rb + sr]
-unpack_sr_after_ignored:
+    # Increment sp by 2
+    call inc_2_sp
 
-    lt  0b00001111, [rb + sr], [flag_decimal]               # flag_decimal used as tmp
-    jz  [flag_decimal], unpack_sr_after_break
-    add [rb + sr], -0b00010000, [rb + sr]
-unpack_sr_after_break:
+    # Unpack the flags
+    add [rb + flags_lo], 0, [rb - 1]
+    arb -1
+    call unpack_flags_lo
 
-    lt  0b00000111, [rb + sr], [flag_decimal]
-    jz  [flag_decimal], unpack_sr_after_decimal
-    add [rb + sr], -0b00001000, [rb + sr]
-unpack_sr_after_decimal:
+    add [rb + flags_hi], 0, [rb - 1]
+    arb -1
+    call unpack_flags_hi
 
-    lt  0b00000011, [rb + sr], [flag_interrupt]
-    jz  [flag_interrupt], unpack_sr_after_interrupt
-    add [rb + sr], -0b00000100, [rb + sr]
-unpack_sr_after_interrupt:
-
-    lt  0b00000001, [rb + sr], [flag_zero]
-    jz  [flag_zero], unpack_sr_after_zero
-    add [rb + sr], -0b00000010, [rb + sr]
-unpack_sr_after_zero:
-
-    lt  0, [rb + sr], [flag_carry]
-
-    ret 1
+    arb 2
+    ret 0
 .ENDFRAME
+
+.EOF
