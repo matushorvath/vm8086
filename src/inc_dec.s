@@ -20,7 +20,7 @@
 
 ##########
 execute_inc_w:
-.FRAME loc_type, loc_addr, _unused_type, _unused_addr; value_lo, value_hi, tmp
+.FRAME loc_type, loc_addr; value_lo, value_hi, tmp
     arb -3
 
     # Read the value
@@ -76,12 +76,12 @@ execute_inc_w_after_carry:
     call write_location_w
 
     arb 3
-    ret 4
+    ret 2
 .ENDFRAME
 
 ##########
 execute_dec_w:
-.FRAME loc_type, loc_addr, _unused_type, _unused_addr; value_lo, value_hi, tmp
+.FRAME loc_type, loc_addr; value_lo, value_hi, tmp
     arb -3
 
     # Read the value
@@ -137,7 +137,7 @@ execute_dec_w_after_borrow:
     call write_location_w
 
     arb 3
-    ret 4
+    ret 2
 .ENDFRAME
 
 .EOF

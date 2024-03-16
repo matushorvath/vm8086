@@ -1,11 +1,11 @@
-.EXPORT arg_reg_ax
-.EXPORT arg_reg_cx
-.EXPORT arg_reg_dx
-.EXPORT arg_reg_bx
-.EXPORT arg_reg_sp
-.EXPORT arg_reg_bp
-.EXPORT arg_reg_si
-.EXPORT arg_reg_di
+.EXPORT arg_ax
+.EXPORT arg_cx
+.EXPORT arg_dx
+.EXPORT arg_bx
+.EXPORT arg_sp
+.EXPORT arg_bp
+.EXPORT arg_si
+.EXPORT arg_di
 
 # From state.s
 .IMPORT reg_ax
@@ -18,10 +18,10 @@
 .IMPORT reg_di
 
 # The argument is a fixed 16-bit register (encoded as part of the opcode).
-# We return address of the first byte of the register.
+# We return the intcode address of the first byte of the register.
 
 ##########
-arg_reg_ax:
+arg_ax:
 .FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
     arb -2
 
@@ -33,7 +33,7 @@ arg_reg_ax:
 .ENDFRAME
 
 ##########
-arg_reg_bx:
+arg_bx:
 .FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
     arb -2
 
@@ -45,7 +45,7 @@ arg_reg_bx:
 .ENDFRAME
 
 ##########
-arg_reg_cx:
+arg_cx:
 .FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
     arb -2
 
@@ -57,7 +57,7 @@ arg_reg_cx:
 .ENDFRAME
 
 ##########
-arg_reg_dx:
+arg_dx:
 .FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
     arb -2
 
@@ -69,7 +69,7 @@ arg_reg_dx:
 .ENDFRAME
 
 ##########
-arg_reg_sp:
+arg_sp:
 .FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
     arb -2
 
@@ -81,7 +81,7 @@ arg_reg_sp:
 .ENDFRAME
 
 ##########
-arg_reg_bp:
+arg_bp:
 .FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
     arb -2
 
@@ -93,7 +93,7 @@ arg_reg_bp:
 .ENDFRAME
 
 ##########
-arg_reg_si:
+arg_si:
 .FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
     arb -2
 
@@ -105,7 +105,7 @@ arg_reg_si:
 .ENDFRAME
 
 ##########
-arg_reg_di:
+arg_di:
 .FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
     arb -2
 
