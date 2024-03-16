@@ -62,7 +62,8 @@ execute_int:
     add [rb - 4], 0, [reg_cs + 1]
 
     # Push IP
-    add [reg_ip], 0, [rb - 1]
+    mul [reg_ip + 1], 0x100, [rb - 1]
+    add [reg_ip + 0], [rb - 1], [rb - 1]
     arb -1
     call push_w
 
@@ -72,12 +73,11 @@ execute_int:
     arb -1
     call read_w
 
-    mul [rb - 4], 0x100, [reg_ip]
-    add [reg_ip], [rb - 3], [reg_ip]
+    add [rb - 3], 0, [reg_ip + 0]
+    add [rb - 4], 0, [reg_ip + 1]
 
     ret 1
 .ENDFRAME
-
 
 ##########
 execute_iret:
@@ -89,8 +89,8 @@ execute_iret:
     arb -1
     call read_w
 
-    mul [rb - 4], 0x100, [reg_ip]
-    add [reg_ip], [rb - 3], [reg_ip]
+    add [rb - 3], 0, [reg_ip + 0]
+    add [rb - 4], 0, [reg_ip + 1]
 
 
 pop ip
@@ -121,7 +121,8 @@ popf
     add [rb - 4], 0, [reg_cs + 1]
 
     # Push IP
-    add [reg_ip], 0, [rb - 1]
+    mul [reg_ip + 1], 0x100, [rb - 1]
+    add [reg_ip + 0], [rb - 1], [rb - 1]
     arb -1
     call push_w
 
@@ -131,8 +132,8 @@ popf
     arb -1
     call read_w
 
-    mul [rb - 4], 0x100, [reg_ip]
-    add [reg_ip], [rb - 3], [reg_ip]
+    add [rb - 3], 0, [reg_ip + 0]
+    add [rb - 4], 0, [reg_ip + 1]
 
     ret 1
 .ENDFRAME
@@ -159,7 +160,7 @@ execute_brk:
     call inc_ip
 
     # Split ip into high and low part
-    add [reg_ip], 0, [rb - 1]
+    add [reg_ipxxx], 0, [rb - 1]
     arb -1
     call split_16_8_8
 
@@ -188,12 +189,12 @@ execute_brk:
     add 0xffff, 0, [rb - 1]
     arb -1
     call read
-    mul [rb - 3], 0x100, [reg_ip]           # read(0xffff) * 0x100 -> [reg_ip]
+    mul [rb - 3], 0x100, [reg_ipxxx]           # read(0xffff) * 0x100 -> [reg_ip]
 
     add 0xfffe, 0, [rb - 1]
     arb -1
     call read
-    add [rb - 3], [reg_ip], [reg_ip]      # read(0xfffe) + read(0xffff) * 0x100 -> [reg_ip]
+    add [rb - 3], [reg_ipxxx], [reg_ipxxx]      # read(0xfffe) + read(0xffff) * 0x100 -> [reg_ip]
 
     arb 2
     ret 0
@@ -213,11 +214,11 @@ execute_rti:
 
     # Pull return addres lo and hi and update reg_ip
     call pop
-    add [rb - 2], 0, [reg_ip]
+    add [rb - 2], 0, [reg_ipxxx]
 
     call pop
     mul [rb - 2], 0x100, [rb - 2]
-    add [reg_ip], [rb - 2], [reg_ip]
+    add [reg_ipxxx], [rb - 2], [reg_ipxxx]
 
     ret 0
 .ENDFRAME

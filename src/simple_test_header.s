@@ -13,7 +13,7 @@ binary_start_address_cs:
 
 # Initial ip value, use the default
 binary_start_address_ip:
-    db  0x0000
+    db  0x00, 0x00
 
 # Load address of the simple test binary in 8086 memory
 binary_load_address:

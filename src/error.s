@@ -31,7 +31,8 @@ report_error:
 
     out ':'
 
-    add [reg_ip], 0, [rb - 1]
+    mul [reg_ip + 1], 0x100, [rb - 1]
+    add [reg_ip + 0], [rb - 1], [rb - 1]
     add 16, 0, [rb - 2]
     arb -2
     call print_num_radix

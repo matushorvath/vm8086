@@ -60,7 +60,7 @@
 
 reg_ip:
     db  0
-#    TODO 16 bit
+    db  0
 
 reg_ax:
 reg_al:
@@ -147,7 +147,8 @@ init_state:
     # Load the start address to cs:ip
     add [binary_start_address_cs + 0], 0, [reg_cs + 0]
     add [binary_start_address_cs + 1], 0, [reg_cs + 1]
-    add [binary_start_address_ip], 0, [reg_ip]
+    add [binary_start_address_ip + 0], 0, [reg_ip + 0]
+    add [binary_start_address_ip + 1], 0, [reg_ip + 1]
 
     # Check if cs:ip is a sane value
     mul [reg_cs + 1], 0x100, [rb - 1]
@@ -156,7 +157,8 @@ init_state:
     arb -2
     call check_range
 
-    add [reg_ip], 0, [rb - 1]
+    mul [reg_ip + 1], 0x100, [rb - 1]
+    add [reg_ip + 0], [rb - 1], [rb - 1]
     add 0xffff, 0, [rb - 2]
     arb -2
     call check_range
@@ -171,12 +173,22 @@ inc_ip:
 .FRAME tmp
     arb -1
 
-    add [reg_ip], 1, [reg_ip]
+    # Increment the low byte
+    add [reg_ip + 0], 1, [reg_ip + 0]
 
-    eq  [reg_ip], 0x10000, [rb + tmp]
-    jz  [rb + tmp], inc_ip_done
+    # Check for carry out of low byte
+    lt  [reg_ip + 0], 0x100, [rb + tmp]
+    jnz [rb + tmp], inc_ip_done
 
-    add 0, 0, [reg_ip]
+    add 0, 0, [reg_ip + 0]
+    add [reg_ip + 1], 1, [reg_ip + 1]
+
+    # Check for carry out of high byte
+    lt  [reg_ip + 1], 0x100, [rb + tmp]
+    jnz [rb + tmp], inc_ip_done
+
+    # Overflow to zero
+    add 0, 0, [reg_ip + 1]
 
 inc_ip_done:
     arb 1

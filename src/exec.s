@@ -36,7 +36,7 @@ execute_loop:
 #
 #    # If the [binary_enable_tracing] flag is positive, we use it as an address
 #    # starting from where we should turn on tracing
-#    eq  [binary_enable_tracing], [reg_ip], [rb + tmp]
+#    eq  [binary_enable_tracing], [reg_ipxxx], [rb + tmp]
 #    jz  [rb + tmp], execute_tracing_different_address
 #
 #    # Address match, turn on tracing
@@ -63,7 +63,8 @@ execute_loop:
     # Read op code
     mul [reg_cs + 1], 0x100, [rb - 1]
     add [reg_cs + 0], [rb - 1], [rb - 1]
-    add [reg_ip], 0, [rb - 2]
+    mul [reg_ip + 1], 0x100, [rb - 2]
+    add [reg_ip + 0], [rb - 2], [rb - 2]
     arb -2
     call read_seg_off_b
     add [rb - 4], 0, [rb + op]

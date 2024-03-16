@@ -27,22 +27,22 @@
 # Initial cs value split into two 8-bit numbers (default for real hardware is 0xff, 0xff)
 +0 = binary_start_address_cs:
 
-# Initial ip value (default for real hardware is 0x0000)
+# Initial ip value split into two 8-bit numbers (default for real hardware is 0x00, 0x00)
 +2 = binary_start_address_ip:
 
 # Load address of the binary image in 8086 memory
-+3 = binary_load_address:
++4 = binary_load_address:
 
 # Tracing (0 - disable tracing, -1 - trace always, >0 - tracing past given address)
-+4 = binary_enable_tracing:
++5 = binary_enable_tracing:
 
 # Optional callback function to call before each instruction, zero if not used
-+5 = binary_vm_callback:
++6 = binary_vm_callback:
 
 # Size of the binary image
-+6 = binary_length:
++7 = binary_length:
 
 # Binary image data
-+7 = binary_data:
++8 = binary_data:
 
 .EOF

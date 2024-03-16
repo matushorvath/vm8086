@@ -75,7 +75,8 @@ decode_mod_rm_mem_disp8:
     # Read 8-bit displacement
     mul [reg_cs + 1], 0x100, [rb - 1]
     add [reg_cs + 0], [rb - 1], [rb - 1]
-    add [reg_ip], 0, [rb - 2]
+    mul [reg_ip + 1], 0x100, [rb - 2]
+    add [reg_ip + 0], [rb - 2], [rb - 2]
     arb -2
     call read_seg_off_b
     add [rb - 4], 0, [rb + disp]
@@ -99,7 +100,8 @@ decode_mod_rm_mem_disp16:
     # Read 16-bit displacement
     mul [reg_cs + 1], 0x100, [rb - 1]
     add [reg_cs + 0], [rb - 1], [rb - 1]
-    add [reg_ip], 0, [rb - 2]
+    mul [reg_ip + 1], 0x100, [rb - 2]
+    add [reg_ip + 0], [rb - 2], [rb - 2]
     arb -2
     call read_seg_off_w
     mul [rb - 5], 0xff, [rb + disp]
