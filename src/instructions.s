@@ -28,7 +28,14 @@
 .IMPORT execute_sti
 
 # From in_out.s
-.IMPORT execute_out_w
+# TODO .IMPORT execute_in_al_immediate_b
+# TODO .IMPORT execute_in_ax_immediate_b
+.IMPORT execute_out_al_immediate_b
+.IMPORT execute_out_ax_immediate_b
+# TODO .IMPORT execute_in_al_dx
+# TODO .IMPORT execute_in_ax_dx
+.IMPORT execute_out_al_dx
+.IMPORT execute_out_ax_dx
 
 # From inc_dec.s
 .IMPORT execute_inc_w
@@ -322,20 +329,20 @@ instructions:
     db  not_implemented, 0, 0 # TODO    db  execute_loop, arg_short_ptr                     # 0xe2 LOOP SHORT-LABEL
     db  not_implemented, 0, 0 # TODO    db  execute_jcxz, arg_short_ptr                     # 0xe3 JCXZ SHORT-LABEL
 
-    db  not_implemented, 0, 0 # TODO    db  execute_in_b, arg_immediate_b                   # 0xe4 IN AL, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_in_w, arg_immediate_b                   # 0xe5 IN AX, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_out_b, arg_immediate_b                  # 0xe6 OUT AL, IMMED8
-    db  execute_out_w, arg_immediate_b, 2               # 0xe7 OUT AX, IMMED8
+    db  not_implemented, 0, 0 # TODO    db  execute_in_al_immediate_b, 0, 0                 # 0xe4 IN AL, IMMED8
+    db  not_implemented, 0, 0 # TODO    db  execute_in_ax_immediate_b, 0, 0                 # 0xe5 IN AX, IMMED8
+    db  execute_out_al_immediate_b, 0, 0                # 0xe6 OUT AL, IMMED8
+    db  execute_out_ax_immediate_b, 0, 0                # 0xe7 OUT AX, IMMED8
 
     db  not_implemented, 0, 0 # TODO    db  execute_call, arg_near_ptr                      # 0xe8 CALL NEAR-PROC
     db  not_implemented, 0, 0 # TODO    db  execute_jmp, arg_near_ptr                       # 0xe9 JMP NEAR-LABEL
     db  not_implemented, 0, 0 # TODO    db  execute_jmp, arg_far_ptr                        # 0xea JMP FAR-LABEL
     db  not_implemented, 0, 0 # TODO    db  execute_jmp, arg_short_ptr                      # 0xeb JMP SHORT-LABEL
 
-    db  not_implemented, 0, 0 # TODO    db  execute_in_b, arg_dx                            # 0xe4 IN AL, DX
-    db  not_implemented, 0, 0 # TODO    db  execute_in_w, arg_dx                            # 0xe5 IN AX, DX
-    db  not_implemented, 0, 0 # TODO    db  execute_out_b, arg_dx                           # 0xe6 OUT AL, DX
-    db  not_implemented, 0, 0 # TODO    db  execute_out_w, arg_dx                           # 0xe7 OUT AX, DX
+    db  not_implemented, 0, 0 # TODO    db  execute_in_al_dx, 0, 0                          # 0xec IN AL, DX
+    db  not_implemented, 0, 0 # TODO    db  execute_in_ax_dx, 0, 0                          # 0xed IN AX, DX
+    db  execute_out_al_dx, 0, 0                         # 0xee OUT AL, DX
+    db  execute_out_ax_dx, 0, 0                         # 0xef OUT AX, DX
 
     db  not_implemented, 0, 0 # TODO    db  execute_lock, 0                                 # 0xf0 LOCK (prefix)
     db  invalid_opcode, 0, 0                            # 0xf1
