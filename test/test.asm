@@ -2,6 +2,13 @@
 
 cpu 8086
 
+; TODO:
+; set overflow, INTO
+; move the int x test to a different interrupt, perhaps interrupt from interrupt? how is it with IF?
+; OUT with 16-bit dx, 16-bit ax
+; reset registers between tests
+; CMC CLC STC CLI STI CLD STD, perhaps test with PUSHF/POPF + OUT
+
 section interrupts start=0x00000
     dw  0x0000, 0x0000
     dw  0x0000, 0x0000
@@ -34,8 +41,6 @@ section .text start=0x80000
     inc dx
 
     out dx, al
-
-    ; TODO 16-bit dx, 16-bit ax
 
     inc bx
     push bx

@@ -95,7 +95,7 @@ instructions:
     db  not_implemented, 0, 0 # TODO    db  execute_sbb_b, arg_al_immediate_b               # 0x1c SBB AL, IMMED8
     db  not_implemented, 0, 0 # TODO    db  execute_sbb_w, arg_ax_immediate_w               # 0x1d SBB AX, IMMED16
 
-    db  execute_push_w, arg_ds, 2                       # 0x1e PUSH SDS
+    db  execute_push_w, arg_ds, 2                       # 0x1e PUSH DS
     db  execute_pop_w, arg_ds, 2                        # 0x1f POP DS
 
     db  not_implemented, 0, 0 # TODO    db  execute_and_b, arg_mod_reg_rm_src_b             # 0x20 AND REG8/MEM8, REG8
