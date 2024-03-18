@@ -10,13 +10,15 @@ cpu 8086
 ; CMC CLC STC CLI STI CLD STD, perhaps test with PUSHF/POPF + OUT
 
 section interrupts start=0x00000
-    dw  0x0000, 0x0000
-    dw  0x0000, 0x0000
-    dw  0x0000, 0x0000
-    dw  0x0000, 0x8000          ; INT3: IP, CS
+    dw  0x0000,         0x0000
+    dw  0x0000,         0x0000
+    dw  0x0000,         0x0000
+    dw  handle_int3,    0x8000          ; INT 3
+    dw  handle_int4,    0x8000          ; INT 4
 
 section .text start=0x80000
-    ; INT 3 handler
+
+handle_int3:                            ; INT 3 handler
     nop
 
     inc ax
@@ -49,10 +51,15 @@ section .text start=0x80000
 
     iret
 
-section boot start=0xffff0     ; needs to match simple_test_header.s
+handle_int4:                            ; INT 4 handler
+    out 0x88, al
+
+    iret
+
+section boot start=0xffff0              ; needs to match simple_test_header.s
     out 0x00, al
     int3
-    int 3
+    int 4
 
     inc dx
     inc ax

@@ -5,9 +5,6 @@
 .IMPORT read_cs_ip_b
 .IMPORT read_cs_ip_w
 
-# From split233.s
-.IMPORT split233
-
 # From state.s
 .IMPORT reg_ax
 .IMPORT reg_bx
@@ -256,7 +253,7 @@ decode_reg:
     add 0, 0, [rb + loc_type]
 
     # Map the REG value to an intocode address of the corresponding 8086 register
-    mul [rb + w], 2, [rb + tmp]
+    mul [rb + w], 8, [rb + tmp]
     add [rb + tmp], [rb + reg], [rb + tmp]
     add decode_reg_table, [rb + tmp], [ip + 1]
     add [0], 0, [rb + loc_addr]

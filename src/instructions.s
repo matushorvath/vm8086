@@ -1,5 +1,11 @@
 .EXPORT instructions
 
+# From arg_mod_reg_rm.s
+.IMPORT arg_mod_reg_rm_src_b
+.IMPORT arg_mod_reg_rm_src_w
+.IMPORT arg_mod_reg_rm_dst_b
+.IMPORT arg_mod_reg_rm_dst_w
+
 # From arg_reg.s
 .IMPORT arg_ax
 .IMPORT arg_cx
@@ -51,87 +57,91 @@
 .IMPORT execute_into
 .IMPORT execute_iret
 
-# From stack.sk
+# From stack.s
 .IMPORT execute_push_w
 .IMPORT execute_pop_w
+
+# From transfer.s
+.IMPORT execute_mov_b
+.IMPORT execute_mov_w
 
 # iAPX 86, 88 User's Manual; August 1981; pages 4-27 to 4-35
 
 instructions:
-    db  not_implemented, 0, 0 # TODO    db  execute_add_b, arg_mod_reg_rm_src_b             # 0x00 ADD REG8/MEM8, REG8
-    db  not_implemented, 0, 0 # TODO    db  execute_add_w, arg_mod_reg_rm_src_w             # 0x01 ADD REG16/MEM16, REG16
-    db  not_implemented, 0, 0 # TODO    db  execute_add_b, arg_mod_reg_rm_dst_b             # 0x02 ADD REG8, REG8/MEM8
-    db  not_implemented, 0, 0 # TODO    db  execute_add_w, arg_mod_reg_rm_dst_w             # 0x03 ADD REG16, REG16/MEM16
+    db  not_implemented, 0, 0 # TODO    db  execute_add_b, arg_mod_reg_rm_src_b, 4          # 0x00 ADD REG8/MEM8, REG8
+    db  not_implemented, 0, 0 # TODO    db  execute_add_w, arg_mod_reg_rm_src_w, 4          # 0x01 ADD REG16/MEM16, REG16
+    db  not_implemented, 0, 0 # TODO    db  execute_add_b, arg_mod_reg_rm_dst_b, 4          # 0x02 ADD REG8, REG8/MEM8
+    db  not_implemented, 0, 0 # TODO    db  execute_add_w, arg_mod_reg_rm_dst_w, 4          # 0x03 ADD REG16, REG16/MEM16
     db  not_implemented, 0, 0 # TODO    db  execute_add_b, arg_al_immediate_b               # 0x04 ADD AL, IMMED8
     db  not_implemented, 0, 0 # TODO    db  execute_add_w, arg_ax_immediate_w               # 0x05 ADD AX, IMMED16
 
     db  execute_push_w, arg_es, 2                       # 0x06 PUSH ES
     db  execute_pop_w, arg_es, 2                        # 0x07 POP ES
 
-    db  not_implemented, 0, 0 # TODO    db  execute_or_b, arg_mod_reg_rm_src_b              # 0x08 OR REG8/MEM8, REG8
-    db  not_implemented, 0, 0 # TODO    db  execute_or_w, arg_mod_reg_rm_src_w              # 0x09 OR REG16/MEM16, REG16
-    db  not_implemented, 0, 0 # TODO    db  execute_or_b, arg_mod_reg_rm_dst_b              # 0x0a OR REG8, REG8/MEM8
-    db  not_implemented, 0, 0 # TODO    db  execute_or_w, arg_mod_reg_rm_dst_w              # 0x0b OR REG16, REG16/MEM16
+    db  not_implemented, 0, 0 # TODO    db  execute_or_b, arg_mod_reg_rm_src_b, 4           # 0x08 OR REG8/MEM8, REG8
+    db  not_implemented, 0, 0 # TODO    db  execute_or_w, arg_mod_reg_rm_src_w, 4           # 0x09 OR REG16/MEM16, REG16
+    db  not_implemented, 0, 0 # TODO    db  execute_or_b, arg_mod_reg_rm_dst_b, 4           # 0x0a OR REG8, REG8/MEM8
+    db  not_implemented, 0, 0 # TODO    db  execute_or_w, arg_mod_reg_rm_dst_w, 4           # 0x0b OR REG16, REG16/MEM16
     db  not_implemented, 0, 0 # TODO    db  execute_or_b, arg_al_immediate_b                # 0x0c OR AL, IMMED8
     db  not_implemented, 0, 0 # TODO    db  execute_or_w, arg_ax_immediate_w                # 0x0d OR AX, IMMED16
 
     db  execute_push_w, arg_cs, 2                       # 0x0e PUSH CS
     db  invalid_opcode, 0, 0                            # 0x0f
 
-    db  not_implemented, 0, 0 # TODO    db  execute_adc_b, arg_mod_reg_rm_src_b             # 0x10 ADC REG8/MEM8, REG8
-    db  not_implemented, 0, 0 # TODO    db  execute_adc_w, arg_mod_reg_rm_src_w             # 0x11 ADC REG16/MEM16, REG16
-    db  not_implemented, 0, 0 # TODO    db  execute_adc_b, arg_mod_reg_rm_dst_b             # 0x12 ADC REG8, REG8/MEM8
-    db  not_implemented, 0, 0 # TODO    db  execute_adc_w, arg_mod_reg_rm_dst_w             # 0x13 ADC REG16, REG16/MEM16
+    db  not_implemented, 0, 0 # TODO    db  execute_adc_b, arg_mod_reg_rm_src_b, 4          # 0x10 ADC REG8/MEM8, REG8
+    db  not_implemented, 0, 0 # TODO    db  execute_adc_w, arg_mod_reg_rm_src_w, 4          # 0x11 ADC REG16/MEM16, REG16
+    db  not_implemented, 0, 0 # TODO    db  execute_adc_b, arg_mod_reg_rm_dst_b, 4          # 0x12 ADC REG8, REG8/MEM8
+    db  not_implemented, 0, 0 # TODO    db  execute_adc_w, arg_mod_reg_rm_dst_w, 4          # 0x13 ADC REG16, REG16/MEM16
     db  not_implemented, 0, 0 # TODO    db  execute_adc_b, arg_al_immediate_b               # 0x14 ADC AL, IMMED8
     db  not_implemented, 0, 0 # TODO    db  execute_adc_w, arg_ax_immediate_w               # 0x15 ADC AX, IMMED16
 
     db  execute_push_w, arg_ss, 2                       # 0x16 PUSH SS
     db  execute_pop_w, arg_ss, 2                        # 0x17 POP SS
 
-    db  not_implemented, 0, 0 # TODO    db  execute_sbb_b, arg_mod_reg_rm_src_b             # 0x18 SBB REG8/MEM8, REG8
-    db  not_implemented, 0, 0 # TODO    db  execute_sbb_w, arg_mod_reg_rm_src_w             # 0x19 SBB REG16/MEM16, REG16
-    db  not_implemented, 0, 0 # TODO    db  execute_sbb_b, arg_mod_reg_rm_dst_b             # 0x1a SBB REG8, REG8/MEM8
-    db  not_implemented, 0, 0 # TODO    db  execute_sbb_w, arg_mod_reg_rm_dst_w             # 0x1b SBB REG16, REG16/MEM16
+    db  not_implemented, 0, 0 # TODO    db  execute_sbb_b, arg_mod_reg_rm_src_b, 4          # 0x18 SBB REG8/MEM8, REG8
+    db  not_implemented, 0, 0 # TODO    db  execute_sbb_w, arg_mod_reg_rm_src_w, 4          # 0x19 SBB REG16/MEM16, REG16
+    db  not_implemented, 0, 0 # TODO    db  execute_sbb_b, arg_mod_reg_rm_dst_b, 4          # 0x1a SBB REG8, REG8/MEM8
+    db  not_implemented, 0, 0 # TODO    db  execute_sbb_w, arg_mod_reg_rm_dst_w, 4          # 0x1b SBB REG16, REG16/MEM16
     db  not_implemented, 0, 0 # TODO    db  execute_sbb_b, arg_al_immediate_b               # 0x1c SBB AL, IMMED8
     db  not_implemented, 0, 0 # TODO    db  execute_sbb_w, arg_ax_immediate_w               # 0x1d SBB AX, IMMED16
 
     db  execute_push_w, arg_ds, 2                       # 0x1e PUSH DS
     db  execute_pop_w, arg_ds, 2                        # 0x1f POP DS
 
-    db  not_implemented, 0, 0 # TODO    db  execute_and_b, arg_mod_reg_rm_src_b             # 0x20 AND REG8/MEM8, REG8
-    db  not_implemented, 0, 0 # TODO    db  execute_and_w, arg_mod_reg_rm_src_w             # 0x21 AND REG16/MEM16, REG16
-    db  not_implemented, 0, 0 # TODO    db  execute_and_b, arg_mod_reg_rm_dst_b             # 0x22 AND REG8, REG8/MEM8
-    db  not_implemented, 0, 0 # TODO    db  execute_and_w, arg_mod_reg_rm_dst_w             # 0x23 AND REG16, REG16/MEM16
+    db  not_implemented, 0, 0 # TODO    db  execute_and_b, arg_mod_reg_rm_src_b, 4          # 0x20 AND REG8/MEM8, REG8
+    db  not_implemented, 0, 0 # TODO    db  execute_and_w, arg_mod_reg_rm_src_w, 4          # 0x21 AND REG16/MEM16, REG16
+    db  not_implemented, 0, 0 # TODO    db  execute_and_b, arg_mod_reg_rm_dst_b, 4          # 0x22 AND REG8, REG8/MEM8
+    db  not_implemented, 0, 0 # TODO    db  execute_and_w, arg_mod_reg_rm_dst_w, 4          # 0x23 AND REG16, REG16/MEM16
     db  not_implemented, 0, 0 # TODO    db  execute_and_b, arg_al_immediate_b               # 0x24 AND AL, IMMED8
     db  not_implemented, 0, 0 # TODO    db  execute_and_w, arg_ax_immediate_w               # 0x25 AND AX, IMMED16
 
     db  not_implemented, 0, 0 # TODO    db  execute_segment_prefix, arg_es                  # 0x26 ES: (segment override prefix)
     db  not_implemented, 0, 0 # TODO    db  execute_daa, 0                                  # 0x27 DAA
 
-    db  not_implemented, 0, 0 # TODO    db  execute_sub_b, arg_mod_reg_rm_src_b             # 0x28 SUB REG8/MEM8, REG8
-    db  not_implemented, 0, 0 # TODO    db  execute_sub_w, arg_mod_reg_rm_src_w             # 0x29 SUB REG16/MEM16, REG16
-    db  not_implemented, 0, 0 # TODO    db  execute_sub_b, arg_mod_reg_rm_dst_b             # 0x2a SUB REG8, REG8/MEM8
-    db  not_implemented, 0, 0 # TODO    db  execute_sub_w, arg_mod_reg_rm_dst_w             # 0x2b SUB REG16, REG16/MEM16
+    db  not_implemented, 0, 0 # TODO    db  execute_sub_b, arg_mod_reg_rm_src_b, 4          # 0x28 SUB REG8/MEM8, REG8
+    db  not_implemented, 0, 0 # TODO    db  execute_sub_w, arg_mod_reg_rm_src_w, 4          # 0x29 SUB REG16/MEM16, REG16
+    db  not_implemented, 0, 0 # TODO    db  execute_sub_b, arg_mod_reg_rm_dst_b, 4          # 0x2a SUB REG8, REG8/MEM8
+    db  not_implemented, 0, 0 # TODO    db  execute_sub_w, arg_mod_reg_rm_dst_w, 4          # 0x2b SUB REG16, REG16/MEM16
     db  not_implemented, 0, 0 # TODO    db  execute_sub_b, arg_al_immediate_b               # 0x2c SUB AL, IMMED8
     db  not_implemented, 0, 0 # TODO    db  execute_sub_w, arg_ax_immediate_w               # 0x2d SUB AX, IMMED16
 
     db  not_implemented, 0, 0 # TODO    db  execute_segment_prefix, arg_cs                  # 0x2e CS: (segment override prefix)
     db  not_implemented, 0, 0 # TODO    db  execute_das, 0                                  # 0x2f DAS
 
-    db  not_implemented, 0, 0 # TODO    db  execute_xor_b, arg_mod_reg_rm_src_b             # 0x30 XOR REG8/MEM8, REG8
-    db  not_implemented, 0, 0 # TODO    db  execute_xor_w, arg_mod_reg_rm_src_w             # 0x31 XOR REG16/MEM16, REG16
-    db  not_implemented, 0, 0 # TODO    db  execute_xor_b, arg_mod_reg_rm_dst_b             # 0x32 XOR REG8, REG8/MEM8
-    db  not_implemented, 0, 0 # TODO    db  execute_xor_w, arg_mod_reg_rm_dst_w             # 0x33 XOR REG16, REG16/MEM16
+    db  not_implemented, 0, 0 # TODO    db  execute_xor_b, arg_mod_reg_rm_src_b, 4          # 0x30 XOR REG8/MEM8, REG8
+    db  not_implemented, 0, 0 # TODO    db  execute_xor_w, arg_mod_reg_rm_src_w, 4          # 0x31 XOR REG16/MEM16, REG16
+    db  not_implemented, 0, 0 # TODO    db  execute_xor_b, arg_mod_reg_rm_dst_b, 4          # 0x32 XOR REG8, REG8/MEM8
+    db  not_implemented, 0, 0 # TODO    db  execute_xor_w, arg_mod_reg_rm_dst_w, 4          # 0x33 XOR REG16, REG16/MEM16
     db  not_implemented, 0, 0 # TODO    db  execute_xor_b, arg_al_immediate_b               # 0x34 XOR AL, IMMED8
     db  not_implemented, 0, 0 # TODO    db  execute_xor_w, arg_ax_immediate_w               # 0x35 XOR AX, IMMED16
 
     db  not_implemented, 0, 0 # TODO    db  execute_segment_prefix, arg_ss                  # 0x36 SS: (segment override prefix)
     db  not_implemented, 0, 0 # TODO    db  execute_aaa, 0                                  # 0x37 AAA
 
-    db  not_implemented, 0, 0 # TODO    db  execute_cmp_b, arg_mod_reg_rm_src_b             # 0x38 CMP REG8/MEM8, REG8
-    db  not_implemented, 0, 0 # TODO    db  execute_cmp_w, arg_mod_reg_rm_src_w             # 0x39 CMP REG16/MEM16, REG16
-    db  not_implemented, 0, 0 # TODO    db  execute_cmp_b, arg_mod_reg_rm_dst_b             # 0x3a CMP REG8, REG8/MEM8
-    db  not_implemented, 0, 0 # TODO    db  execute_cmp_w, arg_mod_reg_rm_dst_w             # 0x3b CMP REG16, REG16/MEM16
+    db  not_implemented, 0, 0 # TODO    db  execute_cmp_b, arg_mod_reg_rm_src_b, 4          # 0x38 CMP REG8/MEM8, REG8
+    db  not_implemented, 0, 0 # TODO    db  execute_cmp_w, arg_mod_reg_rm_src_w, 4          # 0x39 CMP REG16/MEM16, REG16
+    db  not_implemented, 0, 0 # TODO    db  execute_cmp_b, arg_mod_reg_rm_dst_b, 4          # 0x3a CMP REG8, REG8/MEM8
+    db  not_implemented, 0, 0 # TODO    db  execute_cmp_w, arg_mod_reg_rm_dst_w, 4          # 0x3b CMP REG16, REG16/MEM16
     db  not_implemented, 0, 0 # TODO    db  execute_cmp_b, arg_al_immediate_b               # 0x3c CMP AL, IMMED8
     db  not_implemented, 0, 0 # TODO    db  execute_cmp_w, arg_ax_immediate_w               # 0x3d CMP AX, IMMED16
 
@@ -217,16 +227,15 @@ instructions:
     db  not_implemented, 0, 0 # TODO    db  execute_alop_b, arg_mod_alop_rm_ext_b           # 0x82 <alop> REG8/MEM8, IMMED8
     db  not_implemented, 0, 0 # TODO    db  execute_alop_w, arg_mod_alop_rm_ext_w           # 0x83 <alop> REG16/MEM16, IMMED8 (sign extend)
 
-    db  not_implemented, 0, 0 # TODO    db  execute_test_b, arg_mod_reg_rm_src_b            # 0x84 TEST REG8/MEM8, REG8
-    db  not_implemented, 0, 0 # TODO    db  execute_test_w, arg_mod_reg_rm_src_w            # 0x85 TEST REG16/MEM16, REG16
-    db  not_implemented, 0, 0 # TODO    db  execute_xchg_b, arg_mod_reg_rm_dst_b            # 0x86 XCHG REG8, REG8/MEM8
-    db  not_implemented, 0, 0 # TODO    db  execute_xchg_w, arg_mod_reg_rm_dst_w            # 0x87 XCHG REG16, REG16/MEM16
+    db  not_implemented, 0, 0 # TODO    db  execute_test_b, arg_mod_reg_rm_src_b, 4         # 0x84 TEST REG8/MEM8, REG8
+    db  not_implemented, 0, 0 # TODO    db  execute_test_w, arg_mod_reg_rm_src_w, 4         # 0x85 TEST REG16/MEM16, REG16
+    db  not_implemented, 0, 0 # TODO    db  execute_xchg_b, arg_mod_reg_rm_dst_b, 4         # 0x86 XCHG REG8, REG8/MEM8
+    db  not_implemented, 0, 0 # TODO    db  execute_xchg_w, arg_mod_reg_rm_dst_w, 4         # 0x87 XCHG REG16, REG16/MEM16
 
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_b, arg_mod_reg_rm_src_b             # 0x88 MOV REG8/MEM8, REG8
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_w, arg_mod_reg_rm_src_w             # 0x89 MOV REG16/MEM16, REG16
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_b, arg_mod_reg_rm_dst_b             # 0x8a MOV REG8, REG8/MEM8
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_w, arg_mod_reg_rm_dst_w             # 0x8b MOV REG16, REG16/MEM16
-
+    db  execute_mov_b, arg_mod_reg_rm_src_b, 4          # 0x88 MOV REG8/MEM8, REG8
+    db  execute_mov_w, arg_mod_reg_rm_src_w, 4          # 0x89 MOV REG16/MEM16, REG16
+    db  execute_mov_b, arg_mod_reg_rm_dst_b, 4          # 0x8a MOV REG8, REG8/MEM8
+    db  execute_mov_w, arg_mod_reg_rm_dst_w, 4          # 0x8b MOV REG16, REG16/MEM16
     db  not_implemented, 0, 0 # TODO    db  execute_mov_w, arg_mod_1sr_rm_src               # 0x8c MOV REG16/MEM16, SEGREG
     db  not_implemented, 0, 0 # TODO    db  execute_lea_w, arg_mod_reg_mem_dst_w            # 0x8d LEA REG16, MEM16
     db  not_implemented, 0, 0 # TODO    db  execute_mov_w, arg_mod_1sr_rm_dst               # 0x8e MOV SEGREG, REG16/MEM16

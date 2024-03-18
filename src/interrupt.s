@@ -100,7 +100,7 @@ interrupt:
     call push_w
 
     # Load new IP from the interrupt vector (physical address type * 4 + 0)
-    mul type, 4, [rb - 1]
+    mul [rb + type], 4, [rb - 1]
     arb -1
     call read_w
 
