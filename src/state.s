@@ -39,6 +39,8 @@
 .EXPORT init_state
 .EXPORT inc_ip
 
+.EXPORT mem
+
 # From the linked 8086 binary
 .IMPORT binary_start_address_cs
 .IMPORT binary_start_address_ip
@@ -107,6 +109,9 @@ reg_ss:
 
 reg_es:
     db  0
+    db  0
+
+mem:
     db  0
 
 flag_carry:                             # CF

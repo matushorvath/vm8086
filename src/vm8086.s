@@ -1,7 +1,7 @@
 # From exec.s
 .IMPORT execute
 
-# From memory.s
+# From load.s
 .IMPORT init_memory
 
 # From state.s

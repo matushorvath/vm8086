@@ -21,7 +21,8 @@
 .EXPORT binary_load_address
 .EXPORT binary_enable_tracing
 .EXPORT binary_vm_callback
-.EXPORT binary_length
+.EXPORT binary_count
+.EXPORT binary_header
 .EXPORT binary_data
 
 # Initial cs value split into two 8-bit numbers (default for real hardware is 0xff, 0xff)
@@ -39,10 +40,13 @@
 # Optional callback function to call before each instruction, zero if not used
 +6 = binary_vm_callback:
 
-# Size of the binary image
-+7 = binary_length:
+# Number of sections, here we assume just one
++7 = binary_count:
+
+# Load address of the first section
++8 = binary_header:
 
 # Binary image data
-+8 = binary_data:
++11 = binary_data:
 
 .EOF
