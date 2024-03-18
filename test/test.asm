@@ -37,6 +37,11 @@ section .text start=0x80000
 
     ; TODO 16-bit dx, 16-bit ax
 
+    inc bx
+    push bx
+    pop ax
+    out 0x77, ax
+
     iret
 
 section boot start=0xffff0     ; needs to match simple_test_header.s
@@ -55,5 +60,7 @@ section boot start=0xffff0     ; needs to match simple_test_header.s
 ; port 0x22: 0x2
 ; port 0x23: 0x0
 ; port 0x4: 0x4
-; port 0x5: 0x5
+; port 0x77: 0x1
+; port 0x78: 0x0
+; port 0x5: 0x2
 ; port 0x6: 0x0
