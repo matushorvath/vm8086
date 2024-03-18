@@ -1,4 +1,3 @@
-.EXPORT init_memory
 .EXPORT calc_addr
 
 .EXPORT read_b
@@ -17,80 +16,13 @@
 #.EXPORT push
 #.EXPORT pop
 
-# From the linked 8086 binary
-.IMPORT binary_load_address
-.IMPORT binary_length
-.IMPORT binary_data
-
-# From error.s
-.IMPORT report_error
-
 # From state.s
+.IMPORT mem
 .IMPORT reg_cs
 .IMPORT reg_ip
 
 # From util.s
-.IMPORT check_range
 .IMPORT mod
-
-##########
-init_memory:
-.FRAME tmp, src, tgt, cnt
-    arb -4
-
-    # Initialize memory space for the 8086.
-
-    # Validate the load address is a valid 20-bit number
-    add [binary_load_address], 0, [rb - 1]
-    add 0xfffff, 0, [rb - 2]
-    arb -2
-    call check_range
-
-    # Validate the image will fit to 20-bits when loaded there
-    add [binary_load_address], [binary_length], [rb + tgt]
-    lt  0x100000, [rb + tgt], [rb + tmp]
-    jz  [rb + tmp], init_memory_load_address_ok
-
-    add image_too_big_error, 0, [rb - 1]
-    arb -1
-    call report_error
-
-init_memory_load_address_ok:
-    # The 8086 memory space will start where the binary starts now
-    add binary_data, 0, [mem]
-
-    # Do we need to move the binary to a different load address?
-    jz  [binary_load_address], init_memory_done
-
-    # Yes, calculate beginning address of the source (binary),
-    add binary_data, 0, [rb + src]
-
-    # Calculate the beginning address of the target ([mem] + [load])
-    add [mem], [binary_load_address], [rb + tgt]
-
-    # Number of bytes to copy
-    add [binary_length], 0, [rb + cnt]
-
-init_memory_loop:
-    # Move the image from src to tgt (iterating in reverse direction)
-    jz  [rb + cnt], init_memory_done
-    add [rb + cnt], -1, [rb + cnt]
-
-    # Copy one byte
-    add [rb + src], [rb + cnt], [ip + 5]
-    add [rb + tgt], [rb + cnt], [ip + 3]
-    add [0], 0, [0]
-
-    # Zero the source byte
-    add [rb + src], [rb + cnt], [ip + 3]
-    add 0, 0, [0]
-
-    jz  0, init_memory_loop
-
-init_memory_done:
-    arb 4
-    ret 0
-.ENDFRAME
 
 ##########
 read_b:
@@ -298,12 +230,5 @@ read_cs_ip_w:
     arb 2
     ret 0
 .ENDFRAME
-
-##########
-mem:
-    db  0
-
-image_too_big_error:
-    db  "image too big to load at specified address", 0
 
 .EOF

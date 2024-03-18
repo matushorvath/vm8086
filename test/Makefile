@@ -1,9 +1,6 @@
-AS ?= as
-LD ?= ld
-
 %.bin %.lst %.map: %.asm
 	nasm -f bin $< -o $@ -l $(@:.bin=.lst)
-	hd $@
+	hd $@ ; true
 
 .PHONY: all
 all: test.bin

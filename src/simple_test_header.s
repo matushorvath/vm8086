@@ -27,6 +27,6 @@ binary_enable_tracing:
 binary_vm_callback:
     db  0
 
-# Symbols binary_length and binary data are provided by simple_test_data.o
+# Symbols binary_count, binary_size and binary_data are provided by simple_test_data.o
 
 .EOF

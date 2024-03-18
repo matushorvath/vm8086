@@ -11,11 +11,49 @@ section interrupts start=0x00000
 section .text start=0x80000
     ; INT 3 handler
     nop
+
+    inc ax
+    out 0x11, al
+
+    inc ax
+;    inc ah
+;    inc ah
+;    inc ah
+    out 0x22, ax
+
     inc ax
     inc ax
-    out 0x42, ax
+    dec ax
+    inc ax
+
+    dec dx
+    inc dx
+    inc dx
+    inc dx
+    inc dx
+    inc dx
+
+    out dx, al
+
+    ; TODO 16-bit dx, 16-bit ax
+
     iret
 
 section boot start=0xffff0     ; needs to match simple_test_header.s
+    out 0x00, al
     int3
+
+    inc dx
+    inc ax
+    out dx, ax
+
     hlt
+
+; expected:
+; port 0x0: 0x0
+; port 0x11: 0x1
+; port 0x22: 0x2
+; port 0x23: 0x0
+; port 0x4: 0x4
+; port 0x5: 0x5
+; port 0x6: 0x0
