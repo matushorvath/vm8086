@@ -16,8 +16,7 @@ jobs:
 
     strategy:
       matrix:
-# TODO        os: [ubuntu-latest, windows-latest, macOS-latest]
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, windows-latest, macOS-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -40,6 +39,7 @@ jobs:
             sudo apt install -y nasm
           elif [ "$RUNNER_OS" == "Windows" ]; then
             choco install nasm
+            echo "C:\Program Files\NASM" >> $GITHUB_PATH
           elif [ "$RUNNER_OS" == "macOS" ]; then
             brew install nasm
           fi
