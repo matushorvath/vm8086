@@ -16,6 +16,10 @@ section interrupts start=0x00000
     dw  handle_int3,    0x8000          ; INT 3
     dw  handle_int4,    0x8000          ; INT 4
 
+handle_int4_data:
+    ; TODO move this near handle_int3 once we can mov to segment registers
+    dw  0x1234
+
 section .text start=0x80000
 
 handle_int3:                            ; INT 3 handler
@@ -52,7 +56,28 @@ handle_int3:                            ; INT 3 handler
     iret
 
 handle_int4:                            ; INT 4 handler
-    out 0x88, al
+    out 0x80, ax
+
+    mov cx, [handle_int4_data]
+    mov ax, cx
+    out 0x82, ax
+
+    mov bx, ax
+    inc bx
+    mov ax, bx
+    out 0x84, ax
+
+    mov dx, bx
+    mov [handle_int4_data], dx
+    inc dx                              ; TODO mov dx, 0
+    mov ax, dx
+    out 0x86, ax
+
+    mov bx, [handle_int4_data]
+    mov ax, bx
+    out 0x88, ax
+
+    ; TODO test mov reg, [addr + displacement], 8-bit and 16-bit
 
     iret
 

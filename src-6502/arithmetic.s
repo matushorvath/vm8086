@@ -19,7 +19,7 @@
 .IMPORT reg_y
 
 # From util
-.IMPORT mod
+.IMPORT modulo
 .IMPORT split_8_4_4
 
 ##########
@@ -249,7 +249,7 @@ execute_cmp_cpr_generic:
     add [rb + diff], 0, [rb - 1]
     add 0x100, 0, [rb - 2]
     arb -2
-    call mod
+    call modulo
     add [rb - 4], 0, [rb + diff]
 
     # Update flags

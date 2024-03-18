@@ -30,7 +30,7 @@
 .IMPORT unpack_sr
 
 # From util.s
-.IMPORT mod
+.IMPORT modulo
 .IMPORT split_16_8_8    # split_16_8_8 was removed, hopefully it's not needed for 8086
 
 
@@ -53,7 +53,7 @@ execute_jsr:
     add [reg_ip], -1, [rb - 1]
     add 0x10000, 0, [rb - 2]
     arb -2
-    call mod
+    call modulo
 
     # Split the return addres into high and low part
     add [rb - 4], 0, [rb - 1]
@@ -95,7 +95,7 @@ execute_rts:
     add [reg_ip], 1, [rb - 1]
     add 0x10000, 0, [rb - 2]
     arb -2
-    call mod
+    call modulo
     add [rb - 4], 0, [reg_ip]
 
     ret 0

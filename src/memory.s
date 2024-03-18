@@ -22,7 +22,7 @@
 .IMPORT reg_ip
 
 # From util.s
-.IMPORT mod
+.IMPORT modulo
 
 ##########
 read_b:
@@ -99,7 +99,7 @@ calc_addr:
     # Wrap around to 20 bits
     add 0x100000, 0, [rb - 2]
     arb -2
-    call mod
+    call modulo
     add [rb - 4], 0, [rb + addr]
 
     arb 1

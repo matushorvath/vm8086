@@ -105,6 +105,7 @@ arg_mod_reg_rm_generic:
     add [rb - 2], 0, [rb + tmp]
     call inc_ip
 
+    mul [rb + tmp], 3, [rb + tmp]
     add split233 + 0, [rb + tmp], [ip + 1]
     add [0], 0, [rb + rm]
     add split233 + 1, [rb + tmp], [ip + 1]
@@ -115,14 +116,15 @@ arg_mod_reg_rm_generic:
     # Decode MOD and RM
     add [rb + mod], 0, [rb - 1]
     add [rb + rm], 0, [rb - 2]
-    arb -2
+    add [rb + w], 0, [rb - 3]
+    arb -3
     call decode_mod_rm
-    add [rb - 4], 0, [rb + loc_type_rm]
-    add [rb - 5], 0, [rb + loc_addr_rm]
+    add [rb - 5], 0, [rb + loc_type_rm]
+    add [rb - 6], 0, [rb + loc_addr_rm]
 
     # Decode REG
     add [rb + reg], 0, [rb - 1]
-    add 0, 0, [rb - 2]
+    add [rb + w], 0, [rb - 2]
     arb -2
     call decode_reg
     add [rb - 4], 0, [rb + loc_type_reg]
