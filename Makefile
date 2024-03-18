@@ -51,7 +51,7 @@ test: build simple_test
 .PHONY: simple_test
 simple_test: $(BINDIR)/simple_test.input
 	$(ICVM) $(BINDIR)/simple_test.input > $(OBJDIR)/$@.out
-	diff -r $(OBJDIR)/$@.out test/test.out
+	diff -r $(OBJDIR)/$@.out test/test.out && echo Simple test PASSED || echo Simple test FAILED
 
 # The order of the object files matters: First include all the code in any order, then binary.o,
 # then the (optional) 8086 image header and data.
