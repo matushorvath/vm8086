@@ -1,11 +1,15 @@
-# This the header for the 8086 simple test binary.
-# It needs to be linked immediately after binary.o and immediately before the simple test binary itself.
+# This the header for the 8086 test binary.
+# It needs to be linked immediately before the test binary itself.
 
 .EXPORT binary_start_address_cs
 .EXPORT binary_start_address_ip
 .EXPORT binary_load_address
 .EXPORT binary_enable_tracing
 .EXPORT binary_vm_callback
+
+# Reference the main function, to make sure it is pulled into the build image.
+.IMPORT main
+db  main
 
 # Initial cs value, use the default
 binary_start_address_cs:

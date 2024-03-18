@@ -1,5 +1,3 @@
-[map test.map]
-
 cpu 8086
 
 ; TODO:

@@ -1,5 +1,5 @@
 /obj
 /bin
-/test/*.bin
-/test/*.lst
-/test/*.map
+/test/*/bin
+/test/*/obj
+/test/test.log

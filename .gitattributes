@@ -1,1 +1,1 @@
-test/test.out text eol=lf
+test/*/*.txt text eol=lf
