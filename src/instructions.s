@@ -307,7 +307,7 @@ instructions:
     db  not_implemented, 0, 0 # TODO    db  execute_ret_far, arg_zero                       # 0xcb RET (intersegment)
 
     db  execute_int3, 0, 0                              # 0xcc INT 3
-    db  not_implemented, 0, 0 # TODO    db  execute_int, arg_immediate_b                    # 0xcd INT IMMED8
+    db  execute_int, 0, 0                               # 0xcd INT IMMED8
 
     db  execute_into, 0, 0                              # 0xce INTO
     db  execute_iret, 0, 0                              # 0xcf IRET
