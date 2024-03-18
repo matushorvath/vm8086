@@ -30,9 +30,13 @@ arg_mod_feop_rm_b:
 
     call inc_ip
 
-    add split233 + 0, [rb + tmp], [rb + rm]
-    add split233 + 1, [rb + tmp], [rb + reg]
-    add split233 + 2, [rb + tmp], [rb + mod]
+    mul [rb + tmp], 3, [rb + tmp]
+    add split233 + 0, [rb + tmp], [ip + 1]
+    add [0], 0, [rb + rm]
+    add split233 + 1, [rb + tmp], [ip + 1]
+    add [0], 0, [rb + reg]
+    add split233 + 2, [rb + tmp], [ip + 1]
+    add [0], 0, [rb + mod]
 
     # MOD 000 R/M -> INC REG8/MEM8
     eq  [rb + reg], 0b000, [rb + tmp]

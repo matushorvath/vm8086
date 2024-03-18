@@ -1,3 +1,6 @@
+.EXPORT execute_push_w
+.EXPORT execute_pop_w
+
 .EXPORT push_w
 .EXPORT pop_w
 
@@ -10,6 +13,10 @@
 .IMPORT unpack_flags_lo
 .IMPORT unpack_flags_hi
 
+# From location.s
+.IMPORT read_location_w
+.IMPORT write_location_w
+
 # From memory.s
 .IMPORT read_seg_off_w
 .IMPORT write_seg_off_w
@@ -19,59 +26,46 @@
 .IMPORT reg_sp
 
 ##########
-# Increment sp by 2 with wrap around
-inc_2_sp:
-.FRAME tmp
-    arb -1
+execute_push_w:
+.FRAME loc_type, loc_addr; value_lo, value_hi
+    arb -2
 
-    # Increment the low byte
-    add [reg_sp + 0], 2, [reg_sp + 0]
+    # Read the value from location
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    arb -2
+    call read_location_w
 
-    # Check for carry out of low byte
-    lt  [reg_sp + 0], 0x100, [rb + tmp]
-    jnz [rb + tmp], inc_2_sp_done
+    # Push it to stack
+    add [rb - 4], 0, [rb - 1]
+    add [rb - 5], 0, [rb - 2]
+    arb -2
+    call push_w
 
-    add [reg_sp + 0], -0x100, [reg_sp + 0]
-    add [reg_sp + 1], 1, [reg_sp + 1]
-
-    # Check for carry out of high byte
-    lt  [reg_sp + 1], 0x100, [rb + tmp]
-    jnz [rb + tmp], inc_2_sp_done
-
-    # Overflow
-    add [reg_sp + 1], -0x100, [reg_sp + 1]
-
-inc_2_sp_done:
-    arb 1
-    ret 0
+    arb 2
+    ret 2
 .ENDFRAME
 
 ##########
-# Decrement sp by 2 with wrap around
-dec_2_sp:
-.FRAME tmp
-    arb -1
+execute_pop_w:
+.FRAME loc_type, loc_addr; value_lo, value_hi
+    arb -2
 
-    # Decrement the low byte
-    add [reg_sp + 0], -2, [reg_sp + 0]
+    # Pop the value from stack
+    call pop_w
+    add [rb - 2], 0, [rb + value_lo]
+    add [rb - 3], 0, [rb + value_hi]
 
-    # Check for borrow into low byte
-    lt  [reg_sp + 0], 0, [rb + tmp]
-    jz  [rb + tmp], dec_2_sp_done
+    # Write it to location
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + value_lo], 0, [rb - 3]
+    add [rb + value_hi], 0, [rb - 4]
+    arb -4
+    call write_location_w
 
-    add [reg_sp + 0], 0x100, [reg_sp + 0]
-    add [reg_sp + 1], -1, [reg_sp + 1]
-
-    # Check for borrow into high byte
-    lt  [reg_sp + 1], 0, [rb + tmp]
-    jz  [rb + tmp], dec_2_sp_done
-
-    # Underflow
-    add [reg_sp + 1], 0x100, [reg_sp + 1]
-
-dec_2_sp_done:
-    arb 1
-    ret 0
+    arb 2
+    ret 2
 .ENDFRAME
 
 ##########
@@ -172,6 +166,62 @@ popf:
     call unpack_flags_hi
 
     arb 2
+    ret 0
+.ENDFRAME
+
+##########
+# Increment sp by 2 with wrap around
+inc_2_sp:
+.FRAME tmp
+    arb -1
+
+    # Increment the low byte
+    add [reg_sp + 0], 2, [reg_sp + 0]
+
+    # Check for carry out of low byte
+    lt  [reg_sp + 0], 0x100, [rb + tmp]
+    jnz [rb + tmp], inc_2_sp_done
+
+    add [reg_sp + 0], -0x100, [reg_sp + 0]
+    add [reg_sp + 1], 1, [reg_sp + 1]
+
+    # Check for carry out of high byte
+    lt  [reg_sp + 1], 0x100, [rb + tmp]
+    jnz [rb + tmp], inc_2_sp_done
+
+    # Overflow
+    add [reg_sp + 1], -0x100, [reg_sp + 1]
+
+inc_2_sp_done:
+    arb 1
+    ret 0
+.ENDFRAME
+
+##########
+# Decrement sp by 2 with wrap around
+dec_2_sp:
+.FRAME tmp
+    arb -1
+
+    # Decrement the low byte
+    add [reg_sp + 0], -2, [reg_sp + 0]
+
+    # Check for borrow into low byte
+    lt  [reg_sp + 0], 0, [rb + tmp]
+    jz  [rb + tmp], dec_2_sp_done
+
+    add [reg_sp + 0], 0x100, [reg_sp + 0]
+    add [reg_sp + 1], -1, [reg_sp + 1]
+
+    # Check for borrow into high byte
+    lt  [reg_sp + 1], 0, [rb + tmp]
+    jz  [rb + tmp], dec_2_sp_done
+
+    # Underflow
+    add [reg_sp + 1], 0x100, [reg_sp + 1]
+
+dec_2_sp_done:
+    arb 1
     ret 0
 .ENDFRAME
 

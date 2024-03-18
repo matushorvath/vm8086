@@ -5,6 +5,7 @@
 
 # From memory.s
 .IMPORT read_w
+.IMPORT read_cs_ip_b
 
 # From stack.s
 .IMPORT pop_w
@@ -15,6 +16,8 @@
 # From state.s
 .IMPORT reg_cs
 .IMPORT reg_ip
+.IMPORT inc_ip
+
 .IMPORT flag_interrupt
 .IMPORT flag_overflow
 .IMPORT flag_trap
@@ -24,7 +27,7 @@ execute_int3:
 .FRAME
     add 3, 0, [rb - 1]
     arb -1
-    call execute_int
+    call interrupt
 
     ret 0
 .ENDFRAME
@@ -36,7 +39,7 @@ execute_into:
 
     add 4, 0, [rb - 1]
     arb -1
-    call execute_int
+    call interrupt
 
 execute_into_done:
     ret 0
@@ -44,6 +47,28 @@ execute_into_done:
 
 ##########
 execute_int:
+.FRAME type
+    arb -1
+
+    # This is the only instruction that uses an immediate_b parameter, so we simplify by
+    # reading the value here instead of having a separate arg_immediate_b function
+
+    # Read interrupt type from 8-bit immediate argument
+    call read_cs_ip_b
+    add [rb - 2], 0, [rb + type]
+    call inc_ip
+
+    # Process the interrupt
+    add [rb + type], 0, [rb - 1]
+    arb -1
+    call interrupt
+
+    arb 1
+    ret 0
+.ENDFRAME
+
+##########
+interrupt:
 .FRAME type; tmp
     arb -1
 
@@ -75,7 +100,7 @@ execute_int:
     call push_w
 
     # Load new IP from the interrupt vector (physical address type * 4 + 0)
-    mul type, 4, [rb - 1]
+    mul [rb + type], 4, [rb - 1]
     arb -1
     call read_w
 
@@ -104,6 +129,3 @@ execute_iret:
 .ENDFRAME
 
 .EOF
-
-TODO arg_immediate_b
-TODO arg_immediate_w

@@ -5,9 +5,6 @@
 .IMPORT read_cs_ip_b
 .IMPORT read_cs_ip_w
 
-# From split233.s
-.IMPORT split233
-
 # From state.s
 .IMPORT reg_ax
 .IMPORT reg_bx
@@ -34,13 +31,16 @@
 
 .IMPORT inc_ip
 
+# From util.s
+.IMPORT modulo
+
 ##########
 decode_mod_rm:
 .FRAME mod, rm, w; loc_type, loc_addr, disp, tmp       # return loc_type, loc_addr
     arb -4
 
     # Decode the mod field
-    add decode_mod_rm_mod_table, [rb + rm], [ip + 2]
+    add decode_mod_rm_mod_table, [rb + mod], [ip + 2]
     jz  0, [0]
 
 decode_mod_rm_mod_table:
@@ -52,11 +52,11 @@ decode_mod_rm_mod_table:
 
 decode_mod_rm_mem_mod00:
     # Memory mode, no displacement; except when R/M is 0b110, then 16-bit displacement follows
-    eq  [rb + rm], 0x110, [rb + tmp]
+    eq  [rb + rm], 0b110, [rb + tmp]
     jz  [rb + tmp], decode_mod_rm_mem_no_disp
 
-    # Handle the special case with a fake R/M value of 0x1000
-    add 0x1000, 0, [rb + rm]
+    # Handle the special case with a fake R/M value of 0b1000
+    add 0b1000, 0, [rb + rm]
     jz  0, decode_mod_rm_mem_disp16
 
 decode_mod_rm_mem_no_disp:
@@ -92,8 +92,8 @@ decode_mod_rm_mem_disp16:
 
     # Read 16-bit displacement
     call read_cs_ip_w
-    mul [rb - 3], 0xff, [rb + disp]
-    add [rb + disp], [rb - 2], [rb + disp]
+    mul [rb - 3], 0x100, [rb + disp]
+    add [rb - 2], [rb + disp], [rb + disp]
 
     call inc_ip
     call inc_ip
@@ -224,7 +224,7 @@ decode_mod_rm_mem_calc:
     add [rb + loc_addr], [rb + disp], [rb - 1]
     add 0x100000, 0, [rb - 2]
     arb -2
-    call mod
+    call modulo
     add [rb - 4], 0, [rb + loc_addr]
 
     jz  0, decode_mod_rm_end
@@ -256,7 +256,7 @@ decode_reg:
     add 0, 0, [rb + loc_type]
 
     # Map the REG value to an intocode address of the corresponding 8086 register
-    mul [rb + w], 2, [rb + tmp]
+    mul [rb + w], 8, [rb + tmp]
     add [rb + tmp], [rb + reg], [rb + tmp]
     add decode_reg_table, [rb + tmp], [ip + 1]
     add [0], 0, [rb + loc_addr]

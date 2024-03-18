@@ -1,5 +1,5 @@
 .EXPORT check_range
-.EXPORT mod
+.EXPORT modulo
 
 # From error.s
 .IMPORT report_error
@@ -28,8 +28,8 @@ check_range_invalid_message:
 .ENDFRAME
 
 ##########
-# Calculate value mod divisor; should only be used if value/divisor is a small number
-mod:
+# Calculate value modulo divisor; should only be used if value/divisor is a small number
+modulo:
 .FRAME value, divisor; tmp                                   # returns tmp
     arb -1
 

@@ -44,12 +44,21 @@ build: build-prep $(BINDIR)/vm8086.input $(BINDIR)/simple_test.input
 build-prep:
 	mkdir -p "$(BINDIR)" "$(OBJDIR)"
 
+# Test
+.PHONY: test
+test: build simple_test
+
+.PHONY: simple_test
+simple_test: $(BINDIR)/simple_test.input
+	$(ICVM) $(BINDIR)/simple_test.input > $(OBJDIR)/$@.out
+	diff -r $(OBJDIR)/$@.out test/test.out && echo Simple test PASSED || echo Simple test FAILED
+
 # The order of the object files matters: First include all the code in any order, then binary.o,
 # then the (optional) 8086 image header and data.
 
-BASE_OBJS = vm8086.o arg_immediate.o arg_reg.o bits.o decode.o error.o exec.o flags.o in_out.o \
-	inc_dec.o instructions.o interrupt.o load.o location.o memory.o nibbles.o parity.o \
-	split233.o stack.o state.o util.o
+BASE_OBJS = vm8086.o arg_mod_reg_rm.o arg_reg.o bits.o decode.o error.o exec.o flags.o in_out.o \
+	inc_dec.o instructions.o interrupt.o load.o location.o memory.o nibbles.o parity.o split233.o \
+	stack.o state.o transfer.o util.o
 
 VM8086_OBJS = $(BASE_OBJS) $(LIBXIB) binary.o
 

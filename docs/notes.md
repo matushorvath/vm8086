@@ -28,4 +28,4 @@ Possible Optimizations
 - Optimize read_cs_ip_* to call read_b directly, to avoid multiple function calls.
 - Look at the most used path in decode_mod_rm, make sure it is fast. It could even be handled by a single 256 byte table,
   no 8-bit splitting needed and much fewer conditions.
-- If we ever have macros, look at all the heavily used functions like read_b, inc_ip, mod and try them as macros.
+- If we ever have macros, look at all the heavily used functions like read_b, inc_ip, modulo and try them as macros.
