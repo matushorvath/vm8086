@@ -11,15 +11,15 @@ jobs:
     name: OS=${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
-    env:
-      ICDIR: xzintbit
-
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout vm8086
+        uses: actions/checkout@v4
+        with:
+          path: vm8086
 
       - name: Checkout xzintbit
         uses: actions/checkout@v4
@@ -46,8 +46,9 @@ jobs:
         shell: bash
 
       - name: Build
+        working-directory: vm8086
         run: make build
-        shell: bash
 
       - name: Test
+        working-directory: vm8086
         run: make test

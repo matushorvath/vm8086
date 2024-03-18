@@ -19,6 +19,9 @@ SRCDIR = src
 BINDIR ?= bin
 OBJDIR ?= obj
 
+TESTDIRS = $(sort $(dir $(wildcard test/*/*)))
+export TESTLOG = $(abspath test/test.log)
+
 define run-as
 	cat $^ | $(ICVM) $(ICAS) > $@ || ( cat $@ ; false )
 endef
@@ -38,7 +41,7 @@ endef
 
 # Build
 .PHONY: build
-build: build-prep $(BINDIR)/vm8086.input $(BINDIR)/simple_test.input
+build: build-prep $(BINDIR)/vm8086.input
 
 .PHONY: build-prep
 build-prep:
@@ -46,12 +49,20 @@ build-prep:
 
 # Test
 .PHONY: test
-test: build simple_test
+test: build build-test-header run-test
 
-.PHONY: simple_test
-simple_test: $(BINDIR)/simple_test.input
-	$(ICVM) $(BINDIR)/simple_test.input > $(OBJDIR)/$@.out
-	diff -r $(OBJDIR)/$@.out test/test.out && echo Simple test PASSED || echo Simple test FAILED
+.PHONY: build-test-header
+build-test-header: $(OBJDIR)/test_header.o
+
+.PHONY: run-test
+run-test:
+	rm -rf $(TESTLOG)
+	failed=0 ; \
+	for testdir in $(TESTDIRS) ; do \
+		$(MAKE) -C $$testdir test || failed=1 ; \
+	done ; \
+	cat test/test.log ; \
+	[ $$failed = 0 ] || exit 1
 
 # The order of the object files matters: First include all the code in any order, then binary.o,
 # then the (optional) 8086 image header and data.
@@ -60,7 +71,10 @@ BASE_OBJS = vm8086.o arg_mod_reg_rm.o arg_reg.o bits.o decode.o error.o exec.o f
 	inc_dec.o instructions.o interrupt.o load.o location.o memory.o nibbles.o parity.o split233.o \
 	stack.o state.o transfer.o util.o
 
-VM8086_OBJS = $(BASE_OBJS) $(LIBXIB) binary.o
+$(BINDIR)/lib8086.a: $(BASE_OBJS:%.o=$(OBJDIR)/%.o)
+	$(run-ar)
+
+VM8086_OBJS = $(BINDIR)/lib8086.a $(LIBXIB) binary.o
 
 $(BINDIR)/vm8086.input: $(VM8086_OBJS:%.o=$(OBJDIR)/%.o)
 	$(run-ld)
@@ -83,21 +97,9 @@ $(OBJDIR)/%.s: $(OBJDIR)/gen_%.input
 $(OBJDIR)/gen_%.input: $(OBJDIR)/gen_%.o $(LIBXIB)
 	$(run-ld)
 
-# Simple test
-SIMPLE_TEST_OBJS = $(BASE_OBJS) $(LIBXIB) simple_test_header.o simple_test_binary.o
-
-$(BINDIR)/simple_test.input: $(SIMPLE_TEST_OBJS:%.o=$(OBJDIR)/%.o)
-	$(run-ld)
-
-$(OBJDIR)/simple_test_binary.o: test/test.bin
-	$(run-bin2obj)
-
-.PHONY: FORCE
-test/test.bin: FORCE
-	$(MAKE) -C test
-
 # Clean
 .PHONY: clean
 clean:
+	for testdir in $(TESTDIRS) ; do $(MAKE) -C $$testdir clean ; done
 	rm -rf $(BINDIR) $(OBJDIR)
-	$(MAKE) -C test clean
+	rm -rf $(TESTLOG)
