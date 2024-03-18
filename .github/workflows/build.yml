@@ -49,6 +49,5 @@ jobs:
         run: make build
         shell: bash
 
-# TODO run tests
-#      - name: Test
-#        run: make test
+      - name: Test
+        run: make test

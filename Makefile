@@ -44,6 +44,14 @@ build: build-prep $(BINDIR)/vm8086.input $(BINDIR)/simple_test.input
 build-prep:
 	mkdir -p "$(BINDIR)" "$(OBJDIR)"
 
+# Test
+.PHONY: test
+test: build simple_test
+
+.PHONY: simple_test
+simple_test: $(BINDIR)/simple_test.input
+	$(ICVM) $(BINDIR)/simple_test.input | diff -r - test/test.out
+
 # The order of the object files matters: First include all the code in any order, then binary.o,
 # then the (optional) 8086 image header and data.
 
