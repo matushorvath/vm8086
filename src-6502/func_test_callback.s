@@ -58,7 +58,8 @@ func_test_callback_failed:
 
     add [reg_ip], 0, [rb - 1]
     add 16, 0, [rb - 2]
-    arb -2
+    add 0, 0, [rb - 3]
+    arb -3
     call print_num_radix
 
     add func_test_failed_end, 0, [rb - 1]
