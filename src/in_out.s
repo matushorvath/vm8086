@@ -16,10 +16,13 @@
 .IMPORT reg_ax
 .IMPORT reg_dx
 .IMPORT inc_ip
+.IMPORT dump_state
 
 # TODO remove temporary I/O code
 .IMPORT print_num_radix
 .IMPORT print_str
+
+.SYMBOL DUMP_STATE_PORT                 0x42
 
 # The port to access is either the immediate parameter (8-bit) or DX (16-bit).
 # The data to send/receive is in either AL (8-bit) or AX (16-bit).
@@ -115,35 +118,49 @@ execute_out_ax_dx:
 
 ##########
 port_out:
-.FRAME port, value;
+.FRAME port, value; tmp
+    arb -1
+
+    # Port 0x42 is used to dump VM state to stdout, used for tests
+    eq  [rb + port], 0x42, [rb + tmp]
+    jz  [rb + tmp], port_out_regular
+
+    call dump_state
+    jz  0, port_out_done
+
+port_out_regular:
     # Output the port and value to stdout
     # TODO remove temporary I/O code
 
-    add out_port_b_message_start, 0, [rb - 1]
+    add port_out_message_start, 0, [rb - 1]
     arb -1
     call print_str
 
     add [rb + port], 0, [rb - 1]
     add 16, 0, [rb - 2]
-    arb -2
+    add 0, 0, [rb - 3]
+    arb -3
     call print_num_radix
 
-    add out_port_b_message_separator, 0, [rb - 1]
+    add port_out_message_separator, 0, [rb - 1]
     arb -1
     call print_str
 
     add [rb + value], 0, [rb - 1]
     add 16, 0, [rb - 2]
-    arb -2
+    add 0, 0, [rb - 3]
+    arb -3
     call print_num_radix
 
     out 10
 
+port_out_done:
+    arb 1
     ret 2
 
-out_port_b_message_start:
+port_out_message_start:
     db  "port 0x", 0
-out_port_b_message_separator:
+port_out_message_separator:
     db  ": 0x", 0
 .ENDFRAME
 
