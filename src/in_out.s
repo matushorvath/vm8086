@@ -8,6 +8,9 @@
 .EXPORT execute_out_al_dx
 .EXPORT execute_out_ax_dx
 
+# From dump_state.s
+.IMPORT dump_state
+
 # From memory.s
 .IMPORT read_cs_ip_b
 
@@ -16,7 +19,6 @@
 .IMPORT reg_ax
 .IMPORT reg_dx
 .IMPORT inc_ip
-.IMPORT dump_state
 
 # TODO remove temporary I/O code
 .IMPORT print_num_radix
