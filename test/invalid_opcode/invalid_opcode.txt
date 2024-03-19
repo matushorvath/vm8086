@@ -1,0 +1,1 @@
+vm8086 error: invalid opcode (cs:ip ffff:1)
