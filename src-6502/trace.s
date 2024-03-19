@@ -33,7 +33,8 @@ print_trace:
     # Print address
     add [reg_ip], 0, [rb - 1]
     add 16, 0, [rb - 2]
-    arb -2
+    add 0, 0, [rb - 3]
+    arb -3
     call print_num_radix
 
     out ':'
@@ -48,7 +49,8 @@ print_trace:
 
     add [rb + opcode], 0, [rb - 1]
     add 16, 0, [rb - 2]
-    arb -2
+    add 0, 0, [rb - 3]
+    arb -3
     call print_num_radix
 
     out ')'
@@ -67,7 +69,8 @@ print_trace_data_loop:
 
     add [rb - 3], 0, [rb - 1]
     add 16, 0, [rb - 2]
-    arb -2
+    add 0, 0, [rb - 3]
+    arb -3
     call print_num_radix
 
     add [rb + idx], 1, [rb + idx]

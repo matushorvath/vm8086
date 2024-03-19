@@ -109,7 +109,8 @@ b7_loop:
                                 # Print the number
                                 add [number], 0, [rb - 1]
                                 add 16, 0, [rb - 2]
-                                arb -2
+                                add 0, 0, [rb - 3]
+                                arb -3
                                 call print_num_radix
 
                                 out 10

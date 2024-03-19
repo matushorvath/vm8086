@@ -26,7 +26,8 @@ report_error:
     mul [reg_cs + 1], 0x100, [rb - 1]
     add [reg_cs + 0], [rb - 1], [rb - 1]
     add 16, 0, [rb - 2]
-    arb -2
+    add 0, 0, [rb - 3]
+    arb -3
     call print_num_radix
 
     out ':'
@@ -34,7 +35,8 @@ report_error:
     mul [reg_ip + 1], 0x100, [rb - 1]
     add [reg_ip + 0], [rb - 1], [rb - 1]
     add 16, 0, [rb - 2]
-    arb -2
+    add 0, 0, [rb - 3]
+    arb -3
     call print_num_radix
 
     add report_error_msg_end, 0, [rb - 1]

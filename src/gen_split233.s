@@ -43,7 +43,8 @@ b7_loop:
                                 add [b0], [tmp], [rb - 1]                       # [tmp] -> param0
 
                                 add 16, 0, [rb - 2]
-                                arb -2
+                                add 0, 0, [rb - 3]
+                                arb -3
                                 call print_num_radix
 
                                 # Print separator
@@ -59,7 +60,8 @@ b7_loop:
                                 add [b3], [tmp], [rb - 1]                       # [tmp] -> param0
 
                                 add 16, 0, [rb - 2]
-                                arb -2
+                                add 0, 0, [rb - 3]
+                                arb -3
                                 call print_num_radix
 
                                 # Print separator
@@ -73,7 +75,8 @@ b7_loop:
                                 add [b6], [tmp], [rb - 1]                       # [tmp] -> param0
 
                                 add 16, 0, [rb - 2]
-                                arb -2
+                                add 0, 0, [rb - 3]
+                                arb -3
                                 call print_num_radix
 
                                 add [b0], 1, [b0]
