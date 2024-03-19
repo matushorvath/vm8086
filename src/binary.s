@@ -25,6 +25,10 @@
 .EXPORT binary_header
 .EXPORT binary_data
 
+# Reference the main function, to make sure it is pulled into the build image.
+.IMPORT main
+db  main
+
 # Initial cs value split into two 8-bit numbers (default for real hardware is 0xff, 0xff)
 +0 = binary_start_address_cs:
 
