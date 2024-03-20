@@ -5,70 +5,47 @@ section interrupts start=0x00000
     dw  3 dup (0x0000, 0x0000)
     dw  handle_int3, 0x8000             ; INT 3
 
+test_data:
+    dw  0x1234
+
 
 section .text start=0x80000
 
 handle_int3:                            ; INT 3 handler
     out 0x42, al
 
+    mov cx, [test_data]
+    mov ax, cx
+    out 0x42, al
 
-    db  execute_mov_b, arg_mod_reg_rm_src_b, 4          # 0x88 MOV REG8/MEM8, REG8
-    db  execute_mov_w, arg_mod_reg_rm_src_w, 4          # 0x89 MOV REG16/MEM16, REG16
-    db  execute_mov_b, arg_mod_reg_rm_dst_b, 4          # 0x8a MOV REG8, REG8/MEM8
-    db  execute_mov_w, arg_mod_reg_rm_dst_w, 4          # 0x8b MOV REG16, REG16/MEM16
-
-
-    ; push and pop each register
-    inc ax
-    push ax
-    push ax
-
-    pop bx
+    mov bx, ax
     inc bx
-    push bx
-    push bx
+    mov ax, bx
+    out 0x42, al
 
-    pop cx
-    inc cx
-    push cx
-    push cx
-
-    pop dx
+    mov dx, bx
+    mov [test_data], dx
     inc dx
-    push dx
-    push dx
-
-    pop si
-    inc si
-    push si
-    push si
-
-    pop di
-    inc di
-    push di
-    push di
-
-    pop ax
-
+    mov ax, dx
     out 0x42, al
 
-    ; push segment registers, TODO modify them first once we are able
-    push cs
-    push ds
-    push ss
-    push es
-
+    mov si, [test_data]
+    mov ax, bx
     out 0x42, al
 
-    ; pop segment registers intentionally in different order, ss last
-    pop ds
-    pop es
-    pop ss
+; TODO write tests once we have mov immediate and can set ds
+; TODO test the sp:bp case
+; TODO test all the mod reg rm cases
+; TODO test big 16-bit numbers, also check the sources and do white boxing
+; TODO test mov reg, [addr + displacement], 8-bit and 16-bit
 
-    out 0x42, al
+; TODO MOV REG8/MEM8, REG8
+; TODO MOV REG16/MEM16, REG16
+; TODO MOV REG8, REG8/MEM8
+; TODO MOV REG16, REG16/MEM16
 
-    ; everything is messed up, our work here is done
     hlt
+
 
 section boot start=0xffff0              ; boot
     int3
