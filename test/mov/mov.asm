@@ -64,6 +64,11 @@ handle_int3:                            ; INT 3 handler
 ; TODO MOV MEM8, IMMED8
 ; TODO MOV MEM16, IMMED16
 
+; TODO MOV AL, MEM8
+; TODO MOV AX, MEM16
+; TODO MOV MEM8, AL
+; TODO MOV MEM16, AX
+
     hlt
 
 

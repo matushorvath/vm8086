@@ -1,5 +1,9 @@
 .EXPORT instructions
 
+# From arg_al_ax_near_ptr.s
+.IMPORT arg_al_ax_near_ptr_src
+.IMPORT arg_al_ax_near_ptr_dst
+
 # From arg_mod_reg_rm.s
 .IMPORT arg_mod_reg_rm_src_b
 .IMPORT arg_mod_reg_rm_src_w
@@ -280,10 +284,10 @@ instructions:
     db  not_implemented, 0, 0 # TODO    db  execute_sahf, 0                                 # 0x9e SAHF
     db  not_implemented, 0, 0 # TODO    db  execute_lahf, 0                                 # 0x9f LAHF
 
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_b, arg_al_near_ptr_dst_b            # 0xa0 MOV AL, MEM8
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_w, arg_ax_near_ptr_dst_w            # 0xa1 MOV AX, MEM16
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_b, arg_al_near_ptr_src_b            # 0xa2 MOV MEM8, AL
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_w, arg_ax_near_ptr_src_w            # 0xa3 MOV MEM16, AX
+    db  execute_mov_b, arg_al_ax_near_ptr_dst, 4        # 0xa0 MOV AL, MEM8
+    db  execute_mov_w, arg_al_ax_near_ptr_dst, 4        # 0xa1 MOV AX, MEM16
+    db  execute_mov_b, arg_al_ax_near_ptr_src, 4        # 0xa2 MOV MEM8, AL
+    db  execute_mov_w, arg_al_ax_near_ptr_src, 4        # 0xa3 MOV MEM16, AX
 
     db  not_implemented, 0, 0 # TODO    db  execute_movs_b, 0                               # 0xa4 MOVS DEST-STR8, SRC-STR8
     db  not_implemented, 0, 0 # TODO    db  execute_movs_w, 0                               # 0xa5 MOVS DEST-STR16, SRC-STR16
