@@ -89,6 +89,9 @@
 # From transfer.s
 .IMPORT execute_mov_b
 .IMPORT execute_mov_w
+.IMPORT execute_xchg_b
+.IMPORT execute_xchg_w
+.IMPORT execute_xchg_ax_w
 
 # iAPX 86, 88 User's Manual; August 1981; pages 4-27 to 4-35
 
@@ -254,8 +257,8 @@ instructions:
 
     db  not_implemented, 0, 0 # TODO    db  execute_test_b, arg_mod_reg_rm_src_b, 4         # 0x84 TEST REG8/MEM8, REG8
     db  not_implemented, 0, 0 # TODO    db  execute_test_w, arg_mod_reg_rm_src_w, 4         # 0x85 TEST REG16/MEM16, REG16
-    db  not_implemented, 0, 0 # TODO    db  execute_xchg_b, arg_mod_reg_rm_dst_b, 4         # 0x86 XCHG REG8, REG8/MEM8
-    db  not_implemented, 0, 0 # TODO    db  execute_xchg_w, arg_mod_reg_rm_dst_w, 4         # 0x87 XCHG REG16, REG16/MEM16
+    db  execute_xchg_b, arg_mod_reg_rm_dst_b, 4         # 0x86 XCHG REG8, REG8/MEM8
+    db  execute_xchg_w, arg_mod_reg_rm_dst_w, 4         # 0x87 XCHG REG16, REG16/MEM16
 
     db  execute_mov_b, arg_mod_reg_rm_src_b, 4          # 0x88 MOV REG8/MEM8, REG8
     db  execute_mov_w, arg_mod_reg_rm_src_w, 4          # 0x89 MOV REG16/MEM16, REG16
@@ -267,13 +270,13 @@ instructions:
     db  not_implemented, 0, 0 # TODO    db  execute_pop_w, arg_mod_000_rm_w                 # 0x8f POP REG16/MEM16
 
     db  execute_nop, 0, 0                               # 0x90 NOP (= XCHG AX, AX)
-    db  not_implemented, 0, 0 # TODO    db  execute_xchg_w, arg_cx                          # 0x91 XCHG AX, CX
-    db  not_implemented, 0, 0 # TODO    db  execute_xchg_w, arg_dx                          # 0x92 XCHG AX, DX
-    db  not_implemented, 0, 0 # TODO    db  execute_xchg_w, arg_bx                          # 0x93 XCHG AX, BX
-    db  not_implemented, 0, 0 # TODO    db  execute_xchg_w, arg_sp                          # 0x94 XCHG AX, SP
-    db  not_implemented, 0, 0 # TODO    db  execute_xchg_w, arg_bp                          # 0x95 XCHG AX, BP
-    db  not_implemented, 0, 0 # TODO    db  execute_xchg_w, arg_si                          # 0x96 XCHG AX, SI
-    db  not_implemented, 0, 0 # TODO    db  execute_xchg_w, arg_di                          # 0x97 XCHG AX, DI
+    db  execute_xchg_ax_w, arg_cx, 2                    # 0x91 XCHG AX, CX
+    db  execute_xchg_ax_w, arg_dx, 2                    # 0x92 XCHG AX, DX
+    db  execute_xchg_ax_w, arg_bx, 2                    # 0x93 XCHG AX, BX
+    db  execute_xchg_ax_w, arg_sp, 2                    # 0x94 XCHG AX, SP
+    db  execute_xchg_ax_w, arg_bp, 2                    # 0x95 XCHG AX, BP
+    db  execute_xchg_ax_w, arg_si, 2                    # 0x96 XCHG AX, SI
+    db  execute_xchg_ax_w, arg_di, 2                    # 0x97 XCHG AX, DI
 
     db  not_implemented, 0, 0 # TODO    db  execute_cbw, 0                                  # 0x98 CBW
     db  not_implemented, 0, 0 # TODO    db  execute_cwd, 0                                  # 0x99 CWD

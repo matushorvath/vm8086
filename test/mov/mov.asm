@@ -74,3 +74,17 @@ handle_int3:                            ; INT 3 handler
 
 section boot start=0xffff0              ; boot
     int3
+
+
+; TODO new test for XCHG
+
+; XCHG AX, CX
+; XCHG AX, DX
+; XCHG AX, BX
+; XCHG AX, SP
+; XCHG AX, BP
+; XCHG AX, SI
+; XCHG AX, DI
+
+; XCHG REG8, REG8/MEM8
+; XCHG REG16, REG16/MEM16
