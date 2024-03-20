@@ -20,12 +20,8 @@ handle_int3:
     into
     out 0x42, al
 
-    ; get 0x8000 into ax without having mov available
-    ; TODO use MOV
-    push cs
-    pop ax
-
     ; cause an overflow and then interrupt
+    mov ax, 0x8000
     dec ax
     into
     out 0x42, al
@@ -51,7 +47,7 @@ handle_int21:
     out 0x42, al
 
     ; interrupt while processing an interrupt
-    ; TODO should this work? test STI/CLI here?
+    ; TODO HW should this work? test STI/CLI here?
     int 255
     out 0x42, al
 
@@ -66,7 +62,7 @@ handle_int255:
 
 
 section boot start=0xffff0              ; boot
-    ; TODO should we call STI here to allow interrupts?
+    ; TODO HW should we call STI here to allow interrupts?
 
     int3
     out 0x42, al

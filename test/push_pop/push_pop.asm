@@ -45,7 +45,14 @@ handle_int3:                            ; INT 3 handler
 
     out 0x42, al
 
-    ; push segment registers, TODO modify them first once we are able
+    ; push segment registers
+    mov ax, 0x1234
+    mov ds, ax
+    mov ax, 0x5678
+    mov ss, ax                          ; this moves the stack
+    mov ax, 0x9abc
+    mov es, ax
+
     push cs
     push ds
     push ss
