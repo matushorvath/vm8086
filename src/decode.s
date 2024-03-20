@@ -1,5 +1,9 @@
 .EXPORT decode_mod_rm
 .EXPORT decode_reg
+.EXPORT decode_sr
+
+# From error.s
+.IMPORT report_error
 
 # From memory.s
 .IMPORT read_cs_ip_b
@@ -26,8 +30,10 @@
 .IMPORT reg_si
 .IMPORT reg_di
 
+.IMPORT reg_cs
 .IMPORT reg_ds
 .IMPORT reg_ss
+.IMPORT reg_es
 
 .IMPORT inc_ip
 
@@ -265,7 +271,7 @@ decode_reg:
     ret 2
 
 decode_reg_table:
-    # Map each REG value to the intcode address of corresponding register
+    # Map each w+reg value to the intcode address of corresponding register
     db  reg_al
     db  reg_cl
     db  reg_dl
@@ -283,6 +289,43 @@ decode_reg_table:
     db  reg_bp
     db  reg_si
     db  reg_di
+.ENDFRAME
+
+##########
+decode_sr:
+.FRAME reg; loc_type, loc_addr, tmp                      # return loc_type, loc_addr
+    arb -3
+
+    # Expect reg to be 0-7, w to be 0-1
+
+    # Only reg 0-3 are valid instructions
+    lt  [rb + reg], 4, [rb + tmp]
+    jz  [rb + tmp], decode_sr_invalid_instruction
+
+    # Return the intcode address of an 8086 register
+    add 0, 0, [rb + loc_type]
+
+    # Map the REG value to an intocode address of the corresponding 8086 segment register
+    add decode_sr_table, [rb + reg], [ip + 1]
+    add [0], 0, [rb + loc_addr]
+
+    arb 3
+    ret 1
+
+decode_sr_invalid_instruction:
+    add decode_sr_invalid_instruction_message, 0, [rb - 1]
+    arb -1
+    call report_error
+
+decode_sr_invalid_instruction_message:
+    db  "invalid segment register", 0
+
+decode_sr_table:
+    # Map each reg value to the intcode address of corresponding segment register
+    db  reg_es
+    db  reg_cs
+    db  reg_ss
+    db  reg_ds
 .ENDFRAME
 
 .EOF

@@ -5,6 +5,8 @@
 .IMPORT arg_mod_reg_rm_src_w
 .IMPORT arg_mod_reg_rm_dst_b
 .IMPORT arg_mod_reg_rm_dst_w
+.IMPORT arg_mod_1sr_rm_src
+.IMPORT arg_mod_1sr_rm_dst
 
 # From arg_reg.s
 .IMPORT arg_ax
@@ -236,9 +238,9 @@ instructions:
     db  execute_mov_w, arg_mod_reg_rm_src_w, 4          # 0x89 MOV REG16/MEM16, REG16
     db  execute_mov_b, arg_mod_reg_rm_dst_b, 4          # 0x8a MOV REG8, REG8/MEM8
     db  execute_mov_w, arg_mod_reg_rm_dst_w, 4          # 0x8b MOV REG16, REG16/MEM16
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_w, arg_mod_1sr_rm_src               # 0x8c MOV REG16/MEM16, SEGREG
+    db  execute_mov_w, arg_mod_1sr_rm_src, 4            # 0x8c MOV REG16/MEM16, SEGREG
     db  not_implemented, 0, 0 # TODO    db  execute_lea_w, arg_mod_reg_mem_dst_w            # 0x8d LEA REG16, MEM16
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_w, arg_mod_1sr_rm_dst               # 0x8e MOV SEGREG, REG16/MEM16
+    db  execute_mov_w, arg_mod_1sr_rm_dst, 4            # 0x8e MOV SEGREG, REG16/MEM16
     db  not_implemented, 0, 0 # TODO    db  execute_pop_w, arg_mod_000_rm_w                 # 0x8f POP REG16/MEM16
 
     db  execute_nop, 0, 0                               # 0x90 NOP (= XCHG AX, AX)
