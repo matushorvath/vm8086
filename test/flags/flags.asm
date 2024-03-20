@@ -11,33 +11,37 @@ section .text start=0x80000
 handle_int3:                            ; INT 3 handler
     out 0x42, al
 
-    ; push and pop each register
-    inc ax
-    push ax
-    push ax
-    pop ax
+    ; all flags are cleared after boot
 
-
+    stc
     out 0x42, al
 
-    ; everything is messed up, our work here is done
+    sti
+    out 0x42, al
+
+    std
+    out 0x42, al
+
+    clc
+    out 0x42, al
+
+    cli
+    out 0x42, al
+
+    cld
+    out 0x42, al
+
+    cmc
+    out 0x42, al
+
+    cmc
+    out 0x42, al
+
+    ; TODO PUSHF after every change
+    ; TODO POPF to set each flag individually
+
     hlt
 
 
 section boot start=0xffff0              ; boot
     int3
-
-    db  execute_cmc, 0, 0                               # 0xf5 CMC
-
-        db  execute_clc, 0, 0                               # 0xf8 CLC
-    db  execute_stc, 0, 0                               # 0xf9 STC
-    db  execute_cli, 0, 0                               # 0xfa CLI
-    db  execute_sti, 0, 0                               # 0xfb STI
-    db  execute_cld, 0, 0                               # 0xfc CLD
-    db  execute_std, 0, 0                               # 0xfd STD
-
-    + after implemented, 
-
-        db  not_implemented, 0, 0 # TODO    db  execute_pushf, 0                                # 0x9c PUSHF
-    db  not_implemented, 0, 0 # TODO    db  execute_popf, 0                                 # 0x9d POPF
-    
