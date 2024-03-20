@@ -7,16 +7,16 @@ cpu 8086
 ; reset registers between tests
 ; CMC CLC STC CLI STI CLD STD, perhaps test with PUSHF/POPF + OUT
 
+
 section interrupts start=0x00000
-    dw  0x0000,         0x0000
-    dw  0x0000,         0x0000
-    dw  0x0000,         0x0000
-    dw  handle_int3,    0x8000          ; INT 3
+    dw  3 dup (0x0000, 0x0000)
+    dw  handle_int3, 0x8000             ; INT 3
     dw  handle_int4,    0x8000          ; INT 4
 
 handle_int4_data:
     ; TODO move this near handle_int3 once we can mov to segment registers
     dw  0x1234
+
 
 section .text start=0x80000
 
@@ -78,6 +78,7 @@ handle_int4:                            ; INT 4 handler
     ; TODO test mov reg, [addr + displacement], 8-bit and 16-bit
 
     iret
+
 
 section boot start=0xffff0              ; needs to match simple_test_header.s
     out 0x00, al

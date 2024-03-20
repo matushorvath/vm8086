@@ -1,10 +1,10 @@
 cpu 8086
 
+
 section interrupts start=0x00000
-    dw  0x0000,         0x0000
-    dw  0x0000,         0x0000
-    dw  0x0000,         0x0000
-    dw  handle_int3,    0x8000          ; INT 3
+    dw  3 dup (0x0000, 0x0000)
+    dw  handle_int3, 0x8000             ; INT 3
+
 
 section .text start=0x80000
 
@@ -22,6 +22,7 @@ handle_int3:                            ; INT 3 handler
 
     ; everything is messed up, our work here is done
     hlt
+
 
 section boot start=0xffff0              ; boot
     int3

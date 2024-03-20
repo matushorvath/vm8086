@@ -6,6 +6,10 @@ on:
     branches:
       - main
 
+env:
+  FORCE_COLOR: 1
+  TERM: xterm-color
+
 jobs:
   build:
     name: OS=${{ matrix.os }}
