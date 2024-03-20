@@ -7,6 +7,8 @@
 .IMPORT arg_mod_reg_rm_dst_w
 .IMPORT arg_mod_1sr_rm_src
 .IMPORT arg_mod_1sr_rm_dst
+.IMPORT arg_mod_000_rm_immediate_b
+.IMPORT arg_mod_000_rm_immediate_w
 
 # From arg_reg.s
 .IMPORT arg_ax
@@ -325,8 +327,8 @@ instructions:
     db  not_implemented, 0, 0 # TODO    db  execute_les_w, arg_mod_reg_mem_dst_w            # 0xc4 LES REG16, MEM16
     db  not_implemented, 0, 0 # TODO    db  execute_lds_w, arg_mod_reg_mem_dst_w            # 0xc5 LDS REG16, MEM16
 
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_b, arg_mod_000_rm_immediate_b       # 0xc6 MOV MEM8, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_w, arg_mod_000_rm_immediate_w       # 0xc7 MOV MEM16, IMMED16
+    db  execute_mov_b, arg_mod_000_rm_immediate_b, 4    # 0xc6 MOV MEM8, IMMED8
+    db  execute_mov_w, arg_mod_000_rm_immediate_w, 4    # 0xc7 MOV MEM16, IMMED16
 
     db  invalid_opcode, 0, 0                            # 0xc8
     db  invalid_opcode, 0, 0                            # 0xc9
