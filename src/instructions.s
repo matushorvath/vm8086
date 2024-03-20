@@ -22,8 +22,25 @@
 .IMPORT arg_ss
 .IMPORT arg_es
 
-# from arg_immediate.s
-.IMPORT arg_immediate_b
+# From arg_reg_immediate_b.s
+.IMPORT arg_al_immediate_b
+.IMPORT arg_bl_immediate_b
+.IMPORT arg_cl_immediate_b
+.IMPORT arg_dl_immediate_b
+.IMPORT arg_ah_immediate_b
+.IMPORT arg_bh_immediate_b
+.IMPORT arg_ch_immediate_b
+.IMPORT arg_dh_immediate_b
+
+# From arg_reg_immediate_w.s
+.IMPORT arg_ax_immediate_w
+.IMPORT arg_bx_immediate_w
+.IMPORT arg_cx_immediate_w
+.IMPORT arg_dx_immediate_w
+.IMPORT arg_sp_immediate_w
+.IMPORT arg_bp_immediate_w
+.IMPORT arg_si_immediate_w
+.IMPORT arg_di_immediate_w
 
 # From exec.s
 .IMPORT execute_nop
@@ -281,23 +298,23 @@ instructions:
     db  not_implemented, 0, 0 # TODO    db  execute_scas_b, 0                               # 0xae SCAS DEST-STR8
     db  not_implemented, 0, 0 # TODO    db  execute_scas_w, 0                               # 0xaf SCAS DEST-STR16
 
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_b, arg_al_immediate_b               # 0xb0 MOV AL, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_b, arg_cl_immediate_b               # 0xb1 MOV CL, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_b, arg_dl_immediate_b               # 0xb2 MOV DL, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_b, arg_bl_immediate_b               # 0xb3 MOV BL, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_b, arg_ah_immediate_b               # 0xb4 MOV AH, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_b, arg_ch_immediate_b               # 0xb5 MOV CH, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_b, arg_dh_immediate_b               # 0xb6 MOV DH, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_b, arg_bh_immediate_b               # 0xb7 MOV BH, IMMED8
+    db  execute_mov_b, arg_al_immediate_b, 4            # 0xb0 MOV AL, IMMED8
+    db  execute_mov_b, arg_cl_immediate_b, 4            # 0xb1 MOV CL, IMMED8
+    db  execute_mov_b, arg_dl_immediate_b, 4            # 0xb2 MOV DL, IMMED8
+    db  execute_mov_b, arg_bl_immediate_b, 4            # 0xb3 MOV BL, IMMED8
+    db  execute_mov_b, arg_ah_immediate_b, 4            # 0xb4 MOV AH, IMMED8
+    db  execute_mov_b, arg_ch_immediate_b, 4            # 0xb5 MOV CH, IMMED8
+    db  execute_mov_b, arg_dh_immediate_b, 4            # 0xb6 MOV DH, IMMED8
+    db  execute_mov_b, arg_bh_immediate_b, 4            # 0xb7 MOV BH, IMMED8
 
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_w, arg_ax_immediate_w               # 0xb8 MOV AX, IMMED16
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_w, arg_cx_immediate_w               # 0xb9 MOV CX, IMMED16
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_w, arg_dx_immediate_w               # 0xba MOV DX, IMMED16
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_w, arg_bx_immediate_w               # 0xbb MOV BX, IMMED16
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_w, arg_sp_immediate_w               # 0xbc MOV SP, IMMED16
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_w, arg_bp_immediate_w               # 0xbd MOV BP, IMMED16
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_w, arg_si_immediate_w               # 0xbe MOV SI, IMMED16
-    db  not_implemented, 0, 0 # TODO    db  execute_mov_w, arg_di_immediate_w               # 0xbf MOV DI, IMMED16
+    db  execute_mov_w, arg_ax_immediate_w, 4            # 0xb8 MOV AX, IMMED16
+    db  execute_mov_w, arg_cx_immediate_w, 4            # 0xb9 MOV CX, IMMED16
+    db  execute_mov_w, arg_dx_immediate_w, 4            # 0xba MOV DX, IMMED16
+    db  execute_mov_w, arg_bx_immediate_w, 4            # 0xbb MOV BX, IMMED16
+    db  execute_mov_w, arg_sp_immediate_w, 4            # 0xbc MOV SP, IMMED16
+    db  execute_mov_w, arg_bp_immediate_w, 4            # 0xbd MOV BP, IMMED16
+    db  execute_mov_w, arg_si_immediate_w, 4            # 0xbe MOV SI, IMMED16
+    db  execute_mov_w, arg_di_immediate_w, 4            # 0xbf MOV DI, IMMED16
 
     db  invalid_opcode, 0, 0                            # 0xc0
     db  invalid_opcode, 0, 0                            # 0xc1
