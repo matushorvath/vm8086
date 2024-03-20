@@ -1,5 +1,5 @@
-.EXPORT execute_feop_b
-.EXPORT arg_mod_feop_rm_b
+.EXPORT execute_grp1_b
+.EXPORT arg_mod_grp1_rm_b
 
 # From error.s
 .IMPORT report_error
@@ -15,10 +15,8 @@
 
 # Complex instruction opcodes that implement multiple different instructions
 
-# TODO Documentation calls these Immed, Shift, Grp 1 and Grp 2
-
 ##########
-arg_mod_feop_rm_b:
+arg_mod_grp1_rm_b:
 .FRAME addr, mod, reg, rm, tmp          # returns addr
     arb -5
 
@@ -40,40 +38,40 @@ arg_mod_feop_rm_b:
 
     # MOD 000 R/M -> INC REG8/MEM8
     eq  [rb + reg], 0b000, [rb + tmp]
-    jnz [rb + tmp], arg_mod_feop_rm_b_inc
+    jnz [rb + tmp], arg_mod_grp1_rm_b_inc
 
     # MOD 000 R/M -> INC REG8/MEM8
     eq  [rb + reg], 0b001, [rb + tmp]
-    jnz [rb + tmp], arg_mod_feop_rm_b_dec
+    jnz [rb + tmp], arg_mod_grp1_rm_b_dec
 
-    add arg_mod_feop_rm_b_invalid_message, 0, [rb - 1]
+    add arg_mod_grp1_rm_b_invalid_message, 0, [rb - 1]
     arb -1
     call report_error
 
-arg_mod_feop_rm_b_inc:
+arg_mod_grp1_rm_b_inc:
 
 
-arg_mod_feop_rm_b_dec:
+arg_mod_grp1_rm_b_dec:
 
 
-arg_mod_feop_rm_b_end:
+arg_mod_grp1_rm_b_end:
 
 
-    # <feop>:
+    # <grp1>:
     # 000 INC REG8/MEM8
     # 001 DEC REG8/MEM8
     # (rest not used)
-    ds  2, 0 # TODO    db  execute_feop_b, arg_mod_feop_rm_b               # 0xfe <feop> REG8/MEM8
+    ds  2, 0 # TODO    db  execute_grp1_b, arg_mod_grp1_rm_b               # 0xfe <grp1> REG8/MEM8
 
 
     arb 5
     ret 0
 
-arg_mod_feop_rm_b_invalid_message:
+arg_mod_grp1_rm_b_invalid_message:
     db  "invalid group 2 instruction", 0
 .ENDFRAME
 
 
-arg_mod_feop_rm_b
+arg_mod_grp1_rm_b
 
 .EOF

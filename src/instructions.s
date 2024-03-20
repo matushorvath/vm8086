@@ -219,13 +219,13 @@ instructions:
     db  not_implemented, 0, 0 # TODO    db  execute_jng, arg_short_ptr                      # 0x7e JLE/JNG SHORT-LABEL
     db  not_implemented, 0, 0 # TODO    db  execute_jg, arg_short_ptr                       # 0x7f JNLE/JG SHORT-LABEL
 
-    # <alop>: 000 ADD, 001 OR, 010 ADC, 011 SBB, 100 AND, 101 SUB, 110 XOR, 111 CMP
-    db  not_implemented, 0, 0 # TODO    db  execute_alop_b, arg_mod_alop_rm_b               # 0x80 <alop> REG8/MEM8, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_alop_w, arg_mod_alop_rm_w               # 0x81 <alop> REG16/MEM16, IMMED16
+    # <immed>: 000 ADD, 001 OR, 010 ADC, 011 SBB, 100 AND, 101 SUB, 110 XOR, 111 CMP
+    db  not_implemented, 0, 0 # TODO    db  execute_immed_b, arg_mod_immed_rm_b             # 0x80 <immed> REG8/MEM8, IMMED8
+    db  not_implemented, 0, 0 # TODO    db  execute_immed_w, arg_mod_immed_rm_w             # 0x81 <immed> REG16/MEM16, IMMED16
 
-    # <alop>: 000 ADD,         010 ADC, 011 SBB,          101 SUB,          111 CMP
-    db  not_implemented, 0, 0 # TODO    db  execute_alop_b, arg_mod_alop_rm_ext_b           # 0x82 <alop> REG8/MEM8, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_alop_w, arg_mod_alop_rm_ext_w           # 0x83 <alop> REG16/MEM16, IMMED8 (sign extend)
+    # <immed>: 000 ADD,         010 ADC, 011 SBB,          101 SUB,          111 CMP
+    db  not_implemented, 0, 0 # TODO    db  execute_immed_b, arg_mod_immed_rm_ext_b         # 0x82 <immed> REG8/MEM8, IMMED8
+    db  not_implemented, 0, 0 # TODO    db  execute_immed_w, arg_mod_immed_rm_ext_w         # 0x83 <immed> REG16/MEM16, IMMED8 (sign extend)
 
     db  not_implemented, 0, 0 # TODO    db  execute_test_b, arg_mod_reg_rm_src_b, 4         # 0x84 TEST REG8/MEM8, REG8
     db  not_implemented, 0, 0 # TODO    db  execute_test_w, arg_mod_reg_rm_src_w, 4         # 0x85 TEST REG16/MEM16, REG16
@@ -321,11 +321,11 @@ instructions:
     db  execute_into, 0, 0                              # 0xce INTO
     db  execute_iret, 0, 0                              # 0xcf IRET
 
-    # <rsop>: 000 ROL, 001 ROR, 010 RCL, 011 RCR, 100 SAL/SHL, 101 SHR,          111 SAR
-    db  not_implemented, 0, 0 # TODO    db  execute_rsop_b, arg_mod_rsop_rm_1_b             # 0xd0 <rsop> REG8/MEM8, 1
-    db  not_implemented, 0, 0 # TODO    db  execute_rsop_w, arg_mod_rsop_rm_1_w             # 0xd1 <rsop> REG16/MEM16, 1
-    db  not_implemented, 0, 0 # TODO    db  execute_rsop_b, arg_mod_rsop_rm_cl_b            # 0xd2 <rsop> REG8/MEM8, CL
-    db  not_implemented, 0, 0 # TODO    db  execute_rsop_w, arg_mod_rsop_rm_cl_w            # 0xd3 <rsop> REG16/MEM16, CL
+    # <shift>: 000 ROL, 001 ROR, 010 RCL, 011 RCR, 100 SAL/SHL, 101 SHR,          111 SAR
+    db  not_implemented, 0, 0 # TODO    db  execute_shift_b, arg_mod_shift_rm_1_b           # 0xd0 <shift> REG8/MEM8, 1
+    db  not_implemented, 0, 0 # TODO    db  execute_shift_w, arg_mod_shift_rm_1_w           # 0xd1 <shift> REG16/MEM16, 1
+    db  not_implemented, 0, 0 # TODO    db  execute_shift_b, arg_mod_shift_rm_cl_b          # 0xd2 <shift> REG8/MEM8, CL
+    db  not_implemented, 0, 0 # TODO    db  execute_shift_w, arg_mod_shift_rm_cl_w          # 0xd3 <shift> REG16/MEM16, CL
 
     db  not_implemented, 0, 0 # TODO    db  execute_aam, 0                                  # 0xd4 AAM
     db  not_implemented, 0, 0 # TODO    db  execute_aad, 0                                  # 0xd5 AAD
@@ -389,13 +389,13 @@ instructions:
     db  execute_cld, 0, 0                               # 0xfc CLD
     db  execute_std, 0, 0                               # 0xfd STD
 
-    # <feop>:
+    # <grp1>:
     # 000 INC REG8/MEM8
     # 001 DEC REG8/MEM8
     # (rest not used)
-    db  not_implemented, 0, 0 # TODO    db  execute_feop_b, arg_mod_feop_rm_b               # 0xfe <feop> REG8/MEM8
+    db  not_implemented, 0, 0 # TODO    db  execute_grp1_b, arg_mod_grp1_rm_b               # 0xfe <grp1> REG8/MEM8
 
-    # <fdop>:
+    # <grp2>:
     # 000 INC MEM16
     # 001 DEC MEM16
     # 010 CALL REG16/MEM16 (within segment)
