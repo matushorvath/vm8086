@@ -8,7 +8,7 @@
 .EXPORT arg_dh_immediate_b
 
 # From memory.s
-.IMPORT read_cs_ip_b
+.IMPORT calc_cs_ip_addr
 
 # From state.s
 .IMPORT reg_al
@@ -31,7 +31,7 @@ arg_al_immediate_b:
 
     add 1, 0, [rb + loc_type_src]
 
-    call read_cs_ip_b
+    call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr_src]
     call inc_ip
 
@@ -49,7 +49,7 @@ arg_bl_immediate_b:
 
     add 1, 0, [rb + loc_type_src]
 
-    call read_cs_ip_b
+    call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr_src]
     call inc_ip
 
@@ -67,7 +67,7 @@ arg_cl_immediate_b:
 
     add 1, 0, [rb + loc_type_src]
 
-    call read_cs_ip_b
+    call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr_src]
     call inc_ip
 
@@ -85,7 +85,7 @@ arg_dl_immediate_b:
 
     add 1, 0, [rb + loc_type_src]
 
-    call read_cs_ip_b
+    call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr_src]
     call inc_ip
 
@@ -103,7 +103,7 @@ arg_ah_immediate_b:
 
     add 1, 0, [rb + loc_type_src]
 
-    call read_cs_ip_b
+    call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr_src]
     call inc_ip
 
@@ -121,7 +121,7 @@ arg_bh_immediate_b:
 
     add 1, 0, [rb + loc_type_src]
 
-    call read_cs_ip_b
+    call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr_src]
     call inc_ip
 
@@ -139,7 +139,7 @@ arg_ch_immediate_b:
 
     add 1, 0, [rb + loc_type_src]
 
-    call read_cs_ip_b
+    call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr_src]
     call inc_ip
 
@@ -157,7 +157,7 @@ arg_dh_immediate_b:
 
     add 1, 0, [rb + loc_type_src]
 
-    call read_cs_ip_b
+    call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr_src]
     call inc_ip
 

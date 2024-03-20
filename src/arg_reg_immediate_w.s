@@ -8,7 +8,7 @@
 .EXPORT arg_di_immediate_w
 
 # From memory.s
-.IMPORT read_cs_ip_w
+.IMPORT calc_cs_ip_addr
 
 # From state.s
 .IMPORT reg_ax
@@ -31,9 +31,9 @@ arg_ax_immediate_w:
 
     add 1, 0, [rb + loc_type_src]
 
-    call read_cs_ip_w
-    mul [rb - 3], 0x100, [rb + loc_addr_src]
-    add [rb - 2], [rb + loc_addr_src], [rb + loc_addr_src]
+    call calc_cs_ip_addr
+    add [rb - 2], 0, [rb + loc_addr_src]
+    call inc_ip
     call inc_ip
 
     add 0, 0, [rb + loc_type_dst]
@@ -50,9 +50,9 @@ arg_bx_immediate_w:
 
     add 1, 0, [rb + loc_type_src]
 
-    call read_cs_ip_w
-    mul [rb - 3], 0x100, [rb + loc_addr_src]
-    add [rb - 2], [rb + loc_addr_src], [rb + loc_addr_src]
+    call calc_cs_ip_addr
+    add [rb - 2], 0, [rb + loc_addr_src]
+    call inc_ip
     call inc_ip
 
     add 0, 0, [rb + loc_type_dst]
@@ -69,9 +69,9 @@ arg_cx_immediate_w:
 
     add 1, 0, [rb + loc_type_src]
 
-    call read_cs_ip_w
-    mul [rb - 3], 0x100, [rb + loc_addr_src]
-    add [rb - 2], [rb + loc_addr_src], [rb + loc_addr_src]
+    call calc_cs_ip_addr
+    add [rb - 2], 0, [rb + loc_addr_src]
+    call inc_ip
     call inc_ip
 
     add 0, 0, [rb + loc_type_dst]
@@ -88,9 +88,9 @@ arg_dx_immediate_w:
 
     add 1, 0, [rb + loc_type_src]
 
-    call read_cs_ip_w
-    mul [rb - 3], 0x100, [rb + loc_addr_src]
-    add [rb - 2], [rb + loc_addr_src], [rb + loc_addr_src]
+    call calc_cs_ip_addr
+    add [rb - 2], 0, [rb + loc_addr_src]
+    call inc_ip
     call inc_ip
 
     add 0, 0, [rb + loc_type_dst]
@@ -107,9 +107,9 @@ arg_sp_immediate_w:
 
     add 1, 0, [rb + loc_type_src]
 
-    call read_cs_ip_w
-    mul [rb - 3], 0x100, [rb + loc_addr_src]
-    add [rb - 2], [rb + loc_addr_src], [rb + loc_addr_src]
+    call calc_cs_ip_addr
+    add [rb - 2], 0, [rb + loc_addr_src]
+    call inc_ip
     call inc_ip
 
     add 0, 0, [rb + loc_type_dst]
@@ -126,9 +126,9 @@ arg_bp_immediate_w:
 
     add 1, 0, [rb + loc_type_src]
 
-    call read_cs_ip_w
-    mul [rb - 3], 0x100, [rb + loc_addr_src]
-    add [rb - 2], [rb + loc_addr_src], [rb + loc_addr_src]
+    call calc_cs_ip_addr
+    add [rb - 2], 0, [rb + loc_addr_src]
+    call inc_ip
     call inc_ip
 
     add 0, 0, [rb + loc_type_dst]
@@ -145,9 +145,9 @@ arg_si_immediate_w:
 
     add 1, 0, [rb + loc_type_src]
 
-    call read_cs_ip_w
-    mul [rb - 3], 0x100, [rb + loc_addr_src]
-    add [rb - 2], [rb + loc_addr_src], [rb + loc_addr_src]
+    call calc_cs_ip_addr
+    add [rb - 2], 0, [rb + loc_addr_src]
+    call inc_ip
     call inc_ip
 
     add 0, 0, [rb + loc_type_dst]
@@ -164,9 +164,9 @@ arg_di_immediate_w:
 
     add 1, 0, [rb + loc_type_src]
 
-    call read_cs_ip_w
-    mul [rb - 3], 0x100, [rb + loc_addr_src]
-    add [rb - 2], [rb + loc_addr_src], [rb + loc_addr_src]
+    call calc_cs_ip_addr
+    add [rb - 2], 0, [rb + loc_addr_src]
+    call inc_ip
     call inc_ip
 
     add 0, 0, [rb + loc_type_dst]

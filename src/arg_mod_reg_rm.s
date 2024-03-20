@@ -18,8 +18,8 @@
 .IMPORT report_error
 
 # From memory.s
+.IMPORT calc_cs_ip_addr
 .IMPORT read_cs_ip_b
-.IMPORT calc_addr
 
 # From split233.s
 .IMPORT split233
@@ -204,15 +204,10 @@ arg_mod_000_rm_immediate_b:
     jnz [rb - 5], arg_mod_000_rm_immediate_b_nonzero_reg
 
     # Return pointer to 8-bit immediate
-    mul [reg_cs + 1], 0x100, [rb - 1]
-    add [reg_cs + 0], [rb - 1], [rb - 1]
-    mul [reg_ip + 1], 0x100, [rb - 2]
-    add [reg_ip + 0], [rb - 2], [rb - 2]
-    arb -2
-    call calc_addr
+    call calc_cs_ip_addr
 
     add 1, 0, [rb + loc_type_src]
-    add [rb - 4], 0, [rb + loc_addr_src]
+    add [rb - 2], 0, [rb + loc_addr_src]
 
     call inc_ip
 
@@ -243,15 +238,10 @@ arg_mod_000_rm_immediate_w:
     jnz [rb - 5], arg_mod_000_rm_immediate_w_nonzero_reg
 
     # Return pointer to 16-bit immediate
-    mul [reg_cs + 1], 0x100, [rb - 1]
-    add [reg_cs + 0], [rb - 1], [rb - 1]
-    mul [reg_ip + 1], 0x100, [rb - 2]
-    add [reg_ip + 0], [rb - 2], [rb - 2]
-    arb -2
-    call calc_addr
+    call calc_cs_ip_addr
 
     add 1, 0, [rb + loc_type_src]
-    add [rb - 4], 0, [rb + loc_addr_src]
+    add [rb - 2], 0, [rb + loc_addr_src]
 
     call inc_ip
     call inc_ip
