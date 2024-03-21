@@ -103,45 +103,45 @@ handle_int3:                            ; INT 3 handler
     mov di, 13
 
     ; MOV MEM8, REG8
-    mov ax, 0x00ab
+    mov ax, 0x0000
     mov cx, 0x0000
-    mov dx, 0x0000
+    mov dx, 0xab00
 
-    mov [bx + si + test_ds], al
-    mov ah, [5 + 11 + test_ds]
+    mov [bx + si + test_ds], dh
+    mov al, [5 + 11 + test_ds]
 
-    mov [bx + di + test_ds], al
-    mov cl, [5 + 13 + test_ds]
+    mov [bx + di + test_ds], dh
+    mov ah, [5 + 13 + test_ds]
 
-    mov [si + test_ds], al
-    mov ch, [11 + test_ds]
+    mov [si + test_ds], dh
+    mov cl, [11 + test_ds]
 
-    mov [di + test_ds], al
-    mov dl, [13 + test_ds]
+    mov [di + test_ds], dh
+    mov ch, [13 + test_ds]
 
-    mov [bx + test_ds], al
-    mov dh, [5 + test_ds]
+    mov [bx + test_ds], dh
+    mov dl, [5 + test_ds]
 
     out 0x42, al
 
-    mov ax, 0x00cd
+    mov ax, 0x0000
     mov cx, 0x0000
-    mov dx, 0x0000
+    mov dx, 0xcd00
 
     ; TODO needs segment overrride
-    ; mov [bp + test_ss], al
-    ; mov ah, [ss:7 + test_ds]
+    ; mov [bp + test_ss], dh
+    ; mov al, [ss:7 + test_ds]
 
     ; TODO needs segment overrride
-    ; mov [bp + si + test_ss], al
-    ; mov cl, [ss:7 + 11 + test_ss]
+    ; mov [bp + si + test_ss], dh
+    ; mov ah, [ss:7 + 11 + test_ss]
 
     ; TODO needs segment overrride
-    ; mov [bp + di + test_ss], al
-    ; mov ch, [ss:7 + 13 + test_ss]
+    ; mov [bp + di + test_ss], dh
+    ; mov cl, [ss:7 + 13 + test_ss]
 
-    mov [test_ds], al
-    mov dl, [si - 11 + test_ds]
+    mov [test_ds], dh
+    mov ch, [si - 11 + test_ds]
 
     out 0x42, al
 
