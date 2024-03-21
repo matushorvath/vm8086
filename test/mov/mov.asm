@@ -26,7 +26,9 @@ handle_int3:                            ; INT 3 handler
     out 0x42, al
 
 %include "reg_reg.inc"
+    out 0x80, al
 %include "reg_immed.inc"
+    out 0x81, al
 
     ; set up for testing MOD RM
     mov ax, 0x1000
@@ -40,21 +42,18 @@ handle_int3:                            ; INT 3 handler
     mov di, 13
 
 %include "mem8_reg8_16.inc"
+    out 0x82, al
 %include "reg8_mem8_16.inc"
+    out 0x83, al
 %include "mem8_reg8_8.inc"
+    out 0x84, al
 %include "reg8_mem8_8.inc"
+    out 0x85, al
+%include "mem8_reg8_0.inc"
+    out 0x86, al
+%include "reg8_mem8_0.inc"
+    out 0x87, al
 
-;    db  decode_mod_rm_memory_bx_si
-;    db  decode_mod_rm_memory_bx_di
-;    db  decode_mod_rm_memory_bp_si
-;    db  decode_mod_rm_memory_bp_di
-;    db  decode_mod_rm_memory_si
-;    db  decode_mod_rm_memory_di
-;    db  decode_mod_rm_memory_bp
-;    db  decode_mod_rm_memory_bx
-;    db  decode_mod_rm_memory_direct
-
-; TODO test no displacement
 ; TODO test MOD REG RM with 16-bit registers
 ; TODO force NASM to generate also the other variants for MOV REG8/REG8, REG8/REG16 (src/dst)
 
