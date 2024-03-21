@@ -102,24 +102,24 @@ handle_int3:                            ; INT 3 handler
     mov si, 11
     mov di, 13
 
-    ; MOV MEM8, REG8
+    ; MOV MEM8, REG8 (16-bit displacement)
     mov ax, 0x0000
     mov cx, 0x0000
     mov dx, 0xab00
 
-    mov [bx + si + test_ds], dh
+    mov [word bx + si + test_ds], dh
     mov al, [5 + 11 + test_ds]
 
-    mov [bx + di + test_ds], dh
+    mov [word bx + di + test_ds], dh
     mov ah, [5 + 13 + test_ds]
 
-    mov [si + test_ds], dh
+    mov [word si + test_ds], dh
     mov cl, [11 + test_ds]
 
-    mov [di + test_ds], dh
+    mov [word di + test_ds], dh
     mov ch, [13 + test_ds]
 
-    mov [bx + test_ds], dh
+    mov [word bx + test_ds], dh
     mov dl, [5 + test_ds]
 
     out 0x42, al
@@ -129,41 +129,41 @@ handle_int3:                            ; INT 3 handler
     mov dx, 0xcd00
 
     ; TODO needs segment overrride
-    ; mov [bp + test_ss], dh
+    ; mov [word bp + test_ss], dh
     ; mov al, [ss:7 + test_ds]
 
     ; TODO needs segment overrride
-    ; mov [bp + si + test_ss], dh
+    ; mov [word bp + si + test_ss], dh
     ; mov ah, [ss:7 + 11 + test_ss]
 
     ; TODO needs segment overrride
-    ; mov [bp + di + test_ss], dh
+    ; mov [word bp + di + test_ss], dh
     ; mov cl, [ss:7 + 13 + test_ss]
 
-    mov [test_ds], dh
+    mov [word test_ds], dh
     mov ch, [si - 11 + test_ds]
 
     out 0x42, al
 
-    ; MOV REG8, MEM8
+    ; MOV REG8, MEM8 (16-bit displacement)
     mov ax, 0x0067
     mov cx, 0x0000
     mov dx, 0x0000
 
     mov [5 + 11 + test_ds], al
-    mov ah, [bx + si + test_ds]
+    mov ah, [word bx + si + test_ds]
 
     mov [5 + 13 + test_ds], al
-    mov cl, [bx + di + test_ds]
+    mov cl, [word bx + di + test_ds]
 
     mov [11 + test_ds], al
-    mov ch, [si + test_ds]
+    mov ch, [word si + test_ds]
 
     mov [13 + test_ds], al
-    mov dl, [di + test_ds]
+    mov dl, [word di + test_ds]
 
     mov [5 + test_ds], al
-    mov dh, [bx + test_ds]
+    mov dh, [word bx + test_ds]
 
     out 0x42, al
 
@@ -173,18 +173,98 @@ handle_int3:                            ; INT 3 handler
 
     ; TODO needs segment overrride
     ; mov [ss:7 + test_ds], al
-    ; mov ah, [bp + test_ss]
+    ; mov ah, [word bp + test_ss]
 
     ; TODO needs segment overrride
     ; mov [ss:7 + 11 + test_ss], al
-    ; mov cl, [bp + si + test_ss]
+    ; mov cl, [word bp + si + test_ss]
 
     ; TODO needs segment overrride
     ; mov [ss:7 + 13 + test_ss], al
-    ; mov ch, [bp + di + test_ss]
+    ; mov ch, [word bp + di + test_ss]
 
     mov [si - 11 + test_ds], al
-    mov dl, [test_ds]
+    mov dl, [word test_ds]
+
+    out 0x42, al
+
+    ; MOV MEM8, REG8 (8-bit displacement)
+    mov ax, 0x0000
+    mov cx, 0x0000
+    mov dx, 0xab00
+
+    mov [byte bx + si + test_ds], dh
+    mov al, [5 + 11 + test_ds]
+
+    mov [byte bx + di + test_ds], dh
+    mov ah, [5 + 13 + test_ds]
+
+    mov [byte si + test_ds], dh
+    mov cl, [11 + test_ds]
+
+    mov [byte di + test_ds], dh
+    mov ch, [13 + test_ds]
+
+    mov [byte bx + test_ds], dh
+    mov dl, [5 + test_ds]
+
+    out 0x42, al
+
+    mov ax, 0x0000
+    mov cx, 0x0000
+    mov dx, 0xcd00
+
+    ; TODO needs segment overrride
+    ; mov [byte bp + test_ss], dh
+    ; mov al, [ss:7 + test_ds]
+
+    ; TODO needs segment overrride
+    ; mov [byte bp + si + test_ss], dh
+    ; mov ah, [ss:7 + 11 + test_ss]
+
+    ; TODO needs segment overrride
+    ; mov [byte bp + di + test_ss], dh
+    ; mov cl, [ss:7 + 13 + test_ss]
+
+    out 0x42, al
+
+    ; MOV REG8, MEM8 (8-bit displacement)
+    mov ax, 0x0067
+    mov cx, 0x0000
+    mov dx, 0x0000
+
+    mov [5 + 11 + test_ds], al
+    mov ah, [byte bx + si + test_ds]
+
+    mov [5 + 13 + test_ds], al
+    mov cl, [byte bx + di + test_ds]
+
+    mov [11 + test_ds], al
+    mov ch, [byte si + test_ds]
+
+    mov [13 + test_ds], al
+    mov dl, [byte di + test_ds]
+
+    mov [5 + test_ds], al
+    mov dh, [byte bx + test_ds]
+
+    out 0x42, al
+
+    mov ax, 0x0089
+    mov cx, 0x0000
+    mov dx, 0x0000
+
+    ; TODO needs segment overrride
+    ; mov [ss:7 + test_ds], al
+    ; mov ah, [byte bp + test_ss]
+
+    ; TODO needs segment overrride
+    ; mov [ss:7 + 11 + test_ss], al
+    ; mov cl, [byte bp + si + test_ss]
+
+    ; TODO needs segment overrride
+    ; mov [ss:7 + 13 + test_ss], al
+    ; mov ch, [byte bp + di + test_ss]
 
     out 0x42, al
 
@@ -198,7 +278,7 @@ handle_int3:                            ; INT 3 handler
 ;    db  decode_mod_rm_memory_bx
 ;    db  decode_mod_rm_memory_direct
 
-; TODO test 8-bit displacement, no displacement; verify above is 16-bit
+; TODO test no displacement
 ; TODO force NASM to generate also the other variants for MOV REG8/REG8, REG8/REG16 (src/dst)
 
 ; TODO MOV MEM8, REG8
