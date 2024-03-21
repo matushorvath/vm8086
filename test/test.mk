@@ -39,17 +39,17 @@ default: test
 
 .PHONY: test-prep
 test-prep:
-	rm -rf $(BINDIR) $(OBJDIR)
-	mkdir -p $(BINDIR) $(OBJDIR)
+	rm -rf $(BINDIR)
+	mkdir -p $(BINDIR)
 
-$(BINDIR)/%.txt: $(BINDIR)/%.input
+$(BINDIR)/%.txt: $(OBJDIR)/%.input
 	printf '$(NAME): executing ' >> $(TESTLOG)
 	$(ICVM) $< > $@ || ( cat $@ ; true )
 	@diff $(notdir $@) $@ > /dev/null 2> /dev/null || \
 		( echo $(COLOR_RED)FAILED$(COLOR_NORMAL) ; diff $(notdir $@) $@ ) >> $(TESTLOG)
 	@echo $(COLOR_GREEN)OK$(COLOR_NORMAL) >> $(TESTLOG)
 
-$(BINDIR)/%.input: $(LIB8086) $(LIBXIB) $(TEST_HEADER) $(OBJDIR)/%.o
+$(OBJDIR)/%.input: $(LIB8086) $(LIBXIB) $(TEST_HEADER) $(OBJDIR)/%.o
 	echo .$$ | cat $^ - | $(ICVM) $(ICLD) > $@
 	echo .$$ | cat $^ - | $(ICVM) $(ICLDMAP) > $@.map.yaml
 
