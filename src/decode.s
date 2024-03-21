@@ -221,6 +221,7 @@ decode_mod_rm_memory_bx:
 decode_mod_rm_memory_direct:
     mul [reg_ds + 1], 0x100, [rb + loc_addr]
     add [reg_ds + 0], [rb + loc_addr], [rb + loc_addr]
+    mul [rb + loc_addr], 0x10, [rb + loc_addr]
 
 decode_mod_rm_mem_calc:
     # Return an 8086 physical memory address

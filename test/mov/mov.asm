@@ -6,6 +6,20 @@ section interrupts start=0x00000
     dw  handle_int3, 0x8000             ; INT 3
 
 
+section data_segment start=0x10000
+
+    dw 23 dup (0x0000)
+test_ds:
+    dw  0
+
+
+section stack_segment start=0x20000
+
+    dw 17 dup (0x0000)
+test_ss:
+    dw  0
+
+
 section .text start=0x80000
 
 handle_int3:                            ; INT 3 handler
@@ -77,15 +91,120 @@ handle_int3:                            ; INT 3 handler
 
     out 0x42, al
 
-; TODO test the sp:bp case
-; TODO test all the mod reg rm cases
-; TODO check the sources and do white boxing
-; TODO test mov reg, [addr + displacement], 8-bit and 16-bit
+    ; set up for testing MOD RM
+    mov ax, 0x1000
+    mov ds, ax
+    mov ax, 0x2000
+    mov ss, ax
 
-; TODO MOV REG8/MEM8, REG8
-; TODO MOV REG16/MEM16, REG16
-; TODO MOV REG8, REG8/MEM8
-; TODO MOV REG16, REG16/MEM16
+    mov bx, 5
+    mov bp, 7
+    mov si, 11
+    mov di, 13
+
+    ; MOV MEM8, REG8
+    mov ax, 0x00ab
+    mov cx, 0x0000
+    mov dx, 0x0000
+
+    mov [bx + si + test_ds], al
+    mov ah, [5 + 11 + test_ds]
+
+    mov [bx + di + test_ds], al
+    mov bl, [5 + 13 + test_ds]
+
+    mov [si + test_ds], al
+    mov bh, [11 + test_ds]
+
+    mov [di + test_ds], al
+    mov cl, [13 + test_ds]
+
+    mov [bx + test_ds], al
+    mov ch, [5 + test_ds] ; wrong
+
+    mov [test_ds], al
+    mov dl, [si - 11 + test_ds]
+
+    out 0x42, al
+
+    ; mov ax, 0x00cd
+    ; mov cx, 0x0000
+    ; mov dx, 0x0000
+
+    ; TODO needs segment overrride
+    ; mov [bp + test_ss], al
+    ; mov ah, [ss:7 + test_ds]
+
+    ; TODO needs segment overrride
+    ; mov [bp + si + test_ss], al
+    ; mov bl, [ss:7 + 11 + test_ss]
+
+    ; TODO needs segment overrride
+    ; mov [bp + di + test_ss], al
+    ; mov ch, [ss:7 + 13 + test_ss]
+
+    ; out 0x42, al
+
+    ; MOV REG8, MEM8
+    mov ax, 0x0067
+    mov cx, 0x0000
+    mov dx, 0x0000
+
+    mov [5 + 11 + test_ds], al
+    mov ah, [bx + si + test_ds] ; wrong
+
+    mov [5 + 13 + test_ds], al
+    mov bl, [bx + di + test_ds] ; wrong
+
+    mov [11 + test_ds], al
+    mov bh, [si + test_ds]
+
+    mov [13 + test_ds], al
+    mov cl, [di + test_ds]
+
+    mov [5 + test_ds], al
+    mov ch, [bx + test_ds] ; wrong
+
+    mov [si - 11 + test_ds], al
+    mov dl, [test_ds]
+
+    out 0x42, al
+
+    ; mov ax, 0x0089
+    ; mov cx, 0x0000
+    ; mov dx, 0x0000
+
+    ; TODO needs segment overrride
+    ; mov [ss:7 + test_ds], al
+    ; mov ah, [bp + test_ss]
+
+    ; TODO needs segment overrride
+    ; mov [ss:7 + 11 + test_ss], al
+    ; mov bl, [bp + si + test_ss]
+
+    ; TODO needs segment overrride
+    ; mov [ss:7 + 13 + test_ss], al
+    ; mov ch, [bp + di + test_ss]
+
+    ; out 0x42, al
+
+;    db  decode_mod_rm_memory_bx_si
+;    db  decode_mod_rm_memory_bx_di
+;    db  decode_mod_rm_memory_bp_si
+;    db  decode_mod_rm_memory_bp_di
+;    db  decode_mod_rm_memory_si
+;    db  decode_mod_rm_memory_di
+;    db  decode_mod_rm_memory_bp
+;    db  decode_mod_rm_memory_bx
+;    db  decode_mod_rm_memory_direct
+
+; TODO test 8-bit displacement, no displacement; verify above is 16-bit
+; TODO force NASM to generate also the other variants for MOV REG8/REG8, REG8/REG16 (src/dst)
+
+; TODO MOV MEM8, REG8
+; TODO MOV MEM16, REG16
+; TODO MOV REG8, MEM8
+; TODO MOV REG16, MEM16
 
 ; TODO MOV MEM8, IMMED8
 ; TODO MOV MEM16, IMMED16
