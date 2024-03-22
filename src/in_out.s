@@ -66,6 +66,7 @@ execute_out_ax_immediate_b:
     arb -2
     call port_out
 
+    # TODO HW If the first port is 0xff, should the second port be 0x100 or overflow to 0x00?
     add [rb + port], 1, [rb - 1]
     add [reg_ax + 1], 0, [rb - 2]
     arb -2
@@ -96,8 +97,8 @@ execute_out_al_dx:
 
 ##########
 execute_out_ax_dx:
-.FRAME port
-    arb -1
+.FRAME port, tmp
+    arb -2
 
     # Read 16-bit port number from DX
     mul [reg_dx + 1], 0x100, [rb + port]
@@ -109,12 +110,21 @@ execute_out_ax_dx:
     arb -2
     call port_out
 
-    add [rb + port], 1, [rb - 1]
+    # Increment the port with wrap around
+    add [rb + port], 1, [rb + port]
+
+    lt  [rb + port], 0x10000, [rb + tmp]
+    jnz [rb + tmp], execute_out_ax_dx_no_overflow
+
+    add [rb + port], -0x10000, [rb + port]
+
+execute_out_ax_dx_no_overflow:
+    add [rb + port], 0, [rb - 1]
     add [reg_ax + 1], 0, [rb - 2]
     arb -2
     call port_out
 
-    arb 1
+    arb 2
     ret 0
 .ENDFRAME
 

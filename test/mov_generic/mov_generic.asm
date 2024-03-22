@@ -1,0 +1,45 @@
+cpu 8086
+
+
+section interrupts start=0x00000
+    dw  3 dup (0x0000, 0x0000)
+    dw  handle_int3, 0x8000             ; INT 3
+
+
+section .text start=0x80000
+
+handle_int3:                            ; INT 3 handler
+    out 0x42, al
+
+%include "reg_reg.inc"
+    out 0x80, al
+%include "reg_immed.inc"
+    out 0x81, al
+
+; TODO MOV MEM8, IMMED8
+; TODO MOV MEM16, IMMED16
+
+; TODO MOV AL, MEM8
+; TODO MOV AX, MEM16
+; TODO MOV MEM8, AL
+; TODO MOV MEM16, AX
+
+    hlt
+
+
+section boot start=0xffff0              ; boot
+    int3
+
+
+; TODO new test for XCHG
+
+; XCHG AX, CX
+; XCHG AX, DX
+; XCHG AX, BX
+; XCHG AX, SP
+; XCHG AX, BP
+; XCHG AX, SI
+; XCHG AX, DI
+
+; XCHG REG8, REG8/MEM8
+; XCHG REG16, REG16/MEM16

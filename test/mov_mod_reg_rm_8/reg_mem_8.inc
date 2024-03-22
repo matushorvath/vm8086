@@ -1,0 +1,39 @@
+    ; MOV REG8, MEM8 (8-bit displacement)
+    mov ax, 0x0067
+    mov cx, 0x0000
+    mov dx, 0x0000
+
+    mov [5 + 11 + test_ds], al
+    mov ah, [byte bx + si + test_ds]
+
+    mov [5 + 13 + test_ds], al
+    mov cl, [byte bx + di + test_ds]
+
+    mov [11 + test_ds], al
+    mov ch, [byte si + test_ds]
+
+    mov [13 + test_ds], al
+    mov dl, [byte di + test_ds]
+
+    mov [5 + test_ds], al
+    mov dh, [byte bx + test_ds]
+
+    out 0x42, al
+
+    mov ax, 0x0089
+    mov cx, 0x0000
+    mov dx, 0x0000
+
+    ; TODO needs segment overrride
+    ; mov [ss:7 + test_ds], al
+    ; mov ah, [byte bp + test_ss]
+
+    ; TODO needs segment overrride
+    ; mov [ss:7 + 11 + test_ss], al
+    ; mov cl, [byte bp + si + test_ss]
+
+    ; TODO needs segment overrride
+    ; mov [ss:7 + 13 + test_ss], al
+    ; mov ch, [byte bp + di + test_ss]
+
+    out 0x42, al
