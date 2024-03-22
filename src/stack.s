@@ -1,6 +1,9 @@
 .EXPORT execute_push_w
 .EXPORT execute_pop_w
 
+.EXPORT execute_pushf
+.EXPORT execute_popf
+
 .EXPORT push_w
 .EXPORT pop_w
 
@@ -110,6 +113,7 @@ pop_w:
 .ENDFRAME
 
 ##########
+execute_pushf:
 pushf:
 .FRAME flags_lo, flags_hi
     arb -2
@@ -139,6 +143,7 @@ pushf:
 .ENDFRAME
 
 ##########
+execute_popf:
 popf:
 .FRAME flags_lo, flags_hi
     arb -2

@@ -94,6 +94,8 @@
 # From stack.s
 .IMPORT execute_push_w
 .IMPORT execute_pop_w
+.IMPORT execute_pushf
+.IMPORT execute_popf
 
 # From transfer.s
 .IMPORT execute_mov_b
@@ -291,8 +293,8 @@ instructions:
     db  not_implemented, 0, 0 # TODO    db  execute_cwd, 0                                  # 0x99 CWD
     db  not_implemented, 0, 0 # TODO    db  execute_call, arg_far_ptr                       # 0x9a CALL FAR-PROC
     db  not_implemented, 0, 0 # TODO    db  execute_wait, 0                                 # 0x9b WAIT
-    db  not_implemented, 0, 0 # TODO    db  execute_pushf, 0                                # 0x9c PUSHF
-    db  not_implemented, 0, 0 # TODO    db  execute_popf, 0                                 # 0x9d POPF
+    db  execute_pushf, 0, 0                             # 0x9c PUSHF
+    db  execute_popf, 0, 0                              # 0x9d POPF
     db  not_implemented, 0, 0 # TODO    db  execute_sahf, 0                                 # 0x9e SAHF
     db  not_implemented, 0, 0 # TODO    db  execute_lahf, 0                                 # 0x9f LAHF
 
