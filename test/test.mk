@@ -17,7 +17,7 @@ LIBXIB ?= $(abspath $(ICDIR)/bin/libxib.a)
 LIB8086 ?= $(abspath $(VMDIR)/bin/lib8086.a)
 TEST_HEADER ?= $(abspath $(VMDIR)/obj/test_header.o)
 
-BINDIR ?= bin
+RESDIR ?= res
 OBJDIR ?= obj
 
 ifndef TESTLOG
@@ -39,10 +39,10 @@ default: test
 
 .PHONY: test-prep
 test-prep:
-	rm -rf $(BINDIR)
-	mkdir -p $(BINDIR) $(OBJDIR)
+	rm -rf $(RESDIR)
+	mkdir -p $(RESDIR) $(OBJDIR)
 
-$(BINDIR)/%.txt: $(OBJDIR)/%.input
+$(RESDIR)/%.txt: $(OBJDIR)/%.input
 	printf '$(NAME): executing ' >> $(TESTLOG)
 	$(ICVM) $< > $@ || ( cat $@ ; true )
 	@diff $(notdir $@) $@ > /dev/null 2> /dev/null || \
@@ -67,7 +67,7 @@ skip:
 
 .PHONY: clean
 clean:
-	rm -rf $(BINDIR) $(OBJDIR)
+	rm -rf $(RESDIR) $(OBJDIR)
 
 # Keep all automatically generated files (e.g. object files)
 .SECONDARY:
