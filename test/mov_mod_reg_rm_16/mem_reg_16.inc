@@ -36,16 +36,13 @@
     mov dx, 0x789a
     mov sp, 0x0000
 
-    ; TODO needs segment overrride
-    ; mov [word bp + test_ss], dx
-    ; mov ax, [ss:7 + test_ds]
+    mov [word bp + test_ss], dx
+    mov ax, [ss:7 + test_ss]
 
-    ; TODO needs segment overrride
-    ; mov [word bp + si + test_ss], dx
-    ; mov cx, [ss:7 + 11 + test_ss]
+    mov [word bp + si + test_ss], dx
+    mov cx, [ss:7 + 11 + test_ss]
 
-    ; TODO needs segment overrride
-    ; mov [word bp + di + test_ss], dx
-    ; mov sp, [ss:7 + 13 + test_ss]
+    mov [word bp + di + test_ss], dx
+    mov sp, [ss:7 + 13 + test_ss]
 
     out 0x42, al

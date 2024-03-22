@@ -33,16 +33,13 @@
     mov dx, 0x789a
     mov sp, 0x0000
 
-    ; TODO needs segment overrride
-    ; mov [byte bp], dx
-    ; mov ax, [ss:7]
+    mov [byte bp], dx
+    mov ax, [ss:7]
 
-    ; TODO needs segment overrride
-    ; mov [byte bp + si], dx
-    ; mov cx, [ss:7 + 11]
+    mov [byte bp + si], dx
+    mov cx, [ss:7 + 11]
 
-    ; TODO needs segment overrride
-    ; mov [byte bp + di], dx
-    ; mov sp, [ss:7 + 13]
+    mov [byte bp + di], dx
+    mov sp, [ss:7 + 13]
 
     out 0x42, al
