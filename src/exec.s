@@ -16,9 +16,17 @@
 # From memory.s
 .IMPORT read_cs_ip_b
 
+# From prefix.s
+.IMPORT prefix_valid
+.IMPORT ds_segment_prefix
+.IMPORT ss_segment_prefix
+.IMPORT rep_prefix
+
 # From state.s
 .IMPORT reg_cs
 .IMPORT reg_ip
+.IMPORT reg_ds
+.IMPORT reg_ss
 .IMPORT inc_ip
 
 # From trace.s
@@ -60,6 +68,20 @@ execute_loop:
 #    jz  0, execute_hlt
 #
 #execute_callback_done:
+    # Handle prefixes; first check if they were consumed (prefix_valid == 0)
+    jz  [prefix_valid], execute_prefix_done
+
+    # Decrease prefix lifetime
+    add [prefix_valid], -1, [prefix_valid]
+
+    # If now prefix_valid == 0, we have just used the prefixes, reset them to defaults
+    jnz [prefix_valid], execute_prefix_done
+
+    add reg_ds, 0, [ds_segment_prefix]
+    add reg_ss, 0, [ss_segment_prefix]
+    add 0, 0, [rep_prefix]
+
+execute_prefix_done:
     # Read op code
     call read_cs_ip_b
     add [rb - 2], 0, [rb + op]
