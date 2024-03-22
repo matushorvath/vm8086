@@ -82,6 +82,15 @@
 .IMPORT execute_into
 .IMPORT execute_iret
 
+# From prefix.s
+.IMPORT execute_lock
+.IMPORT execute_segment_prefix_cs
+.IMPORT execute_segment_prefix_ds
+.IMPORT execute_segment_prefix_ss
+.IMPORT execute_segment_prefix_es
+.IMPORT execute_repz
+.IMPORT execute_repnz
+
 # From stack.s
 .IMPORT execute_push_w
 .IMPORT execute_pop_w
@@ -143,7 +152,7 @@ instructions:
     db  not_implemented, 0, 0 # TODO    db  execute_and_b, arg_al_immediate_b               # 0x24 AND AL, IMMED8
     db  not_implemented, 0, 0 # TODO    db  execute_and_w, arg_ax_immediate_w               # 0x25 AND AX, IMMED16
 
-    db  not_implemented, 0, 0 # TODO    db  execute_segment_prefix, arg_es                  # 0x26 ES: (segment override prefix)
+    db  execute_segment_prefix_es, 0, 0                 # 0x26 ES: (segment override prefix)
     db  not_implemented, 0, 0 # TODO    db  execute_daa, 0                                  # 0x27 DAA
 
     db  not_implemented, 0, 0 # TODO    db  execute_sub_b, arg_mod_reg_rm_src_b, 4          # 0x28 SUB REG8/MEM8, REG8
@@ -153,7 +162,7 @@ instructions:
     db  not_implemented, 0, 0 # TODO    db  execute_sub_b, arg_al_immediate_b               # 0x2c SUB AL, IMMED8
     db  not_implemented, 0, 0 # TODO    db  execute_sub_w, arg_ax_immediate_w               # 0x2d SUB AX, IMMED16
 
-    db  not_implemented, 0, 0 # TODO    db  execute_segment_prefix, arg_cs                  # 0x2e CS: (segment override prefix)
+    db  execute_segment_prefix_cs, 0, 0                 # 0x2e CS: (segment override prefix)
     db  not_implemented, 0, 0 # TODO    db  execute_das, 0                                  # 0x2f DAS
 
     db  not_implemented, 0, 0 # TODO    db  execute_xor_b, arg_mod_reg_rm_src_b, 4          # 0x30 XOR REG8/MEM8, REG8
@@ -163,7 +172,7 @@ instructions:
     db  not_implemented, 0, 0 # TODO    db  execute_xor_b, arg_al_immediate_b               # 0x34 XOR AL, IMMED8
     db  not_implemented, 0, 0 # TODO    db  execute_xor_w, arg_ax_immediate_w               # 0x35 XOR AX, IMMED16
 
-    db  not_implemented, 0, 0 # TODO    db  execute_segment_prefix, arg_ss                  # 0x36 SS: (segment override prefix)
+    db  execute_segment_prefix_ss, 0, 0                 # 0x36 SS: (segment override prefix)
     db  not_implemented, 0, 0 # TODO    db  execute_aaa, 0                                  # 0x37 AAA
 
     db  not_implemented, 0, 0 # TODO    db  execute_cmp_b, arg_mod_reg_rm_src_b, 4          # 0x38 CMP REG8/MEM8, REG8
@@ -173,7 +182,7 @@ instructions:
     db  not_implemented, 0, 0 # TODO    db  execute_cmp_b, arg_al_immediate_b               # 0x3c CMP AL, IMMED8
     db  not_implemented, 0, 0 # TODO    db  execute_cmp_w, arg_ax_immediate_w               # 0x3d CMP AX, IMMED16
 
-    db  not_implemented, 0, 0 # TODO    db  execute_segment_prefix, arg_ds                  # 0x3e DS: (segment override prefix)
+    db  execute_segment_prefix_ds, 0, 0                 # 0x3e DS: (segment override prefix)
     db  not_implemented, 0, 0 # TODO    db  execute_aas, 0                                  # 0x3f AAS
 
     db  execute_inc_w, arg_ax, 2                        # 0x40 INC AX
@@ -389,10 +398,10 @@ instructions:
     db  execute_out_al_dx, 0, 0                         # 0xee OUT AL, DX
     db  execute_out_ax_dx, 0, 0                         # 0xef OUT AX, DX
 
-    db  not_implemented, 0, 0 # TODO    db  execute_lock, 0                                 # 0xf0 LOCK (prefix)
+    db  execute_lock, 0, 0                              # 0xf0 LOCK (prefix)
     db  invalid_opcode, 0, 0                            # 0xf1
-    db  not_implemented, 0, 0 # TODO    db  execute_repnz, 0                                # 0xf2 REPNE/REPNZ
-    db  not_implemented, 0, 0 # TODO    db  execute_repz, 0                                 # 0xf3 REP/REPE/REPZ
+    db  execute_repnz, 0, 0                             # 0xf2 REPNE/REPNZ
+    db  execute_repz, 0, 0                              # 0xf3 REP/REPE/REPZ
 
     # HLT instruction is processed as part of the 'execute' loop
     db  invalid_opcode, 0, 0                            # 0xf4 HLT

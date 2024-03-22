@@ -24,16 +24,13 @@
     mov cx, 0x0000
     mov dx, 0x0000
 
-    ; TODO needs segment overrride
-    ; mov [ss:7], al
-    ; mov ah, [byte bp]
+    mov [ss:7], al
+    mov ah, [byte bp]
 
-    ; TODO needs segment overrride
-    ; mov [ss:7 + 11], al
-    ; mov cl, [byte bp + si]
+    mov [ss:7 + 11], al
+    mov cl, [byte bp + si]
 
-    ; TODO needs segment overrride
-    ; mov [ss:7 + 13], al
-    ; mov ch, [byte bp + di]
+    mov [ss:7 + 13], al
+    mov ch, [byte bp + di]
 
     out 0x42, al

@@ -1,5 +1,5 @@
 /obj
 /bin
-/test/*/bin
+/test/*/res
 /test/*/obj
 /test/test.log
