@@ -56,7 +56,7 @@ $(OBJDIR)/%.input: $(LIB8086) $(LIBXIB) $(TEST_HEADER) $(OBJDIR)/%.o
 $(OBJDIR)/%.o: $(OBJDIR)/%.bin
 	wc -c $< | sed 's/$$/\/binary/' | cat - $< | $(ICVM) $(ICBIN2OBJ) > $@
 
-$(OBJDIR)/%.bin $(OBJDIR)/%.lst: %.asm
+$(OBJDIR)/%.bin $(OBJDIR)/%.lst: %.asm *.inc
 	nasm -f bin $< -o $@ -l $(@:.bin=.lst)
 	hd $@ ; true
 
