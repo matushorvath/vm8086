@@ -146,17 +146,18 @@ dump_register:
 
 ##########
 dump_flags:
-.FRAME tmp
-    arb -1
+.FRAME flags_lo, flags_hi
+    arb -2
 
     add dump_state_flags, 0, [rb - 1]
     arb -1
     call print_str
 
+    # Binary
     call pack_flags_hi
-    add [rb - 2], 0, [rb + tmp]
+    add [rb - 2], 0, [rb + flags_lo]
 
-    add [rb + tmp], 0, [rb - 1]
+    add [rb + flags_lo], 0, [rb - 1]
     add 2, 0, [rb - 2]
     add 8, 0, [rb - 3]
     arb -3
@@ -165,15 +166,39 @@ dump_flags:
     out ' '
 
     call pack_flags_lo
-    add [rb - 2], 0, [rb + tmp]
+    add [rb - 2], 0, [rb + flags_hi]
 
-    add [rb + tmp], 0, [rb - 1]
+    add [rb + flags_hi], 0, [rb - 1]
     add 2, 0, [rb - 2]
     add 8, 0, [rb - 3]
     arb -3
     call print_num_radix
 
-    arb 1
+    out ' '
+    out '('
+
+    # Hexadecimal
+    call pack_flags_hi
+    add [rb - 2], 0, [rb + flags_lo]
+
+    add [rb + flags_lo], 0, [rb - 1]
+    add 16, 0, [rb - 2]
+    add 2, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
+    call pack_flags_lo
+    add [rb - 2], 0, [rb + flags_hi]
+
+    add [rb + flags_hi], 0, [rb - 1]
+    add 16, 0, [rb - 2]
+    add 2, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
+    out ')'
+
+    arb 2
     ret 0
 .ENDFRAME
 
@@ -194,6 +219,8 @@ dump_stack_loop:
     lt  [rb + index], DUMP_STACK_BYTES, [rb + tmp]
     jz  [rb + tmp], dump_stack_end
 
+    out ' '
+
     mul [reg_ss + 1], 0x100, [rb - 1]
     add [reg_ss + 0], [rb - 1], [rb - 1]
     mul [reg_sp + 1], 0x100, [rb - 2]
@@ -208,8 +235,6 @@ dump_stack_loop:
     add 4, 0, [rb - 3]
     arb -3
     call print_num_radix
-
-    out ' '
 
     add [rb + index], 2, [rb + index]
     jz  0, dump_stack_loop
@@ -255,6 +280,6 @@ dump_state_di:
     db  " di: ", 0
 
 dump_state_stack:
-    db  "stack: ", 0
+    db  "stack:", 0
 
 .EOF

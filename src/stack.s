@@ -1,6 +1,9 @@
 .EXPORT execute_push_w
 .EXPORT execute_pop_w
 
+.EXPORT execute_pushf
+.EXPORT execute_popf
+
 .EXPORT push_w
 .EXPORT pop_w
 
@@ -110,6 +113,7 @@ pop_w:
 .ENDFRAME
 
 ##########
+execute_pushf:
 pushf:
 .FRAME flags_lo, flags_hi
     arb -2
@@ -139,6 +143,7 @@ pushf:
 .ENDFRAME
 
 ##########
+execute_popf:
 popf:
 .FRAME flags_lo, flags_hi
     arb -2
@@ -226,3 +231,10 @@ dec_2_sp_done:
 .ENDFRAME
 
 .EOF
+
+TODO
+
+    db  not_implemented, 0, 0 # TODO    db  execute_pop_w, arg_mod_000_rm_w                 # 0x8f POP REG16/MEM16
+
+    # 110 PUSH MEM16
+    db  not_implemented, 0, 0 # TODO    db  execute_ffop_w, arg_mod_ffop_rm_w               # 0xff <ffop> REG16/MEM16

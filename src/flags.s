@@ -8,6 +8,9 @@
 .EXPORT execute_cli
 .EXPORT execute_sti
 
+.EXPORT execute_lahf
+.EXPORT execute_sahf
+
 .EXPORT pack_flags_lo
 .EXPORT pack_flags_hi
 .EXPORT unpack_flags_lo
@@ -23,6 +26,7 @@
 .IMPORT flag_interrupt
 .IMPORT flag_direction
 .IMPORT flag_trap
+.IMPORT reg_ah
 
 ##########
 execute_clc:
@@ -73,7 +77,26 @@ execute_sti:
     ret 0
 .ENDFRAME
 
-# TODO SAHF, LAHF
+##########
+execute_lahf:
+.FRAME
+    # Pack the flags into ah
+    call pack_flags_lo
+    add [rb - 2], 0, [reg_ah]
+
+    ret 0
+.ENDFRAME
+
+##########
+execute_sahf:
+.FRAME
+    # Unpack the flags from ah
+    add [reg_ah], 0, [rb - 1]
+    arb -1
+    call unpack_flags_lo
+
+    ret 0
+.ENDFRAME
 
 ##########
 pack_flags_lo:
