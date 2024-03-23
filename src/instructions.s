@@ -64,6 +64,9 @@
 .IMPORT execute_lahf
 .IMPORT execute_sahf
 
+# From group1.s
+.IMPORT execute_group1
+
 # From in_out.s
 # TODO .IMPORT execute_in_al_immediate_b
 # TODO .IMPORT execute_in_ax_immediate_b
@@ -430,13 +433,13 @@ instructions:
     db  execute_cld, 0, 0                               # 0xfc CLD
     db  execute_std, 0, 0                               # 0xfd STD
 
-    # <grp1>:
+    # <group 1>:
     # 000 INC REG8/MEM8
     # 001 DEC REG8/MEM8
     # (rest not used)
-    db  not_implemented, 0, 0 # TODO    db  execute_grp1_b, arg_mod_grp1_rm_b               # 0xfe <grp1> REG8/MEM8
+    db  execute_group1, 0, 0                            # 0xfe <group 1> REG8/MEM8
 
-    # <grp2>:
+    # <group 2>:
     # 000 INC MEM16
     # 001 DEC MEM16
     # 010 CALL REG16/MEM16 (within segment)
@@ -445,6 +448,6 @@ instructions:
     # 101 JMP MEM16 (intersegment)
     # 110 PUSH MEM16
     # 111 (not used)
-    db  not_implemented, 0, 0 # TODO    db  execute_ffop_w, arg_mod_ffop_rm_w               # 0xff <ffop> REG16/MEM16
+    db  not_implemented, 0, 0 # TODO    db  execute_group2, 0, 0                            # 0xff <group 2> REG16/MEM16
 
 .EOF
