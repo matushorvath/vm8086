@@ -1,10 +1,3 @@
-; TODO XOR REG16/MEM16, REG16
-; TODO XOR REG16, REG16/MEM16
-; TODO XOR AX, IMMED16
-
-; TODO <immed> REG8/MEM8, IMMED8
-; TODO <immed> REG16/MEM16, IMMED16
-
 cpu 8086
 
 
@@ -29,49 +22,14 @@ handle_int3:                            ; INT 3 handler
 
     out 0x42, al
 
-    ; test various addressing modes, 8-bit
-    mov al, 01010101b
-    xor al, 11001100b                   ; XOR AL, IMMED8
-
-    mov ah, 01010101b
-    mov bl, 11001100b
-    xor ah, bl                          ; XOR REG8, REG8
-
-    mov bl, 01010101b
-    mov byte [data], 11001100b
-    xor byte [data], bl                 ; XOR MEM8, REG8
-    mov bl, byte [data]
-
-    mov bh, 01010101b
-    mov byte [data], 11001100b          ; XOR REG8, MEM8
-    xor bh, byte [data]
-
-    out 0x42, al
-
-    ; test flags, 8-bit
 %macro clearf 0
     mov dx, 0
     push dx
     popf
 %endmacro
 
-    ; SF = 1
-    mov al, 01010101b
-    clearf
-    xor al, 11001100b
-    out 0x42, al
-
-    ; ZF = 1
-    mov al, 01010101b
-    clearf
-    xor al, 01010101b
-    out 0x42, al
-
-    ; PF = 1
-    mov al, 01010101b
-    clearf
-    xor al, 01001100b
-    out 0x42, al
+%include "xor_b.inc"
+%include "xor_w.inc"
 
     hlt
 

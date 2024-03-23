@@ -113,7 +113,7 @@
 
 # From xor.s
 .IMPORT execute_xor_b
-# TODO .IMPORT execute_xor_w
+.IMPORT execute_xor_w
 
 # iAPX 86, 88 User's Manual; August 1981; pages 4-27 to 4-35
 
@@ -179,11 +179,11 @@ instructions:
     db  not_implemented, 0, 0 # TODO    db  execute_das, 0                                  # 0x2f DAS
 
     db  execute_xor_b, arg_mod_reg_rm_src_b, 4          # 0x30 XOR REG8/MEM8, REG8
-    db  not_implemented, 0, 0 # TODO    db  execute_xor_w, arg_mod_reg_rm_src_w, 4          # 0x31 XOR REG16/MEM16, REG16
+    db  execute_xor_w, arg_mod_reg_rm_src_w, 4          # 0x31 XOR REG16/MEM16, REG16
     db  execute_xor_b, arg_mod_reg_rm_dst_b, 4          # 0x32 XOR REG8, REG8/MEM8
-    db  not_implemented, 0, 0 # TODO    db  execute_xor_w, arg_mod_reg_rm_dst_w, 4          # 0x33 XOR REG16, REG16/MEM16
+    db  execute_xor_w, arg_mod_reg_rm_dst_w, 4          # 0x33 XOR REG16, REG16/MEM16
     db  execute_xor_b, arg_al_immediate_b, 4            # 0x34 XOR AL, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_xor_w, arg_ax_immediate_w               # 0x35 XOR AX, IMMED16
+    db  execute_xor_w, arg_ax_immediate_w, 4            # 0x35 XOR AX, IMMED16
 
     db  execute_segment_prefix_ss, 0, 0                 # 0x36 SS: (segment override prefix)
     db  not_implemented, 0, 0 # TODO    db  execute_aaa, 0                                  # 0x37 AAA
