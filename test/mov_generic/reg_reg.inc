@@ -1,21 +1,21 @@
     ; MOV REG8, REG8
     mov al, 0xab
     mov ah, al
-    ; TODO inc ah
+    inc ah
     mov bl, ah
-    ; TODO inc bl
+    inc bl
     mov bh, bl
-    ; TODO inc bh
+    inc bh
     mov cl, bh
-    ; TODO inc cl
+    inc cl
     mov ch, cl
-    ; TODO inc ch
+    inc ch
     mov dl, ch
-    ; TODO inc dl
+    inc dl
     mov dh, dl
-    ; TODO inc dh
+    inc dh
     mov al, dh
-    ; TODO inc al
+    inc al
 
     out 0x42, al
 
