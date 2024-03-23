@@ -6,6 +6,8 @@
 .EXPORT arg_mod_1sr_rm_src
 .EXPORT arg_mod_1sr_rm_dst
 
+.EXPORT arg_mod_000_rm_w
+
 .EXPORT arg_mod_000_rm_immediate_b
 .EXPORT arg_mod_000_rm_immediate_w
 
@@ -184,6 +186,32 @@ arg_mod_1sr_rm_dst:
 
     arb 4
     ret 0
+.ENDFRAME
+
+##########
+arg_mod_000_rm_w:
+.FRAME loc_type, loc_addr                                                       # returns loc_type_*, loc_addr_*
+    arb -2
+
+    # R/M is the parameter
+
+    # Read and decode MOD and R/M
+    add 1, 0, [rb - 1]
+    arb -1
+    call arg_mod_rm_generic
+    add [rb - 3], 0, [rb + loc_type]
+    add [rb - 4], 0, [rb + loc_addr]
+
+    # The REG field must be 0
+    jnz [rb - 5], arg_mod_000_rm_w_nonzero_reg
+
+    arb 2
+    ret 0
+
+arg_mod_000_rm_w_nonzero_reg:
+    add nonzero_reg_message, 0, [rb - 1]
+    arb -1
+    call report_error
 .ENDFRAME
 
 ##########

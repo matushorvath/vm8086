@@ -231,10 +231,3 @@ dec_2_sp_done:
 .ENDFRAME
 
 .EOF
-
-TODO
-
-    db  not_implemented, 0, 0 # TODO    db  execute_pop_w, arg_mod_000_rm_w                 # 0x8f POP REG16/MEM16
-
-    # 110 PUSH MEM16
-    db  not_implemented, 0, 0 # TODO    db  execute_ffop_w, arg_mod_ffop_rm_w               # 0xff <ffop> REG16/MEM16

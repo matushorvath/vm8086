@@ -19,6 +19,9 @@
 # From split233.s
 .IMPORT split233
 
+# From stack.s
+.IMPORT execute_push_w
+
 # From state.s
 .IMPORT inc_ip
 
@@ -190,10 +193,10 @@ execute_group2_w_jmp_far:
     call report_error
 
 execute_group2_w_push_w:
-    # TODO implement
-    add group2_not_implemented_message, 0, [rb - 1]
-    arb -1
-    call report_error
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    arb -2
+    call execute_push_w
 
 execute_group2_w_end:
     arb 6
