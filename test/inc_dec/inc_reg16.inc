@@ -8,7 +8,7 @@
     mov si, 0
     mov di, 0
 
-    ; increment 16-bit
+    ; increment a 16-bit register
     inc ax
 
     inc bx

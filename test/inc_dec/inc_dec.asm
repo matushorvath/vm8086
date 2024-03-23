@@ -1,6 +1,3 @@
-; TODO INC/DEC MEM8
-; TODO INC/DEC MEM16
-
 ; TODO test carry out of low byte (inc/dec)
 ; TODO test carry out of high byte (inc/dec)
 ; TODO test flag_zero
@@ -16,6 +13,13 @@ section interrupts start=0x00000
     dw  handle_int3, 0x8000             ; INT 3
 
 
+section .data start=0x10000
+
+data:
+    dw  13 dup 0x0000
+    dw  0
+
+
 section .text start=0x80000
 
 handle_int3:                            ; INT 3 handler
@@ -26,6 +30,8 @@ handle_int3:                            ; INT 3 handler
 %include "dec_reg16.inc"
 %include "inc_reg8.inc"
 %include "dec_reg8.inc"
+
+%include "inc_dec_mem.inc"
 
     hlt
 

@@ -8,7 +8,7 @@
     mov si, 0
     mov di, 0
 
-    ; increment 8-bit
+    ; increment an 8-bit register
     inc al
 
     inc ah

@@ -8,7 +8,7 @@
     mov si, 0
     mov di, 0
 
-    ; decrement 8-bit
+    ; decrement an 8-bit register
     dec al
     dec al
     dec al

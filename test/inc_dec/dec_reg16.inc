@@ -8,7 +8,7 @@
     mov si, 0
     mov di, 0
 
-    ; decrement 16-bit
+    ; decrement a 16-bit register
     dec di
 
     dec si

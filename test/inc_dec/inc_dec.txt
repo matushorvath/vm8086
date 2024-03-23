@@ -23,3 +23,13 @@ ip: 0142 flags: 00000000 10010000 (0090)
 cs: 8000 ds: 0000 ss: 0000 es: 0000 bp: 0000 sp: 0000
 ax: f9f8 bx: fbfa cx: fdfc dx: fffe si: 0000 di: 0000
 stack: 0000 0000 0000 0000 0000 0000 0000 8000
+----------
+ip: 018f flags: 00000000 10000100 (0084)
+cs: 8000 ds: 1000 ss: 1000 es: 0000 bp: 0000 sp: 0000
+ax: 1000 bx: 0000 cx: fdfc dx: fffe si: 0002 di: 0000
+stack: abab abab aaaa aaaa 0000 0000 0000 0000
+----------
+ip: 01c6 flags: 00000000 10000000 (0080)
+cs: 8000 ds: 1000 ss: 1000 es: 0000 bp: 0000 sp: 0000
+ax: 1000 bx: 0000 cx: fdfc dx: fffe si: 0002 di: 0000
+stack: 8787 8787 8888 8888 0000 0000 0000 0000
