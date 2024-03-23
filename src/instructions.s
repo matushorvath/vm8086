@@ -11,7 +11,7 @@
 .IMPORT arg_mod_op_rm_b
 .IMPORT arg_mod_op_rm_w
 .IMPORT arg_mod_op_rm_b_immediate_b
-.IMPORT arg_mod_op_rm_w_immediate_b
+.IMPORT arg_mod_op_rm_w_immediate_sxb
 .IMPORT arg_mod_op_rm_w_immediate_w
 
 # From arg_mod_reg_rm.s
@@ -75,6 +75,10 @@
 # From group2.s
 .IMPORT execute_group2_b
 .IMPORT execute_group2_w
+
+# From group_immed.s
+.IMPORT execute_immed_b
+.IMPORT execute_immed_w
 
 # From in_out.s
 # TODO .IMPORT execute_in_al_immediate_b
@@ -277,14 +281,14 @@ instructions:
     db  not_implemented, 0, 0 # TODO    db  execute_jg, arg_short_ptr                       # 0x7f JNLE/JG SHORT-LABEL
 
     # <immed>: 000 ADD, 001 OR, 010 ADC, 011 SBB, 100 AND, 101 SUB, 110 XOR, 111 CMP
-    db  not_implemented, 0, 0 # TODO    db  execute_immed_b, arg_mod_immed_rm_b             # 0x80 <immed> REG8/MEM8, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_immed_w, arg_mod_immed_rm_w             # 0x81 <immed> REG16/MEM16, IMMED16
+    db  execute_immed_b, arg_mod_op_rm_b_immediate_b, 5     # 0x80 <immed> REG8/MEM8, IMMED8
+    db  execute_immed_w, arg_mod_op_rm_w_immediate_w, 5     # 0x81 <immed> REG16/MEM16, IMMED16
 
     # <immed>: 000 ADD,         010 ADC, 011 SBB,          101 SUB,          111 CMP
     # however NASM will generate 0x83 0xf0 0xff for xor ax, word 0xffff, which is "(not used)" in intel docs
     # https://bugzilla.nasm.us/show_bug.cgi?id=3392642
-    db  not_implemented, 0, 0 # TODO    db  execute_immed_b, arg_mod_immed_rm_ext_b         # 0x82 <immed> REG8/MEM8, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_immed_w, arg_mod_immed_rm_ext_w         # 0x83 <immed> REG16/MEM16, IMMED8 (sign extend)
+    db  execute_immed_b, arg_mod_op_rm_b_immediate_b, 5     # 0x82 <immed> REG8/MEM8, IMMED8
+    db  execute_immed_w, arg_mod_op_rm_w_immediate_sxb, 5   # 0x83 <immed> REG16/MEM16, IMMED8 (sign extended)
 
     db  not_implemented, 0, 0 # TODO    db  execute_test_b, arg_mod_reg_rm_src_b, 4         # 0x84 TEST REG8/MEM8, REG8
     db  not_implemented, 0, 0 # TODO    db  execute_test_w, arg_mod_reg_rm_src_w, 4         # 0x85 TEST REG16/MEM16, REG16

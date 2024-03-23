@@ -122,7 +122,7 @@ execute_xor_w:
     add [rb + loc_type_dst], 0, [rb - 1]
     add [rb + loc_addr_dst], 0, [rb - 2]
     add [rb + res_lo], 0, [rb - 3]
-    add [rb + res_hi], 0, [rb - 3]
+    add [rb + res_hi], 0, [rb - 4]
     arb -4
     call write_location_w
 

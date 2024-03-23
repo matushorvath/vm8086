@@ -19,8 +19,10 @@
 
 ##########
 execute_group2_b:
-.FRAME op, loc_type, loc_addr; tmp
-    arb -1
+.FRAME op, loc_type, loc_addr;
+    # Prepare the arguments on stack
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
 
     # Execute the operation
     add execute_group2_b_table, [rb + op], [ip + 2]
@@ -38,26 +40,20 @@ execute_group2_b_table:
     db  execute_group2_b_invalid_op
 
 execute_group2_b_invalid_op:
-    add group2_invalid_op_message, 0, [rb - 1]
+    add invalid_op_message, 0, [rb - 1]
     arb -1
     call report_error
 
 execute_group2_b_inc:
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
     arb -2
     call execute_inc_b
-
     jz  0, execute_group2_b_end
 
 execute_group2_b_dec:
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
     arb -2
     call execute_dec_b
 
 execute_group2_b_end:
-    arb 1
     ret 3
 .ENDFRAME
 
@@ -73,8 +69,10 @@ execute_group2_b_end:
 
 ##########
 execute_group2_w:
-.FRAME op, loc_type, loc_addr; tmp
-    arb -1
+.FRAME op, loc_type, loc_addr;
+    # Prepare the arguments on stack
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
 
     # Execute the operation
     add execute_group2_w_table, [rb + op], [ip + 2]
@@ -92,47 +90,41 @@ execute_group2_w_table:
     db  execute_group2_w_invalid_op
 
 execute_group2_w_invalid_op:
-    add group2_invalid_op_message, 0, [rb - 1]
+    add invalid_op_message, 0, [rb - 1]
     arb -1
     call report_error
 
 execute_group2_w_inc:
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
     arb -2
     call execute_inc_w
-
     jz  0, execute_group2_w_end
 
 execute_group2_w_dec:
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
     arb -2
     call execute_dec_w
-
     jz  0, execute_group2_w_end
 
 execute_group2_w_call_near:
     # TODO implement
-    add group2_not_implemented_message, 0, [rb - 1]
+    add not_implemented_message, 0, [rb - 1]
     arb -1
     call report_error
 
 execute_group2_w_call_far:
     # TODO implement
-    add group2_not_implemented_message, 0, [rb - 1]
+    add not_implemented_message, 0, [rb - 1]
     arb -1
     call report_error
 
 execute_group2_w_jmp_near:
     # TODO implement
-    add group2_not_implemented_message, 0, [rb - 1]
+    add not_implemented_message, 0, [rb - 1]
     arb -1
     call report_error
 
 execute_group2_w_jmp_far:
     # TODO implement
-    add group2_not_implemented_message, 0, [rb - 1]
+    add not_implemented_message, 0, [rb - 1]
     arb -1
     call report_error
 
@@ -143,15 +135,14 @@ execute_group2_w_push_w:
     call execute_push_w
 
 execute_group2_w_end:
-    arb 1
     ret 3
 .ENDFRAME
 
 ##########
-group2_not_implemented_message:                             # TODO remove
+not_implemented_message:                                    # TODO remove
     db  "group 2 operation not implemented", 0
 
-group2_invalid_op_message:
+invalid_op_message:
     db  "invalid group 2 operation", 0
 
 .EOF

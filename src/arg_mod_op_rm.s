@@ -5,7 +5,7 @@
 .EXPORT arg_mod_op_rm_b
 .EXPORT arg_mod_op_rm_w
 .EXPORT arg_mod_op_rm_b_immediate_b
-.EXPORT arg_mod_op_rm_w_immediate_b
+.EXPORT arg_mod_op_rm_w_immediate_sxb
 .EXPORT arg_mod_op_rm_w_immediate_w
 
 # From arg_mod_reg_rm.s
@@ -16,6 +16,7 @@
 
 # From memory.s
 .IMPORT calc_cs_ip_addr
+.IMPORT read_cs_ip_b
 
 # From state.s
 .IMPORT inc_ip
@@ -181,11 +182,11 @@ arg_mod_op_rm_b_immediate_b:
 .ENDFRAME
 
 ##########
-arg_mod_op_rm_w_immediate_b:
-.FRAME op, loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst               # returns op, loc_type_*, loc_addr_*
-    arb -5
+arg_mod_op_rm_w_immediate_sxb:
+.FRAME op, loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst, tmp          # returns op, loc_type_*, loc_addr_*
+    arb -6
 
-    # 16-bit R/M is dst, 8-bit immediate is src
+    # 16-bit R/M is dst, sign-extended 8-bit immediate is src
 
     # Read and decode MOD and R/M
     add 1, 0, [rb - 1]
@@ -195,15 +196,20 @@ arg_mod_op_rm_w_immediate_b:
     add [rb - 4], 0, [rb + loc_addr_dst]
     add [rb - 5], 0, [rb + op]
 
-    # Return pointer to 8-bit immediate
-    call calc_cs_ip_addr
-
-    add 1, 0, [rb + loc_type_src]
-    add [rb - 2], 0, [rb + loc_addr_src]
-
+    # Retrieve the 8-bit immediate into the sign-extend buffer
+    call read_cs_ip_b
+    add [rb - 2], 0, [sign_extend_buffer_lo]
     call inc_ip
 
-    arb 5
+    # Sign extend the value
+    lt  0x7f, [sign_extend_buffer_lo], [rb + tmp]
+    mul [rb + tmp], 0xff, [sign_extend_buffer_hi]
+
+    # Return pointer to the sign-extended 8-bit immediate in an intcode buffer
+    add 0, 0, [rb + loc_type_src]
+    add sign_extend_buffer_lo, 0, [rb + loc_addr_src]
+
+    arb 6
     ret 0
 .ENDFRAME
 
@@ -238,5 +244,10 @@ arg_mod_op_rm_w_immediate_w:
 ##########
 nonzero_reg_message:
     db  "invalid non-zero REG value", 0
+
+sign_extend_buffer_lo:
+    db  0
+sign_extend_buffer_hi:
+    db  0
 
 .EOF

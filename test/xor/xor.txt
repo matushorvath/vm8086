@@ -24,22 +24,37 @@ cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 0000 sp: fffa
 ax: 9919 bx: 9999 cx: 0000 dx: 0000 si: 0000 di: 0000
 stack: 0001 ffff 0000 0000 0000 0000 0000 0000
 ----------
-ip: 007c flags: ----odit Sz-a-p-c 00000000 10000000 (0080)
-cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 0000 sp: fffa
+ip: 0074 flags: ----odit Sz-a-p-c 00000000 10000000 (0080)
+cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 000e sp: fffa
+ax: 9919 bx: 9999 cx: 0099 dx: 0000 si: 0000 di: 0000
+stack: 0001 ffff 0000 0000 0000 0000 0000 0000
+----------
+ip: 00a2 flags: ----odit Sz-a-p-c 00000000 10000000 (0080)
+cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 000e sp: fffa
 ax: 9999 bx: 9999 cx: 9999 dx: 9999 si: 0000 di: 0000
 stack: 0001 ffff 0000 0000 0000 0000 0000 0000
 ----------
-ip: 0089 flags: ----odit Sz-a-p-c 00000000 10000000 (0080)
-cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 0000 sp: fffa
+ip: 00af flags: ----odit Sz-a-p-c 00000000 10000000 (0080)
+cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 000e sp: fffa
 ax: 9999 bx: 9999 cx: 9999 dx: 0000 si: 0000 di: 0000
 stack: 0001 ffff 0000 0000 0000 0000 0000 0000
 ----------
-ip: 0096 flags: ----odit sZ-a-p-c 00000000 01000000 (0040)
-cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 0000 sp: fffa
+ip: 00bc flags: ----odit sZ-a-p-c 00000000 01000000 (0040)
+cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 000e sp: fffa
 ax: 0000 bx: 9999 cx: 9999 dx: 0000 si: 0000 di: 0000
 stack: 0001 ffff 0000 0000 0000 0000 0000 0000
 ----------
-ip: 00a3 flags: ----odit sz-a-P-c 00000000 00000100 (0004)
-cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 0000 sp: fffa
+ip: 00c9 flags: ----odit sz-a-P-c 00000000 00000100 (0004)
+cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 000e sp: fffa
 ax: 1919 bx: 9999 cx: 9999 dx: 0000 si: 0000 di: 0000
+stack: 0001 ffff 0000 0000 0000 0000 0000 0000
+----------
+ip: 00f5 flags: ----odit Sz-a-p-c 00000000 10000000 (0080)
+cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 000e sp: fffa
+ax: 1919 bx: 9999 cx: 9999 dx: 9999 si: 0000 di: 0000
+stack: 0001 ffff 0000 0000 0000 0000 0000 0000
+----------
+ip: 011e flags: ----odit Sz-a-p-c 00000000 10000000 (0080)
+cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 000e sp: fffa
+ax: 1919 bx: cc99 cx: cc99 dx: cc99 si: 0000 di: 0000
 stack: 0001 ffff 0000 0000 0000 0000 0000 0000
