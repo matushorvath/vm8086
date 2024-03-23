@@ -67,6 +67,9 @@
 # From group1.s
 .IMPORT execute_group1
 
+# From group2.s
+.IMPORT execute_group2
+
 # From in_out.s
 # TODO .IMPORT execute_in_al_immediate_b
 # TODO .IMPORT execute_in_ax_immediate_b
@@ -448,6 +451,6 @@ instructions:
     # 101 JMP MEM16 (intersegment)
     # 110 PUSH MEM16
     # 111 (not used)
-    db  not_implemented, 0, 0 # TODO    db  execute_group2, 0, 0                            # 0xff <group 2> REG16/MEM16
+    db  execute_group2, 0, 0                            # 0xff <group 2> REG16/MEM16
 
 .EOF

@@ -51,6 +51,7 @@ execute_group1:
     add [rb - 6], 0, [rb + loc_addr]
 
     # Execute the operation
+    # TODO jump table
     eq  [rb + op], 0b000, [rb + tmp]
     jnz [rb + tmp], execute_group1_inc
 

@@ -31,14 +31,12 @@
     out 0x42, al
 
     ; increment 16-bit memory using various addressing modes
-    ; TODO INC MEM16
-    ;inc word [data]
-    ;inc word [bx + 2]
-    ;inc word [bp + 4]
-    ;inc word [bx + si + 4]
+    inc word [data]
+    inc word [bx + 2]
+    inc word [bp + 4]
+    inc word [bx + si + 4]
 
-    ;out 0x42, al
-    ;expected stack: acac acac abab abab
+    out 0x42, al
 
     ; reset the memory
     mov byte [data + 0], 0x8888
@@ -59,11 +57,9 @@
     out 0x42, al
 
     ; decrement 16-bit memory using various addressing modes
-    ; TODO INC MEM16
-    ;dec word [data]
-    ;dec word [bx + 2]
-    ;dec word [bp + 4]
-    ;dec word [bx + si + 4]
+    dec word [data]
+    dec word [bx + 2]
+    dec word [bp + 4]
+    dec word [bx + si + 4]
 
-    ;out 0x42, al
-    ;expected stack: 8686 8686 8787 8787
+    out 0x42, al
