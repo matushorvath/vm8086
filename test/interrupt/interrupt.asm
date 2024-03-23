@@ -72,4 +72,4 @@ section boot start=0xffff0              ; boot
 
     hlt
 
-; TODO test that int clears TF and IF
+; TODO x test that int clears TF and IF

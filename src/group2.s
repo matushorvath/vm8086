@@ -22,7 +22,7 @@
 # From state.s
 .IMPORT inc_ip
 
-# Group 2 8-bit instructions, first byte is MOD xxx RM, where xxx is:
+# Group 2 8-bit instructions, first byte is MOD xxx R/M, where xxx is:
 # 000 INC REG8/MEM8
 # 001 DEC REG8/MEM8
 
@@ -44,7 +44,7 @@ execute_group2_b:
     add split233 + 2, [rb + tmp], [ip + 1]
     add [0], 0, [rb + mod]
 
-    # Decode MOD and RM
+    # Decode MOD and R/M
     add [rb + mod], 0, [rb - 1]
     add [rb + rm], 0, [rb - 2]
     add 0, 0, [rb - 3]
@@ -92,7 +92,7 @@ execute_group2_b_end:
     ret 0
 .ENDFRAME
 
-# Group 2 instructions, first byte is MOD xxx RM, where xxx is:
+# Group 2 instructions, first byte is MOD xxx R/M, where xxx is:
 # 000 INC MEM16
 # 001 DEC MEM16
 # 010 CALL REG16/MEM16 (within segment)
@@ -120,7 +120,7 @@ execute_group2_w:
     add split233 + 2, [rb + tmp], [ip + 1]
     add [0], 0, [rb + mod]
 
-    # Decode MOD and RM
+    # Decode MOD and R/M
     add [rb + mod], 0, [rb - 1]
     add [rb + rm], 0, [rb - 2]
     add 0, 0, [rb - 3]

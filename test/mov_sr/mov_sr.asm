@@ -41,7 +41,7 @@ handle_int3:                            ; INT 3 handler
 
     out 0x42, al
 
-    ; TODO proper tests once we are able to fill registers with immediate
+    ; TODO x proper tests once we are able to fill registers with immediate
 
     ; MOV sr, [registers]
     mov es, [bx + si]
@@ -65,16 +65,10 @@ handle_int3:                            ; INT 3 handler
 
     out 0x42, al
 
-    ; TODO
-    ; MOV sr, [registers + 8-bit displacement]
-    ; MOV sr, [registers + 16-bit displacement]
-    ; MOV sr, reg
-    ; and all that in the other direction
-
-; TODO test the sp:bp case
-; TODO test sign-extended 8-bit displacement
-; TODO test wrap around (sr+regs near 0xfffff + displacement)
-; TODO test setting cs
+    ; TODO x MOV sr, MEM16 with 8-bit displacement, both directions
+    ; TODO x MOV sr, MEM16 with 16-bit displacement], both directions
+    ; TODO x MOV sr, reg, both directions
+    ; TODO x test setting cs (as the last test probably)
 
     hlt
 

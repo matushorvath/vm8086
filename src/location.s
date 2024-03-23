@@ -54,7 +54,7 @@ read_location_w:
     call read_b
     add [rb - 3], 0, [rb + value_lo]
 
-    # TODO loc_addr wrap around to 20 bits
+    # TODO x loc_addr wrap around to 20 bits
     add [rb + loc_addr], 1, [rb - 1]
     arb -1
     call read_b
@@ -108,7 +108,7 @@ write_location_w:
     arb -2
     call write_b
 
-    # TODO loc_addr wrap around to 20 bits
+    # TODO x loc_addr wrap around to 20 bits
     add [rb + loc_addr], 1, [rb - 1]
     add [rb + value_hi], 0, [rb - 2]
     arb -2

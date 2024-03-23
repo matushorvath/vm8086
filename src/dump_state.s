@@ -225,7 +225,7 @@ dump_stack_loop:
     add [reg_ss + 0], [rb - 1], [rb - 1]
     mul [reg_sp + 1], 0x100, [rb - 2]
     add [reg_sp + 0], [rb - 2], [rb - 2]
-    add [rb + index], [rb - 2], [rb - 2]                    # TODO no sp overflow support
+    add [rb + index], [rb - 2], [rb - 2]                    # no sp overflow support
     arb -2
     call read_seg_off_w
 

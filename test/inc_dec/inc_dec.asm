@@ -1,9 +1,9 @@
-; TODO test carry out of low byte (inc/dec)
-; TODO test carry out of high byte (inc/dec)
-; TODO test flag_zero
-; TODO test flag_parity is calculated only from low byte
-; TODO test flag_auxiliary_carry for low nibble
-; TODO test flag_overflow when moving 0x7f->0x80 and back
+; TODO x test carry out of low byte (inc/dec)
+; TODO x test carry out of high byte (inc/dec)
+; TODO x test flag_zero
+; TODO x test flag_parity is calculated only from low byte
+; TODO x test flag_auxiliary_carry for low nibble
+; TODO x test flag_overflow when moving 0x7f->0x80 and back
 
 cpu 8086
 
