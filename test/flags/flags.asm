@@ -1,5 +1,3 @@
-; TODO test PUSHF/POPF/LAHF/SAHF with flags that can only be set through stack
-
 cpu 8086
 
 

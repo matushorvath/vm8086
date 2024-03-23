@@ -44,9 +44,8 @@ test-prep:
 
 $(RESDIR)/%.txt: $(OBJDIR)/%.input
 	printf '$(NAME): executing ' >> $(TESTLOG)
-	$(ICVM) $< > $@ || ( cat $@ ; true )
-	@diff $(notdir $@) $@ > /dev/null 2> /dev/null || \
-		( echo $(COLOR_RED)FAILED$(COLOR_NORMAL) ; diff $(notdir $@) $@ ) >> $(TESTLOG)
+	$(ICVM) $< > $@ 2>&1 || ( cat $@ ; true )
+	@diff $(notdir $@) $@ || ( echo $(COLOR_RED)FAILED$(COLOR_NORMAL) ; diff $(notdir $@) $@ ) >> $(TESTLOG)
 	@echo $(COLOR_GREEN)OK$(COLOR_NORMAL) >> $(TESTLOG)
 
 $(OBJDIR)/%.input: $(LIB8086) $(LIBXIB) $(TEST_HEADER) $(OBJDIR)/%.o
