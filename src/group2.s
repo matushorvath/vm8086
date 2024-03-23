@@ -1,9 +1,6 @@
 .EXPORT execute_group2_b
 .EXPORT execute_group2_w
 
-# From arg_mod_reg_rm.s
-.IMPORT arg_mod_rm_generic
-
 # From error.s
 .IMPORT report_error
 
@@ -22,17 +19,8 @@
 
 ##########
 execute_group2_b:
-.FRAME tmp, mod, op, rm, loc_type, loc_addr
-    arb -6
-
-    # Read and decode MOD and R/M
-    # TODO arg_mod_op_rm_b_immediate_b
-    add 0, 0, [rb - 1]
+.FRAME op, loc_type, loc_addr; tmp
     arb -1
-    call arg_mod_rm_generic
-    add [rb - 3], 0, [rb + loc_type]
-    add [rb - 4], 0, [rb + loc_addr]
-    add [rb - 5], 0, [rb + op]
 
     # Execute the operation
     add execute_group2_b_table, [rb + op], [ip + 2]
@@ -69,8 +57,8 @@ execute_group2_b_dec:
     call execute_dec_b
 
 execute_group2_b_end:
-    arb 6
-    ret 0
+    arb 1
+    ret 3
 .ENDFRAME
 
 # Group 2 instructions, first byte is MOD xxx R/M, where xxx is:
@@ -85,17 +73,8 @@ execute_group2_b_end:
 
 ##########
 execute_group2_w:
-.FRAME tmp, mod, op, rm, loc_type, loc_addr
-    arb -6
-
-    # Read and decode MOD and R/M
-    # TODO arg_mod_op_rm_w_immediate_w
-    add 1, 0, [rb - 1]
+.FRAME op, loc_type, loc_addr; tmp
     arb -1
-    call arg_mod_rm_generic
-    add [rb - 3], 0, [rb + loc_type]
-    add [rb - 4], 0, [rb + loc_addr]
-    add [rb - 5], 0, [rb + op]
 
     # Execute the operation
     add execute_group2_w_table, [rb + op], [ip + 2]
@@ -164,8 +143,8 @@ execute_group2_w_push_w:
     call execute_push_w
 
 execute_group2_w_end:
-    arb 6
-    ret 0
+    arb 1
+    ret 3
 .ENDFRAME
 
 ##########

@@ -1,8 +1,9 @@
-.EXPORT arg_mod_000_rm
-
+.EXPORT arg_mod_000_rm_w
 .EXPORT arg_mod_000_rm_immediate_b
 .EXPORT arg_mod_000_rm_immediate_w
 
+.EXPORT arg_mod_op_rm_b
+.EXPORT arg_mod_op_rm_w
 .EXPORT arg_mod_op_rm_b_immediate_b
 .EXPORT arg_mod_op_rm_w_immediate_b
 .EXPORT arg_mod_op_rm_w_immediate_w
@@ -20,7 +21,7 @@
 .IMPORT inc_ip
 
 ##########
-arg_mod_000_rm:
+arg_mod_000_rm_w:
 .FRAME loc_type, loc_addr                                                       # returns loc_type_*, loc_addr_*
     arb -2
 
@@ -115,6 +116,44 @@ arg_mod_000_rm_immediate_w_nonzero_reg:
 .ENDFRAME
 
 ##########
+arg_mod_op_rm_b:
+.FRAME op, loc_type, loc_addr                                                   # returns op, returns loc_type_*, loc_addr_*
+    arb -3
+
+    # R/M is the parameter
+
+    # Read and decode MOD and R/M
+    add 0, 0, [rb - 1]
+    arb -1
+    call arg_mod_rm_generic
+    add [rb - 3], 0, [rb + loc_type]
+    add [rb - 4], 0, [rb + loc_addr]
+    add [rb - 5], 0, [rb + op]
+
+    arb 3
+    ret 0
+.ENDFRAME
+
+##########
+arg_mod_op_rm_w:
+.FRAME op, loc_type, loc_addr                                                   # returns op, returns loc_type_*, loc_addr_*
+    arb -3
+
+    # R/M is the parameter
+
+    # Read and decode MOD and R/M
+    add 1, 0, [rb - 1]
+    arb -1
+    call arg_mod_rm_generic
+    add [rb - 3], 0, [rb + loc_type]
+    add [rb - 4], 0, [rb + loc_addr]
+    add [rb - 5], 0, [rb + op]
+
+    arb 3
+    ret 0
+.ENDFRAME
+
+##########
 arg_mod_op_rm_b_immediate_b:
 .FRAME op, loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst               # returns op, loc_type_*, loc_addr_*
     arb -5
@@ -144,7 +183,7 @@ arg_mod_op_rm_b_immediate_b:
 ##########
 arg_mod_op_rm_w_immediate_b:
 .FRAME op, loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst               # returns op, loc_type_*, loc_addr_*
-    arb -4
+    arb -5
 
     # 16-bit R/M is dst, 8-bit immediate is src
 
@@ -164,14 +203,14 @@ arg_mod_op_rm_w_immediate_b:
 
     call inc_ip
 
-    arb 4
+    arb 5
     ret 0
 .ENDFRAME
 
 ##########
 arg_mod_op_rm_w_immediate_w:
 .FRAME op, loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst               # returns op, loc_type_*, loc_addr_*
-    arb -4
+    arb -5
 
     # 16-bit R/M is dst, 16-bit immediate is src
 
@@ -192,7 +231,7 @@ arg_mod_op_rm_w_immediate_w:
     call inc_ip
     call inc_ip
 
-    arb 4
+    arb 5
     ret 0
 .ENDFRAME
 
