@@ -23,7 +23,7 @@ execute_mov_b:
     arb -2
     call read_location_b
 
-    # Write the target value
+    # Write the destination value
     add [rb + loc_type_dst], 0, [rb - 1]
     add [rb + loc_addr_dst], 0, [rb - 2]
     add [rb - 4], 0, [rb - 3]                               # read_location_b() -> param3
@@ -42,7 +42,7 @@ execute_mov_w:
     arb -2
     call read_location_w
 
-    # Write the target value
+    # Write the destination value
     add [rb + loc_type_dst], 0, [rb - 1]
     add [rb + loc_addr_dst], 0, [rb - 2]
     add [rb - 4], 0, [rb - 3]                               # read_location_w().lo -> param3

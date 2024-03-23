@@ -9,10 +9,10 @@
 .IMPORT write_location_b
 .IMPORT write_location_w
 
-# From nibbles.s
+# From obj/nibbles.s
 .IMPORT nibbles
 
-# From parity.s
+# From obj/parity.s
 .IMPORT parity
 
 # From state.s
