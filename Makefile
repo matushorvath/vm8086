@@ -68,9 +68,9 @@ run-test:
 # then the (optional) 8086 image header and data.
 
 BASE_OBJS = vm8086.o arg_al_ax_near_ptr.o arg_mod_reg_rm.o arg_reg.o arg_reg_immediate_b.o \
-	arg_reg_immediate_w.o bits.o decode.o dump_state.o error.o exec.o flags.o group1.o group2.o \
-	in_out.o inc_dec.o instructions.o interrupt.o load.o location.o memory.o nibbles.o parity.o \
-	prefix.o split233.o stack.o state.o transfer.o util.o
+	arg_reg_immediate_w.o bits.o decode.o dump_state.o error.o exec.o flags.o group2.o in_out.o \
+	inc_dec.o instructions.o interrupt.o load.o location.o memory.o nibbles.o parity.o prefix.o \
+	split233.o stack.o state.o transfer.o util.o
 
 $(BINDIR)/lib8086.a: $(BASE_OBJS:%.o=$(OBJDIR)/%.o)
 	$(run-ar)

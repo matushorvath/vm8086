@@ -64,11 +64,9 @@
 .IMPORT execute_lahf
 .IMPORT execute_sahf
 
-# From group1.s
-.IMPORT execute_group1
-
 # From group2.s
-.IMPORT execute_group2
+.IMPORT execute_group2_b
+.IMPORT execute_group2_w
 
 # From in_out.s
 # TODO .IMPORT execute_in_al_immediate_b
@@ -417,7 +415,7 @@ instructions:
     db  invalid_opcode, 0, 0                            # 0xf4 HLT
     db  execute_cmc, 0, 0                               # 0xf5 CMC
 
-    # <tnmd>:
+    # <group 1>:
     # 000 TEST REG/MEM, IMMED
     # 001 (not used)
     # 010 NOT REG/MEM
@@ -426,8 +424,8 @@ instructions:
     # 101 IMUL REG/MEM
     # 110 DIV REG/MEM
     # 111 IDIV REG/MEM
-    db  not_implemented, 0, 0 # TODO    db  execute_tnmd_b, arg_mod_tnmd_rm_b               # 0xf6 <tnmd> 8-bit
-    db  not_implemented, 0, 0 # TODO    db  execute_tnmd_w, arg_mod_tnmd_rm_w               # 0xf7 <tnmd> 16-bit
+    db  not_implemented, 0, 0 # TODO    db  execute_tnmd_b, arg_mod_group1_rm_b               # 0xf6 <group 1> 8-bit
+    db  not_implemented, 0, 0 # TODO    db  execute_tnmd_w, arg_mod_group1_rm_w               # 0xf7 <group 1> 16-bit
 
     db  execute_clc, 0, 0                               # 0xf8 CLC
     db  execute_stc, 0, 0                               # 0xf9 STC
@@ -436,13 +434,13 @@ instructions:
     db  execute_cld, 0, 0                               # 0xfc CLD
     db  execute_std, 0, 0                               # 0xfd STD
 
-    # <group 1>:
+    # <group 2>, 8-bit:
     # 000 INC REG8/MEM8
     # 001 DEC REG8/MEM8
     # (rest not used)
-    db  execute_group1, 0, 0                            # 0xfe <group 1> REG8/MEM8
+    db  execute_group2_b, 0, 0                          # 0xfe <group 2> REG8/MEM8
 
-    # <group 2>:
+    # <group 2>, 16-bit:
     # 000 INC MEM16
     # 001 DEC MEM16
     # 010 CALL REG16/MEM16 (within segment)
@@ -451,6 +449,6 @@ instructions:
     # 101 JMP MEM16 (intersegment)
     # 110 PUSH MEM16
     # 111 (not used)
-    db  execute_group2, 0, 0                            # 0xff <group 2> REG16/MEM16
+    db  execute_group2_w, 0, 0                          # 0xff <group 2> REG16/MEM16
 
 .EOF
