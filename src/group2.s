@@ -57,28 +57,21 @@ execute_group2:
     add [rb - 6], 0, [rb + loc_addr]
 
     # Execute the operation
-    # TODO jump table
-    eq  [rb + op], 0b000, [rb + tmp]
-    jnz [rb + tmp], execute_group2_inc
+    add execute_group2_table, [rb + op], [ip + 2]
+    jz  0, [0]
 
-    eq  [rb + op], 0b001, [rb + tmp]
-    jnz [rb + tmp], execute_group2_dec
+execute_group2_table:
+    # Map each OP value to the label that handles it
+    db  execute_group2_inc
+    db  execute_group2_dec
+    db  execute_group2_call_near
+    db  execute_group2_call_far
+    db  execute_group2_jmp_near
+    db  execute_group2_jmp_far
+    db  execute_group2_push_w
+    db  execute_group2_invalid_op
 
-    eq  [rb + op], 0b010, [rb + tmp]
-    jnz [rb + tmp], execute_group2_call_near
-
-    eq  [rb + op], 0b011, [rb + tmp]
-    jnz [rb + tmp], execute_group2_call_far
-
-    eq  [rb + op], 0b100, [rb + tmp]
-    jnz [rb + tmp], execute_group2_jmp_near
-
-    eq  [rb + op], 0b101, [rb + tmp]
-    jnz [rb + tmp], execute_group2_jmp_far
-
-    eq  [rb + op], 0b110, [rb + tmp]
-    jnz [rb + tmp], execute_group2_push_w
-
+execute_group2_invalid_op:
     add execute_group2_invalid_op_message, 0, [rb - 1]
     arb -1
     call report_error
