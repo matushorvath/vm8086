@@ -14,63 +14,11 @@ section .text start=0x80000
 handle_int3:                            ; INT 3 handler
     out 0x42, al
 
-    ; push and pop each register
-    inc ax
-    push ax
-    push ax
+%include "reg.inc"
 
-    pop bx
-    inc bx
-    push bx
-    push bx
+    ; the sr.inc test messes up segments
+%include "sr.inc"
 
-    pop cx
-    inc cx
-    push cx
-    push cx
-
-    pop dx
-    inc dx
-    push dx
-    push dx
-
-    pop si
-    inc si
-    push si
-    push si
-
-    pop di
-    inc di
-    push di
-    push di
-
-    pop ax
-
-    out 0x42, al
-
-    ; push segment registers
-    mov ax, 0x1234
-    mov ds, ax
-    mov ax, 0x5678
-    mov ss, ax                          ; this moves the stack
-    mov ax, 0x9abc
-    mov es, ax
-
-    push cs
-    push ds
-    push ss
-    push es
-
-    out 0x42, al
-
-    ; pop segment registers intentionally in different order, ss last
-    pop ds
-    pop es
-    pop ss
-
-    out 0x42, al
-
-    ; everything is messed up, our work here is done
     hlt
 
 
