@@ -8,14 +8,10 @@
     mov sp, data
 
     ; reset the memory
-    mov byte [data + 0], 0xaaaa
-    mov byte [data + 1], 0xaaaa
-    mov byte [data + 2], 0xaaaa
-    mov byte [data + 3], 0xaaaa
-    mov byte [data + 4], 0xaaaa
-    mov byte [data + 5], 0xaaaa
-    mov byte [data + 6], 0xaaaa
-    mov byte [data + 7], 0xaaaa
+    mov word [data + 0], 0xaaaa
+    mov word [data + 2], 0xaaaa
+    mov word [data + 4], 0xaaaa
+    mov word [data + 6], 0xaaaa
 
     ; set up registers we will use
     mov bx, data
@@ -39,14 +35,10 @@
     out 0x42, al
 
     ; reset the memory
-    mov byte [data + 0], 0x8888
-    mov byte [data + 1], 0x8888
-    mov byte [data + 2], 0x8888
-    mov byte [data + 3], 0x8888
-    mov byte [data + 4], 0x8888
-    mov byte [data + 5], 0x8888
-    mov byte [data + 6], 0x8888
-    mov byte [data + 7], 0x8888
+    mov word [data + 0], 0x8888
+    mov word [data + 2], 0x8888
+    mov word [data + 4], 0x8888
+    mov word [data + 6], 0x8888
 
     ; decrement 8-bit memory using various addressing modes
     dec byte [data]

@@ -24,6 +24,16 @@
 .IMPORT reg_ss
 .IMPORT reg_es
 
+.IMPORT flag_carry
+.IMPORT flag_parity
+.IMPORT flag_auxiliary_carry
+.IMPORT flag_zero
+.IMPORT flag_sign
+.IMPORT flag_overflow
+.IMPORT flag_interrupt
+.IMPORT flag_direction
+.IMPORT flag_trap
+
 # From libxib.a
 .IMPORT print_num_radix
 .IMPORT print_str
@@ -146,14 +156,66 @@ dump_register:
 
 ##########
 dump_flags:
-.FRAME flags_lo, flags_hi
-    arb -2
+.FRAME flags_lo, flags_hi, tmp
+    arb -3
 
     add dump_state_flags, 0, [rb - 1]
     arb -1
     call print_str
 
-    # Binary
+    # Print flags as lowercase/uppercase characters
+    out '-'
+    out '-'
+    out '-'
+    out '-'
+
+    mul [flag_overflow], -0x20, [rb + tmp]
+    add 'o', [rb + tmp], [rb + tmp]
+    out [rb + tmp]
+
+    mul [flag_direction], -0x20, [rb + tmp]
+    add 'd', [rb + tmp], [rb + tmp]
+    out [rb + tmp]
+
+    mul [flag_interrupt], -0x20, [rb + tmp]
+    add 'i', [rb + tmp], [rb + tmp]
+    out [rb + tmp]
+
+    mul [flag_trap], -0x20, [rb + tmp]
+    add 't', [rb + tmp], [rb + tmp]
+    out [rb + tmp]
+
+    out ' '
+
+    mul [flag_sign], -0x20, [rb + tmp]
+    add 's', [rb + tmp], [rb + tmp]
+    out [rb + tmp]
+
+    mul [flag_zero], -0x20, [rb + tmp]
+    add 'z', [rb + tmp], [rb + tmp]
+    out [rb + tmp]
+
+    out '-'
+
+    mul [flag_auxiliary_carry], -0x20, [rb + tmp]
+    add 'a', [rb + tmp], [rb + tmp]
+    out [rb + tmp]
+
+    out '-'
+
+    mul [flag_parity], -0x20, [rb + tmp]
+    add 'p', [rb + tmp], [rb + tmp]
+    out [rb + tmp]
+
+    out '-'
+
+    mul [flag_carry], -0x20, [rb + tmp]
+    add 'c', [rb + tmp], [rb + tmp]
+    out [rb + tmp]
+
+    out ' '
+
+    # Binary value
     call pack_flags_hi
     add [rb - 2], 0, [rb + flags_lo]
 
@@ -177,7 +239,7 @@ dump_flags:
     out ' '
     out '('
 
-    # Hexadecimal
+    # Hexadecimal value
     call pack_flags_hi
     add [rb - 2], 0, [rb + flags_lo]
 
@@ -198,7 +260,7 @@ dump_flags:
 
     out ')'
 
-    arb 2
+    arb 3
     ret 0
 .ENDFRAME
 
@@ -225,7 +287,7 @@ dump_stack_loop:
     add [reg_ss + 0], [rb - 1], [rb - 1]
     mul [reg_sp + 1], 0x100, [rb - 2]
     add [reg_sp + 0], [rb - 2], [rb - 2]
-    add [rb + index], [rb - 2], [rb - 2]                    # TODO no sp overflow support
+    add [rb + index], [rb - 2], [rb - 2]                    # no sp overflow support
     arb -2
     call read_seg_off_w
 

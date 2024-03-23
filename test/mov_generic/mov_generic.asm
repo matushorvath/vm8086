@@ -16,13 +16,13 @@ handle_int3:                            ; INT 3 handler
 %include "reg_immed.inc"
     out 0x81, al
 
-; TODO MOV MEM8, IMMED8
-; TODO MOV MEM16, IMMED16
+; TODO x MOV MEM8, IMMED8
+; TODO x MOV MEM16, IMMED16
 
-; TODO MOV AL, MEM8
-; TODO MOV AX, MEM16
-; TODO MOV MEM8, AL
-; TODO MOV MEM16, AX
+; TODO x MOV AL, MEM8
+; TODO x MOV AX, MEM16
+; TODO x MOV MEM8, AL
+; TODO x MOV MEM16, AX
 
     hlt
 
@@ -31,7 +31,7 @@ section boot start=0xffff0              ; boot
     int3
 
 
-; TODO new test for XCHG
+; TODO x new test for XCHG
 
 ; XCHG AX, CX
 ; XCHG AX, DX

@@ -6,27 +6,20 @@
 .EXPORT arg_mod_1sr_rm_src
 .EXPORT arg_mod_1sr_rm_dst
 
-.EXPORT arg_mod_000_rm_immediate_b
-.EXPORT arg_mod_000_rm_immediate_w
+.EXPORT arg_mod_rm_generic
 
 # From decode.s
 .IMPORT decode_mod_rm
 .IMPORT decode_reg
 .IMPORT decode_sr
 
-# From error.s
-.IMPORT report_error
-
 # From memory.s
-.IMPORT calc_cs_ip_addr
 .IMPORT read_cs_ip_b
 
-# From split233.s
+# From obj/split233.s
 .IMPORT split233
 
 # From state.s
-.IMPORT reg_cs
-.IMPORT reg_ip
 .IMPORT inc_ip
 
 # "_src_" means the REG field is the source
@@ -37,7 +30,7 @@ arg_mod_reg_rm_src_b:
 .FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
     arb -4
 
-    # RM is dst, REG is src
+    # R/M is dst, REG is src
 
     # Read and decode MOD and R/M
     add 0, 0, [rb - 1]
@@ -63,7 +56,7 @@ arg_mod_reg_rm_src_w:
 .FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
     arb -4
 
-    # RM is dst, REG is src
+    # R/M is dst, REG is src
 
     # Read and decode MOD and R/M
     add 1, 0, [rb - 1]
@@ -89,7 +82,7 @@ arg_mod_reg_rm_dst_b:
 .FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
     arb -4
 
-    # RM is src, REG is dst
+    # R/M is src, REG is dst
 
     # Read and decode MOD and R/M
     add 0, 0, [rb - 1]
@@ -115,7 +108,7 @@ arg_mod_reg_rm_dst_w:
 .FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
     arb -4
 
-    # RM is src, REG is dst
+    # R/M is src, REG is dst
 
     # Read and decode MOD and R/M
     add 1, 0, [rb - 1]
@@ -141,7 +134,7 @@ arg_mod_1sr_rm_src:
 .FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
     arb -4
 
-    # RM is dst, SR is src
+    # R/M is dst, SR is src
 
     # Read and decode MOD and R/M
     add 1, 0, [rb - 1]
@@ -166,7 +159,7 @@ arg_mod_1sr_rm_dst:
 .FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
     arb -4
 
-    # RM is src, SR is dst
+    # R/M is src, SR is dst
 
     # Read and decode MOD and R/M
     add 1, 0, [rb - 1]
@@ -187,79 +180,6 @@ arg_mod_1sr_rm_dst:
 .ENDFRAME
 
 ##########
-arg_mod_000_rm_immediate_b:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
-    arb -4
-
-    # RM is dst, 8-bit immediate is src
-
-    # Read and decode MOD and R/M
-    add 0, 0, [rb - 1]
-    arb -1
-    call arg_mod_rm_generic
-    add [rb - 3], 0, [rb + loc_type_dst]
-    add [rb - 4], 0, [rb + loc_addr_dst]
-
-    # The REG field must be 0
-    jnz [rb - 5], arg_mod_000_rm_immediate_b_nonzero_reg
-
-    # Return pointer to 8-bit immediate
-    call calc_cs_ip_addr
-
-    add 1, 0, [rb + loc_type_src]
-    add [rb - 2], 0, [rb + loc_addr_src]
-
-    call inc_ip
-
-    arb 4
-    ret 0
-
-arg_mod_000_rm_immediate_b_nonzero_reg:
-    add nonzero_reg_message, 0, [rb - 1]
-    arb -1
-    call report_error
-.ENDFRAME
-
-##########
-arg_mod_000_rm_immediate_w:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
-    arb -4
-
-    # RM is dst, 8-bit immediate is src
-
-    # Read and decode MOD and R/M
-    add 1, 0, [rb - 1]
-    arb -1
-    call arg_mod_rm_generic
-    add [rb - 3], 0, [rb + loc_type_dst]
-    add [rb - 4], 0, [rb + loc_addr_dst]
-
-    # The REG field must be 0
-    jnz [rb - 5], arg_mod_000_rm_immediate_w_nonzero_reg
-
-    # Return pointer to 16-bit immediate
-    call calc_cs_ip_addr
-
-    add 1, 0, [rb + loc_type_src]
-    add [rb - 2], 0, [rb + loc_addr_src]
-
-    call inc_ip
-    call inc_ip
-
-    arb 4
-    ret 0
-
-arg_mod_000_rm_immediate_w_nonzero_reg:
-    add nonzero_reg_message, 0, [rb - 1]
-    arb -1
-    call report_error
-.ENDFRAME
-
-##########
-nonzero_reg_message:
-    db  "invalid non-zero REG value", 0
-
-##########
 arg_mod_rm_generic:
 .FRAME w; loc_type_rm, loc_addr_rm, reg, mod, rm, tmp                           # returns loc_type_rm, loc_addr_rm, reg
     arb -6
@@ -277,7 +197,7 @@ arg_mod_rm_generic:
     add split233 + 2, [rb + tmp], [ip + 1]
     add [0], 0, [rb + mod]
 
-    # Decode MOD and RM
+    # Decode MOD and R/M
     add [rb + mod], 0, [rb - 1]
     add [rb + rm], 0, [rb - 2]
     add [rb + w], 0, [rb - 3]
