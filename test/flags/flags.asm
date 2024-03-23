@@ -57,7 +57,7 @@ handle_int3:                            ; INT 3 handler
     pop ax
 
     ; set flag and push
-    xor ax, %1
+    xor ax, word %1
     push ax
     popf
     pushf
@@ -73,7 +73,7 @@ handle_int3:                            ; INT 3 handler
     out 0x42, al
 
     ; clear flag and push
-    xor ax, %1
+    xor ax, word %1
     push ax
     popf
     pushf
@@ -109,14 +109,14 @@ handle_int3:                            ; INT 3 handler
     mov ah, al
 
     ; set flag and store to ah
-    xor ah, %1
+    xor ah, byte %1
     sahf
     mov ah, 0
     lahf
     out 0x42, al
 
     ; clear flag and store to ah
-    xor ah, %1
+    xor ah, byte %1
     sahf
     mov ah, 0
     lahf

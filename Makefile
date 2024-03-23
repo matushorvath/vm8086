@@ -67,10 +67,10 @@ run-test:
 # The order of the object files matters: First include all the code in any order, then binary.o,
 # then the (optional) 8086 image header and data.
 
-BASE_OBJS = vm8086.o arg_al_ax_near_ptr.o arg_mod_reg_rm.o arg_reg.o arg_reg_immediate_b.o \
-	arg_reg_immediate_w.o bits.o decode.o dump_state.o error.o exec.o flags.o group2.o in_out.o \
-	inc_dec.o instructions.o interrupt.o load.o location.o memory.o nibbles.o parity.o prefix.o \
-	split233.o stack.o state.o transfer.o util.o xor.o
+BASE_OBJS = vm8086.o arg_al_ax_near_ptr.o arg_mod_op_rm.o arg_mod_reg_rm.o arg_reg.o \
+	arg_reg_immediate_b.o arg_reg_immediate_w.o bits.o decode.o dump_state.o error.o exec.o \
+	flags.o group2.o in_out.o inc_dec.o instructions.o interrupt.o load.o location.o memory.o \
+	nibbles.o parity.o prefix.o split233.o stack.o state.o transfer.o util.o xor.o
 
 $(BINDIR)/lib8086.a: $(BASE_OBJS:%.o=$(OBJDIR)/%.o)
 	$(run-ar)

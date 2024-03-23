@@ -4,6 +4,13 @@
 .IMPORT arg_al_ax_near_ptr_src
 .IMPORT arg_al_ax_near_ptr_dst
 
+# From arg_mod_op_rm.s
+.IMPORT arg_mod_000_rm_immediate_b
+.IMPORT arg_mod_000_rm_immediate_w
+.IMPORT arg_mod_op_rm_b_immediate_b
+.IMPORT arg_mod_op_rm_w_immediate_b
+.IMPORT arg_mod_op_rm_w_immediate_w
+
 # From arg_mod_reg_rm.s
 .IMPORT arg_mod_reg_rm_src_b
 .IMPORT arg_mod_reg_rm_src_w
@@ -11,9 +18,7 @@
 .IMPORT arg_mod_reg_rm_dst_w
 .IMPORT arg_mod_1sr_rm_src
 .IMPORT arg_mod_1sr_rm_dst
-.IMPORT arg_mod_000_rm_w
-.IMPORT arg_mod_000_rm_immediate_b
-.IMPORT arg_mod_000_rm_immediate_w
+.IMPORT arg_mod_000_rm
 
 # From arg_reg.s
 .IMPORT arg_ax
@@ -274,6 +279,8 @@ instructions:
     db  not_implemented, 0, 0 # TODO    db  execute_immed_w, arg_mod_immed_rm_w             # 0x81 <immed> REG16/MEM16, IMMED16
 
     # <immed>: 000 ADD,         010 ADC, 011 SBB,          101 SUB,          111 CMP
+    # however NASM will generate 0x83 0xf0 0xff for xor ax, word 0xffff, which is "(not used)" in intel docs
+    # https://bugzilla.nasm.us/show_bug.cgi?id=3392642
     db  not_implemented, 0, 0 # TODO    db  execute_immed_b, arg_mod_immed_rm_ext_b         # 0x82 <immed> REG8/MEM8, IMMED8
     db  not_implemented, 0, 0 # TODO    db  execute_immed_w, arg_mod_immed_rm_ext_w         # 0x83 <immed> REG16/MEM16, IMMED8 (sign extend)
 
@@ -289,7 +296,7 @@ instructions:
     db  execute_mov_w, arg_mod_1sr_rm_src, 4            # 0x8c MOV REG16/MEM16, SEGREG
     db  not_implemented, 0, 0 # TODO x   db  execute_lea_w, arg_mod_reg_mem_dst_w            # 0x8d LEA REG16, MEM16
     db  execute_mov_w, arg_mod_1sr_rm_dst, 4            # 0x8e MOV SEGREG, REG16/MEM16
-    db  execute_pop_w, arg_mod_000_rm_w, 2              # 0x8f POP REG16/MEM16
+    db  execute_pop_w, arg_mod_000_rm, 2                # 0x8f POP REG16/MEM16
 
     db  execute_nop, 0, 0                               # 0x90 NOP (= XCHG AX, AX)
     db  execute_xchg_ax_w, arg_cx, 2                    # 0x91 XCHG AX, CX

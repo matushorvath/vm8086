@@ -1,8 +1,8 @@
 .EXPORT execute_group2_b
 .EXPORT execute_group2_w
 
-# From decode.s
-.IMPORT decode_mod_rm
+# From arg_mod_reg_rm.s
+.IMPORT arg_mod_rm_generic
 
 # From error.s
 .IMPORT report_error
@@ -13,17 +13,8 @@
 .IMPORT execute_dec_b
 .IMPORT execute_dec_w
 
-# From memory.s
-.IMPORT read_cs_ip_b
-
-# From obj/split233.s
-.IMPORT split233
-
 # From stack.s
 .IMPORT execute_push_w
-
-# From state.s
-.IMPORT inc_ip
 
 # Group 2 8-bit instructions, first byte is MOD xxx R/M, where xxx is:
 # 000 INC REG8/MEM8
@@ -34,27 +25,14 @@ execute_group2_b:
 .FRAME tmp, mod, op, rm, loc_type, loc_addr
     arb -6
 
-    # Read the MOD xxx R/M byte and split it
-    call read_cs_ip_b
-    add [rb - 2], 0, [rb + tmp]
-    call inc_ip
-
-    mul [rb + tmp], 3, [rb + tmp]
-    add split233 + 0, [rb + tmp], [ip + 1]
-    add [0], 0, [rb + rm]
-    add split233 + 1, [rb + tmp], [ip + 1]
-    add [0], 0, [rb + op]
-    add split233 + 2, [rb + tmp], [ip + 1]
-    add [0], 0, [rb + mod]
-
-    # Decode MOD and R/M
-    add [rb + mod], 0, [rb - 1]
-    add [rb + rm], 0, [rb - 2]
-    add 0, 0, [rb - 3]
-    arb -3
-    call decode_mod_rm
-    add [rb - 5], 0, [rb + loc_type]
-    add [rb - 6], 0, [rb + loc_addr]
+    # Read and decode MOD and R/M
+    # TODO arg_mod_op_rm_b_immediate_b
+    add 0, 0, [rb - 1]
+    arb -1
+    call arg_mod_rm_generic
+    add [rb - 3], 0, [rb + loc_type]
+    add [rb - 4], 0, [rb + loc_addr]
+    add [rb - 5], 0, [rb + op]
 
     # Execute the operation
     add execute_group2_b_table, [rb + op], [ip + 2]
@@ -110,27 +88,14 @@ execute_group2_w:
 .FRAME tmp, mod, op, rm, loc_type, loc_addr
     arb -6
 
-    # Read the MOD xxx R/M byte and split it
-    call read_cs_ip_b
-    add [rb - 2], 0, [rb + tmp]
-    call inc_ip
-
-    mul [rb + tmp], 3, [rb + tmp]
-    add split233 + 0, [rb + tmp], [ip + 1]
-    add [0], 0, [rb + rm]
-    add split233 + 1, [rb + tmp], [ip + 1]
-    add [0], 0, [rb + op]
-    add split233 + 2, [rb + tmp], [ip + 1]
-    add [0], 0, [rb + mod]
-
-    # Decode MOD and R/M
-    add [rb + mod], 0, [rb - 1]
-    add [rb + rm], 0, [rb - 2]
-    add 0, 0, [rb - 3]
-    arb -3
-    call decode_mod_rm
-    add [rb - 5], 0, [rb + loc_type]
-    add [rb - 6], 0, [rb + loc_addr]
+    # Read and decode MOD and R/M
+    # TODO arg_mod_op_rm_w_immediate_w
+    add 1, 0, [rb - 1]
+    arb -1
+    call arg_mod_rm_generic
+    add [rb - 3], 0, [rb + loc_type]
+    add [rb - 4], 0, [rb + loc_addr]
+    add [rb - 5], 0, [rb + op]
 
     # Execute the operation
     add execute_group2_w_table, [rb + op], [ip + 2]
