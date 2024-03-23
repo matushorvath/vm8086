@@ -34,6 +34,14 @@ section int4_section start=0x90000
 handle_int4:
     out 0x42, al
 
+    ; test if interrupt clears TF and IF
+    mov dx, 00000011_00000000b
+    push dx
+    popf
+    out 0x42, al
+    int 255
+    out 0x42, al
+
     ; test restoring flags
     std
     out 0x42, al
@@ -57,6 +65,7 @@ handle_int21:
 section int255_section start=0xb0000
 
 handle_int255:
+    ; this interrupt needs to just output and return
     out 0x42, al
     iret
 
@@ -71,5 +80,3 @@ section boot start=0xffff0              ; boot
     out 0x42, al
 
     hlt
-
-; TODO x test that int clears TF and IF
