@@ -46,7 +46,7 @@
 
 ##########
 decode_mod_rm:
-.FRAME mod, rm, w; loc_type, loc_addr, disp, tmp       # return loc_type, loc_addr
+.FRAME mod, rm, w; loc_type, loc_addr, disp, tmp       # returns loc_type, loc_addr
     arb -4
 
     # Decode the mod field
@@ -276,7 +276,7 @@ decode_mod_rm_end:
 
 ##########
 decode_reg:
-.FRAME reg, w; loc_type, loc_addr, tmp                      # return loc_type, loc_addr
+.FRAME reg, w; loc_type, loc_addr, tmp                      # returns loc_type, loc_addr
     arb -3
 
     # Expect reg to be 0-7, w to be 0-1
@@ -316,7 +316,7 @@ decode_reg_table:
 
 ##########
 decode_sr:
-.FRAME reg; loc_type, loc_addr, tmp                      # return loc_type, loc_addr
+.FRAME reg; loc_type, loc_addr, tmp                      # returns loc_type, loc_addr
     arb -3
 
     # Expect reg to be 0-7, w to be 0-1
