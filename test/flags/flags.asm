@@ -45,6 +45,8 @@ handle_int3:                            ; INT 3 handler
     out 0x42, al
 %endmacro
 
+    out 0x80, al
+
     ; set/reset individual flags with dedicated instructions
     set_reset_instruction stc, clc
     set_reset_instruction sti, cli
@@ -89,18 +91,19 @@ handle_int3:                            ; INT 3 handler
     out 0x42, al
 %endmacro
 
-    ; set/reset individual flags with popf
-    ; TODO enable once we have XOR
-    ; set_reset_stack 0b0000000000000001
-    ; set_reset_stack 0b0000000000000100
-    ; set_reset_stack 0b0000000000010000
-    ; set_reset_stack 0b0000000001000000
-    ; set_reset_stack 0b0000000010000000
+    out 0x81, al
 
-    ; set_reset_stack 0b0000000100000000
-    ; set_reset_stack 0b0000001000000000
-    ; set_reset_stack 0b0000010000000000
-    ; set_reset_stack 0b0000100000000000
+    ; set/reset individual flags with popf
+    set_reset_stack 0b0000000000000001
+    set_reset_stack 0b0000000000000100
+    set_reset_stack 0b0000000000010000
+    set_reset_stack 0b0000000001000000
+    set_reset_stack 0b0000000010000000
+
+    set_reset_stack 0b0000000100000000
+    set_reset_stack 0b0000001000000000
+    set_reset_stack 0b0000010000000000
+    set_reset_stack 0b0000100000000000
 
 %macro set_reset_ah 1
     ; load ah with current status
@@ -124,13 +127,14 @@ handle_int3:                            ; INT 3 handler
 
 %endmacro
 
+    out 0x82, al
+
     ; set/reset individual flags with sahf
-    ; TODO enable once we have XOR
-    ; set_reset_ah 0b00000001
-    ; set_reset_ah 0b00000100
-    ; set_reset_ah 0b00010000
-    ; set_reset_ah 0b01000000
-    ; set_reset_ah 0b10000000
+    set_reset_ah 0b00000001
+    set_reset_ah 0b00000100
+    set_reset_ah 0b00010000
+    set_reset_ah 0b01000000
+    set_reset_ah 0b10000000
 
     hlt
 
