@@ -56,6 +56,16 @@
 .IMPORT arg_si_immediate_w
 .IMPORT arg_di_immediate_w
 
+# From bitwise.s
+.IMPORT execute_and_b
+.IMPORT execute_and_w
+.IMPORT execute_or_b
+.IMPORT execute_or_w
+.IMPORT execute_xor_b
+.IMPORT execute_xor_w
+.IMPORT execute_test_b
+.IMPORT execute_test_w
+
 # From exec.s
 .IMPORT execute_nop
 .IMPORT invalid_opcode
@@ -122,10 +132,6 @@
 .IMPORT execute_xchg_w
 .IMPORT execute_xchg_ax_w
 
-# From xor.s
-.IMPORT execute_xor_b
-.IMPORT execute_xor_w
-
 # iAPX 86, 88 User's Manual; August 1981; pages 4-27 to 4-35
 
 instructions:
@@ -139,12 +145,12 @@ instructions:
     db  execute_push_w, arg_es, 2                           # 0x06 PUSH ES
     db  execute_pop_w, arg_es, 2                            # 0x07 POP ES
 
-    db  not_implemented, 0, 0 # TODO    db  execute_or_b, arg_mod_reg_rm_src_b, 4           # 0x08 OR REG8/MEM8, REG8
-    db  not_implemented, 0, 0 # TODO    db  execute_or_w, arg_mod_reg_rm_src_w, 4           # 0x09 OR REG16/MEM16, REG16
-    db  not_implemented, 0, 0 # TODO    db  execute_or_b, arg_mod_reg_rm_dst_b, 4           # 0x0a OR REG8, REG8/MEM8
-    db  not_implemented, 0, 0 # TODO    db  execute_or_w, arg_mod_reg_rm_dst_w, 4           # 0x0b OR REG16, REG16/MEM16
-    db  not_implemented, 0, 0 # TODO    db  execute_or_b, arg_al_immediate_b                # 0x0c OR AL, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_or_w, arg_ax_immediate_w                # 0x0d OR AX, IMMED16
+    db  execute_or_b, arg_mod_reg_rm_src_b, 4               # 0x08 OR REG8/MEM8, REG8
+    db  execute_or_w, arg_mod_reg_rm_src_w, 4               # 0x09 OR REG16/MEM16, REG16
+    db  execute_or_b, arg_mod_reg_rm_dst_b, 4               # 0x0a OR REG8, REG8/MEM8
+    db  execute_or_w, arg_mod_reg_rm_dst_w, 4               # 0x0b OR REG16, REG16/MEM16
+    db  execute_or_b, arg_al_immediate_b, 4                 # 0x0c OR AL, IMMED8
+    db  execute_or_w, arg_ax_immediate_w, 4                 # 0x0d OR AX, IMMED16
 
     db  execute_push_w, arg_cs, 2                           # 0x0e PUSH CS
     db  invalid_opcode, 0, 0                                # 0x0f
@@ -169,12 +175,12 @@ instructions:
     db  execute_push_w, arg_ds, 2                           # 0x1e PUSH DS
     db  execute_pop_w, arg_ds, 2                            # 0x1f POP DS
 
-    db  not_implemented, 0, 0 # TODO    db  execute_and_b, arg_mod_reg_rm_src_b, 4          # 0x20 AND REG8/MEM8, REG8
-    db  not_implemented, 0, 0 # TODO    db  execute_and_w, arg_mod_reg_rm_src_w, 4          # 0x21 AND REG16/MEM16, REG16
-    db  not_implemented, 0, 0 # TODO    db  execute_and_b, arg_mod_reg_rm_dst_b, 4          # 0x22 AND REG8, REG8/MEM8
-    db  not_implemented, 0, 0 # TODO    db  execute_and_w, arg_mod_reg_rm_dst_w, 4          # 0x23 AND REG16, REG16/MEM16
-    db  not_implemented, 0, 0 # TODO    db  execute_and_b, arg_al_immediate_b               # 0x24 AND AL, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_and_w, arg_ax_immediate_w               # 0x25 AND AX, IMMED16
+    db  execute_and_b, arg_mod_reg_rm_src_b, 4              # 0x20 AND REG8/MEM8, REG8
+    db  execute_and_w, arg_mod_reg_rm_src_w, 4              # 0x21 AND REG16/MEM16, REG16
+    db  execute_and_b, arg_mod_reg_rm_dst_b, 4              # 0x22 AND REG8, REG8/MEM8
+    db  execute_and_w, arg_mod_reg_rm_dst_w, 4              # 0x23 AND REG16, REG16/MEM16
+    db  execute_and_b, arg_al_immediate_b, 4                # 0x24 AND AL, IMMED8
+    db  execute_and_w, arg_ax_immediate_w, 4                # 0x25 AND AX, IMMED16
 
     db  execute_segment_prefix_es, 0, 0                     # 0x26 ES: (segment override prefix)
     db  not_implemented, 0, 0 # TODO    db  execute_daa, 0                                  # 0x27 DAA
@@ -290,8 +296,8 @@ instructions:
     db  execute_immed_b, arg_mod_op_rm_b_immediate_b, 5     # 0x82 <immed> REG8/MEM8, IMMED8
     db  execute_immed_w, arg_mod_op_rm_w_immediate_sxb, 5   # 0x83 <immed> REG16/MEM16, IMMED8 (sign extended)
 
-    db  not_implemented, 0, 0 # TODO    db  execute_test_b, arg_mod_reg_rm_src_b, 4         # 0x84 TEST REG8/MEM8, REG8
-    db  not_implemented, 0, 0 # TODO    db  execute_test_w, arg_mod_reg_rm_src_w, 4         # 0x85 TEST REG16/MEM16, REG16
+    db  execute_test_b, arg_mod_reg_rm_src_b, 4             # 0x84 TEST REG8/MEM8, REG8
+    db  execute_test_w, arg_mod_reg_rm_src_w, 4             # 0x85 TEST REG16/MEM16, REG16
     db  execute_xchg_b, arg_mod_reg_rm_dst_b, 4             # 0x86 XCHG REG8, REG8/MEM8
     db  execute_xchg_w, arg_mod_reg_rm_dst_w, 4             # 0x87 XCHG REG16, REG16/MEM16
 
@@ -332,8 +338,8 @@ instructions:
     db  not_implemented, 0, 0 # TODO    db  execute_cmps_b, 0                               # 0xa6 CMPS DEST-STR8, SRC-STR8
     db  not_implemented, 0, 0 # TODO    db  execute_cmps_w, 0                               # 0xa7 CMPS DEST-STR16, SRC-STR16
 
-    db  not_implemented, 0, 0 # TODO    db  execute_test_b, arg_al_immediate_b              # 0xa8 TEST AL, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_test_w, arg_ax_immediate_w              # 0xa9 TEST AX, IMMED16
+    db  execute_test_b, arg_al_immediate_b, 4               # 0xa8 TEST AL, IMMED8
+    db  execute_test_w, arg_ax_immediate_w, 4               # 0xa9 TEST AX, IMMED16
 
     db  not_implemented, 0, 0 # TODO    db  execute_stos_b, 0                               # 0xaa STOS DEST-STR8
     db  not_implemented, 0, 0 # TODO    db  execute_stos_w, 0                               # 0xab STOS DEST-STR16

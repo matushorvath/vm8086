@@ -1,12 +1,16 @@
 .EXPORT execute_immed_b
 .EXPORT execute_immed_w
 
-# From error.s
-.IMPORT report_error                    # TODO remove
-
-# From xor.s
+# From bitwise.s
+.IMPORT execute_and_b
+.IMPORT execute_and_w
+.IMPORT execute_or_b
+.IMPORT execute_or_w
 .IMPORT execute_xor_b
 .IMPORT execute_xor_w
+
+# From error.s
+.IMPORT report_error                    # TODO remove
 
 # Group "immediate" instructions, first byte is MOD xxx R/M, where xxx is:
 # 000 ADD, 001 OR, 010 ADC, 011 SBB, 100 AND, 101 SUB, 110 XOR, 111 CMP
@@ -55,10 +59,9 @@ execute_immed_b_add:
     call report_error
 
 execute_immed_b_or:
-    # TODO implement
-    add not_implemented_message, 0, [rb - 1]
-    arb -1
-    call report_error
+    arb -4
+    call execute_or_b
+    jz  0, execute_immed_w_end
 
 execute_immed_b_adc:
     # TODO implement
@@ -73,10 +76,9 @@ execute_immed_b_sbb:
     call report_error
 
 execute_immed_b_and:
-    # TODO implement
-    add not_implemented_message, 0, [rb - 1]
-    arb -1
-    call report_error
+    arb -4
+    call execute_and_b
+    jz  0, execute_immed_w_end
 
 execute_immed_b_sub:
     # TODO implement
@@ -130,10 +132,9 @@ execute_immed_w_add:
     call report_error
 
 execute_immed_w_or:
-    # TODO implement
-    add not_implemented_message, 0, [rb - 1]
-    arb -1
-    call report_error
+    arb -4
+    call execute_or_w
+    jz  0, execute_immed_w_end
 
 execute_immed_w_adc:
     # TODO implement
@@ -148,10 +149,9 @@ execute_immed_w_sbb:
     call report_error
 
 execute_immed_w_and:
-    # TODO implement
-    add not_implemented_message, 0, [rb - 1]
-    arb -1
-    call report_error
+    arb -4
+    call execute_and_w
+    jz  0, execute_immed_w_end
 
 execute_immed_w_sub:
     # TODO implement
