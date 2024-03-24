@@ -110,6 +110,9 @@
 .IMPORT execute_into
 .IMPORT execute_iret
 
+# From jump.s
+.IMPORT execute_jo
+
 # From prefix.s
 .IMPORT execute_lock
 .IMPORT execute_segment_prefix_cs
@@ -269,22 +272,22 @@ instructions:
     db  invalid_opcode, 0, 0                                # 0x6e
     db  invalid_opcode, 0, 0                                # 0x6f
 
-    db  not_implemented, 0, 0 # TODO    db  execute_jo, arg_short_ptr                       # 0x70 JO SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jno, arg_short_ptr                      # 0x71 JNO SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jb, arg_short_ptr                       # 0x72 JB/JNAEI/JC SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jnb, arg_short_ptr                      # 0x73 JNB/JAEI/JNC SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jz, arg_short_ptr                       # 0x74 JE/JZ SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jnz, arg_short_ptr                      # 0x75 JNE/JNZ SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jna, arg_short_ptr                      # 0x76 JBE/JNA SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_ja, arg_short_ptr                       # 0x77 JNBE/JA SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_js, arg_short_ptr                       # 0x78 JS SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jns, arg_short_ptr                      # 0x79 JNS SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jp, arg_short_ptr                       # 0x7a JP/JPE SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jnp, arg_short_ptr                      # 0x7b JNP/JPO SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jl, arg_short_ptr                       # 0x7c JL/JNGE SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jnl, arg_short_ptr                      # 0x7d JNL/JGE SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jng, arg_short_ptr                      # 0x7e JLE/JNG SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jg, arg_short_ptr                       # 0x7f JNLE/JG SHORT-LABEL
+    db  execute_jo, 0, 0                                    # 0x70 JO SHORT-LABEL
+    db  not_implemented, 0, 0 # TODO    db  execute_jno, 0, 0                                   # 0x71 JNO SHORT-LABEL
+    db  not_implemented, 0, 0 # TODO    db  execute_jb, 0, 0                                    # 0x72 JB/JNAEI/JC SHORT-LABEL
+    db  not_implemented, 0, 0 # TODO    db  execute_jnb, 0, 0                                   # 0x73 JNB/JAEI/JNC SHORT-LABEL
+    db  not_implemented, 0, 0 # TODO    db  execute_jz, 0, 0                                    # 0x74 JE/JZ SHORT-LABEL
+    db  not_implemented, 0, 0 # TODO    db  execute_jnz, 0, 0                                   # 0x75 JNE/JNZ SHORT-LABEL
+    db  not_implemented, 0, 0 # TODO    db  execute_jna, 0, 0                                   # 0x76 JBE/JNA SHORT-LABEL
+    db  not_implemented, 0, 0 # TODO    db  execute_ja, 0, 0                                    # 0x77 JNBE/JA SHORT-LABEL
+    db  not_implemented, 0, 0 # TODO    db  execute_js, 0, 0                                    # 0x78 JS SHORT-LABEL
+    db  not_implemented, 0, 0 # TODO    db  execute_jns, 0, 0                                   # 0x79 JNS SHORT-LABEL
+    db  not_implemented, 0, 0 # TODO    db  execute_jp, 0, 0                                    # 0x7a JP/JPE SHORT-LABEL
+    db  not_implemented, 0, 0 # TODO    db  execute_jnp, 0, 0                                   # 0x7b JNP/JPO SHORT-LABEL
+    db  not_implemented, 0, 0 # TODO    db  execute_jl, 0, 0                                    # 0x7c JL/JNGE SHORT-LABEL
+    db  not_implemented, 0, 0 # TODO    db  execute_jnl, 0, 0                                   # 0x7d JNL/JGE SHORT-LABEL
+    db  not_implemented, 0, 0 # TODO    db  execute_jng, 0, 0                                   # 0x7e JLE/JNG SHORT-LABEL
+    db  not_implemented, 0, 0 # TODO    db  execute_jg, 0, 0                                    # 0x7f JNLE/JG SHORT-LABEL
 
     # <immed>: 000 ADD, 001 OR, 010 ADC, 011 SBB, 100 AND, 101 SUB, 110 XOR, 111 CMP
     db  execute_immed_b, arg_mod_op_rm_b_immediate_b, 5     # 0x80 <immed> REG8/MEM8, IMMED8
