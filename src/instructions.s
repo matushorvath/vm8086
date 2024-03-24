@@ -128,6 +128,7 @@
 .IMPORT execute_jg
 .IMPORT execute_jng
 .IMPORT execute_jcxz
+.IMPORT execute_jmp_short
 
 # From prefix.s
 .IMPORT execute_lock
@@ -442,7 +443,7 @@ instructions:
     db  not_implemented, 0, 0 # TODO    db  execute_call, arg_near_ptr                      # 0xe8 CALL NEAR-PROC
     db  not_implemented, 0, 0 # TODO    db  execute_jmp, arg_near_ptr                       # 0xe9 JMP NEAR-LABEL
     db  not_implemented, 0, 0 # TODO    db  execute_jmp, arg_far_ptr                        # 0xea JMP FAR-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jmp, arg_short_ptr                      # 0xeb JMP SHORT-LABEL
+    db  execute_jmp_short, 0, 0                             # 0xeb JMP SHORT-LABEL
 
     db  not_implemented, 0, 0 # TODO    db  execute_in_al_dx, 0, 0                          # 0xec IN AL, DX
     db  not_implemented, 0, 0 # TODO    db  execute_in_ax_dx, 0, 0                          # 0xed IN AX, DX
