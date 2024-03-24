@@ -1,7 +1,6 @@
 ; TODO CALL NEAR, CALL FAR, RET NEAR IMMED16, RET NEAR 0, RET FAR IMMED16, RET FAR 0 (all immediate)
 ; TODO CALL NEAR REG16/MEM16, CALL FAR MEM16, JMP NEAR REG16/MEM16, JMP FAR MEM16
 ; TODO JMP SHORT, JMP NEAR, JMP FAR (all immediate)
-; TODO LOOPNE/LOOPNZ SHORT-LABEL, LOOPE/LOOPZ SHORT-LABEL, LOOP SHORT-LABEL, JCXZ SHORT-LABEL
 
 cpu 8086
 
@@ -16,6 +15,7 @@ section .text start=0x80000
 handle_int3:                            ; INT 3 handler
 
 %include "conditional.inc"
+%include "loop.inc"
 
     hlt
 

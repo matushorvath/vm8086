@@ -1,7 +1,6 @@
-; TODO conditional jump:
 ; TODO negative short pointer
 ; TODO carry from low byte (reg_ip low byte + short pointer is more than 0x100)
-; TODO borrot to low byte (reg_ip low byte + short pointer is less than 0)
+; TODO borrow to low byte (reg_ip low byte + short pointer is less than 0)
 ; TODO overflow (reg_ip + short pointer is more than 0x1000)
 ; TODO underflow (reg_ip + short pointer is less than 0)
 
@@ -15,9 +14,10 @@
 
     ; try jumping
     mov ax, 1
-    %1  %%flag_1
+    %1  %%target
     mov ax, 0
-%%flag_1:
+
+%%target:
     out 0x42, al
 %endmacro
 
