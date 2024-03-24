@@ -1,13 +1,3 @@
-; TODO x test AND
-; 0x20 AND REG8/MEM8, REG8
-; 0x21 AND REG16/MEM16, REG16
-; 0x22 AND REG8, REG8/MEM8
-; 0x23 AND REG16, REG16/MEM16
-; 0x24 AND AL, IMMED8
-; 0x25 AND AX, IMMED16
-; 0x80+0b100 AND REG8/MEM8, IMMED8
-; 0x81+0b100 AND REG16/MEM16, IMMED16
-
 ; TODO x test OR
 ; 0x08 OR REG8/MEM8, REG8
 ; 0x09 OR REG16/MEM16, REG16
@@ -55,6 +45,18 @@ handle_int3:                            ; INT 3 handler
     push dx
     popf
 %endmacro
+
+    out 0x80, al
+
+%include "and_b.inc"
+%include "and_w.inc"
+
+;    out 0x81, al
+
+;%include "or_b.inc"
+;%include "or_w.inc"
+
+    out 0x82, al
 
 %include "xor_b.inc"
 %include "xor_w.inc"

@@ -7,84 +7,84 @@
 
     ; test various addressing modes, 16-bit
     mov ax, 0b_01010101_11001100
-    xor ax, 0b_11001100_01010101        ; XOR AX, IMMED16
+    and ax, 0b_11001100_01010101        ; AND AX, IMMED16
 
     mov bx, 0b_01010101_11001100
     mov cx, 0b_11001100_01010101
-    xor bx, cx                          ; XOR REG16, REG16
+    and bx, cx                          ; AND REG16, REG16
 
     mov cx, 0b_01010101_11001100
     mov word [data], 0b_11001100_01010101
-    xor word [data], cx                 ; XOR MEM16, REG16
+    and word [data], cx                 ; AND MEM16, REG16
     mov cx, word [data]
 
     mov dx, 0b_01010101_11001100
     mov word [data], 0b_11001100_01010101
-    xor dx, word [data]                 ; XOR REG16, MEM16
+    and dx, word [data]                 ; AND REG16, MEM16
 
     out 0x42, al
 
     ; test flags, 16-bit
 
     ; SF = 1
-    mov ax, 0b_01010101_11001100
+    mov ax, 0b_11010101_11001100
     clearf
-    xor ax, 0b_11001100_01010101
+    and ax, 0b_11001100_01010101
     out 0x42, al
 
     ; ZF = 1
     mov ax, 0b_01010101_11001100
     clearf
-    xor ax, 0b_01010101_11001100
+    and ax, 0b_10101010_00110011
     out 0x42, al
 
     ; PF = 1
-    mov ax, 0b_01010101_11001100
+    mov ax, 0b_01010101_11001101
     clearf
-    xor ax, 0b_01001100_01001100
+    and ax, 0b_01001100_01001100
     out 0x42, al
 
-    ; test XOR REG16/MEM16, IMMED16
+    ; test AND REG16/MEM16, IMMED16
     mov bx, 0b_01010101_11001100
-    xor bx, 0b_11001100_01010101                    ; XOR REG16, IMMED16
+    and bx, 0b_11001100_01010101                    ; AND REG16, IMMED16
 
     mov word [data], 0b_01010101_11001100
-    xor word [data], 0b_11001100_01010101           ; XOR MEM16, IMMED16
+    and word [data], 0b_11001100_01010101           ; AND MEM16, IMMED16
     mov cx, word [data]
 
     mov bp, data
     mov word [data], 0b_01010101_11001100
-    xor word [ds:bp], 0b_11001100_01010101          ; XOR MEM16, IMMED16
+    and word [ds:bp], 0b_11001100_01010101          ; AND MEM16, IMMED16
     mov dx, word [data]
 
     out 0x42, al
 
-    ; test XOR REG16/MEM16, IMMED8, positive value
+    ; test AND REG16/MEM16, IMMED8, positive value
     mov bx, 0b_01010101_11001100
-    xor bx, 0b_01010101                             ; XOR REG16, IMMED8
+    and bx, 0b_01010101                             ; AND REG16, IMMED8
 
     mov word [data], 0b_01010101_11001100
-    xor word [data], 0b_01010101                    ; XOR MEM16, IMMED8
+    and word [data], 0b_01010101                    ; AND MEM16, IMMED8
     mov cx, word [data]
 
     mov bp, data
     mov word [data], 0b_01010101_11001100
-    xor word [ds:bp], 0b_01010101                   ; XOR MEM16, IMMED8
+    and word [ds:bp], 0b_01010101                   ; AND MEM16, IMMED8
     mov dx, word [data]
 
     out 0x42, al
 
-    ; test XOR REG16/MEM16, IMMED8, negative value
+    ; test AND REG16/MEM16, IMMED8, negative value
     mov bx, 0b_11001100_01010101
-    xor bx, 0b_11111111_11001100                    ; XOR REG16, IMMED8
+    and bx, 0b_11111111_11001100                    ; AND REG16, IMMED8
 
     mov word [data], 0b_11001100_01010101
-    xor word [data], 0b_11111111_11001100           ; XOR MEM16, IMMED8
+    and word [data], 0b_11111111_11001100           ; AND MEM16, IMMED8
     mov cx, word [data]
 
     mov bp, data
     mov word [data], 0b_11001100_01010101
-    xor word [ds:bp], 0b_11111111_11001100          ; XOR MEM16, IMMED8
+    and word [ds:bp], 0b_11111111_11001100          ; AND MEM16, IMMED8
     mov dx, word [data]
 
     out 0x42, al
