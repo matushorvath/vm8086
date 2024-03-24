@@ -35,7 +35,7 @@ handle_int4:
     out 0x42, al
 
     ; test if interrupt clears TF and IF
-    mov dx, 00000011_00000000b
+    mov dx, 0b_00000011_00000000
     push dx
     popf
     out 0x42, al

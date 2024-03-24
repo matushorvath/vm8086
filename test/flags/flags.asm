@@ -94,16 +94,16 @@ handle_int3:                            ; INT 3 handler
     out 0x81, al
 
     ; set/reset individual flags with popf
-    set_reset_stack 0b0000000000000001
-    set_reset_stack 0b0000000000000100
-    set_reset_stack 0b0000000000010000
-    set_reset_stack 0b0000000001000000
-    set_reset_stack 0b0000000010000000
+    set_reset_stack 0b_0000000000000001
+    set_reset_stack 0b_0000000000000100
+    set_reset_stack 0b_0000000000010000
+    set_reset_stack 0b_0000000001000000
+    set_reset_stack 0b_0000000010000000
 
-    set_reset_stack 0b0000000100000000
-    set_reset_stack 0b0000001000000000
-    set_reset_stack 0b0000010000000000
-    set_reset_stack 0b0000100000000000
+    set_reset_stack 0b_0000000100000000
+    set_reset_stack 0b_0000001000000000
+    set_reset_stack 0b_0000010000000000
+    set_reset_stack 0b_0000100000000000
 
 %macro set_reset_ah 1
     ; load ah with current status
@@ -130,11 +130,11 @@ handle_int3:                            ; INT 3 handler
     out 0x82, al
 
     ; set/reset individual flags with sahf
-    set_reset_ah 0b00000001
-    set_reset_ah 0b00000100
-    set_reset_ah 0b00010000
-    set_reset_ah 0b01000000
-    set_reset_ah 0b10000000
+    set_reset_ah 0b_00000001
+    set_reset_ah 0b_00000100
+    set_reset_ah 0b_00010000
+    set_reset_ah 0b_01000000
+    set_reset_ah 0b_10000000
 
     hlt
 
