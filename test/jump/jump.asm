@@ -20,6 +20,9 @@ handle_int3:                            ; INT 3 handler
     out 0x81, al
 %include "loop.inc"
 
+    out 0x82, al
+%include "jmp.inc"
+
     hlt
 
 
