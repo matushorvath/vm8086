@@ -14,6 +14,8 @@
 # From state.s
 .IMPORT inc_ip
 
+# TODO implement rest of group 1
+
 # Group 1, first byte is MOD xxx R/M, where xxx is:
 # 000 TEST REG/MEM, IMMED
 # 001 (not used)

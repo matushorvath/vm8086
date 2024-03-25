@@ -13,6 +13,8 @@
 # From stack.s
 .IMPORT execute_push_w
 
+# TODO implement rest of group 2
+
 # Group 2 8-bit instructions, first byte is MOD xxx R/M, where xxx is:
 # 000 INC REG8/MEM8
 # 001 DEC REG8/MEM8
