@@ -131,6 +131,9 @@
 .IMPORT execute_jnl
 .IMPORT execute_jg
 .IMPORT execute_jng
+.IMPORT execute_loop
+.IMPORT execute_loopz
+.IMPORT execute_loopnz
 .IMPORT execute_jcxz
 .IMPORT execute_jmp_short
 
@@ -434,9 +437,9 @@ instructions:
     db  not_implemented, 0, 0 # TODO    db  execute_esc, arg_esc_yyy                        # 0xde ESC OPCODE, SOURCE (4 bytes)
     db  not_implemented, 0, 0 # TODO    db  execute_esc, arg_esc_111                        # 0xdf ESC OPCODE, SOURCE (2 bytes)
 
-    db  not_implemented, 0, 0 # TODO    db  execute_loopne, arg_short_ptr                   # 0xe0 LOOPNE/LOOPNZ SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_loope, arg_short_ptr                    # 0xe1 LOOPE/LOOPZ SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_loop, arg_short_ptr                     # 0xe2 LOOP SHORT-LABEL
+    db  execute_loopnz, 0, 0                                # 0xe0 LOOPNE/LOOPNZ SHORT-LABEL
+    db  execute_loopz, 0, 0                                 # 0xe1 LOOPE/LOOPZ SHORT-LABEL
+    db  execute_loop, 0, 0                                  # 0xe2 LOOP SHORT-LABEL
     db  execute_jcxz, 0, 0                                  # 0xe3 JCXZ SHORT-LABEL
 
     db  not_implemented, 0, 0 # TODO    db  execute_in_al_immediate_b, 0, 0                 # 0xe4 IN AL, IMMED8

@@ -14,7 +14,10 @@ section .text start=0x80000
 
 handle_int3:                            ; INT 3 handler
 
+    out 0x80, al
 %include "conditional.inc"
+
+    out 0x81, al
 %include "loop.inc"
 
     hlt
