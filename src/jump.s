@@ -24,6 +24,9 @@
 .EXPORT execute_jmp_near
 .EXPORT execute_jmp_far
 
+# From location.s
+.IMPORT read_location_w
+
 # From memory.s
 .IMPORT read_cs_ip_b
 .IMPORT read_cs_ip_w
@@ -463,16 +466,16 @@ execute_jmp_short_after_carry_hi:
 
 ##########
 execute_jmp_near:
-.FRAME ptr_lo, ptr_hi, tmp
+.FRAME loc_type, loc_addr; ptr_lo, ptr_hi, tmp
     arb -3
 
     # Read the near pointer
-    call read_cs_ip_w
-    add [rb - 2], 0, [rb + ptr_lo]
-    add [rb - 3], 0, [rb + ptr_hi]
-
-    call inc_ip
-    call inc_ip
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    arb -2
+    call read_location_w
+    add [rb - 4], 0, [rb + ptr_lo]
+    add [rb - 5], 0, [rb + ptr_hi]
 
     # Add the 16-bit signed near pointer to the 16-bit unsigned reg_ip
     add [rb + ptr_lo], [reg_ip + 0], [reg_ip + 0]
@@ -494,29 +497,29 @@ execute_jmp_near_after_carry_lo:
 
 execute_jmp_near_after_carry_hi:
     arb 3
-    ret 0
+    ret 2
 .ENDFRAME
 
 ##########
 execute_jmp_far:
-.FRAME offset_lo, offset_hi, segment_lo, segment_hi, tmp
+.FRAME loc_type_offset, loc_addr_offset, loc_type_segment, loc_addr_segment; offset_lo, offset_hi, segment_lo, segment_hi, tmp
     arb -5
 
     # Read the offset
-    call read_cs_ip_w
-    add [rb - 2], 0, [rb + offset_lo]
-    add [rb - 3], 0, [rb + offset_hi]
-
-    call inc_ip
-    call inc_ip
+    add [rb + loc_type_offset], 0, [rb - 1]
+    add [rb + loc_addr_offset], 0, [rb - 2]
+    arb -2
+    call read_location_w
+    add [rb - 4], 0, [rb + offset_lo]
+    add [rb - 5], 0, [rb + offset_hi]
 
     # Read the segment
-    call read_cs_ip_w
-    add [rb - 2], 0, [rb + segment_lo]
-    add [rb - 3], 0, [rb + segment_hi]
-
-    call inc_ip
-    call inc_ip
+    add [rb + loc_type_segment], 0, [rb - 1]
+    add [rb + loc_addr_segment], 0, [rb - 2]
+    arb -2
+    call read_location_w
+    add [rb - 4], 0, [rb + segment_lo]
+    add [rb - 5], 0, [rb + segment_hi]
 
     # Use the new values for cs:ip
     add [rb + segment_lo], 0, [reg_cs + 0]
@@ -525,7 +528,7 @@ execute_jmp_far:
     add [rb + offset_hi], 0, [reg_ip + 1]
 
     arb 5
-    ret 0
+    ret 4
 .ENDFRAME
 
 .EOF

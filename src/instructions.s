@@ -36,6 +36,11 @@
 .IMPORT arg_ss
 .IMPORT arg_es
 
+# From arg_immediate.s
+.IMPORT arg_immediate_b
+.IMPORT arg_immediate_w
+.IMPORT arg_two_immediate_w
+
 # From arg_reg_immediate_b.s
 .IMPORT arg_al_immediate_b
 .IMPORT arg_bl_immediate_b
@@ -450,8 +455,8 @@ instructions:
     db  execute_out_ax_immediate_b, 0, 0                    # 0xe7 OUT AX, IMMED8
 
     db  not_implemented, 0, 0 # TODO    db  execute_call, arg_near_ptr                      # 0xe8 CALL NEAR-PROC
-    db  execute_jmp_near, 0, 0                              # 0xe9 JMP NEAR-LABEL
-    db  execute_jmp_far, 0, 0                               # 0xea JMP FAR-LABEL
+    db  execute_jmp_near, arg_immediate_w, 2                # 0xe9 JMP NEAR-LABEL
+    db  execute_jmp_far, arg_two_immediate_w, 4             # 0xea JMP FAR-LABEL
     db  execute_jmp_short, 0, 0                             # 0xeb JMP SHORT-LABEL
 
     db  not_implemented, 0, 0 # TODO    db  execute_in_al_dx, 0, 0                          # 0xec IN AL, DX

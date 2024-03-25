@@ -50,9 +50,6 @@ execute_int:
 .FRAME type
     arb -1
 
-    # This is the only instruction that uses an immediate_b parameter, so we simplify by
-    # reading the value here instead of having a separate arg_immediate_b function
-
     # Read interrupt type from 8-bit immediate argument
     call read_cs_ip_b
     add [rb - 2], 0, [rb + type]
