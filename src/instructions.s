@@ -56,6 +56,16 @@
 .IMPORT arg_si_immediate_w
 .IMPORT arg_di_immediate_w
 
+# From bitwise.s
+.IMPORT execute_and_b
+.IMPORT execute_and_w
+.IMPORT execute_or_b
+.IMPORT execute_or_w
+.IMPORT execute_xor_b
+.IMPORT execute_xor_w
+.IMPORT execute_test_b
+.IMPORT execute_test_w
+
 # From exec.s
 .IMPORT execute_nop
 .IMPORT invalid_opcode
@@ -71,6 +81,10 @@
 .IMPORT execute_sti
 .IMPORT execute_lahf
 .IMPORT execute_sahf
+
+# From group1.s
+.IMPORT execute_group1_b
+.IMPORT execute_group1_w
 
 # From group2.s
 .IMPORT execute_group2_b
@@ -100,6 +114,26 @@
 .IMPORT execute_into
 .IMPORT execute_iret
 
+# From jump.s
+.IMPORT execute_jo
+.IMPORT execute_jno
+.IMPORT execute_jc
+.IMPORT execute_jnc
+.IMPORT execute_jz
+.IMPORT execute_jnz
+.IMPORT execute_ja
+.IMPORT execute_jna
+.IMPORT execute_js
+.IMPORT execute_jns
+.IMPORT execute_jp
+.IMPORT execute_jnp
+.IMPORT execute_jl
+.IMPORT execute_jnl
+.IMPORT execute_jg
+.IMPORT execute_jng
+.IMPORT execute_jcxz
+.IMPORT execute_jmp_short
+
 # From prefix.s
 .IMPORT execute_lock
 .IMPORT execute_segment_prefix_cs
@@ -122,10 +156,6 @@
 .IMPORT execute_xchg_w
 .IMPORT execute_xchg_ax_w
 
-# From xor.s
-.IMPORT execute_xor_b
-.IMPORT execute_xor_w
-
 # iAPX 86, 88 User's Manual; August 1981; pages 4-27 to 4-35
 
 instructions:
@@ -139,12 +169,12 @@ instructions:
     db  execute_push_w, arg_es, 2                           # 0x06 PUSH ES
     db  execute_pop_w, arg_es, 2                            # 0x07 POP ES
 
-    db  not_implemented, 0, 0 # TODO    db  execute_or_b, arg_mod_reg_rm_src_b, 4           # 0x08 OR REG8/MEM8, REG8
-    db  not_implemented, 0, 0 # TODO    db  execute_or_w, arg_mod_reg_rm_src_w, 4           # 0x09 OR REG16/MEM16, REG16
-    db  not_implemented, 0, 0 # TODO    db  execute_or_b, arg_mod_reg_rm_dst_b, 4           # 0x0a OR REG8, REG8/MEM8
-    db  not_implemented, 0, 0 # TODO    db  execute_or_w, arg_mod_reg_rm_dst_w, 4           # 0x0b OR REG16, REG16/MEM16
-    db  not_implemented, 0, 0 # TODO    db  execute_or_b, arg_al_immediate_b                # 0x0c OR AL, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_or_w, arg_ax_immediate_w                # 0x0d OR AX, IMMED16
+    db  execute_or_b, arg_mod_reg_rm_src_b, 4               # 0x08 OR REG8/MEM8, REG8
+    db  execute_or_w, arg_mod_reg_rm_src_w, 4               # 0x09 OR REG16/MEM16, REG16
+    db  execute_or_b, arg_mod_reg_rm_dst_b, 4               # 0x0a OR REG8, REG8/MEM8
+    db  execute_or_w, arg_mod_reg_rm_dst_w, 4               # 0x0b OR REG16, REG16/MEM16
+    db  execute_or_b, arg_al_immediate_b, 4                 # 0x0c OR AL, IMMED8
+    db  execute_or_w, arg_ax_immediate_w, 4                 # 0x0d OR AX, IMMED16
 
     db  execute_push_w, arg_cs, 2                           # 0x0e PUSH CS
     db  invalid_opcode, 0, 0                                # 0x0f
@@ -169,12 +199,12 @@ instructions:
     db  execute_push_w, arg_ds, 2                           # 0x1e PUSH DS
     db  execute_pop_w, arg_ds, 2                            # 0x1f POP DS
 
-    db  not_implemented, 0, 0 # TODO    db  execute_and_b, arg_mod_reg_rm_src_b, 4          # 0x20 AND REG8/MEM8, REG8
-    db  not_implemented, 0, 0 # TODO    db  execute_and_w, arg_mod_reg_rm_src_w, 4          # 0x21 AND REG16/MEM16, REG16
-    db  not_implemented, 0, 0 # TODO    db  execute_and_b, arg_mod_reg_rm_dst_b, 4          # 0x22 AND REG8, REG8/MEM8
-    db  not_implemented, 0, 0 # TODO    db  execute_and_w, arg_mod_reg_rm_dst_w, 4          # 0x23 AND REG16, REG16/MEM16
-    db  not_implemented, 0, 0 # TODO    db  execute_and_b, arg_al_immediate_b               # 0x24 AND AL, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_and_w, arg_ax_immediate_w               # 0x25 AND AX, IMMED16
+    db  execute_and_b, arg_mod_reg_rm_src_b, 4              # 0x20 AND REG8/MEM8, REG8
+    db  execute_and_w, arg_mod_reg_rm_src_w, 4              # 0x21 AND REG16/MEM16, REG16
+    db  execute_and_b, arg_mod_reg_rm_dst_b, 4              # 0x22 AND REG8, REG8/MEM8
+    db  execute_and_w, arg_mod_reg_rm_dst_w, 4              # 0x23 AND REG16, REG16/MEM16
+    db  execute_and_b, arg_al_immediate_b, 4                # 0x24 AND AL, IMMED8
+    db  execute_and_w, arg_ax_immediate_w, 4                # 0x25 AND AX, IMMED16
 
     db  execute_segment_prefix_es, 0, 0                     # 0x26 ES: (segment override prefix)
     db  not_implemented, 0, 0 # TODO    db  execute_daa, 0                                  # 0x27 DAA
@@ -263,22 +293,22 @@ instructions:
     db  invalid_opcode, 0, 0                                # 0x6e
     db  invalid_opcode, 0, 0                                # 0x6f
 
-    db  not_implemented, 0, 0 # TODO    db  execute_jo, arg_short_ptr                       # 0x70 JO SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jno, arg_short_ptr                      # 0x71 JNO SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jb, arg_short_ptr                       # 0x72 JB/JNAEI/JC SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jnb, arg_short_ptr                      # 0x73 JNB/JAEI/JNC SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jz, arg_short_ptr                       # 0x74 JE/JZ SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jnz, arg_short_ptr                      # 0x75 JNE/JNZ SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jna, arg_short_ptr                      # 0x76 JBE/JNA SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_ja, arg_short_ptr                       # 0x77 JNBE/JA SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_js, arg_short_ptr                       # 0x78 JS SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jns, arg_short_ptr                      # 0x79 JNS SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jp, arg_short_ptr                       # 0x7a JP/JPE SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jnp, arg_short_ptr                      # 0x7b JNP/JPO SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jl, arg_short_ptr                       # 0x7c JL/JNGE SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jnl, arg_short_ptr                      # 0x7d JNL/JGE SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jng, arg_short_ptr                      # 0x7e JLE/JNG SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jg, arg_short_ptr                       # 0x7f JNLE/JG SHORT-LABEL
+    db  execute_jo, 0, 0                                    # 0x70 JO SHORT-LABEL
+    db  execute_jno, 0, 0                                   # 0x71 JNO SHORT-LABEL
+    db  execute_jc, 0, 0                                    # 0x72 JB/JNAEI/JC SHORT-LABEL
+    db  execute_jnc, 0, 0                                   # 0x73 JNB/JAEI/JNC SHORT-LABEL
+    db  execute_jz, 0, 0                                    # 0x74 JE/JZ SHORT-LABEL
+    db  execute_jnz, 0, 0                                   # 0x75 JNE/JNZ SHORT-LABEL
+    db  execute_jna, 0, 0                                   # 0x76 JBE/JNA SHORT-LABEL
+    db  execute_ja, 0, 0                                    # 0x77 JNBE/JA SHORT-LABEL
+    db  execute_js, 0, 0                                    # 0x78 JS SHORT-LABEL
+    db  execute_jns, 0, 0                                   # 0x79 JNS SHORT-LABEL
+    db  execute_jp, 0, 0                                    # 0x7a JP/JPE SHORT-LABEL
+    db  execute_jnp, 0, 0                                   # 0x7b JNP/JPO SHORT-LABEL
+    db  execute_jl, 0, 0                                    # 0x7c JL/JNGE SHORT-LABEL
+    db  execute_jnl, 0, 0                                   # 0x7d JNL/JGE SHORT-LABEL
+    db  execute_jng, 0, 0                                   # 0x7e JLE/JNG SHORT-LABEL
+    db  execute_jg, 0, 0                                    # 0x7f JNLE/JG SHORT-LABEL
 
     # <immed>: 000 ADD, 001 OR, 010 ADC, 011 SBB, 100 AND, 101 SUB, 110 XOR, 111 CMP
     db  execute_immed_b, arg_mod_op_rm_b_immediate_b, 5     # 0x80 <immed> REG8/MEM8, IMMED8
@@ -290,8 +320,8 @@ instructions:
     db  execute_immed_b, arg_mod_op_rm_b_immediate_b, 5     # 0x82 <immed> REG8/MEM8, IMMED8
     db  execute_immed_w, arg_mod_op_rm_w_immediate_sxb, 5   # 0x83 <immed> REG16/MEM16, IMMED8 (sign extended)
 
-    db  not_implemented, 0, 0 # TODO    db  execute_test_b, arg_mod_reg_rm_src_b, 4         # 0x84 TEST REG8/MEM8, REG8
-    db  not_implemented, 0, 0 # TODO    db  execute_test_w, arg_mod_reg_rm_src_w, 4         # 0x85 TEST REG16/MEM16, REG16
+    db  execute_test_b, arg_mod_reg_rm_src_b, 4             # 0x84 TEST REG8/MEM8, REG8
+    db  execute_test_w, arg_mod_reg_rm_src_w, 4             # 0x85 TEST REG16/MEM16, REG16
     db  execute_xchg_b, arg_mod_reg_rm_dst_b, 4             # 0x86 XCHG REG8, REG8/MEM8
     db  execute_xchg_w, arg_mod_reg_rm_dst_w, 4             # 0x87 XCHG REG16, REG16/MEM16
 
@@ -332,8 +362,8 @@ instructions:
     db  not_implemented, 0, 0 # TODO    db  execute_cmps_b, 0                               # 0xa6 CMPS DEST-STR8, SRC-STR8
     db  not_implemented, 0, 0 # TODO    db  execute_cmps_w, 0                               # 0xa7 CMPS DEST-STR16, SRC-STR16
 
-    db  not_implemented, 0, 0 # TODO    db  execute_test_b, arg_al_immediate_b              # 0xa8 TEST AL, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_test_w, arg_ax_immediate_w              # 0xa9 TEST AX, IMMED16
+    db  execute_test_b, arg_al_immediate_b, 4               # 0xa8 TEST AL, IMMED8
+    db  execute_test_w, arg_ax_immediate_w, 4               # 0xa9 TEST AX, IMMED16
 
     db  not_implemented, 0, 0 # TODO    db  execute_stos_b, 0                               # 0xaa STOS DEST-STR8
     db  not_implemented, 0, 0 # TODO    db  execute_stos_w, 0                               # 0xab STOS DEST-STR16
@@ -407,7 +437,7 @@ instructions:
     db  not_implemented, 0, 0 # TODO    db  execute_loopne, arg_short_ptr                   # 0xe0 LOOPNE/LOOPNZ SHORT-LABEL
     db  not_implemented, 0, 0 # TODO    db  execute_loope, arg_short_ptr                    # 0xe1 LOOPE/LOOPZ SHORT-LABEL
     db  not_implemented, 0, 0 # TODO    db  execute_loop, arg_short_ptr                     # 0xe2 LOOP SHORT-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jcxz, arg_short_ptr                     # 0xe3 JCXZ SHORT-LABEL
+    db  execute_jcxz, 0, 0                                  # 0xe3 JCXZ SHORT-LABEL
 
     db  not_implemented, 0, 0 # TODO    db  execute_in_al_immediate_b, 0, 0                 # 0xe4 IN AL, IMMED8
     db  not_implemented, 0, 0 # TODO    db  execute_in_ax_immediate_b, 0, 0                 # 0xe5 IN AX, IMMED8
@@ -417,7 +447,7 @@ instructions:
     db  not_implemented, 0, 0 # TODO    db  execute_call, arg_near_ptr                      # 0xe8 CALL NEAR-PROC
     db  not_implemented, 0, 0 # TODO    db  execute_jmp, arg_near_ptr                       # 0xe9 JMP NEAR-LABEL
     db  not_implemented, 0, 0 # TODO    db  execute_jmp, arg_far_ptr                        # 0xea JMP FAR-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jmp, arg_short_ptr                      # 0xeb JMP SHORT-LABEL
+    db  execute_jmp_short, 0, 0                             # 0xeb JMP SHORT-LABEL
 
     db  not_implemented, 0, 0 # TODO    db  execute_in_al_dx, 0, 0                          # 0xec IN AL, DX
     db  not_implemented, 0, 0 # TODO    db  execute_in_ax_dx, 0, 0                          # 0xed IN AX, DX
@@ -442,8 +472,8 @@ instructions:
     # 101 IMUL REG/MEM
     # 110 DIV REG/MEM
     # 111 IDIV REG/MEM
-    db  not_implemented, 0, 0 # TODO    db  execute_group1_b, 0, 0                          # 0xf6 <group 1> 8-bit
-    db  not_implemented, 0, 0 # TODO    db  execute_group1_w, 0, 0                          # 0xf7 <group 1> 16-bit
+    db  execute_group1_b, arg_mod_op_rm_b, 3                # 0xf6 <group 1> 8-bit
+    db  execute_group1_w, arg_mod_op_rm_w, 3                # 0xf7 <group 1> 16-bit
 
     db  execute_clc, 0, 0                                   # 0xf8 CLC
     db  execute_stc, 0, 0                                   # 0xf9 STC

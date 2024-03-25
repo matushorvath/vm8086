@@ -23,13 +23,30 @@ handle_int3:                            ; INT 3 handler
     out 0x42, al
 
 %macro clearf 0
-    mov dx, 0
-    push dx
+    mov di, 0
+    push di
     popf
 %endmacro
 
+    out 0x80, al
+
+%include "and_b.inc"
+%include "and_w.inc"
+
+    out 0x81, al
+
+%include "or_b.inc"
+%include "or_w.inc"
+
+    out 0x82, al
+
 %include "xor_b.inc"
 %include "xor_w.inc"
+
+    out 0x83, al
+
+%include "test_b.inc"
+%include "test_w.inc"
 
     hlt
 
