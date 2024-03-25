@@ -82,6 +82,10 @@
 .IMPORT execute_lahf
 .IMPORT execute_sahf
 
+# From group1.s
+.IMPORT execute_group1_b
+.IMPORT execute_group1_w
+
 # From group2.s
 .IMPORT execute_group2_b
 .IMPORT execute_group2_w
@@ -468,8 +472,8 @@ instructions:
     # 101 IMUL REG/MEM
     # 110 DIV REG/MEM
     # 111 IDIV REG/MEM
-    db  not_implemented, 0, 0 # TODO    db  execute_group1_b, 0, 0                          # 0xf6 <group 1> 8-bit
-    db  not_implemented, 0, 0 # TODO    db  execute_group1_w, 0, 0                          # 0xf7 <group 1> 16-bit
+    db  execute_group1_b, arg_mod_op_rm_b, 3                # 0xf6 <group 1> 8-bit
+    db  execute_group1_w, arg_mod_op_rm_w, 3                # 0xf7 <group 1> 16-bit
 
     db  execute_clc, 0, 0                                   # 0xf8 CLC
     db  execute_stc, 0, 0                                   # 0xf9 STC

@@ -189,41 +189,51 @@ stack: 0001 ffff 0000 0000 0000 0000 0000 0000
 port 0x83: 0x80
 ----------
 ip: 0472 flags: ----odit sz-a-P-c 00000000 00000100 (0004)
-cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 0000 sp: fffa
-ax: 5555 bx: 55cd cx: 0000 dx: 0000 si: 0000 di: 0000
-stack: 0001 ffff 0000 0000 0000 0000 0000 0000
+cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 0000 sp: fff2
+ax: 5555 bx: 5555 cx: 0000 dx: 0000 si: 0000 di: 0000
+stack: 0004 0004 0004 0004 0001 ffff 0000 0000
 ----------
 ip: 047d flags: ----odit Sz-a-p-c 00000000 10000000 (0080)
-cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 0000 sp: fffa
-ax: 55d5 bx: 55cd cx: 0000 dx: 0000 si: 0000 di: 0000
-stack: 0001 ffff 0000 0000 0000 0000 0000 0000
+cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 0000 sp: fff2
+ax: 55d5 bx: 5555 cx: 0000 dx: 0000 si: 0000 di: 0000
+stack: 0004 0004 0004 0004 0001 ffff 0000 0000
 ----------
 ip: 0488 flags: ----odit sZ-a-p-c 00000000 01000000 (0040)
-cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 0000 sp: fffa
-ax: 5555 bx: 55cd cx: 0000 dx: 0000 si: 0000 di: 0000
-stack: 0001 ffff 0000 0000 0000 0000 0000 0000
+cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 0000 sp: fff2
+ax: 5555 bx: 5555 cx: 0000 dx: 0000 si: 0000 di: 0000
+stack: 0004 0004 0004 0004 0001 ffff 0000 0000
 ----------
 ip: 0493 flags: ----odit sz-a-P-c 00000000 00000100 (0004)
-cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 0000 sp: fffa
-ax: 5555 bx: 55cd cx: 0000 dx: 0000 si: 0000 di: 0000
-stack: 0001 ffff 0000 0000 0000 0000 0000 0000
+cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 0000 sp: fff2
+ax: 5555 bx: 5555 cx: 0000 dx: 0000 si: 0000 di: 0000
+stack: 0004 0004 0004 0004 0001 ffff 0000 0000
 ----------
-ip: 04e4 flags: ----odit sz-a-P-c 00000000 00000100 (0004)
-cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 0000 sp: fffa
-ax: 55cc bx: 55cc cx: cc55 dx: 55cd si: 0000 di: 0000
-stack: 0001 ffff 0000 0000 0000 0000 0000 0000
+ip: 04c3 flags: ----odit sz-a-P-c 00000000 00000100 (0004)
+cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 000e sp: ffec
+ax: 5555 bx: 5555 cx: 0000 dx: 0000 si: 0000 di: 0000
+stack: 0004 0004 0004 0004 0004 0004 0004 0001
 ----------
-ip: 04f1 flags: ----odit Sz-a-p-c 00000000 10000000 (0080)
-cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 0000 sp: fffa
-ax: d5cc bx: 55cc cx: cc55 dx: 55cd si: 0000 di: 0000
-stack: 0001 ffff 0000 0000 0000 0000 0000 0000
+ip: 0514 flags: ----odit sz-a-P-c 00000000 00000100 (0004)
+cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 0000 sp: ffe4
+ax: 55cd bx: 55cd cx: 55cd dx: 55cd si: 0000 di: 0000
+stack: 0004 0004 0004 0004 0004 0004 0004 0004
 ----------
-ip: 04fe flags: ----odit sZ-a-p-c 00000000 01000000 (0040)
-cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 0000 sp: fffa
-ax: 55cc bx: 55cc cx: cc55 dx: 55cd si: 0000 di: 0000
-stack: 0001 ffff 0000 0000 0000 0000 0000 0000
+ip: 0521 flags: ----odit Sz-a-p-c 00000000 10000000 (0080)
+cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 0000 sp: ffe4
+ax: d5cc bx: 55cd cx: 55cd dx: 55cd si: 0000 di: 0000
+stack: 0004 0004 0004 0004 0004 0004 0004 0004
 ----------
-ip: 050b flags: ----odit sz-a-P-c 00000000 00000100 (0004)
-cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 0000 sp: fffa
-ax: 55cd bx: 55cc cx: cc55 dx: 55cd si: 0000 di: 0000
-stack: 0001 ffff 0000 0000 0000 0000 0000 0000
+ip: 052e flags: ----odit sZ-a-p-c 00000000 01000000 (0040)
+cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 0000 sp: ffe4
+ax: 55cc bx: 55cd cx: 55cd dx: 55cd si: 0000 di: 0000
+stack: 0004 0004 0004 0004 0004 0004 0004 0004
+----------
+ip: 053b flags: ----odit sz-a-P-c 00000000 00000100 (0004)
+cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 0000 sp: ffe4
+ax: 55cd bx: 55cd cx: 55cd dx: 55cd si: 0000 di: 0000
+stack: 0004 0004 0004 0004 0004 0004 0004 0004
+----------
+ip: 0571 flags: ----odit sz-a-P-c 00000000 00000100 (0004)
+cs: 8000 ds: 1000 ss: 0000 es: 0000 bp: 000e sp: ffde
+ax: 55cd bx: 55cd cx: 55cd dx: 55cd si: 0000 di: 0000
+stack: 0004 0004 0004 0004 0004 0004 0004 0004
