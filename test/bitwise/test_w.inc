@@ -1,0 +1,71 @@
+; TODO 0xf7+0b000 TEST REG16/MEM16, IMMED16
+
+    ; TEST does not update registers, so we check parity instead
+
+    ; clear registers
+    mov ax, 0
+    mov bx, 0
+    mov cx, 0
+    mov dx, 0
+    mov bp, 0
+
+    ; test various addressing modes, 16-bit
+    mov ax, 0b_01010101_11001100
+    clearf
+    test ax, 0b_11001100_01010101       ; TEST AX, IMMED16
+
+    mov bx, 0b_01010101_11001100
+    mov cx, 0b_11001100_01010101
+    clearf
+    test bx, cx                         ; TEST REG16, REG16
+
+    mov cx, 0b_01010101_11001100
+    mov word [data], 0b_11001100_01010101
+    clearf
+    test word [data], cx                ; TEST MEM16, REG16
+    mov cx, word [data]
+
+    mov dx, 0b_01010101_11001101
+    mov word [data], 0b_11001100_01010101
+    clearf
+    test dx, word [data]                ; TEST REG16, MEM16
+
+    out 0x42, al
+
+    ; test flags, 16-bit
+
+    ; SF = 1
+    mov ax, 0b_11010101_11001100
+    clearf
+    test ax, 0b_11001100_01010101
+    out 0x42, al
+
+    ; ZF = 1
+    mov ax, 0b_01010101_11001100
+    clearf
+    test ax, 0b_10101010_00110011
+    out 0x42, al
+
+    ; PF = 1
+    mov ax, 0b_01010101_11001101
+    clearf
+    test ax, 0b_01001100_01001100
+    out 0x42, al
+
+;    ; test TEST REG16/MEM16, IMMED16
+;    mov bx, 0b_01010101_11001100
+;    clearf
+;    test bx, 0b_11001100_01010101                   ; TEST REG16, IMMED16
+;
+;    mov word [data], 0b_01010101_11001100
+;    clearf
+;    test word [data], 0b_11001100_01010101          ; TEST MEM16, IMMED16
+;    mov cx, word [data]
+;
+;    mov bp, data
+;    mov word [data], 0b_01010101_11001100
+;    clearf
+;    test word [ds:bp], 0b_11001100_01010101         ; TEST MEM16, IMMED16
+;    mov dx, word [data]
+;
+;    out 0x42, al

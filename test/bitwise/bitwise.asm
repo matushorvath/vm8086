@@ -1,11 +1,3 @@
-; TODO x test TEST
-; 0x84 TEST REG8/MEM8, REG8
-; 0x85 TEST REG16/MEM16, REG16
-; 0xa8 TEST AL, IMMED8
-; 0xa9 TEST AX, IMMED16
-; - 0xf6+0b000 TEST REG/MEM, IMMED b
-; - 0xf7+0b000 TEST REG/MEM, IMMED w
-
 cpu 8086
 
 
@@ -31,8 +23,8 @@ handle_int3:                            ; INT 3 handler
     out 0x42, al
 
 %macro clearf 0
-    mov dx, 0
-    push dx
+    mov di, 0
+    push di
     popf
 %endmacro
 
@@ -51,10 +43,10 @@ handle_int3:                            ; INT 3 handler
 %include "xor_b.inc"
 %include "xor_w.inc"
 
-;    out 0x83, al
+    out 0x83, al
 
-;%include "test_b.inc"
-;%include "test_w.inc"
+%include "test_b.inc"
+%include "test_w.inc"
 
     hlt
 
