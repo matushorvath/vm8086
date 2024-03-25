@@ -50,7 +50,7 @@ read_w:
     call read_b
     add [rb - 3], 0, [rb + value_lo]
 
-    add [rb + addr], 1, [rb - 1]
+    add [rb + addr], 1, [rb - 1]                            # TODO wrap around to 20 bits
     arb -1
     call read_b
     add [rb - 3], 0, [rb + value_hi]
@@ -80,7 +80,7 @@ write_w:
     arb -2
     call write_b
 
-    add [rb + addr], 1, [rb - 1]
+    add [rb + addr], 1, [rb - 1]                            # TODO wrap around to 20 bits
     add [rb + value_hi], 0, [rb - 2]
     arb -2
     call write_b
@@ -98,6 +98,7 @@ calc_addr:
     add [rb + off], [rb + addr], [rb - 1]                   # store to param 0
 
     # Wrap around to 20 bits
+    # TODO should be less than 0x10000 over, instead of modulo just subtract 0x10000?
     add 0x100000, 0, [rb - 2]
     arb -2
     call modulo
@@ -127,6 +128,7 @@ calc_cs_ip_addr:
     add [reg_ip + 0], [rb + addr], [rb - 1]                 # store to param 0
 
     # Wrap around to 20 bits
+    # TODO should be less than 0x10000 over, instead of modulo just subtract 0x10000?
     add 0x100000, 0, [rb - 2]
     arb -2
     call modulo
@@ -172,7 +174,7 @@ read_seg_off_w:
     call read_b
     add [rb - 3], 0, [rb + value_lo]
 
-    add [rb + addr], 1, [rb - 1]
+    add [rb + addr], 1, [rb - 1]                            # TODO wrap around to 20 bits, or call read_w
     arb -1
     call read_b
     add [rb - 3], 0, [rb + value_hi]
@@ -217,7 +219,7 @@ write_seg_off_w:
     arb -2
     call write_b
 
-    add [rb + addr], 1, [rb - 1]
+    add [rb + addr], 1, [rb - 1]                            # TODO wrap around to 20 bits, or call write_w
     add [rb + value_hi], 0, [rb - 2]
     arb -2
     call write_b
@@ -256,7 +258,7 @@ read_cs_ip_w:
     call read_b
     add [rb - 3], 0, [rb + value_lo]
 
-    add [rb + addr], 1, [rb - 1]
+    add [rb + addr], 1, [rb - 1]                            # TODO wrap around to 20 bits, or call read_w
     arb -1
     call read_b
     add [rb - 3], 0, [rb + value_hi]

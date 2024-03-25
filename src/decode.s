@@ -250,6 +250,8 @@ decode_mod_rm_mem_calc:
     add 1, 0, [rb + loc_type]
 
     # Add displacement and wrap around to 20 bits
+    # TODO this may be incorrect; maybe we add displacement before the segment
+    # and wrap around to 16-bits, then add segment and wrap around again to 20 bits?
     add [rb + loc_addr], [rb + disp], [rb - 1]
     add 0x100000, 0, [rb - 2]
     arb -2

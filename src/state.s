@@ -181,7 +181,6 @@ inc_ip:
     lt  [reg_ip + 1], 0x100, [rb + tmp]
     jnz [rb + tmp], inc_ip_done
 
-    # Overflow to zero
     add [reg_ip + 1], -0x100, [reg_ip + 1]
 
 inc_ip_done:
