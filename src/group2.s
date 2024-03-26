@@ -1,6 +1,10 @@
 .EXPORT execute_group2_b
 .EXPORT execute_group2_w
 
+# From call.s
+.IMPORT execute_call_near_indirect
+.IMPORT execute_call_far_indirect
+
 # From error.s
 .IMPORT report_error
 
@@ -111,16 +115,14 @@ execute_group2_w_dec:
     jz  0, execute_group2_w_end
 
 execute_group2_w_call_near:
-    # TODO implement
-    add not_implemented_message, 0, [rb - 1]
-    arb -1
-    call report_error
+    arb -2
+    call execute_call_near_indirect
+    jz  0, execute_group2_w_end
 
 execute_group2_w_call_far:
-    # TODO implement
-    add not_implemented_message, 0, [rb - 1]
-    arb -1
-    call report_error
+    arb -2
+    call execute_call_far_indirect
+    jz  0, execute_group2_w_end
 
 execute_group2_w_jmp_near:
     arb -2
