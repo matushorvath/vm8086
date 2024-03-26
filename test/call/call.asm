@@ -1,5 +1,8 @@
-; TODO CALL NEAR, CALL FAR, RET NEAR IMMED16, RET NEAR 0, RET FAR IMMED16, RET FAR 0 (all immediate)
-; TODO CALL NEAR REG16/MEM16, CALL FAR MEM16
+; TODO negative pointer
+; TODO carry from low byte (reg_ip low byte + short pointer is more than 0x100)
+; TODO borrow to low byte (reg_ip low byte + short pointer is less than 0)
+; TODO overflow (reg_ip + short pointer is more than 0x1000)
+; TODO underflow (reg_ip + short pointer is less than 0)
 
 cpu 8086
 
@@ -17,11 +20,11 @@ handle_int3:                            ; INT 3 handler
 
 %include "call_direct.inc"
 
-;    out 0x81, al
-;%include "call_register.inc"
+    out 0x81, al
+%include "call_register.inc"
 
-;    out 0x82, al
-;%include "call_memory.inc"
+    out 0x82, al
+%include "call_memory.inc"
 
     hlt
 
