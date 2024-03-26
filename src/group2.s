@@ -11,7 +11,8 @@
 .IMPORT execute_dec_w
 
 # From jump.s
-.IMPORT execute_jmp_near
+.IMPORT execute_jmp_near_indirect
+.IMPORT execute_jmp_far_indirect
 
 # From stack.s
 .IMPORT execute_push_w
@@ -122,25 +123,16 @@ execute_group2_w_call_far:
     call report_error
 
 execute_group2_w_jmp_near:
-    # TODO xxx this does not work because execute_jmp_near does not accept location
-
-    # TODO implement
-    add not_implemented_message, 0, [rb - 1]
-    arb -1
-    call report_error
+    arb -2
+    call execute_jmp_near_indirect
+    jz  0, execute_group2_w_end
 
 execute_group2_w_jmp_far:
-    # TODO xxx this does not work because execute_jmp_far does not accept location
-    # TODO check that loc_type is 8086 memory; it can't be a register, we read 4 bytes out of it (also docs say)
-
-    # TODO implement
-    add not_implemented_message, 0, [rb - 1]
-    arb -1
-    call report_error
+    arb -2
+    call execute_jmp_far_indirect
+    jz  0, execute_group2_w_end
 
 execute_group2_w_push_w:
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
     arb -2
     call execute_push_w
 

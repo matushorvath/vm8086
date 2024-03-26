@@ -1,9 +1,3 @@
-; TODO negative short pointer
-; TODO carry from low byte (reg_ip low byte + short pointer is more than 0x100)
-; TODO borrow to low byte (reg_ip low byte + short pointer is less than 0)
-; TODO overflow (reg_ip + short pointer is more than 0x1000)
-; TODO underflow (reg_ip + short pointer is less than 0)
-
     ; test conditional jumps
 
 %macro test_conditional 2 ; instruction, flags

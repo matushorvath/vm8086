@@ -30,6 +30,13 @@ Possible Optimizations
   no 8-bit splitting needed and much fewer conditions.
 - If we ever have macros, look at all the heavily used functions like read_b, inc_ip, modulo and try them as macros.
 
+- Use a second level table for decoding the group instructions
+  e.g. exec_fn, args_fn, N           means call it directly
+       second_level_table, -1, -1   means split away the MOD, go through a second level table
+  The second level table would allow its own args_fn to handle instructions with strange parameter count
+
+- Avoid args_fn as much as possible, I think the whole locations concept is eating too much performance.
+  Wait for performance measurements first.
 
 Emulators
 =========

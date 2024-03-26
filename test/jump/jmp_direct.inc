@@ -1,16 +1,14 @@
-; TODO negative pointer
 ; TODO carry from low byte (reg_ip low byte + short pointer is more than 0x100)
 ; TODO borrow to low byte (reg_ip low byte + short pointer is less than 0)
 ; TODO overflow (reg_ip + short pointer is more than 0x1000)
 ; TODO underflow (reg_ip + short pointer is less than 0)
-; TODO 0xff    # 100 JMP REG16/MEM16 (within segment)
-; TODO 0xff    # 101 JMP MEM16 (intersegment)
 
     ; test JMP SHORT, JMP NEAR, JMP FAR
 
     ; if we execute anything we shouldn't, ax will be set to 0
     mov ax, 1
     out 0x42, al
+
 
     jmp short_forward                   ; 1s
     mov ax, 0
@@ -48,7 +46,7 @@ test_far:
     jmp 0x9000:far_absolute             ; 1f
     mov ax, 0
 
-far_back:
+test_end:
     out 0x42, al                        ; 3f
 
 
@@ -56,8 +54,8 @@ far_back:
 [section far_target start=0x90000]
 
 far_absolute:
-    out 0x42, al
-    jmp 0x8000:far_back                 ; 2f
+    out 0x42, al                        ; 2f
+    jmp 0x8000:test_end
     mov ax, 0
 
 __?SECT?__
