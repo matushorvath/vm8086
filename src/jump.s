@@ -15,12 +15,27 @@
 .EXPORT execute_jg
 .EXPORT execute_jng
 
+.EXPORT execute_loop
+.EXPORT execute_loopz
+.EXPORT execute_loopnz
 .EXPORT execute_jcxz
 
 .EXPORT execute_jmp_short
+.EXPORT execute_jmp_near
+.EXPORT execute_jmp_near_indirect
+.EXPORT execute_jmp_far
+.EXPORT execute_jmp_far_indirect
+
+# From error.s
+.IMPORT report_error
+
+# From location.s
+.IMPORT read_location_w
 
 # From memory.s
 .IMPORT read_cs_ip_b
+.IMPORT read_cs_ip_w
+.IMPORT read_w
 
 # From state.s
 .IMPORT flag_carry
@@ -34,6 +49,7 @@
 .IMPORT flag_trap
 
 .IMPORT reg_cx
+.IMPORT reg_cs
 .IMPORT reg_ip
 .IMPORT inc_ip
 
@@ -320,6 +336,62 @@ execute_jng_done:
 .ENDFRAME
 
 ##########
+execute_loop:
+.FRAME
+    call dec_cx
+
+    jnz [reg_cx], execute_loop_taken
+
+    # Skip the pointer and don't jump
+    call inc_ip
+    jz  0, execute_loop_done
+
+execute_loop_taken:
+    call execute_jmp_short
+
+execute_loop_done:
+    ret 0
+.ENDFRAME
+
+##########
+execute_loopz:
+.FRAME
+    call dec_cx
+
+    jz  [reg_cx], execute_loopz_not_taken
+    jz  [flag_zero], execute_loopz_not_taken
+
+    call execute_jmp_short
+    jz  0, execute_loopz_done
+
+execute_loopz_not_taken:
+    # Skip the pointer and don't jump
+    call inc_ip
+
+execute_loopz_done:
+    ret 0
+.ENDFRAME
+
+##########
+execute_loopnz:
+.FRAME
+    call dec_cx
+
+    jz  [reg_cx], execute_loopnz_not_taken
+    jnz [flag_zero], execute_loopnz_not_taken
+
+    call execute_jmp_short
+    jz  0, execute_loopnz_done
+
+execute_loopnz_not_taken:
+    # Skip the pointer and don't jump
+    call inc_ip
+
+execute_loopnz_done:
+    ret 0
+.ENDFRAME
+
+##########
 execute_jcxz:
 .FRAME
     jz  [reg_cx], execute_jcxz_taken
@@ -336,6 +408,32 @@ execute_jcxz_done:
 .ENDFRAME
 
 ##########
+dec_cx:
+.FRAME tmp
+    arb -1
+
+    # Decrement the value
+    add [reg_cx + 0], -1, [reg_cx + 0]
+
+    # Check for borrow into low byte
+    lt  [reg_cx + 0], 0, [rb + tmp]
+    jz  [rb + tmp], dec_cx_done
+
+    add [reg_cx + 0], 0x100, [reg_cx + 0]
+    add [reg_cx + 1], -1, [reg_cx + 1]
+
+    # Check for borrow into high byte
+    lt  [reg_cx + 1], 0, [rb + tmp]
+    jz  [rb + tmp], dec_cx_done
+
+    add [reg_cx + 1], 0x100, [reg_cx + 1]
+
+dec_cx_done:
+    arb 1
+    ret 0
+.ENDFRAME
+
+##########
 execute_jmp_short:
 .FRAME ptr, tmp
     arb -2
@@ -345,59 +443,165 @@ execute_jmp_short:
     add [rb - 2], 0, [rb + ptr]
     call inc_ip
 
-    # Add the 8-bit signed short pointer to the lo byte of 16-bit unsigned reg_ip
-    add [rb + ptr], [reg_ip + 0], [reg_ip + 0]
-
-    # Is the pointer negative?
+    # Calculate sign extension of ptr
     lt  0x7f, [rb + ptr], [rb + tmp]
-    jnz [rb + tmp], execute_jmp_short_negative
+    mul [rb + tmp], 0xff, [rb + tmp]
 
-    # The pointer is positive, check for carry out of low byte of reg_ip
+    # Add the sign-extended 8-bit signed short pointer to the 16-bit unsigned reg_ip
+    add [rb + ptr], [reg_ip + 0], [reg_ip + 0]
+    add [rb + tmp], [reg_ip + 1], [reg_ip + 1]
+
+    # Check for carry out of low byte of reg_ip
     lt [reg_ip + 0], 0x100, [rb + tmp]
-    jnz [rb + tmp], execute_jmp_short_done
+    jnz [rb + tmp], execute_jmp_short_after_carry_lo
 
     add [reg_ip + 0], -0x100, [reg_ip + 0]
     add [reg_ip + 1], 1, [reg_ip + 1]
 
+execute_jmp_short_after_carry_lo:
     # Check for carry out of high byte of reg_ip
     lt  [reg_ip + 1], 0x100, [rb + tmp]
-    jnz [rb + tmp], execute_jmp_short_done
+    jnz [rb + tmp], execute_jmp_short_after_carry_hi
 
     add [reg_ip + 1], -0x100, [reg_ip + 1]
 
-    jz  0, execute_jmp_short_done
-
-execute_jmp_short_negative:
-    # The pointer is negative, adjust the result by -256
-    add [reg_ip], -0x100, [reg_ip]
-
-    # Check for borrow into low byte of reg_ip
-    lt  [reg_ip + 0], 0, [rb + tmp]
-    jz  [rb + tmp], execute_jmp_short_done
-
-    add [reg_ip + 0], 0x100, [reg_ip + 0]
-    add [reg_ip + 1], -1, [reg_ip + 1]
-
-    # Check for borrow into high byte of reg_ip
-    lt  [reg_ip + 1], 0, [rb + tmp]
-    jz  [rb + tmp], execute_jmp_short_done
-
-    add [reg_ip + 1], 0x100, [reg_ip + 1]
-
-execute_jmp_short_done:
+execute_jmp_short_after_carry_hi:
     arb 2
     ret 0
 .ENDFRAME
 
-.EOF
+##########
+execute_jmp_near:
+.FRAME ptr_lo, ptr_hi, tmp
+    arb -3
 
+    # Read the near pointer
+    call read_cs_ip_w
+    add [rb - 2], 0, [rb + ptr_lo]
+    add [rb - 3], 0, [rb + ptr_hi]
+
+    call inc_ip
+    call inc_ip
+
+    # Add the 16-bit signed near pointer to the 16-bit unsigned reg_ip
+    add [rb + ptr_lo], [reg_ip + 0], [reg_ip + 0]
+    add [rb + ptr_hi], [reg_ip + 1], [reg_ip + 1]
+
+    # Check for carry out of low byte of reg_ip
+    lt [reg_ip + 0], 0x100, [rb + tmp]
+    jnz [rb + tmp], execute_jmp_near_after_carry_lo
+
+    add [reg_ip + 0], -0x100, [reg_ip + 0]
+    add [reg_ip + 1], 1, [reg_ip + 1]
+
+execute_jmp_near_after_carry_lo:
+    # Check for carry out of high byte of reg_ip
+    lt  [reg_ip + 1], 0x100, [rb + tmp]
+    jnz [rb + tmp], execute_jmp_near_after_carry_hi
+
+    add [reg_ip + 1], -0x100, [reg_ip + 1]
+
+execute_jmp_near_after_carry_hi:
+    arb 3
+    ret 0
+.ENDFRAME
 
 ##########
-execute_jmp:
-.FRAME addr;
-    add [rb + addr], 0, [reg_ip]
-    ret 1
+execute_jmp_near_indirect:
+.FRAME loc_type, loc_addr;
+    # Read the near pointer into reg_ip
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    arb -2
+    call read_location_w
+    add [rb - 4], 0, [reg_ip + 0]
+    add [rb - 5], 0, [reg_ip + 1]
+
+    ret 2
 .ENDFRAME
+
+##########
+execute_jmp_far:
+.FRAME offset_lo, offset_hi, segment_lo, segment_hi, tmp
+    arb -5
+
+    # Read the offset
+    call read_cs_ip_w
+    add [rb - 2], 0, [rb + offset_lo]
+    add [rb - 3], 0, [rb + offset_hi]
+
+    call inc_ip
+    call inc_ip
+
+    # Read the segment
+    call read_cs_ip_w
+    add [rb - 2], 0, [rb + segment_lo]
+    add [rb - 3], 0, [rb + segment_hi]
+
+    call inc_ip
+    call inc_ip
+
+    # Use the new values for cs:ip
+    add [rb + segment_lo], 0, [reg_cs + 0]
+    add [rb + segment_hi], 0, [reg_cs + 1]
+    add [rb + offset_lo], 0, [reg_ip + 0]
+    add [rb + offset_hi], 0, [reg_ip + 1]
+
+    arb 5
+    ret 0
+.ENDFRAME
+
+##########
+execute_jmp_far_indirect:
+.FRAME loc_type_offset, loc_addr_offset; loc_addr_segment, tmp
+    arb -2
+
+    # The location we received must be a 8086 memory location, and it contains the offset.
+    # After that we expect two more bytes to contain the segment.
+
+    # Verify that the offset location is 8086 memory
+    eq  [rb + loc_type_offset], 1, [rb + tmp]
+    jnz [rb + loc_type_offset], execute_jmp_far_indirect_is_memory
+
+    add execute_jmp_far_indirect_not_memory_message, 0, [rb - 1]
+    arb -1
+    call report_error
+
+execute_jmp_far_indirect_is_memory:
+    # Calculate address of two bytes after given location, which contain the target segment
+    add [rb + loc_addr_offset], 2, [rb + loc_addr_segment]
+
+    # Wrap around to 16 bits
+    lt  [rb + loc_addr_segment], 0x10000, [rb + tmp]
+    jnz [rb + tmp], execute_group2_w_jmp_far_after_carry
+
+    add [rb + loc_addr_segment], -0x10000, [rb + loc_addr_segment]
+
+execute_group2_w_jmp_far_after_carry:
+    # Read the offset from given location (we know it's 8086 memory) into reg_ip
+    add [rb + loc_addr_offset], 0, [rb - 1]
+    arb -1
+    call read_w
+    add [rb - 3], 0, [reg_ip + 0]
+    add [rb - 4], 0, [reg_ip + 1]
+
+    # Read the segment from the address we calculated into reg_cs
+    add [rb + loc_addr_segment], 0, [rb - 1]
+    arb -1
+    call read_w
+    add [rb - 3], 0, [reg_cs + 0]
+    add [rb - 4], 0, [reg_cs + 1]
+
+    arb 2
+    ret 2
+
+##########
+execute_jmp_far_indirect_not_memory_message:
+    db  "invalid argment for indirect far jump", 0
+.ENDFRAME
+
+.EOF
+
 
 ##########
 execute_jsr:
@@ -437,7 +641,6 @@ execute_jsr:
     ret 1
 .ENDFRAME
 
-
 ##########
 execute_rts:
 .FRAME
@@ -472,11 +675,5 @@ TODO
     db  not_implemented, 0, 0 # TODO    db  execute_ret_far, arg_immediate_w                # 0xca RET IMMED16 (intersegment)
     db  not_implemented, 0, 0 # TODO    db  execute_ret_far, arg_zero                       # 0xcb RET (intersegment)
 
-    db  not_implemented, 0, 0 # TODO    db  execute_jmp, arg_near_ptr                       # 0xe9 JMP NEAR-LABEL
-    db  not_implemented, 0, 0 # TODO    db  execute_jmp, arg_far_ptr                        # 0xea JMP FAR-LABEL
     0xff: # 100 JMP REG16/MEM16 (within segment)
     0xff: # 101 JMP MEM16 (intersegment)
-
-TODO x db  not_implemented, 0, 0 # TODO    db  execute_loopne, arg_short_ptr                   # 0xe0 LOOPNE/LOOPNZ SHORT-LABEL
-TODO x db  not_implemented, 0, 0 # TODO    db  execute_loope, arg_short_ptr                    # 0xe1 LOOPE/LOOPZ SHORT-LABEL
-TODO x db  not_implemented, 0, 0 # TODO    db  execute_loop, arg_short_ptr                     # 0xe2 LOOP SHORT-LABEL

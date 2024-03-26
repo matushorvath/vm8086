@@ -10,8 +10,14 @@
 .IMPORT execute_dec_b
 .IMPORT execute_dec_w
 
+# From jump.s
+.IMPORT execute_jmp_near_indirect
+.IMPORT execute_jmp_far_indirect
+
 # From stack.s
 .IMPORT execute_push_w
+
+# TODO implement rest of group 2
 
 # Group 2 8-bit instructions, first byte is MOD xxx R/M, where xxx is:
 # 000 INC REG8/MEM8
@@ -117,20 +123,16 @@ execute_group2_w_call_far:
     call report_error
 
 execute_group2_w_jmp_near:
-    # TODO implement
-    add not_implemented_message, 0, [rb - 1]
-    arb -1
-    call report_error
+    arb -2
+    call execute_jmp_near_indirect
+    jz  0, execute_group2_w_end
 
 execute_group2_w_jmp_far:
-    # TODO implement
-    add not_implemented_message, 0, [rb - 1]
-    arb -1
-    call report_error
+    arb -2
+    call execute_jmp_far_indirect
+    jz  0, execute_group2_w_end
 
 execute_group2_w_push_w:
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
     arb -2
     call execute_push_w
 

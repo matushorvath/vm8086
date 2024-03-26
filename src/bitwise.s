@@ -374,6 +374,3 @@ bitwise_table:
     db  and_b                           # TEST is the same as AND, but we skip writing the result
 
 .EOF
-
-# TODO implement group1 TEST - 0xf6+0b000 TEST REG/MEM, IMMED b
-# TODO implement group1 TEST - 0xf7+0b000 TEST REG/MEM, IMMED w
