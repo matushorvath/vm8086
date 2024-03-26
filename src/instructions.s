@@ -370,7 +370,7 @@ instructions:
     db  not_implemented, 0, 0 # TODO x   db  execute_cbw, 0                                  # 0x98 CBW
     db  not_implemented, 0, 0 # TODO x   db  execute_cwd, 0                                  # 0x99 CWD
     db  execute_call_far, 0, 0                              # 0x9a CALL FAR-PROC
-    db  not_implemented, 0, 0 # TODO    db  execute_wait, 0                                 # 0x9b WAIT
+    db  not_implemented, 0, 0 # TODO    db  execute_wait, 0                                  # 0x9b WAIT
     db  execute_pushf, 0, 0                                 # 0x9c PUSHF
     db  execute_popf, 0, 0                                  # 0x9d POPF
     db  execute_sahf, 0, 0                                  # 0x9e SAHF

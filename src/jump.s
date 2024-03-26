@@ -183,7 +183,7 @@ execute_group2_w_jmp_far_after_carry:
 
 ##########
 execute_jmp_far_indirect_not_memory_message:
-    db  "invalid argment for indirect far jump/call", 0
+    db  "invalid argment for indirect far jump", 0
 .ENDFRAME
 
 .EOF
