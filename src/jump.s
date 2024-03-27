@@ -4,16 +4,13 @@
 .EXPORT execute_jmp_far
 .EXPORT execute_jmp_far_indirect
 
-# From error.s
-.IMPORT report_error
-
 # From location.s
 .IMPORT read_location_w
+.IMPORT read_location_dw
 
 # From memory.s
 .IMPORT read_cs_ip_b
 .IMPORT read_cs_ip_w
-.IMPORT read_w
 
 .IMPORT reg_cs
 .IMPORT reg_ip
@@ -108,8 +105,8 @@ execute_jmp_near_indirect:
 
 ##########
 execute_jmp_far:
-.FRAME offset_lo, offset_hi, segment_lo, segment_hi, tmp
-    arb -5
+.FRAME offset_lo, offset_hi, segment_lo, segment_hi
+    arb -4
 
     # Read the offset
     call read_cs_ip_w
@@ -133,57 +130,24 @@ execute_jmp_far:
     add [rb + offset_lo], 0, [reg_ip + 0]
     add [rb + offset_hi], 0, [reg_ip + 1]
 
-    arb 5
+    arb 4
     ret 0
 .ENDFRAME
 
 ##########
 execute_jmp_far_indirect:
-.FRAME loc_type_offset, loc_addr_offset; loc_addr_segment, tmp
+.FRAME loc_type, loc_addr;
+    # Read the far pointer into reg_cs and reg_ip
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
     arb -2
+    call read_location_dw
+    add [rb - 4], 0, [reg_ip + 0]
+    add [rb - 5], 0, [reg_ip + 1]
+    add [rb - 6], 0, [reg_cs + 0]
+    add [rb - 7], 0, [reg_cs + 1]
 
-    # The location we received must be a 8086 memory location, and it contains the offset.
-    # After that we expect two more bytes to contain the segment.
-
-    # Verify that the offset location is 8086 memory
-    eq  [rb + loc_type_offset], 1, [rb + tmp]
-    jnz [rb + loc_type_offset], execute_jmp_far_indirect_is_memory
-
-    add execute_jmp_far_indirect_not_memory_message, 0, [rb - 1]
-    arb -1
-    call report_error
-
-execute_jmp_far_indirect_is_memory:
-    # Calculate address of two bytes after given location, which contain the target segment
-    add [rb + loc_addr_offset], 2, [rb + loc_addr_segment]
-
-    # Wrap around to 16 bits
-    lt  [rb + loc_addr_segment], 0x10000, [rb + tmp]
-    jnz [rb + tmp], execute_group2_w_jmp_far_after_carry
-
-    add [rb + loc_addr_segment], -0x10000, [rb + loc_addr_segment]
-
-execute_group2_w_jmp_far_after_carry:
-    # Read the offset from given location (we know it's 8086 memory) into reg_ip
-    add [rb + loc_addr_offset], 0, [rb - 1]
-    arb -1
-    call read_w
-    add [rb - 3], 0, [reg_ip + 0]
-    add [rb - 4], 0, [reg_ip + 1]
-
-    # Read the segment from the address we calculated into reg_cs
-    add [rb + loc_addr_segment], 0, [rb - 1]
-    arb -1
-    call read_w
-    add [rb - 3], 0, [reg_cs + 0]
-    add [rb - 4], 0, [reg_cs + 1]
-
-    arb 2
     ret 2
-
-##########
-execute_jmp_far_indirect_not_memory_message:
-    db  "invalid argment for indirect far jump", 0
 .ENDFRAME
 
 .EOF

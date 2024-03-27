@@ -1,7 +1,11 @@
 .EXPORT read_location_b
 .EXPORT read_location_w
+.EXPORT read_location_dw
 .EXPORT write_location_b
 .EXPORT write_location_w
+
+# From error.s
+.IMPORT report_error
 
 # From memory.s
 .IMPORT read_b
@@ -73,6 +77,54 @@ read_location_w_register:
 read_location_w_done:
     arb 2
     ret 2
+.ENDFRAME
+
+##########
+read_location_dw:
+.FRAME loc_type, loc_addr; value_ll, value_lh, value_hl, value_hh               # returns value_*
+    arb -4
+
+    jz  [rb + loc_type], read_location_dw_register
+
+    # Read from an 8086 address
+    add [rb + loc_addr], 0, [rb - 1]
+    arb -1
+    call read_b
+    add [rb - 3], 0, [rb + value_ll]
+
+    # TODO x loc_addr wrap around to 20 bits
+    add [rb + loc_addr], 1, [rb - 1]
+    arb -1
+    call read_b
+    add [rb - 3], 0, [rb + value_lh]
+
+    # TODO x loc_addr wrap around to 20 bits
+    add [rb + loc_addr], 2, [rb - 1]
+    arb -1
+    call read_b
+    add [rb - 3], 0, [rb + value_hl]
+
+    # TODO x loc_addr wrap around to 20 bits
+    add [rb + loc_addr], 3, [rb - 1]
+    arb -1
+    call read_b
+    add [rb - 3], 0, [rb + value_hh]
+
+    jz  0, read_location_dw_done
+
+read_location_dw_register:
+    # The location must be 8086 memory, since we read 4 bytes from it
+
+    add read_location_dw_register_message, 0, [rb - 1]
+    arb -1
+    call report_error
+
+read_location_dw_done:
+    arb 4
+    ret 2
+
+read_location_dw_register_message:
+    db  "cannot read 4 bytes from a register", 0
 .ENDFRAME
 
 ##########

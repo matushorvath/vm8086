@@ -8,15 +8,12 @@
 .EXPORT execute_ret_far_zero
 .EXPORT execute_ret_far_immediate_w
 
-# From error.s
-.IMPORT report_error
-
 # From location.s
 .IMPORT read_location_w
+.IMPORT read_location_dw
 
 # From memory.s
 .IMPORT read_cs_ip_w
-.IMPORT read_w
 
 # From stack.s
 .IMPORT push_w
@@ -72,9 +69,7 @@ execute_call_near_after_carry_hi:
 
 ##########
 execute_call_near_indirect:
-.FRAME loc_type, loc_addr; offset_lo, offset_hi
-    arb -2
-
+.FRAME loc_type, loc_addr;
     # Push IP
     add [reg_ip + 0], 0, [rb - 1]
     add [reg_ip + 1], 0, [rb - 2]
@@ -89,7 +84,6 @@ execute_call_near_indirect:
     add [rb - 4], 0, [reg_ip + 0]
     add [rb - 5], 0, [reg_ip + 1]
 
-    arb 2
     ret 2
 .ENDFRAME
 
@@ -138,31 +132,7 @@ execute_call_far:
 
 ##########
 execute_call_far_indirect:
-.FRAME loc_type_offset, loc_addr_offset; loc_addr_segment, tmp
-    arb -2
-
-    # The location we received must be a 8086 memory location, and it contains the offset.
-    # After that we expect two more bytes to contain the segment.
-
-    # Verify that the offset location is 8086 memory
-    eq  [rb + loc_type_offset], 1, [rb + tmp]
-    jnz [rb + loc_type_offset], execute_call_far_indirect_is_memory
-
-    add execute_call_far_indirect_not_memory_message, 0, [rb - 1]
-    arb -1
-    call report_error
-
-execute_call_far_indirect_is_memory:
-    # Calculate address of two bytes after given location, which contain the target segment
-    add [rb + loc_addr_offset], 2, [rb + loc_addr_segment]
-
-    # Wrap around to 16 bits
-    lt  [rb + loc_addr_segment], 0x10000, [rb + tmp]
-    jnz [rb + tmp], execute_group2_w_call_far_after_carry
-
-    add [rb + loc_addr_segment], -0x10000, [rb + loc_addr_segment]
-
-execute_group2_w_call_far_after_carry:
+.FRAME loc_type, loc_addr;
     # Push CS
     add [reg_cs + 0], 0, [rb - 1]
     add [reg_cs + 1], 0, [rb - 2]
@@ -175,26 +145,17 @@ execute_group2_w_call_far_after_carry:
     arb -2
     call push_w
 
-    # Read the offset from given location (we know it's 8086 memory) into reg_ip
-    add [rb + loc_addr_offset], 0, [rb - 1]
-    arb -1
-    call read_w
-    add [rb - 3], 0, [reg_ip + 0]
-    add [rb - 4], 0, [reg_ip + 1]
+    # Read the far pointer into reg_cs and reg_ip
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    arb -2
+    call read_location_dw
+    add [rb - 4], 0, [reg_ip + 0]
+    add [rb - 5], 0, [reg_ip + 1]
+    add [rb - 6], 0, [reg_cs + 0]
+    add [rb - 7], 0, [reg_cs + 1]
 
-    # Read the segment from the address we calculated into reg_cs
-    add [rb + loc_addr_segment], 0, [rb - 1]
-    arb -1
-    call read_w
-    add [rb - 3], 0, [reg_cs + 0]
-    add [rb - 4], 0, [reg_cs + 1]
-
-    arb 2
     ret 2
-
-##########
-execute_call_far_indirect_not_memory_message:
-    db  "invalid argment for indirect far call", 0
 .ENDFRAME
 
 ##########
