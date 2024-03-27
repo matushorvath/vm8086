@@ -1,27 +1,3 @@
-.EXPORT execute_adc
-.EXPORT execute_sbc
-
-.EXPORT execute_cmp
-.EXPORT execute_cpx
-.EXPORT execute_cpy
-
-# From memory.s
-.IMPORT read
-
-# From state.s
-.IMPORT flag_carry
-.IMPORT flag_decimal
-.IMPORT flag_negative
-.IMPORT flag_overflow
-.IMPORT flag_zero
-.IMPORT reg_a
-.IMPORT reg_x
-.IMPORT reg_y
-
-# From util
-.IMPORT modulo
-.IMPORT split_8_4_4
-
 ##########
 execute_adc:
 .FRAME addr; b, sum, a_lo, a_hi, b_lo, b_hi

@@ -3,6 +3,8 @@
 .EXPORT execute_add_w
 .EXPORT execute_adc_w
 
+# TODO BCD support
+
 # From bits.s
 .IMPORT bits
 
@@ -253,25 +255,28 @@ update_overflow_done:
 
 .EOF
 
-TODO
-    db  not_implemented, 0, 0 # TODO    db  execute_add_b, arg_mod_reg_rm_src_b, 4          # 0x00 ADD REG8/MEM8, REG8
-    db  not_implemented, 0, 0 # TODO    db  execute_add_w, arg_mod_reg_rm_src_w, 4          # 0x01 ADD REG16/MEM16, REG16
-    db  not_implemented, 0, 0 # TODO    db  execute_add_b, arg_mod_reg_rm_dst_b, 4          # 0x02 ADD REG8, REG8/MEM8
-    db  not_implemented, 0, 0 # TODO    db  execute_add_w, arg_mod_reg_rm_dst_w, 4          # 0x03 ADD REG16, REG16/MEM16
-    db  not_implemented, 0, 0 # TODO    db  execute_add_b, arg_al_immediate_b               # 0x04 ADD AL, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_add_w, arg_ax_immediate_w               # 0x05 ADD AX, IMMED16
+TODO test:
 
-    db  not_implemented, 0, 0 # TODO    db  execute_adc_b, arg_mod_reg_rm_src_b, 4          # 0x10 ADC REG8/MEM8, REG8
-    db  not_implemented, 0, 0 # TODO    db  execute_adc_w, arg_mod_reg_rm_src_w, 4          # 0x11 ADC REG16/MEM16, REG16
-    db  not_implemented, 0, 0 # TODO    db  execute_adc_b, arg_mod_reg_rm_dst_b, 4          # 0x12 ADC REG8, REG8/MEM8
-    db  not_implemented, 0, 0 # TODO    db  execute_adc_w, arg_mod_reg_rm_dst_w, 4          # 0x13 ADC REG16, REG16/MEM16
-    db  not_implemented, 0, 0 # TODO    db  execute_adc_b, arg_al_immediate_b               # 0x14 ADC AL, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_adc_w, arg_ax_immediate_w               # 0x15 ADC AX, IMMED16
+0x00 ADD REG8/MEM8, REG8
+0x01 ADD REG16/MEM16, REG16
+0x02 ADD REG8, REG8/MEM8
+0x03 ADD REG16, REG16/MEM16
+0x04 ADD AL, IMMED8
+0x05 ADD AX, IMMED16
 
-    # <immed>: 000 ADD, 001 OR, 010 ADC, 011 SBB, 100 AND, 101 SUB, 110 XOR, 111 CMP
-    db  execute_immed_b, arg_mod_op_rm_b_immediate_b, 5     # 0x80 <immed> REG8/MEM8, IMMED8
-    db  execute_immed_w, arg_mod_op_rm_w_immediate_w, 5     # 0x81 <immed> REG16/MEM16, IMMED16
+0x10 ADC REG8/MEM8, REG8
+0x11 ADC REG16/MEM16, REG16
+0x12 ADC REG8, REG8/MEM8
+0x13 ADC REG16, REG16/MEM16
+0x14 ADC AL, IMMED8
+0x15 ADC AX, IMMED16
 
-    # <immed>: 000 ADD,         010 ADC, 011 SBB,          101 SUB,          111 CMP
-    db  execute_immed_b, arg_mod_op_rm_b_immediate_b, 5     # 0x82 <immed> REG8/MEM8, IMMED8
-    db  execute_immed_w, arg_mod_op_rm_w_immediate_sxb, 5   # 0x83 <immed> REG16/MEM16, IMMED8 (sign extended)
+0x80+0b000 ADD REG8/MEM8, IMMED8
+0x81+0b000 ADD REG16/MEM16, IMMED16
+0x82+0b000 ADD REG8/MEM8, IMMED8
+0x83+0b000 ADD REG16/MEM16, IMMED8 (sign extended)
+
+0x80+0b010 ADC REG8/MEM8, IMMED8
+0x81+0b010 ADC REG16/MEM16, IMMED16
+0x82+0b010 ADC REG8/MEM8, IMMED8
+0x83+0b010 ADC REG16/MEM16, IMMED8 (sign extended)
