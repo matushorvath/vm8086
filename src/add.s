@@ -1,5 +1,5 @@
-# TODO .EXPORT execute_add_b
-# TODO .EXPORT execute_adc_b
+.EXPORT execute_add_b
+.EXPORT execute_adc_b
 .EXPORT execute_add_w
 .EXPORT execute_adc_w
 
@@ -7,7 +7,9 @@
 .IMPORT bits
 
 # From location.s
+.IMPORT read_location_b
 .IMPORT read_location_w
+.IMPORT write_location_b
 .IMPORT write_location_w
 
 # From parity.s
@@ -20,6 +22,84 @@
 .IMPORT flag_zero
 .IMPORT flag_sign
 .IMPORT flag_overflow
+
+##########
+execute_add_b:
+.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
+    add 0, 0, [flag_carry]
+
+    add [rb + loc_type_src], 0, [rb - 1]
+    add [rb + loc_addr_src], 0, [rb - 2]
+    add [rb + loc_type_dst], 0, [rb - 3]
+    add [rb + loc_addr_dst], 0, [rb - 4]
+    arb -4
+    call execute_adc_b
+
+    ret 4
+.ENDFRAME
+
+##########
+execute_adc_b:
+.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a, b, r, tmp
+    arb -4
+
+    # Read the source value
+    add [rb + loc_type_src], 0, [rb - 1]
+    add [rb + loc_addr_src], 0, [rb - 2]
+    arb -2
+    call read_location_b
+    add [rb - 4], 0, [rb + a]
+
+    # Read the destination value
+    add [rb + loc_type_dst], 0, [rb - 1]
+    add [rb + loc_addr_dst], 0, [rb - 2]
+    arb -2
+    call read_location_b
+    add [rb - 4], 0, [rb + b]
+
+    # Add the 8-bit numbers
+    add [rb + a], [rb + b], [rb + r]
+    add [rb + r], [flag_carry], [rb + r]
+
+    # Check for carry
+    lt  [rb + r], 0x100, [rb + tmp]
+    jnz [rb + tmp], execute_adc_b_after_carry
+
+    add [rb + r], -0x100, [rb + r]
+    add 1, 0, [flag_carry]
+
+execute_adc_b_after_carry:
+    # Update flags
+    lt  0x7f, [rb + r], [flag_sign]
+    eq  [rb + r], 0, [flag_zero]
+
+    add parity, [rb + r], [ip + 1]
+    add [0], 0, [flag_parity]
+
+    # Auxiliary carry
+    add [rb + a], 0, [rb - 1]
+    add [rb + b], 0, [rb - 2]
+    add [rb + r], 0, [rb - 3]
+    arb -3
+    call update_auxiliary_carry
+
+    # Overflow
+    add [rb + a], 0, [rb - 1]
+    add [rb + b], 0, [rb - 2]
+    add [rb + r], 0, [rb - 3]
+    arb -3
+    call update_overflow
+
+    # Write the destination value
+    add [rb + loc_type_dst], 0, [rb - 1]
+    add [rb + loc_addr_dst], 0, [rb - 2]
+    add [rb + r], 0, [rb - 3]
+    arb -3
+    call write_location_b
+
+    arb 4
+    ret 4
+.ENDFRAME
 
 ##########
 execute_add_w:
