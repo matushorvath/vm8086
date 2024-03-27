@@ -71,6 +71,16 @@
 .IMPORT execute_test_b
 .IMPORT execute_test_w
 
+# From call.s
+.IMPORT execute_call_near
+.IMPORT execute_call_near_indirect
+.IMPORT execute_call_far
+.IMPORT execute_call_far_indirect
+.IMPORT execute_ret_near_zero
+.IMPORT execute_ret_near_immediate_w
+.IMPORT execute_ret_far_zero
+.IMPORT execute_ret_far_immediate_w
+
 # From exec.s
 .IMPORT execute_nop
 .IMPORT invalid_opcode
@@ -120,6 +130,11 @@
 .IMPORT execute_iret
 
 # From jump.s
+.IMPORT execute_jmp_short
+.IMPORT execute_jmp_near
+.IMPORT execute_jmp_far
+
+# From jump_flag.s
 .IMPORT execute_jo
 .IMPORT execute_jno
 .IMPORT execute_jc
@@ -136,13 +151,12 @@
 .IMPORT execute_jnl
 .IMPORT execute_jg
 .IMPORT execute_jng
+
+# From loop.s
 .IMPORT execute_loop
 .IMPORT execute_loopz
 .IMPORT execute_loopnz
 .IMPORT execute_jcxz
-.IMPORT execute_jmp_short
-.IMPORT execute_jmp_near
-.IMPORT execute_jmp_far
 
 # From prefix.s
 .IMPORT execute_lock
@@ -355,8 +369,8 @@ instructions:
 
     db  not_implemented, 0, 0 # TODO x   db  execute_cbw, 0                                  # 0x98 CBW
     db  not_implemented, 0, 0 # TODO x   db  execute_cwd, 0                                  # 0x99 CWD
-    db  not_implemented, 0, 0 # TODO    db  execute_call, arg_far_ptr                       # 0x9a CALL FAR-PROC
-    db  not_implemented, 0, 0 # TODO    db  execute_wait, 0                                 # 0x9b WAIT
+    db  execute_call_far, 0, 0                              # 0x9a CALL FAR-PROC
+    db  not_implemented, 0, 0 # TODO    db  execute_wait, 0                                  # 0x9b WAIT
     db  execute_pushf, 0, 0                                 # 0x9c PUSHF
     db  execute_popf, 0, 0                                  # 0x9d POPF
     db  execute_sahf, 0, 0                                  # 0x9e SAHF
@@ -403,8 +417,8 @@ instructions:
     db  invalid_opcode, 0, 0                                # 0xc0
     db  invalid_opcode, 0, 0                                # 0xc1
 
-    db  not_implemented, 0, 0 # TODO    db  execute_ret_near, arg_immediate_w               # 0xc2 RET IMMED16 (within segment)
-    db  not_implemented, 0, 0 # TODO    db  execute_ret_near, arg_zero                      # 0xc3 RET (within segment)
+    db  execute_ret_near_immediate_w, 0, 0                  # 0xc2 RET IMMED16 (within segment)
+    db  execute_ret_near_zero, 0, 0                         # 0xc3 RET (within segment)
 
     db  not_implemented, 0, 0 # TODO x   db  execute_les_w, arg_mod_reg_mem_dst_w            # 0xc4 LES REG16, MEM16
     db  not_implemented, 0, 0 # TODO x   db  execute_lds_w, arg_mod_reg_mem_dst_w            # 0xc5 LDS REG16, MEM16
@@ -415,8 +429,8 @@ instructions:
     db  invalid_opcode, 0, 0                                # 0xc8
     db  invalid_opcode, 0, 0                                # 0xc9
 
-    db  not_implemented, 0, 0 # TODO    db  execute_ret_far, arg_immediate_w                # 0xca RET IMMED16 (intersegment)
-    db  not_implemented, 0, 0 # TODO    db  execute_ret_far, arg_zero                       # 0xcb RET (intersegment)
+    db  execute_ret_far_immediate_w, 0, 0                   # 0xca RET IMMED16 (intersegment)
+    db  execute_ret_far_zero, 0, 0                          # 0xcb RET (intersegment)
 
     db  execute_int3, 0, 0                                  # 0xcc INT 3
     db  execute_int, 0, 0                                   # 0xcd INT IMMED8
@@ -454,7 +468,7 @@ instructions:
     db  execute_out_al_immediate_b, 0, 0                    # 0xe6 OUT AL, IMMED8
     db  execute_out_ax_immediate_b, 0, 0                    # 0xe7 OUT AX, IMMED8
 
-    db  not_implemented, 0, 0 # TODO    db  execute_call, arg_near_ptr                      # 0xe8 CALL NEAR-PROC
+    db  execute_call_near, 0, 0                             # 0xe8 CALL NEAR-PROC
     db  execute_jmp_near, 0, 0                              # 0xe9 JMP NEAR-LABEL
     db  execute_jmp_far, 0, 0                               # 0xea JMP FAR-LABEL
     db  execute_jmp_short, 0, 0                             # 0xeb JMP SHORT-LABEL

@@ -57,7 +57,7 @@ $(OBJDIR)/%.o: $(OBJDIR)/%.bin
 
 $(OBJDIR)/%.bin $(OBJDIR)/%.lst: %.asm $(wildcard *.inc)
 	nasm -f bin $< -o $@ -l $(@:.bin=.lst)
-	hd $@ ; true
+	hexdump -C $@ ; true
 
 .PHONY: skip
 skip:
