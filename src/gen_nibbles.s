@@ -1,5 +1,10 @@
 # Utility to generate nibbles.s
 
+# TODO Maybe we always just need the lower nibble? Don't generate both in that case.
+
+# TODO Possibly we can calculate auxiliary carry by xoring together just bit 4 of both
+# TODO operands and comparing it with bit 4 of result. Then we don't need nibbles.
+
 .IMPORT print_num_radix
 .IMPORT print_str
 
