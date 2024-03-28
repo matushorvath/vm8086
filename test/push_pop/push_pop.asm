@@ -2,10 +2,10 @@ cpu 8086
 org 0x00000
 
 
-section .bss start=0xe0000 nobits
-    dw  13 dup (?)
+section .data start=0xe0000
+    dw  13 dup (0)
 data:
-    dw  ?
+    dw  0
 
 
 section .text start=0xd0000
