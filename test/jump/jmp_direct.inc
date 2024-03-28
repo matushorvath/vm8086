@@ -55,7 +55,7 @@ test_end:
 
 far_absolute:
     out 0x42, al                        ; 2f
-    jmp 0x8000:test_end
+    jmp 0xd000:test_end
     mov ax, 0
 
 __?SECT?__

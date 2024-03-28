@@ -3,7 +3,7 @@ cpu 8086
 
 section interrupts start=0x00000
     dw  3 dup (0x0000, 0x0000)
-    dw  handle_int3, 0x8000             ; INT 3
+    dw  handle_int3, 0xd000             ; INT 3
     dw  handle_int4, 0x9000             ; INT 4
     dw  16 dup (0x0000, 0x0000)
     dw  handle_int21, 0xa000            ; INT 21
@@ -11,7 +11,7 @@ section interrupts start=0x00000
     dw  handle_int255, 0xb000           ; INT 255
 
 
-section int3_section start=0x80000
+section int3_section start=0xd0000
 
 handle_int3:
     out 0x42, al

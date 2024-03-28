@@ -47,7 +47,7 @@ test_end_mem:
 far_absolute_mem:
     out 0x42, al                        ; 2f
     mov word [jmp_offset], test_end_mem
-    mov word [jmp_segment], 0x8000
+    mov word [jmp_segment], 0xd000
     jmp far [jmp_offset]
     mov ax, 0
 

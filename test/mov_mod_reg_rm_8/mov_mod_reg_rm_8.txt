@@ -1,71 +1,71 @@
 ----------
 ip: 0002 flags: ----odit sz-a-p-c 00000000 00000010 (0002)
-cs: 8000 ds: 0000 ss: 0000 es: 0000 bp: 0000 sp: fffa
+cs: d000 ds: 0000 ss: 0000 es: 0000 bp: 0000 sp: fffa
 ax: 0000 bx: 0000 cx: 0000 dx: 0000 si: 0000 di: 0000
 stack: 0001 ffff 0002 0000 0000 0000 0000 0000
 ----------
 ip: 004a flags: ----odit sz-a-p-c 00000000 00000010 (0002)
-cs: 8000 ds: 1000 ss: 2000 es: 0000 bp: 0007 sp: fffa
+cs: d000 ds: 1000 ss: 2000 es: 0000 bp: 0007 sp: fffa
 ax: abab bx: 0005 cx: abab dx: abab si: 000b di: 000d
 stack: 0000 0000 0000 0000 0000 0000 0000 0000
 ----------
 ip: 0077 flags: ----odit sz-a-p-c 00000000 00000010 (0002)
-cs: 8000 ds: 1000 ss: 2000 es: 0000 bp: 0007 sp: fffa
+cs: d000 ds: 1000 ss: 2000 es: 0000 bp: 0007 sp: fffa
 ax: cdcd bx: 0005 cx: cdcd dx: cd00 si: 000b di: 000d
 stack: 0000 0000 0000 0000 0000 0000 0000 0000
 port 0x80: 0xcd
 ----------
 ip: 00a7 flags: ----odit sz-a-p-c 00000000 00000010 (0002)
-cs: 8000 ds: 1000 ss: 2000 es: 0000 bp: 0007 sp: fffa
+cs: d000 ds: 1000 ss: 2000 es: 0000 bp: 0007 sp: fffa
 ax: 6767 bx: 0005 cx: 6767 dx: 6767 si: 000b di: 000d
 stack: 0000 0000 0000 0000 0000 0000 0000 0000
 ----------
 ip: 00d2 flags: ----odit sz-a-p-c 00000000 00000010 (0002)
-cs: 8000 ds: 1000 ss: 2000 es: 0000 bp: 0007 sp: fffa
+cs: d000 ds: 1000 ss: 2000 es: 0000 bp: 0007 sp: fffa
 ax: 8989 bx: 0005 cx: 8989 dx: 0089 si: 000b di: 000d
 stack: 0000 0000 0000 0000 0000 0000 0000 0000
 port 0x81: 0x89
 ----------
 ip: 0101 flags: ----odit sz-a-p-c 00000000 00000010 (0002)
-cs: 8000 ds: 1000 ss: 2000 es: 0000 bp: 0007 sp: fffa
+cs: d000 ds: 1000 ss: 2000 es: 0000 bp: 0007 sp: fffa
 ax: abab bx: 0005 cx: abab dx: abab si: 000b di: 000d
 stack: 0000 0000 0000 0000 0000 0000 0000 0000
 ----------
 ip: 0123 flags: ----odit sz-a-p-c 00000000 00000010 (0002)
-cs: 8000 ds: 1000 ss: 2000 es: 0000 bp: 0007 sp: fffa
+cs: d000 ds: 1000 ss: 2000 es: 0000 bp: 0007 sp: fffa
 ax: cdcd bx: 0005 cx: 00cd dx: cd00 si: 000b di: 000d
 stack: 0000 0000 0000 0000 0000 0000 0000 0000
 port 0x82: 0xcd
 ----------
 ip: 014e flags: ----odit sz-a-p-c 00000000 00000010 (0002)
-cs: 8000 ds: 1000 ss: 2000 es: 0000 bp: 0007 sp: fffa
+cs: d000 ds: 1000 ss: 2000 es: 0000 bp: 0007 sp: fffa
 ax: 6767 bx: 0005 cx: 6767 dx: 6767 si: 000b di: 000d
 stack: 0000 0000 0000 0000 0000 0000 0000 0000
 ----------
 ip: 016e flags: ----odit sz-a-p-c 00000000 00000010 (0002)
-cs: 8000 ds: 1000 ss: 2000 es: 0000 bp: 0007 sp: fffa
+cs: d000 ds: 1000 ss: 2000 es: 0000 bp: 0007 sp: fffa
 ax: 8989 bx: 0005 cx: 8989 dx: 0000 si: 000b di: 000d
 stack: 0000 0000 0000 0000 0000 0000 0000 0000
 port 0x83: 0x89
 ----------
 ip: 019d flags: ----odit sz-a-p-c 00000000 00000010 (0002)
-cs: 8000 ds: 1000 ss: 2000 es: 0000 bp: 0007 sp: fffa
+cs: d000 ds: 1000 ss: 2000 es: 0000 bp: 0007 sp: fffa
 ax: abab bx: 0005 cx: abab dx: abab si: 000b di: 000d
 stack: 0000 0000 0000 0000 0000 0000 0000 0000
 ----------
 ip: 01bf flags: ----odit sz-a-p-c 00000000 00000010 (0002)
-cs: 8000 ds: 1000 ss: 2000 es: 0000 bp: 0007 sp: fffa
+cs: d000 ds: 1000 ss: 2000 es: 0000 bp: 0007 sp: fffa
 ax: cdcd bx: 0005 cx: 00cd dx: cd00 si: 000b di: 000d
 stack: 0000 0000 0000 0000 0000 0000 0000 0000
 port 0x84: 0xcd
 ----------
 ip: 01ea flags: ----odit sz-a-p-c 00000000 00000010 (0002)
-cs: 8000 ds: 1000 ss: 2000 es: 0000 bp: 0007 sp: fffa
+cs: d000 ds: 1000 ss: 2000 es: 0000 bp: 0007 sp: fffa
 ax: 6767 bx: 0005 cx: 6767 dx: 6767 si: 000b di: 000d
 stack: 0000 0000 0000 0000 0000 0000 0000 0000
 ----------
 ip: 020a flags: ----odit sz-a-p-c 00000000 00000010 (0002)
-cs: 8000 ds: 1000 ss: 2000 es: 0000 bp: 0007 sp: fffa
+cs: d000 ds: 1000 ss: 2000 es: 0000 bp: 0007 sp: fffa
 ax: 8989 bx: 0005 cx: 8989 dx: 0000 si: 000b di: 000d
 stack: 0000 0000 0000 0000 0000 0000 0000 0000
 port 0x85: 0x89
