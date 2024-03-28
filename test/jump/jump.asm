@@ -2,7 +2,7 @@
 ; TODO CALL NEAR REG16/MEM16, CALL FAR MEM16
 
 cpu 8086
-org 0x00000
+org 0xd0000
 
 
 section .text start=0xd0000

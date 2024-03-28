@@ -43,7 +43,8 @@ near_forward:
 
 
 test_far:
-    jmp 0x9000:far_absolute             ; 1f
+    ; TODO the segment isn't a round number
+    jmp 0xe400:far_absolute - 0x4000    ; 1f
     mov ax, 0
 
 test_end:
@@ -51,7 +52,7 @@ test_end:
 
 
     ; far target in another segment, then resume current segment
-[section far_target start=0x90000]
+[section far_target start=0xe4000]
 
 far_absolute:
     out 0x42, al                        ; 2f

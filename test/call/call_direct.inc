@@ -19,7 +19,7 @@ near_forward:
 
 test_far:
     out 0x42, al                        ; 1f
-    call 0xe600:far_absolute_2 - 0x6000                     ; TODO because the segment isn't a round number
+    call 0xe600:far_absolute_2 - 0x6000                     ; TODO the segment isn't a round number
     out 0x42, al                        ; 5f
 
 
@@ -38,7 +38,7 @@ __?SECT?__
 far_absolute_2:
     out 0x42, al                        ; 2f
     push ax
-    call 0xe400:far_absolute_1 - 0x4000                     ; TODO because the segment isn't a round number
+    call 0xe400:far_absolute_1 - 0x4000                     ; TODO the segment isn't a round number
     out 0x42, al                        ; 4f
     retf 0
 

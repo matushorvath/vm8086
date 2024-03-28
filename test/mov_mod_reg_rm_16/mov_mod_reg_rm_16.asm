@@ -2,7 +2,7 @@
 ; TODO x test wrap around (register near 0xfffff + displacement, also negative displacement, also around 0x7f)
 
 cpu 8086
-org 0x00000
+org 0xd0000
 
 
 section data_segment start=0x10000 nobits

@@ -45,7 +45,8 @@ test-prep:
 $(RESDIR)/%.txt: $(OBJDIR)/%.input
 	printf '$(NAME): executing ' >> $(TESTLOG)
 	$(ICVM) $< > $@ 2>&1 || ( cat $@ ; true )
-	@diff $(notdir $@) $@ || ( echo $(COLOR_RED)FAILED$(COLOR_NORMAL) ; diff $(notdir $@) $@ ) >> $(TESTLOG)
+	@diff $(notdir $@) $@ \
+		|| ( echo $(COLOR_RED)FAILED$(COLOR_NORMAL) ; diff $(notdir $@) $@ ) >> $(TESTLOG)
 	@echo $(COLOR_GREEN)OK$(COLOR_NORMAL) >> $(TESTLOG)
 
 $(OBJDIR)/%.input: $(LIB8086) $(LIBXIB) $(TEST_HEADER) $(OBJDIR)/%.o
@@ -56,8 +57,11 @@ $(OBJDIR)/%.o: $(OBJDIR)/%.bin
 	wc -c $< | sed 's/$$/\/binary/' | cat - $< | $(ICVM) $(ICBIN2OBJ) > $@
 
 $(OBJDIR)/%.bin $(OBJDIR)/%.lst: %.asm $(wildcard *.inc)
-	nasm -f bin $< -o $@ -l $(@:.bin=.lst)
+	printf '$(NAME): assembling ' >> $(TESTLOG)
+	nasm -f bin $< -o $@ -l $(@:.bin=.lst) \
+		|| ( echo $(COLOR_RED)FAILED$(COLOR_NORMAL) ; false ) >> $(TESTLOG)
 	hexdump -C $@ ; true
+	@echo $(COLOR_GREEN)OK$(COLOR_NORMAL) >> $(TESTLOG)
 
 .PHONY: skip
 skip:

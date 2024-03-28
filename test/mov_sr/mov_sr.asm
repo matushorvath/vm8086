@@ -1,5 +1,5 @@
 cpu 8086
-org 0x00000
+org 0xd0000
 
 
 section .data start=0xe0000
