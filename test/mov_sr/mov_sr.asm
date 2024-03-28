@@ -2,15 +2,7 @@ cpu 8086
 org 0x00000
 
 
-section interrupts start=0x00000
-    dw  3 dup (0x0000, 0x0000)
-    dw  handle_int3, 0xd000             ; INT 3
-
-data_segment:
-    dw  0x1234
-
-
-section .data start=0x12340
+section .data start=0xe0000
 
 test_data:
     dw  0
@@ -22,7 +14,7 @@ handle_int3:                            ; INT 3 handler
     out 0x42, al
 
     ; MOV sr, [16-bit displacement]
-    mov ds, [data_segment]
+    mov ds, [cs:data_segment]
 
     out 0x42, al
 
@@ -73,6 +65,9 @@ handle_int3:                            ; INT 3 handler
 
     hlt
 
+data_segment:
+    ; we load this into ds at the beginning of the test
+    dw  0xe000
 
 section boot start=0xffff0              ; boot
-    int3
+    jmp 0xd000:0x0000

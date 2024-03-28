@@ -16,12 +16,9 @@ org 0x00000
 %endmacro
 
 
-section interrupts start=0x00000
-    dw  3 dup (0x0000, 0x0000)
-    dw  handle_int3, 0x1000             ; INT 3
+section .text start=0xd0000
+    jmp handle_int3
 
-
-section .text start=0x10000
     ; make sure the data_read starts at an interesting address, not 0
     dw  17 dup 0x0000
 data_read:
@@ -50,13 +47,18 @@ handle_int3:                            ; INT 3 handler
     out 0x42, al
     out 0x81, al
 
-    ; set up segments (cs is already set up by int3)
+    ; set up segments (cs is already set up by jmp)
     mov ax, 0x2000
     mov ds, ax
     mov ax, 0x3000
     mov ss, ax
     mov ax, 0x4000
     mov es, ax
+
+    ; set up different data in each segment
+    mov word [ds:data_read], 0x2222
+    mov word [ss:data_read], 0x3333
+    mov word [es:data_read], 0x4444
 
     out 0x42, al
     out 0x82, al
@@ -198,23 +200,5 @@ handle_int3:                            ; INT 3 handler
     hlt
 
 
-section data_segment start=0x20000
-    dw  17 dup 0x0000
-    dw  0x2222
-    dw  0x0000
-
-
-section stack_segment start=0x30000
-    dw  17 dup 0x0000
-    dw  0x3333
-    dw  0x0000
-
-
-section extra_segment start=0x40000
-    dw  17 dup 0x0000
-    dw  0x4444
-    dw  0x0000
-
-
 section boot start=0xffff0              ; boot
-    int3
+    jmp 0xd000:0x0000
