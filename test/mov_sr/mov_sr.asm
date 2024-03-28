@@ -1,5 +1,4 @@
-cpu 8086
-org 0xd0000
+%include "common.inc"
 
 
 section .data start=0xe0000
@@ -8,7 +7,7 @@ test_data:
     dw  0
 
 
-section .text start=0xd0000
+section .text
     out 0x42, al
 
     ; MOV sr, [16-bit displacement]
@@ -66,6 +65,3 @@ section .text start=0xd0000
 data_segment:
     ; we load this into ds at the beginning of the test
     dw  0xe000
-
-section boot start=0xffff0              ; boot
-    jmp 0xd000:0x0000

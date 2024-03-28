@@ -1,8 +1,7 @@
-cpu 8086
-org 0xd0000
+%include "common.inc"
 
 
-section .text start=0xd0000
+section .text
     out 0x42, al
 
 %include "reg_reg.inc"
@@ -19,11 +18,6 @@ section .text start=0xd0000
 ; TODO x MOV MEM16, AX
 
     hlt
-
-
-section boot start=0xffff0              ; boot
-    jmp 0xd000:0x0000
-
 
 ; TODO x new test for XCHG
 

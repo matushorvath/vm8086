@@ -1,7 +1,6 @@
 ; TODO check other instructions than MOV; make sure all instruction variants that access memory are handled
 
-cpu 8086
-org 0xd0000
+%include "common.inc"
 
 
 %macro clear_registers 0
@@ -16,7 +15,7 @@ org 0xd0000
 %endmacro
 
 
-section .text start=0xd0000
+section .text
     jmp start
 
     ; make sure the data_read starts at an interesting address, not 0
@@ -198,7 +197,3 @@ start:
     out 0x8c, al
 
     hlt
-
-
-section boot start=0xffff0              ; boot
-    jmp 0xd000:0x0000

@@ -1,5 +1,4 @@
-cpu 8086
-org 0xd0000
+%include "common.inc"
 
 
 section .data start=0xe0000
@@ -8,7 +7,7 @@ data:
     dw  0
 
 
-section .text start=0xd0000
+section .text
     out 0x42, al
 
 %include "reg.inc"
@@ -18,7 +17,3 @@ section .text start=0xd0000
 %include "sr.inc"
 
     hlt
-
-
-section boot start=0xffff0              ; boot
-    jmp 0xd000:0x0000

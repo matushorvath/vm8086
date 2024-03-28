@@ -1,8 +1,7 @@
 ; TODO force NASM to generate also the other variants for MOV REG8/REG8, REG8/REG16 (src/dst)
 ; TODO x test wrap around (register near 0xfffff + displacement, also negative displacement, also around 0x7f)
 
-cpu 8086
-org 0xd0000
+%include "common.inc"
 
 
 section data_segment start=0x10000 nobits
@@ -17,7 +16,7 @@ test_ss:
     resw 1
 
 
-section .text start=0xd0000
+section .text
     out 0x42, al
 
     ; set up for testing MOD R/M
@@ -45,7 +44,3 @@ section .text start=0xd0000
     out 0x85, al
 
     hlt
-
-
-section boot start=0xffff0              ; boot
-    jmp 0xd000:0x0000
