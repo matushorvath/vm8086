@@ -2,17 +2,39 @@ cpu 8086
 org 0x00000
 
 
-section interrupts start=0x00000
-    dw  3 dup (0x0000, 0x0000)
-    dw  handle_int3, 0xd000             ; INT 3
-    dw  handle_int4, 0x9000             ; INT 4
-    dw  16 dup (0x0000, 0x0000)
-    dw  handle_int21, 0xa000            ; INT 21
-    dw  233 dup (0x0000, 0x0000)
-    dw  handle_int255, 0xb000           ; INT 255
+section interrupts start=0x00000 nobits
+                    resw 2 * 3
+vector_int3:        resw 2
+vector_int4:        resw 2
+                    resw 2 * 16
+vector_int21:       resw 2
+                    resw 2 * 233
+vector_int255:      resw 2
 
 
-section int3_section start=0xd0000
+section .text start=0xd0000
+
+init:
+    ; TODO HW should we call STI here to allow interrupts?
+
+    ; set up interrupt handlers
+    mov word [vector_int3   + 0], handle_int3
+    mov word [vector_int3   + 2], 0xd000
+    mov word [vector_int4   + 0], handle_int4
+    mov word [vector_int4   + 2], 0xe000
+    mov word [vector_int21  + 0], handle_int21
+    mov word [vector_int21  + 2], 0xe000
+    mov word [vector_int255 + 0], handle_int255
+    mov word [vector_int255 + 2], 0xd000
+
+    ; test interrupts
+    int3
+    out 0x42, al
+
+    int 21
+    out 0x42, al
+
+    hlt
 
 handle_int3:
     out 0x42, al
@@ -29,8 +51,13 @@ handle_int3:
 
     iret
 
+handle_int255:
+    ; this interrupt needs to just output and return
+    out 0x42, al
+    iret
 
-section int4_section start=0x90000
+
+section int_handlers start=0xe0000
 
 handle_int4:
     out 0x42, al
@@ -49,9 +76,6 @@ handle_int4:
 
     iret
 
-
-section int21_section start=0xa0000
-
 handle_int21:
     out 0x42, al
 
@@ -63,21 +87,5 @@ handle_int21:
     iret
 
 
-section int255_section start=0xb0000
-
-handle_int255:
-    ; this interrupt needs to just output and return
-    out 0x42, al
-    iret
-
-
 section boot start=0xffff0              ; boot
-    ; TODO HW should we call STI here to allow interrupts?
-
-    int3
-    out 0x42, al
-
-    int 21
-    out 0x42, al
-
-    hlt
+    jmp 0xd000:0x0000
