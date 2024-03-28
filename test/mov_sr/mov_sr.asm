@@ -9,8 +9,6 @@ test_data:
 
 
 section .text start=0xd0000
-
-handle_int3:                            ; INT 3 handler
     out 0x42, al
 
     ; MOV sr, [16-bit displacement]

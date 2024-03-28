@@ -9,9 +9,6 @@ org 0x00000
 
 
 section .text start=0xd0000
-
-handle_int3:                            ; INT 3 handler
-
     out 0x80, al
 
 %include "call_direct.inc"

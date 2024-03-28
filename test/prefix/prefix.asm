@@ -17,7 +17,7 @@ org 0x00000
 
 
 section .text start=0xd0000
-    jmp handle_int3
+    jmp start
 
     ; make sure the data_read starts at an interesting address, not 0
     dw  17 dup 0x0000
@@ -26,7 +26,7 @@ data_read:
 data_write:
     dw  0x0000
 
-handle_int3:                            ; INT 3 handler
+start:
     out 0x42, al
     out 0x80, al
 

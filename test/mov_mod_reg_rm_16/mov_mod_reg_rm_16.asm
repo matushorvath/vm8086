@@ -18,8 +18,6 @@ test_ss:
 
 
 section .text start=0xd0000
-
-handle_int3:                            ; INT 3 handler
     out 0x42, al
 
     ; set up for testing MOD R/M

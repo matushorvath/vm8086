@@ -11,8 +11,6 @@ data:
 
 
 section .text start=0xd0000
-
-handle_int3:                            ; INT 3 handler
     mov dx, 0x1000
     mov ds, dx
 
