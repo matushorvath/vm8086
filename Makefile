@@ -19,7 +19,7 @@ SRCDIR = src
 BINDIR ?= bin
 OBJDIR ?= obj
 
-TESTDIRS = $(sort $(dir $(wildcard test/*/*)))
+TESTDIRS = $(sort $(dir $(wildcard test/*/Makefile)))
 export TESTLOG = $(abspath test/test.log)
 
 define run-as

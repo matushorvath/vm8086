@@ -58,7 +58,7 @@ $(OBJDIR)/%.o: $(OBJDIR)/%.bin
 
 $(OBJDIR)/%.bin $(OBJDIR)/%.lst: %.asm $(wildcard *.inc)
 	printf '$(NAME): assembling ' >> $(TESTLOG)
-	nasm -f bin $< -o $@ -l $(@:.bin=.lst) \
+	nasm -i ../common -d VM8086 -f bin $< -o $@ -l $(@:.bin=.lst) \
 		|| ( echo $(COLOR_RED)FAILED$(COLOR_NORMAL) ; false ) >> $(TESTLOG)
 	hexdump -C $@ ; true
 	@echo $(COLOR_GREEN)OK$(COLOR_NORMAL) >> $(TESTLOG)

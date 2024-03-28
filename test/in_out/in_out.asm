@@ -1,8 +1,7 @@
-cpu 8086
-org 0xd0000
+%include "common.inc"
 
 
-section .text start=0xd0000
+section .text
     out 0x42, al
 
     mov al, 0xab
@@ -35,7 +34,3 @@ section .text start=0xd0000
     ; TODO IN AX, DX
 
     hlt
-
-
-section boot start=0xffff0              ; boot
-    jmp 0xd000:0x0000

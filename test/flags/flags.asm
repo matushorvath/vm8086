@@ -1,8 +1,7 @@
-cpu 8086
-org 0xd0000
+%include "common.inc"
 
 
-section .text start=0xd0000
+section .text
     ; reset all flags
     mov dx, 0
     push dx
@@ -131,7 +130,3 @@ section .text start=0xd0000
     set_reset_ah 0b_10000000
 
     hlt
-
-
-section boot start=0xffff0              ; boot
-    jmp 0xd000:0x0000

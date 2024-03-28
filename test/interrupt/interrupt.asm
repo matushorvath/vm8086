@@ -1,5 +1,4 @@
-cpu 8086
-org 0xd0000
+%include "common.inc"
 
 
 section interrupts start=0x00000 nobits
@@ -12,9 +11,7 @@ vector_int21:       resw 2
 vector_int255:      resw 2
 
 
-section .text start=0xd0000
-
-init:
+section .text
     ; TODO HW should we call STI here to allow interrupts?
 
     ; set up interrupt handlers
@@ -85,7 +82,3 @@ handle_int21:
     out 0x42, al
 
     iret
-
-
-section boot start=0xffff0              ; boot
-    jmp 0xd000:0x0000

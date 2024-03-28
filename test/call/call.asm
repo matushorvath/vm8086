@@ -4,11 +4,10 @@
 ; TODO overflow (reg_ip + short pointer is more than 0x1000)
 ; TODO underflow (reg_ip + short pointer is less than 0)
 
-cpu 8086
-org 0xd0000
+%include "common.inc"
 
 
-section .text start=0xd0000
+section .text
     out 0x80, al
 
 %include "call_direct.inc"
@@ -20,7 +19,3 @@ section .text start=0xd0000
 %include "call_memory.inc"
 
     hlt
-
-
-section boot start=0xffff0              ; boot
-    jmp 0xd000:0x0000
