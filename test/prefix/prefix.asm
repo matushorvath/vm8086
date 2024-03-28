@@ -1,6 +1,7 @@
 ; TODO check other instructions than MOV; make sure all instruction variants that access memory are handled
 
 cpu 8086
+org 0x00000
 
 
 %macro clear_registers 0

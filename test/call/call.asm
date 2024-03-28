@@ -5,6 +5,7 @@
 ; TODO underflow (reg_ip + short pointer is less than 0)
 
 cpu 8086
+org 0x00000
 
 
 section interrupts start=0x00000

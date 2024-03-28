@@ -6,6 +6,7 @@
 ; TODO x test flag_overflow when moving 0x7f->0x80 and back
 
 cpu 8086
+org 0x00000
 
 
 section interrupts start=0x00000

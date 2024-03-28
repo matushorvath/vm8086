@@ -1,16 +1,11 @@
 cpu 8086
+org 0x00000
 
 
-section interrupts start=0x00000
-    dw  3 dup (0x0000, 0x0000)
-    dw  handle_int3, 0xd000             ; INT 3
-
-
-section .data start=0x10000
-
+section .bss start=0xe0000 nobits
+    dw  13 dup (?)
 data:
-    dw  13 dup 0x0000
-    dw  0
+    dw  ?
 
 
 section .text start=0xd0000
@@ -28,4 +23,4 @@ handle_int3:                            ; INT 3 handler
 
 
 section boot start=0xffff0              ; boot
-    int3
+    jmp 0xd000:0x0000
