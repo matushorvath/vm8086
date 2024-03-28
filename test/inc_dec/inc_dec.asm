@@ -5,8 +5,7 @@
 ; TODO x test flag_auxiliary_carry for low nibble
 ; TODO x test flag_overflow when moving 0x7f->0x80 and back
 
-cpu 8086
-org 0xd0000
+%include "common.inc"
 
 
 section .data start=0xe0000
@@ -16,7 +15,7 @@ data:
     dw  0
 
 
-section .text start=0xd0000
+section .text
     out 0x42, al
 
     ; these tests break sp
@@ -28,7 +27,3 @@ section .text start=0xd0000
 %include "inc_dec_mem.inc"
 
     hlt
-
-
-section boot start=0xffff0              ; boot
-    jmp 0xd000:0x0000
