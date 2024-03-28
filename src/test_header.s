@@ -21,7 +21,7 @@ binary_start_address_ip:
 
 # Load address of the simple test binary in 8086 memory
 binary_load_address:
-    db  0xd0000
+    db  0x00000
 
 # Tracing (0 - disable tracing, -1 - trace always, >0 - tracing past given address)
 binary_enable_tracing:
