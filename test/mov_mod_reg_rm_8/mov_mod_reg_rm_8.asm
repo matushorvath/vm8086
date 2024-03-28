@@ -7,17 +7,15 @@ org 0x00000
 
 
 section data_segment start=0x10000 nobits
-
-    dw 23 dup (?)
+    resw 23
 test_ds:
-    dw  ?
+    resw 1
 
 
 section stack_segment start=0x20000 nobits
-
-    dw 17 dup (?)
+    resw 17
 test_ss:
-    dw  ?
+    resw 1
 
 
 section .text start=0xd0000
