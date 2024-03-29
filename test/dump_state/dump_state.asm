@@ -2,5 +2,5 @@
 
 
 section .text
-    out 0x42, al
-    hlt
+    dump_state
+    call power_off

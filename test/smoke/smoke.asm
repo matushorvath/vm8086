@@ -3,4 +3,4 @@
 
 section .text
     nop
-    hlt
+    call power_off
