@@ -51,18 +51,29 @@ build-prep:
 .PHONY: test
 test: build build-test-header run-test
 
+.PHONY: validate
+validate: build build-test-header run-validate
+
 .PHONY: build-test-header
 build-test-header: $(OBJDIR)/test_header.o
 
-.PHONY: run-test
-run-test:
+define run-each-test
 	rm -rf $(TESTLOG)
 	failed=0 ; \
 	for testdir in $(TESTDIRS) ; do \
-		$(MAKE) -C $$testdir test || failed=1 ; \
+		$(MAKE) -C $$testdir $(subst run-,,$@) || failed=1 ; \
 	done ; \
 	cat test/test.log ; \
 	[ $$failed = 0 ] || exit 1
+endef
+
+.PHONY: run-test
+run-test:
+	$(run-each-test)
+
+.PHONY: run-validate
+run-validate:
+	$(run-each-test)
 
 # The order of the object files matters: First include all the code in any order, then binary.o,
 # then the (optional) 8086 image header and data.

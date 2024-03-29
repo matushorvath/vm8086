@@ -20,11 +20,19 @@ TEST_HEADER ?= $(abspath $(VMDIR)/obj/test_header.o)
 RESDIR ?= res
 OBJDIR ?= obj
 
+COMMON_DIR ?= $(abspath ../common)
+COMMON_OBJDIR ?= $(abspath ../common/obj)
+COMMON_BINDIR ?= $(abspath ../common/bin)
+
 ifndef TESTLOG
 	TESTLOG := $(shell mktemp)
 endif
 
 NAME = $(notdir $(CURDIR))
+
+SAMPLE_TXT := $(NAME).txt
+VM8086_TXT := $(patsubst %.txt,$(RESDIR)/%.vm8086.txt,$(SAMPLE_TXT))
+BOCHS_TXT := $(patsubst %.txt,$(RESDIR)/%.bochs.txt,$(SAMPLE_TXT))
 
 HAVE_COLOR := $(or $(FORCE_COLOR), $(shell [ -n $$(tput colors) ] && [ $$(tput colors) -ge 8 ] && echo 1))
 ifeq ($(HAVE_COLOR),1)
@@ -33,44 +41,86 @@ ifeq ($(HAVE_COLOR),1)
 	COLOR_GREEN := "$(shell tput setaf 2)"
 endif
 
-.PHONY: default test
-default: test
-	[ $(MAKELEVEL) -eq 0 ] && cat $(TESTLOG) && rm -f $(TESTLOG)
+ifeq ($(OS), Windows_NT)
+	PLATFORM := windows
+else
+	UNAME_S := $(shell uname -s)
+	ifeq ($(UNAME_S), Linux)
+		PLATFORM := linux
+	endif
+	ifeq ($(UNAME_S), Darwin)
+		PLATFORM := macos
+	endif
+endif
+
+.PHONY: test
+test: test-prep $(VM8086_TXT)
+	[ $(MAKELEVEL) -eq 0 ] && cat $(TESTLOG) && rm -f $(TESTLOG) || true
+
+.PHONY: validate
+validate: test-prep $(BOCHS_TXT)
+	[ $(MAKELEVEL) -eq 0 ] && cat $(TESTLOG) && rm -f $(TESTLOG) || true
+
+.PHONY: all
+all: validate test
 
 .PHONY: test-prep
 test-prep:
 	rm -rf $(RESDIR)
-	mkdir -p $(RESDIR) $(OBJDIR)
+	mkdir -p $(RESDIR) $(OBJDIR) $(COMMON_OBJDIR) $(COMMON_BINDIR)
 
-$(RESDIR)/%.txt: $(OBJDIR)/%.input
-	printf '$(NAME): executing ' >> $(TESTLOG)
+# Test the vm8086 binary
+$(RESDIR)/%.vm8086.txt: $(OBJDIR)/%.input
+	printf '$(NAME): executing (vm8086) ' >> $(TESTLOG)
 	$(ICVM) $< > $@ 2>&1 || ( cat $@ ; true )
-	@diff $(notdir $@) $@ \
-		|| ( echo $(COLOR_RED)FAILED$(COLOR_NORMAL) ; diff $(notdir $@) $@ ) >> $(TESTLOG)
+	@diff $(SAMPLE_TXT) $@ || ( echo $(COLOR_RED)FAILED$(COLOR_NORMAL) ; diff $(notdir $@) $@ ) >> $(TESTLOG)
 	@echo $(COLOR_GREEN)OK$(COLOR_NORMAL) >> $(TESTLOG)
 
 $(OBJDIR)/%.input: $(LIB8086) $(LIBXIB) $(TEST_HEADER) $(OBJDIR)/%.o
 	echo .$$ | cat $^ - | $(ICVM) $(ICLD) > $@
 	echo .$$ | cat $^ - | $(ICVM) $(ICLDMAP) > $@.map.yaml
 
-$(OBJDIR)/%.o: $(OBJDIR)/%.bin
+$(OBJDIR)/%.o: $(OBJDIR)/%.vm8086.bin
 	wc -c $< | sed 's/$$/\/binary/' | cat - $< | $(ICVM) $(ICBIN2OBJ) > $@
 
-$(OBJDIR)/%.bin $(OBJDIR)/%.lst: %.asm $(wildcard *.inc)
-	printf '$(NAME): assembling ' >> $(TESTLOG)
-	nasm -i ../common -d VM8086 -f bin $< -o $@ -l $(@:.bin=.lst) \
+# Test the bochs binary
+$(RESDIR)/%.bochs.txt: $(OBJDIR)/%.bochs.serial $(COMMON_BINDIR)/dump_state
+	$(COMMON_BINDIR)/dump_state $< $@
+
+$(OBJDIR)/%.bochs.serial: $(OBJDIR)/%.bochs.bin
+	printf '$(NAME): executing (bochs) ' >> $(TESTLOG)
+	echo continue | bochs -q -f ../common/bochsrc.${PLATFORM} \
+		"optromimage1:file=$<,address=0xd0000" "com1:dev=$@" || true
+	@diff $(SAMPLE_TXT) $@ || ( echo $(COLOR_RED)FAILED$(COLOR_NORMAL) ; diff $(notdir $@) $@ ) >> $(TESTLOG)
+	@echo $(COLOR_GREEN)OK$(COLOR_NORMAL) >> $(TESTLOG)
+
+# Build the binaries
+$(OBJDIR)/%.bochs.bin: %.asm $(wildcard *.inc) $(COMMON_BINDIR)/checksum
+	printf '$(NAME): assembling (bochs) ' >> $(TESTLOG)
+	@nasm -i ../common -d BOCHS -f bin $< -o $@ \
+		|| ( echo $(COLOR_RED)FAILED$(COLOR_NORMAL) ; false ) >> $(TESTLOG)
+	$(COMMON_BINDIR)/checksum $@ || rm $@
+	hexdump -C $@ ; true
+	@echo $(COLOR_GREEN)OK$(COLOR_NORMAL) >> $(TESTLOG)
+
+$(OBJDIR)/%.vm8086.bin: %.asm $(wildcard *.inc)
+	printf '$(NAME): assembling (vm8086) ' >> $(TESTLOG)
+	@nasm -i ../common -d VM8086 -f bin $< -o $@ \
 		|| ( echo $(COLOR_RED)FAILED$(COLOR_NORMAL) ; false ) >> $(TESTLOG)
 	hexdump -C $@ ; true
 	@echo $(COLOR_GREEN)OK$(COLOR_NORMAL) >> $(TESTLOG)
 
-.PHONY: skip
-skip:
-	@echo $(NAME): $(COLOR_RED)SKIPPED$(COLOR_NORMAL) >> $(TESTLOG)
-	false
+# Build supporting tools
+$(COMMON_BINDIR)/%: $(COMMON_OBJDIR)/%.o
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
+$(COMMON_OBJDIR)/%.o: $(COMMON_DIR)/%.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $^ -o $@
+
+# Clean
 .PHONY: clean
 clean:
-	rm -rf $(RESDIR) $(OBJDIR)
+	rm -rf $(RESDIR) $(OBJDIR) $(COMMON_OBJDIR) $(COMMON_BINDIR)
 
 # Keep all automatically generated files (e.g. object files)
 .SECONDARY:
