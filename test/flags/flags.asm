@@ -1,25 +1,18 @@
-cpu 8086
+%include "common.inc"
 
 
-section interrupts start=0x00000
-    dw  3 dup (0x0000, 0x0000)
-    dw  handle_int3, 0x8000             ; INT 3
-
-
-section .text start=0x80000
-
-handle_int3:                            ; INT 3 handler
+section .text
     ; reset all flags
     mov dx, 0
     push dx
     popf
-    out 0x42, al
+    dump_state
 
 %macro set_reset_instruction 2
     ; set flag and push
     %1
     pushf
-    out 0x42, al
+    dump_state
 
     ; reset all flags
     mov dx, 0
@@ -28,12 +21,12 @@ handle_int3:                            ; INT 3 handler
 
     ; pop flags
     popf
-    out 0x42, al
+    dump_state
 
     ; clear flag and push
     %2
     pushf
-    out 0x42, al
+    dump_state
 
     ; set all flags
     mov dx, 0xffff
@@ -42,7 +35,7 @@ handle_int3:                            ; INT 3 handler
 
     ; pop flags
     popf
-    out 0x42, al
+    dump_state
 %endmacro
 
     out 0x80, al
@@ -63,7 +56,7 @@ handle_int3:                            ; INT 3 handler
     push ax
     popf
     pushf
-    out 0x42, al
+    dump_state
 
     ; reset all flags
     mov dx, 0
@@ -72,14 +65,14 @@ handle_int3:                            ; INT 3 handler
 
     ; pop flags
     popf
-    out 0x42, al
+    dump_state
 
     ; clear flag and push
     xor ax, word %1
     push ax
     popf
     pushf
-    out 0x42, al
+    dump_state
 
     ; set all flags
     mov dx, 0xffff
@@ -88,7 +81,7 @@ handle_int3:                            ; INT 3 handler
 
     ; pop flags
     popf
-    out 0x42, al
+    dump_state
 %endmacro
 
     out 0x81, al
@@ -116,14 +109,14 @@ handle_int3:                            ; INT 3 handler
     sahf
     mov ah, 0
     lahf
-    out 0x42, al
+    dump_state
 
     ; clear flag and store to ah
     xor ah, byte %1
     sahf
     mov ah, 0
     lahf
-    out 0x42, al
+    dump_state
 
 %endmacro
 
@@ -136,8 +129,4 @@ handle_int3:                            ; INT 3 handler
     set_reset_ah 0b_01000000
     set_reset_ah 0b_10000000
 
-    hlt
-
-
-section boot start=0xffff0              ; boot
-    int3
+    call power_off

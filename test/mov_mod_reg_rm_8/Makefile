@@ -1,3 +1,2 @@
+DISABLE_BOCHS=1
 include ../test.mk
-
-test: test-prep $(RESDIR)/$(NAME).txt

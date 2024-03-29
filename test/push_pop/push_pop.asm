@@ -1,22 +1,14 @@
-cpu 8086
+%include "common.inc"
 
 
-section interrupts start=0x00000
-    dw  3 dup (0x0000, 0x0000)
-    dw  handle_int3, 0x8000             ; INT 3
-
-
-section .data start=0x10000
-
+section .data start=0xe0000
+    dw  13 dup (0)
 data:
-    dw  13 dup 0x0000
     dw  0
 
 
-section .text start=0x80000
-
-handle_int3:                            ; INT 3 handler
-    out 0x42, al
+section .text
+    dump_state
 
 %include "reg.inc"
 %include "mem.inc"
@@ -24,8 +16,4 @@ handle_int3:                            ; INT 3 handler
     ; the sr.inc test messes up segments
 %include "sr.inc"
 
-    hlt
-
-
-section boot start=0xffff0              ; boot
-    int3
+    call power_off

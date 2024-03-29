@@ -1,6 +1,6 @@
 ; TODO check other instructions than MOV; make sure all instruction variants that access memory are handled
 
-cpu 8086
+%include "common.inc"
 
 
 %macro clear_registers 0
@@ -15,12 +15,9 @@ cpu 8086
 %endmacro
 
 
-section interrupts start=0x00000
-    dw  3 dup (0x0000, 0x0000)
-    dw  handle_int3, 0x1000             ; INT 3
+section .text
+    jmp start
 
-
-section .text start=0x10000
     ; make sure the data_read starts at an interesting address, not 0
     dw  17 dup 0x0000
 data_read:
@@ -28,8 +25,8 @@ data_read:
 data_write:
     dw  0x0000
 
-handle_int3:                            ; INT 3 handler
-    out 0x42, al
+start:
+    dump_state
     out 0x80, al
 
     ; some basic tests
@@ -46,10 +43,10 @@ handle_int3:                            ; INT 3 handler
     mov ds, dx
     mov dx, [data_write]
 
-    out 0x42, al
+    dump_state
     out 0x81, al
 
-    ; set up segments (cs is already set up by int3)
+    ; set up segments (cs is already set up by jmp)
     mov ax, 0x2000
     mov ds, ax
     mov ax, 0x3000
@@ -57,7 +54,12 @@ handle_int3:                            ; INT 3 handler
     mov ax, 0x4000
     mov es, ax
 
-    out 0x42, al
+    ; set up different data in each segment
+    mov word [ds:data_read], 0x2222
+    mov word [ss:data_read], 0x3333
+    mov word [es:data_read], 0x4444
+
+    dump_state
     out 0x82, al
 
     ; check segment prefixes when using just displacement
@@ -68,7 +70,7 @@ handle_int3:                            ; INT 3 handler
     mov si, [ss:data_read]
     mov di, [es:data_read]
 
-    out 0x42, al
+    dump_state
     out 0x83, al
 
     ; check segment prefixes when using bx
@@ -80,7 +82,7 @@ handle_int3:                            ; INT 3 handler
     mov si, [ss:bx]
     mov di, [es:bx]
 
-    out 0x42, al
+    dump_state
     out 0x84, al
 
     ; check segment prefixes when using bp
@@ -92,7 +94,7 @@ handle_int3:                            ; INT 3 handler
     mov si, [ss:bp]
     mov di, [es:bp]
 
-    out 0x42, al
+    dump_state
     out 0x85, al
 
     ; check the other direction
@@ -117,7 +119,7 @@ handle_int3:                            ; INT 3 handler
     mov cx, [ss:data_write]
     mov dx, [es:data_write]
 
-    out 0x42, al
+    dump_state
     out 0x86, al
 
     ; check that segment prefixes get used up after one instruction
@@ -129,7 +131,7 @@ handle_int3:                            ; INT 3 handler
     mov si, [ss:data_read]
     mov di, [data_read]
 
-    out 0x42, al
+    dump_state
     out 0x87, al
 
     ; check that combinations of prefixes work correctly
@@ -144,7 +146,7 @@ handle_int3:                            ; INT 3 handler
     rep lock mov si, [es:data_read]
     mov di, [data_read]
 
-    out 0x42, al
+    dump_state
     out 0x88, al
 
     ; check segment prefix with MOV AX
@@ -153,7 +155,7 @@ handle_int3:                            ; INT 3 handler
     mov [data_write], ax
     mov dx, [data_write]                ; make the value visible in dump
 
-    out 0x42, al
+    dump_state
     out 0x89, al
 
     clear_registers
@@ -161,7 +163,7 @@ handle_int3:                            ; INT 3 handler
     mov [es:data_write], ax
     mov dx, [es:data_write]             ; make the value visible in dump
 
-    out 0x42, al
+    dump_state
     out 0x8a, al
 
     ; check segment prefix with MOV MEM8, IMMED8
@@ -176,7 +178,7 @@ handle_int3:                            ; INT 3 handler
     mov bl, [ds:bp]
     mov cl, [cs:bp]
 
-    out 0x42, al
+    dump_state
     out 0x8b, al
 
     ; check segment prefix with MOV MEM16, IMMED16
@@ -191,29 +193,7 @@ handle_int3:                            ; INT 3 handler
     mov bx, [ds:bp]
     mov cx, [cs:bp]
 
-    out 0x42, al
+    dump_state
     out 0x8c, al
 
-    hlt
-
-
-section data_segment start=0x20000
-    dw  17 dup 0x0000
-    dw  0x2222
-    dw  0x0000
-
-
-section stack_segment start=0x30000
-    dw  17 dup 0x0000
-    dw  0x3333
-    dw  0x0000
-
-
-section extra_segment start=0x40000
-    dw  17 dup 0x0000
-    dw  0x4444
-    dw  0x0000
-
-
-section boot start=0xffff0              ; boot
-    int3
+    call power_off

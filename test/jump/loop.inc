@@ -20,7 +20,7 @@
     mov ax, 0
 
 %%target:
-    out 0x42, al
+    dump_state
 %endmacro
 
     test_loop loop, 0

@@ -2,32 +2,23 @@
 ; TODO x test sign-extended 8-bit displacement
 ; TODO x test wrap around (register near 0xfffff + displacement, also negative displacement, also around 0x7f)
 
-cpu 8086
+%include "common.inc"
 
 
-section interrupts start=0x00000
-    dw  3 dup (0x0000, 0x0000)
-    dw  handle_int3, 0x8000             ; INT 3
-
-
-section data_segment start=0x10000
-
-    dw 23 dup (0x0000)
+section data_segment start=0x10000 nobits
+    resw 23
 test_ds:
-    dw  0
+    resw 1
 
 
-section stack_segment start=0x20000
-
-    dw 17 dup (0x0000)
+section stack_segment start=0x20000 nobits
+    resw 17
 test_ss:
-    dw  0
+    resw 1
 
 
-section .text start=0x80000
-
-handle_int3:                            ; INT 3 handler
-    out 0x42, al
+section .text
+    dump_state
 
     ; set up for testing MOD R/M
     mov ax, 0x1000
@@ -53,8 +44,4 @@ handle_int3:                            ; INT 3 handler
 %include "reg_mem_0.inc"
     out 0x85, al
 
-    hlt
-
-
-section boot start=0xffff0              ; boot
-    int3
+    call power_off

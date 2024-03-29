@@ -53,4 +53,4 @@
     inc dh
     inc dh
 
-    out 0x42, al
+    dump_state

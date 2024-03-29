@@ -19,7 +19,7 @@ SRCDIR = src
 BINDIR ?= bin
 OBJDIR ?= obj
 
-TESTDIRS = $(sort $(dir $(wildcard test/*/*)))
+TESTDIRS = $(sort $(dir $(wildcard test/*/Makefile)))
 export TESTLOG = $(abspath test/test.log)
 
 define run-as
@@ -49,20 +49,45 @@ build-prep:
 
 # Test
 .PHONY: test
-test: build build-test-header run-test
+test: build build-test-header run-test-test
+
+.PHONY: validate
+validate: build build-test-header run-test-validate
+
+.PHONY: test-all
+test-all: build build-test-header run-test-all
+
+.PHONY: test-build
+test-build: build build-test-header run-test-build
 
 .PHONY: build-test-header
 build-test-header: $(OBJDIR)/test_header.o
 
-.PHONY: run-test
-run-test:
+define run-each-test
 	rm -rf $(TESTLOG)
 	failed=0 ; \
 	for testdir in $(TESTDIRS) ; do \
-		$(MAKE) -C $$testdir test || failed=1 ; \
+		$(MAKE) -C $$testdir $(subst run-test-,,$@) || failed=1 ; \
 	done ; \
 	cat test/test.log ; \
 	[ $$failed = 0 ] || exit 1
+endef
+
+.PHONY: run-test-test
+run-test-test:
+	$(run-each-test)
+
+.PHONY: run-test-validate
+run-test-validate:
+	$(run-each-test)
+
+.PHONY: run-test-all
+run-test-all:
+	$(run-each-test)
+
+.PHONY: run-test-build
+run-test-build:
+	$(run-each-test)
 
 # The order of the object files matters: First include all the code in any order, then binary.o,
 # then the (optional) 8086 image header and data.

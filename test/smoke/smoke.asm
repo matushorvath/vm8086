@@ -1,8 +1,6 @@
-cpu 8086
-
-org 0x00000
+%include "common.inc"
 
 
-section .text start=0xffff0              ; boot
+section .text
     nop
-    hlt
+    call power_off

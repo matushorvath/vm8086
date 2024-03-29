@@ -22,7 +22,7 @@
     mov byte [data], 0b_11001100
     or  bh, byte [data]                 ; OR REG8, MEM8
 
-    out 0x42, al
+    dump_state
 
     ; test flags, 8-bit
 
@@ -30,19 +30,19 @@
     mov al, 0b_01010101
     clearf
     or  al, 0b_11001100
-    out 0x42, al
+    dump_state
 
     ; ZF = 1
     mov al, 0b_00000000
     clearf
     or  al, 0b_00000000
-    out 0x42, al
+    dump_state
 
     ; PF = 1
     mov al, 0b_01010101
     clearf
     or  al, 0b_01001101
-    out 0x42, al
+    dump_state
 
     ; test OR REG8/MEM8, IMMED8
     ; there are two opcodes, 0x80 and 0x82, with the same behavior and implementation
@@ -58,4 +58,4 @@
     or  byte [ds:bp], 0b_01010101       ; OR MEM8, IMMED8
     mov cl, byte [data]
 
-    out 0x42, al
+    dump_state

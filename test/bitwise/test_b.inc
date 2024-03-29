@@ -31,7 +31,7 @@
     test bh, byte [data]                ; TEST REG8, MEM8
     pushf
 
-    out 0x42, al
+    dump_state
 
     ; test flags, 8-bit
 
@@ -39,19 +39,19 @@
     mov al, 0b_11010101
     clearf
     test al, 0b_11001101
-    out 0x42, al
+    dump_state
 
     ; ZF = 1
     mov al, 0b_01010101
     clearf
     test al, 0b_10101010
-    out 0x42, al
+    dump_state
 
     ; PF = 1
     mov al, 0b_01010101
     clearf
     test al, 0b_01001101
-    out 0x42, al
+    dump_state
 
     ; test TEST REG8/MEM8, IMMED8
     mov bl, 0b_01010101
@@ -70,4 +70,4 @@
     test byte [ds:bp], 0b_01010101      ; TEST MEM8, IMMED8
     pushf
 
-    out 0x42, al
+    dump_state

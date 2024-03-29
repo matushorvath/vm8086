@@ -1,0 +1,5 @@
+#include ../common/bochsrc.common
+
+display_library: nogui
+#display_library: term
+#display_library: sdl2

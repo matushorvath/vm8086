@@ -5,25 +5,18 @@
 ; TODO x test flag_auxiliary_carry for low nibble
 ; TODO x test flag_overflow when moving 0x7f->0x80 and back
 
-cpu 8086
+%include "common.inc"
 
 
-section interrupts start=0x00000
-    dw  3 dup (0x0000, 0x0000)
-    dw  handle_int3, 0x8000             ; INT 3
+section .data start=0xe0000
 
-
-section .data start=0x10000
-
-data:
     dw  13 dup 0x0000
+data:
     dw  0
 
 
-section .text start=0x80000
-
-handle_int3:                            ; INT 3 handler
-    out 0x42, al
+section .text
+    dump_state
 
     ; these tests break sp
 %include "inc_reg16.inc"
@@ -33,8 +26,4 @@ handle_int3:                            ; INT 3 handler
 
 %include "inc_dec_mem.inc"
 
-    hlt
-
-
-section boot start=0xffff0              ; boot
-    int3
+    call power_off

@@ -1,5 +1,5 @@
     ; set ds to access the data
-    mov ax, 0x1000
+    mov ax, 0xe000
     mov ds, ax
 
     ; reset the memory
@@ -16,7 +16,7 @@
     push word [ds:bp + 1]
     push word [ds:bp + di]
 
-    out 0x42, al
+    dump_state
 
     ; pop memory in opposite order
     pop word [data]
@@ -28,4 +28,4 @@
     mov word bx, [ds:bp + 1]
     mov word cx, [ds:bp + 2]
 
-    out 0x42, al
+    dump_state

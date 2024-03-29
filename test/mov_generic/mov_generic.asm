@@ -1,15 +1,8 @@
-cpu 8086
+%include "common.inc"
 
 
-section interrupts start=0x00000
-    dw  3 dup (0x0000, 0x0000)
-    dw  handle_int3, 0x8000             ; INT 3
-
-
-section .text start=0x80000
-
-handle_int3:                            ; INT 3 handler
-    out 0x42, al
+section .text
+    dump_state
 
 %include "reg_reg.inc"
     out 0x80, al
@@ -24,12 +17,7 @@ handle_int3:                            ; INT 3 handler
 ; TODO x MOV MEM8, AL
 ; TODO x MOV MEM16, AX
 
-    hlt
-
-
-section boot start=0xffff0              ; boot
-    int3
-
+    call power_off
 
 ; TODO x new test for XCHG
 

@@ -31,7 +31,7 @@
     test dx, word [data]                ; TEST REG16, MEM16
     pushf
 
-    out 0x42, al
+    dump_state
 
     ; test flags, 16-bit
 
@@ -39,19 +39,19 @@
     mov ax, 0b_11010101_11001100
     clearf
     test ax, 0b_11001100_01010101
-    out 0x42, al
+    dump_state
 
     ; ZF = 1
     mov ax, 0b_01010101_11001100
     clearf
     test ax, 0b_10101010_00110011
-    out 0x42, al
+    dump_state
 
     ; PF = 1
     mov ax, 0b_01010101_11001101
     clearf
     test ax, 0b_01001100_01001100
-    out 0x42, al
+    dump_state
 
     ; test TEST REG16/MEM16, IMMED16
     mov bx, 0b_01010101_11001101
@@ -70,4 +70,4 @@
     test word [ds:bp], 0b_11001100_01010101         ; TEST MEM16, IMMED16
     pushf
 
-    out 0x42, al
+    dump_state

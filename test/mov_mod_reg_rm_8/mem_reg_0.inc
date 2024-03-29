@@ -18,7 +18,7 @@
     mov [byte bx], dh
     mov dl, [5]
 
-    out 0x42, al
+    dump_state
 
     mov ax, 0x0000
     mov cx, 0x0000
@@ -33,4 +33,4 @@
     mov [byte bp + di], dh
     mov cl, [ss:7 + 13]
 
-    out 0x42, al
+    dump_state

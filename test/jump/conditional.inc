@@ -12,7 +12,7 @@
     mov ax, 0
 
 %%target:
-    out 0x42, al
+    dump_state
 %endmacro
 
     ; ----ODIT SZ-A-P-C
