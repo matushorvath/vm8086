@@ -1,4 +1,5 @@
 romimage: file=$BXSHARE/BIOS-bochs-legacy
+vga: extension=none
 
 magic_break: enabled=1
 

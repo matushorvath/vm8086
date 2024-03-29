@@ -5,33 +5,41 @@
 %endif
 
 
-; bochs allows option roms between c8000 and dfffff
+; bochs allows option roms between c8000 and dfffff, vgabios.bin ends at c9600
+; we use ca000 for the header and cb000 for the extra segment
 extra_seg   equ 0xc000
-extra_addr  equ 0xc8000
-extra_size  equ 0x8000
+extra_addr  equ 0xcb000
+extra_size  equ 0x5000
 
 text_seg    equ 0xd000
 text_addr   equ 0xd0000
-text_size   equ 0xc000
+text_size   equ 0x8000
 
-util_addr   equ 0xdc000
+util_addr   equ 0xd8000
 util_size   equ 0x4000
 
-rom_addr    equ 0xc8000
-rom_size    equ 0x18000
+data_addr   equ 0xdc000
+data_size   equ 0x4000
+
+rom_addr    equ 0xca000
+rom_size    equ 0x16000
 
 
 cpu 8086
 org rom_addr
 
 
-; startup and initialization
-
-section .text start=text_addr
-    ; option rom signature, needed for booting in bochs
+; option rom signature, needed for booting in bochs
+section header start=rom_addr
     dw  0xaa55                                              ; signature
     db  rom_size / 0x200                                    ; size in 512 byte blocks
+    jmp text_seg:init
 
+
+; startup and initialization
+section .text start=text_addr
+    ; TODO remove these three bytes (and fix all tests)
+    db  3 dup (0)
 init:
     call initialize
 

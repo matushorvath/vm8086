@@ -50,7 +50,7 @@ define failed
 endef
 
 define failed-diff
-	( echo $(COLOR_RED)FAILED$(COLOR_NORMAL) ; diff $(SAMPLE_TXT) $@ ) >> $(TESTLOG)
+	( echo $(COLOR_RED)FAILED$(COLOR_NORMAL) ; diff $(SAMPLE_TXT) $@ ; false ) >> $(TESTLOG)
 endef
 
 ifeq ($(OS), Windows_NT)
@@ -115,24 +115,25 @@ $(RESDIR)/%.bochs.txt: $(RESDIR)/%.bochs.serial $(COMMON_BINDIR)/dump_state
 $(RESDIR)/%.bochs.serial: $(OBJDIR)/%.bochs.bin
 	printf '$(NAME): [bochs] executing ' >> $(TESTLOG)
 	echo continue | bochs -q -f ../common/bochsrc.${PLATFORM} \
-		"optromimage1:file=$<,address=0xd0000" "com1:dev=$@" || true
+		"optromimage1:file=$<,address=0xca000" "com1:dev=$@" || true
 	touch $@
 	@$(passed)
 
 # Build the binaries
+# TODO depend on common.inc
 $(OBJDIR)/%.bochs.bin: %.asm $(wildcard *.inc) $(COMMON_BINDIR)/checksum
 	printf '$(NAME): [bochs] assembling ' >> $(TESTLOG)
 	nasm -i ../common -d BOCHS -f bin $< -o $@ || $(failed)
 	$(COMMON_BINDIR)/checksum $@ || rm $@
 	hexdump -C $@ ; true
-	[ "$$(wc -c < $@)" -eq 98304 ] || $(failed)
+	[ "$$(wc -c < $@)" -eq 90112 ] || $(failed)
 	@$(passed)
 
 $(OBJDIR)/%.vm8086.bin: %.asm $(wildcard *.inc)
 	printf '$(NAME): [vm8086] assembling ' >> $(TESTLOG)
 	nasm -i ../common -d VM8086 -f bin $< -o $@ || $(failed)
 	hexdump -C $@ ; true
-	[ "$$(wc -c < $@)" -eq 229376 ] || ( rm $@ ; $(failed) )
+	[ "$$(wc -c < $@)" -eq 221184 ] || ( rm $@ ; $(failed) )
 	@$(passed)
 
 # Build supporting tools
