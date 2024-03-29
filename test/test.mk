@@ -132,8 +132,7 @@ $(RESDIR)/%.bochs.serial: $(OBJDIR)/%.bochs.bin
 	@$(passed)
 
 # Build the binaries
-# TODO depend on common.inc
-$(OBJDIR)/%.bochs.bin: %.asm $(wildcard *.inc) $(COMMON_BINDIR)/checksum
+$(OBJDIR)/%.bochs.bin: %.asm $(wildcard *.inc) $(wildcard $(COMMON_DIR)/*.inc) $(COMMON_BINDIR)/checksum
 	printf '$(NAME): [bochs] assembling ' >> $(TESTLOG)
 	nasm -i ../common -d BOCHS -f bin $< -o $@ || $(failed)
 	$(COMMON_BINDIR)/checksum $@ || rm $@
@@ -141,7 +140,7 @@ $(OBJDIR)/%.bochs.bin: %.asm $(wildcard *.inc) $(COMMON_BINDIR)/checksum
 	[ "$$(wc -c < $@)" -eq 90112 ] || $(failed)
 	@$(passed)
 
-$(OBJDIR)/%.vm8086.bin: %.asm $(wildcard *.inc)
+$(OBJDIR)/%.vm8086.bin: %.asm $(wildcard *.inc) $(wildcard $(COMMON_DIR)/*.inc)
 	printf '$(NAME): [vm8086] assembling ' >> $(TESTLOG)
 	nasm -i ../common -d VM8086 -f bin $< -o $@ || $(failed)
 	hexdump -C $@ ; true

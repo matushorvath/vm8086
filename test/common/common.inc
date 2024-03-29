@@ -75,6 +75,10 @@ initialize:
     mov al, 0b_111_00_0_11                                  ; 9600 P0 S1 B8
     int 0x14
 
+    ; print to bochs console
+    mov al, 'I'
+    out 0xe9, al
+
     ; clear segment registers
     xor ax, ax
     mov ds, ax
@@ -163,6 +167,12 @@ power_off:
     xor bx, bx
     mov cx, 0x0102
     int 0x15
+
+    ; print to bochs console
+    mov al, 'P'
+    out 0xe9, al
+    mov al, 10
+    out 0xe9, al
 
     ; apm power off
     mov ax, 0x5307
@@ -324,6 +334,10 @@ dump_state_bochs:
 
     inc si
     loop .loop_stack
+
+    ; print to bochs console
+    mov al, 's'
+    out 0xe9, al
 
     pop bp
     pop si
