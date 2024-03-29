@@ -1,9 +1,9 @@
 %include "common.inc"
 
 
-test_seg equ 0x8000
+bss_seg     equ 0x8000
 
-section .bss start=(test_seg * 0x10) nobits
+section .bss start=(bss_seg * 0x10) nobits
 
 test_data:
     resw  0
@@ -66,4 +66,4 @@ section .text
 
 data_segment:
     ; we load this into ds at the beginning of the test
-    dw  test_seg
+    dw  bss_seg

@@ -30,6 +30,7 @@ org rom_addr
 
 
 ; option rom signature, needed for booting in bochs
+; TODO remove this for vm8086, just do a db X instead
 section header start=rom_addr
     dw  0xaa55                                              ; signature
     db  rom_size / 0x200                                    ; size in 512 byte blocks
@@ -227,18 +228,23 @@ power_off:
 dump_state_bochs:
     ; dump state in raw form, to be formatted later by dump_state.c
 
+.first_push:
     push ax
     push cx
     push si
     push bp
+    pushf
 
-    ; save ax and bp for dumping later
+    ; save ax, bp and flags for dumping later
     push ax
     push bp
+    pushf
+.last_push:
 
     ; reconstruct original sp in bp
     mov bp, sp
-    add bp, 14                          ; 6 pushed registers + IP
+    ; how many registers we pushed above + IP that was pushed by function call
+    add bp, (.last_push - .first_push + 1) * 2
 
     ; record type is 0x0001
     mov al, 0x01
@@ -255,7 +261,6 @@ dump_state_bochs:
     call out_char
 
     ; flags
-    pushf
     pop ax
     call out_char
     mov al, ah
@@ -339,6 +344,7 @@ dump_state_bochs:
     mov al, 's'
     out 0xe9, al
 
+    popf
     pop bp
     pop si
     pop cx
