@@ -17,7 +17,7 @@ section .text
 ; TODO x MOV MEM8, AL
 ; TODO x MOV MEM16, AX
 
-    hlt
+    call power_off
 
 ; TODO x new test for XCHG
 

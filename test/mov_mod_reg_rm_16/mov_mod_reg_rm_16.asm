@@ -43,4 +43,4 @@ section .text
 %include "reg_mem_0.inc"
     out 0x85, al
 
-    hlt
+    call power_off

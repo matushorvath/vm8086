@@ -18,4 +18,4 @@ section .text
     out 0x82, al
 %include "call_memory.inc"
 
-    hlt
+    call power_off

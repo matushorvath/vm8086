@@ -129,4 +129,4 @@ section .text
     set_reset_ah 0b_01000000
     set_reset_ah 0b_10000000
 
-    hlt
+    call power_off

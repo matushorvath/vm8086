@@ -33,4 +33,4 @@ section .text
     ; TODO IN AL, DX
     ; TODO IN AX, DX
 
-    hlt
+    call power_off

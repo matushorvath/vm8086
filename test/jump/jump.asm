@@ -20,4 +20,4 @@ section .text
     out 0x84, al
 %include "jmp_memory.inc"
 
-    hlt
+    call power_off

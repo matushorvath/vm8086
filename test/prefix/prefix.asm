@@ -196,4 +196,4 @@ start:
     dump_state
     out 0x8c, al
 
-    hlt
+    call power_off

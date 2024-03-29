@@ -31,7 +31,7 @@ section .text
     int 21
     dump_state
 
-    hlt
+    call power_off
 
 handle_int3:
     dump_state

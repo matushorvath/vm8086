@@ -41,4 +41,4 @@ section .text
 %include "test_b.inc"
 %include "test_w.inc"
 
-    hlt
+    call power_off

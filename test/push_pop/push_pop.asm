@@ -16,4 +16,4 @@ section .text
     ; the sr.inc test messes up segments
 %include "sr.inc"
 
-    hlt
+    call power_off

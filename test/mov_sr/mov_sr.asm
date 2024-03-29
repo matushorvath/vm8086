@@ -60,7 +60,7 @@ section .text
     ; TODO x MOV sr, reg, both directions
     ; TODO x test setting cs (as the last test probably)
 
-    hlt
+    call power_off
 
 data_segment:
     ; we load this into ds at the beginning of the test

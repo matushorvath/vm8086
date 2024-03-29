@@ -26,4 +26,4 @@ section .text
 
 %include "inc_dec_mem.inc"
 
-    hlt
+    call power_off
