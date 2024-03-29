@@ -39,6 +39,7 @@ ifeq ($(HAVE_COLOR),1)
 	COLOR_NORMAL := "$$(tput sgr0)"
 	COLOR_RED := "$$(tput setaf 1)"
 	COLOR_GREEN := "$$(tput setaf 2)"
+	COLOR_YELLOW := "$$(tput setaf 3)"
 endif
 
 define passed
@@ -47,6 +48,10 @@ endef
 
 define failed
 	( echo $(COLOR_RED)FAILED$(COLOR_NORMAL) ; false ) >> $(TESTLOG)
+endef
+
+define disabled
+	echo $(COLOR_YELLOW)DISABLED$(COLOR_NORMAL) >> $(TESTLOG)
 endef
 
 define failed-diff
@@ -70,8 +75,15 @@ test: test-prep $(VM8086_TXT)
 	[ $(MAKELEVEL) -eq 0 ] && cat $(TESTLOG) && rm -f $(TESTLOG) || true
 
 .PHONY: validate
+ifeq ($(DISABLE_BOCHS), 1)
+validate:
+	printf '$(NAME): [bochs] validating ' >> $(TESTLOG)
+	$(disabled)
+	[ $(MAKELEVEL) -eq 0 ] && cat $(TESTLOG) && rm -f $(TESTLOG) || true
+else
 validate: test-prep $(BOCHS_TXT)
 	[ $(MAKELEVEL) -eq 0 ] && cat $(TESTLOG) && rm -f $(TESTLOG) || true
+endif
 
 .PHONY: all
 all: test-prep $(BOCHS_TXT) $(VM8086_TXT)
@@ -106,7 +118,7 @@ $(OBJDIR)/%.o: $(OBJDIR)/%.vm8086.bin
 
 # Test the bochs binary
 $(RESDIR)/%.bochs.txt: $(RESDIR)/%.bochs.serial $(COMMON_BINDIR)/dump_state
-	printf '$(NAME): [bochs] generating output ' >> $(TESTLOG)
+	printf '$(NAME): [bochs] comparing ' >> $(TESTLOG)
 	$(COMMON_BINDIR)/dump_state $< $@
 	diff $(SAMPLE_TXT) $@ || $(failed-diff)
 	@$(passed)
