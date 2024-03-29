@@ -5,24 +5,24 @@
 %endif
 
 
-text_seg     equ 0xd000
-text_addr    equ (text_seg * 0x10)
-text_size    equ 0xc000
+; bochs allows option roms between c8000 and dfffff
+extra_seg   equ 0xc000
+extra_addr  equ 0xc8000
+extra_size  equ 0x8000
 
-util_seg    equ 0xdc00
-util_addr   equ (util_seg * 0x10)
+text_seg    equ 0xd000
+text_addr   equ 0xd0000
+text_size   equ 0xc000
+
+util_addr   equ 0xdc000
 util_size   equ 0x4000
 
-data_seg    equ 0xe000
-data_addr   equ (data_addr * 0x10)
-data_size   equ 0x10000
-
-rom_addr    equ 0xd0000
-rom_size    equ 0x20000
+rom_addr    equ 0xc8000
+rom_size    equ 0x18000
 
 
 cpu 8086
-org text_addr
+org rom_addr
 
 
 ; startup and initialization

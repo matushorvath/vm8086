@@ -125,14 +125,14 @@ $(OBJDIR)/%.bochs.bin: %.asm $(wildcard *.inc) $(COMMON_BINDIR)/checksum
 	nasm -i ../common -d BOCHS -f bin $< -o $@ || $(failed)
 	$(COMMON_BINDIR)/checksum $@ || rm $@
 	hexdump -C $@ ; true
-	[ "$$(wc -c < $@)" -eq 131072 ] || $(failed)
+	[ "$$(wc -c < $@)" -eq 98304 ] || $(failed)
 	@$(passed)
 
 $(OBJDIR)/%.vm8086.bin: %.asm $(wildcard *.inc)
 	printf '$(NAME): [vm8086] assembling ' >> $(TESTLOG)
 	nasm -i ../common -d VM8086 -f bin $< -o $@ || $(failed)
 	hexdump -C $@ ; true
-	[ "$$(wc -c < $@)" -eq 196608 ] || ( rm $@ ; $(failed) )
+	[ "$$(wc -c < $@)" -eq 229376 ] || ( rm $@ ; $(failed) )
 	@$(passed)
 
 # Build supporting tools
