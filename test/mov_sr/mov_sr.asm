@@ -8,28 +8,28 @@ test_data:
 
 
 section .text
-    out 0x42, al
+    dump_state
 
     ; MOV sr, [16-bit displacement]
     mov ds, [cs:data_segment]
 
-    out 0x42, al
+    dump_state
 
     mov [test_data], ds
     mov es, [test_data]
 
-    out 0x42, al
+    dump_state
 
     mov [test_data], es
     mov ss, [test_data]
     mov es, ax                          ; zero es to check the mov es, [] below 
 
-    out 0x42, al
+    dump_state
 
     mov [test_data], ss
     mov es, [test_data]
 
-    out 0x42, al
+    dump_state
 
     ; TODO x proper tests once we are able to fill registers with immediate
 
@@ -53,7 +53,7 @@ section .text
     mov [bp], es
     mov [bx], es
 
-    out 0x42, al
+    dump_state
 
     ; TODO x MOV sr, MEM16 with 8-bit displacement, both directions
     ; TODO x MOV sr, MEM16 with 16-bit displacement], both directions

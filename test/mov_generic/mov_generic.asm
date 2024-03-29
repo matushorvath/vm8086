@@ -2,7 +2,7 @@
 
 
 section .text
-    out 0x42, al
+    dump_state
 
 %include "reg_reg.inc"
     out 0x80, al

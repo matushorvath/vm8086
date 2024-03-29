@@ -18,7 +18,7 @@
     mov [word bx + test_ds], dh
     mov dl, [5 + test_ds]
 
-    out 0x42, al
+    dump_state
 
     mov ax, 0x0000
     mov cx, 0x0000
@@ -36,4 +36,4 @@
     mov [word test_ds], dh
     mov ch, [si - 11 + test_ds]
 
-    out 0x42, al
+    dump_state

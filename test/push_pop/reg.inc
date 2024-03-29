@@ -30,4 +30,4 @@
 
     pop ax
 
-    out 0x42, al
+    dump_state

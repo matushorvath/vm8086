@@ -13,7 +13,7 @@
     mov [word si + test_ds], sp
     mov dx, [11 + test_ds]
 
-    out 0x42, al
+    dump_state
 
     mov ax, 0x0000
     mov cx, 0x5432
@@ -29,7 +29,7 @@
     mov [word test_ds], cx
     mov sp, [si - 11 + test_ds]
 
-    out 0x42, al
+    dump_state
 
     mov ax, 0x0000
     mov cx, 0x0000
@@ -45,4 +45,4 @@
     mov [word bp + di + test_ss], dx
     mov sp, [ss:7 + 13 + test_ss]
 
-    out 0x42, al
+    dump_state

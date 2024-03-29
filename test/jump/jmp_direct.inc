@@ -7,19 +7,19 @@
 
     ; if we execute anything we shouldn't, ax will be set to 0
     mov ax, 1
-    out 0x42, al
+    dump_state
 
 
     jmp short_forward                   ; 1s
     mov ax, 0
 
 short_backward:
-    out 0x42, al                        ; 3s
+    dump_state                        ; 3s
     jmp test_near
     mov ax, 0
 
 short_forward:
-    out 0x42, al                        ; 2s
+    dump_state                        ; 2s
     jmp short_backward
     mov ax, 0
 
@@ -29,7 +29,7 @@ test_near:
     mov ax, 0
 
 near_backward:
-    out 0x42, al                        ; 3n
+    dump_state                        ; 3n
     jmp test_far
     mov ax, 0
 
@@ -37,7 +37,7 @@ near_backward:
     db  256 dup 0
 
 near_forward:
-    out 0x42, al                        ; 2n
+    dump_state                        ; 2n
     jmp near_backward
     mov ax, 0
 
@@ -48,14 +48,14 @@ test_far:
     mov ax, 0
 
 test_end:
-    out 0x42, al                        ; 3f
+    dump_state                        ; 3f
 
 
     ; far target in another segment, then resume current segment
 [section far_target start=0xe4000]
 
 far_absolute:
-    out 0x42, al                        ; 2f
+    dump_state                        ; 2f
     jmp 0xd000:test_end
     mov ax, 0
 

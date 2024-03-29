@@ -17,7 +17,7 @@
     mov al, dh
     inc al
 
-    out 0x42, al
+    dump_state
 
     ; MOV REG16, REG16
     mov ax, 0x4321
@@ -38,4 +38,4 @@
     mov ax, di
     inc ax
 
-    out 0x42, al
+    dump_state

@@ -16,7 +16,7 @@ data:
 
 
 section .text
-    out 0x42, al
+    dump_state
 
     ; these tests break sp
 %include "inc_reg16.inc"

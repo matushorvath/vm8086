@@ -26,59 +26,59 @@ section .text
 
     ; test interrupts
     int3
-    out 0x42, al
+    dump_state
 
     int 21
-    out 0x42, al
+    dump_state
 
     hlt
 
 handle_int3:
-    out 0x42, al
+    dump_state
 
     ; should not interrupt
     into
-    out 0x42, al
+    dump_state
 
     ; cause an overflow and then interrupt
     mov ax, 0x8000
     dec ax
     into
-    out 0x42, al
+    dump_state
 
     iret
 
 handle_int255:
     ; this interrupt needs to just output and return
-    out 0x42, al
+    dump_state
     iret
 
 
 section int_handlers start=0xe0000
 
 handle_int4:
-    out 0x42, al
+    dump_state
 
     ; test if interrupt clears TF and IF
     mov dx, 0b_00000011_00000000
     push dx
     popf
-    out 0x42, al
+    dump_state
     int 255
-    out 0x42, al
+    dump_state
 
     ; test restoring flags
     std
-    out 0x42, al
+    dump_state
 
     iret
 
 handle_int21:
-    out 0x42, al
+    dump_state
 
     ; interrupt while processing an interrupt
     ; TODO HW should this work? test STI/CLI here?
     int 255
-    out 0x42, al
+    dump_state
 
     iret

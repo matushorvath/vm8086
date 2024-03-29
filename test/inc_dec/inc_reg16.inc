@@ -53,4 +53,4 @@
     inc di
     inc di
 
-    out 0x42, al
+    dump_state

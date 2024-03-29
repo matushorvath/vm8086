@@ -24,7 +24,7 @@
     inc byte [bp + 2]
     inc byte [bx + si + 1]
 
-    out 0x42, al
+    dump_state
 
     ; increment 16-bit memory using various addressing modes
     inc word [data]
@@ -32,7 +32,7 @@
     inc word [bp + 4]
     inc word [bx + si + 4]
 
-    out 0x42, al
+    dump_state
 
     ; reset the memory
     mov word [data + 0], 0x8888
@@ -46,7 +46,7 @@
     dec byte [bp + 2]
     dec byte [bx + si + 1]
 
-    out 0x42, al
+    dump_state
 
     ; decrement 16-bit memory using various addressing modes
     dec word [data]
@@ -54,4 +54,4 @@
     dec word [bp + 4]
     dec word [bx + si + 4]
 
-    out 0x42, al
+    dump_state

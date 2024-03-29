@@ -8,7 +8,7 @@
     mov dl, 0x67
     mov dh, 0x78
 
-    out 0x42, al
+    dump_state
 
     ; MOV REG, IMMED16
     mov ax, 0xfedc
@@ -20,4 +20,4 @@
     mov si, 0x3210
     mov di, 0x210f
 
-    out 0x42, al
+    dump_state

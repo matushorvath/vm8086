@@ -13,7 +13,7 @@
     mov [11], sp
     mov dx, [byte si]
 
-    out 0x42, al
+    dump_state
 
     mov ax, 0x0000
     mov cx, 0x5432
@@ -26,7 +26,7 @@
     mov [5], cx
     mov dx, [byte bx]
 
-    out 0x42, al
+    dump_state
 
     mov ax, 0x0000
     mov cx, 0x0000
@@ -42,4 +42,4 @@
     mov [ss:7 + 13], dx
     mov sp, [byte bp + di]
 
-    out 0x42, al
+    dump_state

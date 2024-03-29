@@ -18,7 +18,7 @@ test_ss:
 
 
 section .text
-    out 0x42, al
+    dump_state
 
     ; set up for testing MOD R/M
     mov ax, 0x1000

@@ -22,7 +22,7 @@
     mov word [data], 0b_11001100_01010101
     xor dx, word [data]                 ; XOR REG16, MEM16
 
-    out 0x42, al
+    dump_state
 
     ; test flags, 16-bit
 
@@ -30,19 +30,19 @@
     mov ax, 0b_01010101_11001100
     clearf
     xor ax, 0b_11001100_01010101
-    out 0x42, al
+    dump_state
 
     ; ZF = 1
     mov ax, 0b_01010101_11001100
     clearf
     xor ax, 0b_01010101_11001100
-    out 0x42, al
+    dump_state
 
     ; PF = 1
     mov ax, 0b_01010101_11001100
     clearf
     xor ax, 0b_01001100_01001100
-    out 0x42, al
+    dump_state
 
     ; test XOR REG16/MEM16, IMMED16
     mov bx, 0b_01010101_11001100
@@ -57,7 +57,7 @@
     xor word [ds:bp], 0b_11001100_01010101          ; XOR MEM16, IMMED16
     mov dx, word [data]
 
-    out 0x42, al
+    dump_state
 
     ; test XOR REG16/MEM16, IMMED8, positive value
     mov bx, 0b_01010101_11001100
@@ -72,7 +72,7 @@
     xor word [ds:bp], 0b_01010101                   ; XOR MEM16, IMMED8
     mov dx, word [data]
 
-    out 0x42, al
+    dump_state
 
     ; test XOR REG16/MEM16, IMMED8, negative value
     mov bx, 0b_11001100_01010101
@@ -87,4 +87,4 @@
     xor word [ds:bp], 0b_11111111_11001100          ; XOR MEM16, IMMED8
     mov dx, word [data]
 
-    out 0x42, al
+    dump_state

@@ -11,11 +11,11 @@
     push ss
     push es
 
-    out 0x42, al
+    dump_state
 
     ; pop segment registers intentionally in different order, ss last
     pop ds
     pop es
     pop ss
 
-    out 0x42, al
+    dump_state

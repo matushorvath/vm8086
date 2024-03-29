@@ -37,7 +37,7 @@ BOCHS_TXT := $(patsubst %.txt,$(RESDIR)/%.bochs.txt,$(SAMPLE_TXT))
 HAVE_COLOR := $(or $(FORCE_COLOR), $(shell [ -n $$(tput colors) ] && [ $$(tput colors) -ge 8 ] && echo 1))
 ifeq ($(HAVE_COLOR),1)
 	COLOR_NORMAL := "$$(tput sgr0)"
-	COLOR_RED := "$$(tput setaf)"
+	COLOR_RED := "$$(tput setaf 1)"
 	COLOR_GREEN := "$$(tput setaf 2)"
 endif
 

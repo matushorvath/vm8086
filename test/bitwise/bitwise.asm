@@ -13,7 +13,7 @@ section .text
     mov dx, 0x1000
     mov ds, dx
 
-    out 0x42, al
+    dump_state
 
 %macro clearf 0
     mov di, 0

@@ -8,7 +8,7 @@ data:
 
 
 section .text
-    out 0x42, al
+    dump_state
 
 %include "reg.inc"
 %include "mem.inc"

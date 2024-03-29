@@ -26,7 +26,7 @@ data_write:
     dw  0x0000
 
 start:
-    out 0x42, al
+    dump_state
     out 0x80, al
 
     ; some basic tests
@@ -43,7 +43,7 @@ start:
     mov ds, dx
     mov dx, [data_write]
 
-    out 0x42, al
+    dump_state
     out 0x81, al
 
     ; set up segments (cs is already set up by jmp)
@@ -59,7 +59,7 @@ start:
     mov word [ss:data_read], 0x3333
     mov word [es:data_read], 0x4444
 
-    out 0x42, al
+    dump_state
     out 0x82, al
 
     ; check segment prefixes when using just displacement
@@ -70,7 +70,7 @@ start:
     mov si, [ss:data_read]
     mov di, [es:data_read]
 
-    out 0x42, al
+    dump_state
     out 0x83, al
 
     ; check segment prefixes when using bx
@@ -82,7 +82,7 @@ start:
     mov si, [ss:bx]
     mov di, [es:bx]
 
-    out 0x42, al
+    dump_state
     out 0x84, al
 
     ; check segment prefixes when using bp
@@ -94,7 +94,7 @@ start:
     mov si, [ss:bp]
     mov di, [es:bp]
 
-    out 0x42, al
+    dump_state
     out 0x85, al
 
     ; check the other direction
@@ -119,7 +119,7 @@ start:
     mov cx, [ss:data_write]
     mov dx, [es:data_write]
 
-    out 0x42, al
+    dump_state
     out 0x86, al
 
     ; check that segment prefixes get used up after one instruction
@@ -131,7 +131,7 @@ start:
     mov si, [ss:data_read]
     mov di, [data_read]
 
-    out 0x42, al
+    dump_state
     out 0x87, al
 
     ; check that combinations of prefixes work correctly
@@ -146,7 +146,7 @@ start:
     rep lock mov si, [es:data_read]
     mov di, [data_read]
 
-    out 0x42, al
+    dump_state
     out 0x88, al
 
     ; check segment prefix with MOV AX
@@ -155,7 +155,7 @@ start:
     mov [data_write], ax
     mov dx, [data_write]                ; make the value visible in dump
 
-    out 0x42, al
+    dump_state
     out 0x89, al
 
     clear_registers
@@ -163,7 +163,7 @@ start:
     mov [es:data_write], ax
     mov dx, [es:data_write]             ; make the value visible in dump
 
-    out 0x42, al
+    dump_state
     out 0x8a, al
 
     ; check segment prefix with MOV MEM8, IMMED8
@@ -178,7 +178,7 @@ start:
     mov bl, [ds:bp]
     mov cl, [cs:bp]
 
-    out 0x42, al
+    dump_state
     out 0x8b, al
 
     ; check segment prefix with MOV MEM16, IMMED16
@@ -193,7 +193,7 @@ start:
     mov bx, [ds:bp]
     mov cx, [cs:bp]
 
-    out 0x42, al
+    dump_state
     out 0x8c, al
 
     hlt

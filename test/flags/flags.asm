@@ -6,13 +6,13 @@ section .text
     mov dx, 0
     push dx
     popf
-    out 0x42, al
+    dump_state
 
 %macro set_reset_instruction 2
     ; set flag and push
     %1
     pushf
-    out 0x42, al
+    dump_state
 
     ; reset all flags
     mov dx, 0
@@ -21,12 +21,12 @@ section .text
 
     ; pop flags
     popf
-    out 0x42, al
+    dump_state
 
     ; clear flag and push
     %2
     pushf
-    out 0x42, al
+    dump_state
 
     ; set all flags
     mov dx, 0xffff
@@ -35,7 +35,7 @@ section .text
 
     ; pop flags
     popf
-    out 0x42, al
+    dump_state
 %endmacro
 
     out 0x80, al
@@ -56,7 +56,7 @@ section .text
     push ax
     popf
     pushf
-    out 0x42, al
+    dump_state
 
     ; reset all flags
     mov dx, 0
@@ -65,14 +65,14 @@ section .text
 
     ; pop flags
     popf
-    out 0x42, al
+    dump_state
 
     ; clear flag and push
     xor ax, word %1
     push ax
     popf
     pushf
-    out 0x42, al
+    dump_state
 
     ; set all flags
     mov dx, 0xffff
@@ -81,7 +81,7 @@ section .text
 
     ; pop flags
     popf
-    out 0x42, al
+    dump_state
 %endmacro
 
     out 0x81, al
@@ -109,14 +109,14 @@ section .text
     sahf
     mov ah, 0
     lahf
-    out 0x42, al
+    dump_state
 
     ; clear flag and store to ah
     xor ah, byte %1
     sahf
     mov ah, 0
     lahf
-    out 0x42, al
+    dump_state
 
 %endmacro
 
