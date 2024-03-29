@@ -19,27 +19,30 @@ near_forward:
 
 test_far:
     dump_state                          ; 1f
-    call 0xe600:far_absolute_2 - 0x6000                     ; TODO the segment isn't a round number
+    call extra_seg:far_absolute_2
     dump_state                          ; 5f
 
+    jmp test_end
 
-    ; far target in another segment
-[section far_target_1 start=0xe4000]
-
+    ; far target in .text segment
 far_absolute_1:
     dump_state                          ; 3f
     retf 2
 
-__?SECT?__
+test_end:
 
-    ; far target in yet another segment
-[section far_target_2 start=0xe6000]
+
+    ; far target in extra segment
+[section far_target_2 start=extra_addr]
 
 far_absolute_2:
+    ; TODO this does not work in bochs, it needs a far call
     dump_state                          ; 2f
+    ; TODO remove db  3 dup 0x90
     push ax
-    call 0xe400:far_absolute_1 - 0x4000                     ; TODO the segment isn't a round number
+    call text_seg:far_absolute_1
     dump_state                          ; 4f
+    ; TODO remove db  3 dup 0x90
     retf 0
 
 __?SECT?__
