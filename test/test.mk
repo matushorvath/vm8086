@@ -77,6 +77,10 @@ validate: test-prep $(BOCHS_TXT)
 all: test-prep $(BOCHS_TXT) $(VM8086_TXT)
 	[ $(MAKELEVEL) -eq 0 ] && cat $(TESTLOG) && rm -f $(TESTLOG) || true
 
+.PHONY: build
+build: test-prep $(OBJDIR)/$(NAME).bochs.bin $(OBJDIR)/$(NAME).vm8086.bin
+	[ $(MAKELEVEL) -eq 0 ] && cat $(TESTLOG) && rm -f $(TESTLOG) || true
+
 .PHONY: test-prep
 test-prep:
 	rm -rf $(RESDIR)
@@ -101,13 +105,14 @@ $(OBJDIR)/%.o: $(OBJDIR)/%.vm8086.bin
 	@$(passed)
 
 # Test the bochs binary
-$(RESDIR)/%.bochs.txt: $(OBJDIR)/%.bochs.serial $(COMMON_BINDIR)/dump_state
+$(RESDIR)/%.bochs.txt: $(RESDIR)/%.bochs.serial $(COMMON_BINDIR)/dump_state
 	printf '$(NAME): [bochs] generating output ' >> $(TESTLOG)
 	$(COMMON_BINDIR)/dump_state $< $@
 	diff $(SAMPLE_TXT) $@ || $(failed-diff)
 	@$(passed)
 
-$(OBJDIR)/%.bochs.serial: $(OBJDIR)/%.bochs.bin
+# TODO kill bochs after a timeout
+$(RESDIR)/%.bochs.serial: $(OBJDIR)/%.bochs.bin
 	printf '$(NAME): [bochs] executing ' >> $(TESTLOG)
 	echo continue | bochs -q -f ../common/bochsrc.${PLATFORM} \
 		"optromimage1:file=$<,address=0xd0000" "com1:dev=$@" || true
@@ -120,12 +125,14 @@ $(OBJDIR)/%.bochs.bin: %.asm $(wildcard *.inc) $(COMMON_BINDIR)/checksum
 	nasm -i ../common -d BOCHS -f bin $< -o $@ || $(failed)
 	$(COMMON_BINDIR)/checksum $@ || rm $@
 	hexdump -C $@ ; true
+	[ "$$(wc -c < $@)" -eq 131072 ] || $(failed)
 	@$(passed)
 
 $(OBJDIR)/%.vm8086.bin: %.asm $(wildcard *.inc)
 	printf '$(NAME): [vm8086] assembling ' >> $(TESTLOG)
 	nasm -i ../common -d VM8086 -f bin $< -o $@ || $(failed)
 	hexdump -C $@ ; true
+	[ "$$(wc -c < $@)" -eq 196608 ] || ( rm $@ ; $(failed) )
 	@$(passed)
 
 # Build supporting tools

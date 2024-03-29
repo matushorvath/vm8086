@@ -49,10 +49,16 @@ build-prep:
 
 # Test
 .PHONY: test
-test: build build-test-header run-test
+test: build build-test-header run-test-test
 
 .PHONY: validate
-validate: build build-test-header run-validate
+validate: build build-test-header run-test-validate
+
+.PHONY: test-all
+test-all: build build-test-header run-test-all
+
+.PHONY: test-build
+test-build: build build-test-header run-test-build
 
 .PHONY: build-test-header
 build-test-header: $(OBJDIR)/test_header.o
@@ -61,18 +67,26 @@ define run-each-test
 	rm -rf $(TESTLOG)
 	failed=0 ; \
 	for testdir in $(TESTDIRS) ; do \
-		$(MAKE) -C $$testdir $(subst run-,,$@) || failed=1 ; \
+		$(MAKE) -C $$testdir $(subst run-test-,,$@) || failed=1 ; \
 	done ; \
 	cat test/test.log ; \
 	[ $$failed = 0 ] || exit 1
 endef
 
-.PHONY: run-test
-run-test:
+.PHONY: run-test-test
+run-test-test:
 	$(run-each-test)
 
-.PHONY: run-validate
-run-validate:
+.PHONY: run-test-validate
+run-test-validate:
+	$(run-each-test)
+
+.PHONY: run-test-all
+run-test-all:
+	$(run-each-test)
+
+.PHONY: run-test-build
+run-test-build:
 	$(run-each-test)
 
 # The order of the object files matters: First include all the code in any order, then binary.o,

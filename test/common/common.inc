@@ -7,13 +7,18 @@
 
 text_seg     equ 0xd000
 text_addr    equ (text_seg * 0x10)
-text_size    equ 0x3000
+text_size    equ 0xc000
 
-util_seg    equ 0xd300
+util_seg    equ 0xdc00
 util_addr   equ (util_seg * 0x10)
-util_size   equ 0x1000
+util_size   equ 0x4000
 
-code_size   equ text_size + util_size
+data_seg    equ 0xe000
+data_addr   equ (data_addr * 0x10)
+data_size   equ 0x10000
+
+rom_addr    equ 0xd0000
+rom_size    equ 0x20000
 
 
 cpu 8086
@@ -25,15 +30,15 @@ org text_addr
 section .text start=text_addr
     ; option rom signature, needed for booting in bochs
     dw  0xaa55                                              ; signature
-    db  code_size / 0x200                                   ; size in 512 byte blocks
+    db  rom_size / 0x200                                    ; size in 512 byte blocks
 
 init:
     call initialize
 
 
 %ifdef BOCHS
-section image_end start=(text_addr + code_size - 1)
-    ; dummy section to make sure the image is exactly code_size bytes long
+section image_end start=(rom_addr + rom_size - 1)
+    ; dummy section to make sure the image is exactly rom_size bytes long
     db  0
 %endif
 
@@ -71,6 +76,7 @@ initialize:
     mov cx, 16
     mov si, 0xfff0
 
+    ; TODO use loop
     mov word [ds:0xfff0], 0
     mov word [ds:0xfff2], 0
     mov word [ds:0xfff4], 0
@@ -124,6 +130,8 @@ out_char:                                                   ; al is the char to 
     ; TODO jnz %wait_serial
     jz .wait_serial
 
+    ; TODO print also to bochs console (or at least print a dot)
+
     pop dx
     pop ax
 %endif
@@ -163,11 +171,39 @@ power_off:
     ; we should not ever get here
     jmp $
 
+; TODO
+; %macro mark 1
+;     call near mark_bochs
+; %endmacro
+
+; mark_bochs:
+; %ifdef BOCHS
+;     ; output a mark in raw form, to be formatted later by dump_state.c
+
+;     push ax
+
+;     ; record type is 0x0002
+;     mov al, 0x01
+;     call out_char
+;     mov al, 0x00
+;     call out_char
+
+;     ; output the number
+;     mov al, %1
+;     call out_char
+
+;     pop ax
+; %elifdef VM8086
+;     ; output to the numbered port, which writes a mark to output
+
+
+; %endif
+
 
 %ifdef BOCHS
 
 %macro dump_state 0
-    call dump_state_bochs
+    call near dump_state_bochs
 %endmacro
 
 dump_state_bochs:
@@ -285,6 +321,8 @@ dump_state_bochs:
     pop si
     pop cx
     pop ax
+
+    retn
 %endif
 
 %ifdef VM8086
