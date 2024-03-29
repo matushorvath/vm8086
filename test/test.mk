@@ -93,6 +93,7 @@ all: test-prep $(BOCHS_TXT) $(VM8086_TXT)
 build: test-prep $(OBJDIR)/$(NAME).bochs.bin $(OBJDIR)/$(NAME).vm8086.bin
 	[ $(MAKELEVEL) -eq 0 ] && cat $(TESTLOG) && rm -f $(TESTLOG) || true
 
+# TODO delete just the result we are going to re-create, not all results
 .PHONY: test-prep
 test-prep:
 	rm -rf $(RESDIR)
