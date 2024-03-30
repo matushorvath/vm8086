@@ -1,10 +1,11 @@
 %include "common.inc"
 
+bss_seg     equ 0x8000
 
-section .data start=0xe0000
-    dw  13 dup (0)
+section .bss start=(bss_seg * 0x10)
+    resw 13
 data:
-    dw  0
+    resw 1
 
 
 section .text
