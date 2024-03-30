@@ -130,7 +130,7 @@ execute_xchg_w:
 
 ##########
 execute_xchg_ax_w:
-.FRAME loc_type, loc_addr
+.FRAME loc_type, loc_addr;
 
     # Exchange AX with location
     add 0, 0, [rb - 1]

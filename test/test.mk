@@ -83,7 +83,7 @@ all: test-prep $(BOCHS_TXT) $(VM8086_TXT)
 	[ $(MAKELEVEL) -eq 0 ] && cat $(TESTLOG) && rm -f $(TESTLOG) || true
 
 .PHONY: build
-build: test-prep $(OBJDIR)/$(NAME).bochs.bin $(OBJDIR)/$(NAME).vm8086.bin
+build: test-prep $(OBJDIR)/$(NAME).bochs.bin $(OBJDIR)/$(NAME).input
 	[ $(MAKELEVEL) -eq 0 ] && cat $(TESTLOG) && rm -f $(TESTLOG) || true
 
 .PHONY: test-prep
