@@ -2,19 +2,19 @@
 
 
 section .text
-    out 0x80, al
+    mark 0x80
 %include "conditional.inc"
 
-    out 0x81, al
+    mark 0x81
 %include "loop.inc"
 
-    out 0x82, al
+    mark 0x82
 %include "jmp_direct.inc"
 
-    out 0x83, al
+    mark 0x83
 %include "jmp_register.inc"
 
-    out 0x84, al
+    mark 0x84
 %include "jmp_memory.inc"
 
     call power_off

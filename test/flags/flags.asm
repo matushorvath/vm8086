@@ -38,7 +38,7 @@ section .text
     dump_state
 %endmacro
 
-    out 0x80, al
+    mark 0x80
 
     ; set/reset individual flags with dedicated instructions
     set_reset_instruction stc, clc
@@ -84,7 +84,7 @@ section .text
     dump_state
 %endmacro
 
-    out 0x81, al
+    mark 0x81
 
     ; set/reset individual flags with popf
     set_reset_stack 0b_0000000000000001
@@ -120,7 +120,7 @@ section .text
 
 %endmacro
 
-    out 0x82, al
+    mark 0x82
 
     ; set/reset individual flags with sahf
     set_reset_ah 0b_00000001

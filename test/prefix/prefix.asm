@@ -35,7 +35,7 @@ data_write:
 
 start:
     dump_state
-    out 0x80, al
+    mark 0x80
 
     ; some basic tests
     ; TODO HW lock freezes on bochs, investigate
@@ -55,7 +55,7 @@ start:
     mov dx, [data_write]
 
     dump_state
-    out 0x81, al
+    mark 0x81
 
     ; set up other segments
     mov ax, ss_seg
@@ -69,7 +69,7 @@ start:
     mov word [es:data_read], 0x4444
 
     dump_state
-    out 0x82, al
+    mark 0x82
 
     ; check segment prefixes when using just displacement
     clear_registers
@@ -80,7 +80,7 @@ start:
     mov di, [es:data_read]
 
     dump_state
-    out 0x83, al
+    mark 0x83
 
     ; check segment prefixes when using bx
     clear_registers
@@ -92,7 +92,7 @@ start:
     mov di, [es:bx]
 
     dump_state
-    out 0x84, al
+    mark 0x84
 
     ; check segment prefixes when using bp
     clear_registers
@@ -104,7 +104,7 @@ start:
     mov di, [es:bp]
 
     dump_state
-    out 0x85, al
+    mark 0x85
 
     ; check the other direction
 
@@ -126,7 +126,7 @@ start:
     mov dx, [es:data_write]
 
     dump_state
-    out 0x86, al
+    mark 0x86
 
     ; check that segment prefixes get used up after one instruction
     clear_registers
@@ -138,7 +138,7 @@ start:
     mov di, [data_read]
 
     dump_state
-    out 0x87, al
+    mark 0x87
 
     ; check that combinations of prefixes work correctly
     clear_registers
@@ -155,7 +155,7 @@ start:
     mov di, [data_read]
 
     dump_state
-    out 0x88, al
+    mark 0x88
 
     ; check segment prefix with MOV AX
     clear_registers
@@ -164,7 +164,7 @@ start:
     mov dx, [data_write]                ; make the value visible in dump
 
     dump_state
-    out 0x89, al
+    mark 0x89
 
     clear_registers
     mov ax, [es:data_read]
@@ -172,7 +172,7 @@ start:
     mov dx, [es:data_write]             ; make the value visible in dump
 
     dump_state
-    out 0x8a, al
+    mark 0x8a
 
     ; check segment prefix with MOV MEM8, IMMED8
     clear_registers
@@ -185,7 +185,7 @@ start:
     mov bl, [ds:bp]
 
     dump_state
-    out 0x8b, al
+    mark 0x8b
 
     ; check segment prefix with MOV MEM16, IMMED16
     clear_registers
@@ -198,6 +198,6 @@ start:
     mov bx, [ds:bp]
 
     dump_state
-    out 0x8c, al
+    mark 0x8c
 
     call power_off
