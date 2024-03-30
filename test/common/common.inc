@@ -135,13 +135,11 @@ out_char:                                                   ; al is the char to 
     int 0x14
 
 .wait_serial:
-    ; TODO mov ah, 0x03
-    mov ax, 0x03                                            ; get status
+    mov ah, 0x03                                            ; get status
     int 0x14
 
     and ah, 0b_01000000                                     ; trans shift reg empty
-    ; TODO jnz %wait_serial
-    jz .wait_serial
+    jz  .wait_serial
 
     pop dx
     pop ax

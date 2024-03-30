@@ -119,7 +119,7 @@ $(RESDIR)/%.bochs.txt:
 else
 $(RESDIR)/%.bochs.txt: $(RESDIR)/%.bochs.serial $(COMMON_BINDIR)/dump_state
 	printf '$(NAME): [bochs] validating ' >> $(TESTLOG)
-	$(COMMON_BINDIR)/dump_state $< $@
+	$(COMMON_BINDIR)/dump_state $< $@ || $(failed)
 	diff $(SAMPLE_TXT) $@ || $(failed-diff)
 	@$(passed)
 endif
