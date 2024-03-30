@@ -12,7 +12,7 @@ env:
 
 jobs:
   build:
-    name: OS=${{ matrix.os }}
+    name: Build OS=${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -57,4 +57,55 @@ jobs:
         working-directory: vm8086
         run: make test
 
-        # TODO make validate
+  validate:
+    name: Validate OS=${{ matrix.os }}
+    runs-on: ${{ matrix.os }}     # TODO validate on windows and macos
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - name: Checkout vm8086
+        uses: actions/checkout@v4
+        with:
+          path: vm8086
+
+      - name: Checkout xzintbit
+        uses: actions/checkout@v4
+        with:
+          repository: matushorvath/xzintbit
+          path: xzintbit
+
+      - name: Build xzintbit
+        working-directory: xzintbit
+        env:
+          CC: gcc
+        run: make build-vm
+
+      - name: Install nasm
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            sudo apt install -y nasm
+          elif [ "$RUNNER_OS" == "Windows" ]; then
+            choco install nasm
+            echo "C:\Program Files\NASM" >> $GITHUB_PATH
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            brew install nasm
+          fi
+        shell: bash
+
+      - name: Install bochs
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            sudo apt install -y bochs bochs-term bochsbios vgabios
+          fi
+        shell: bash
+
+      - name: Build
+        working-directory: vm8086
+        run: make build
+
+      - name: Validate
+        working-directory: vm8086
+        run: make validate
