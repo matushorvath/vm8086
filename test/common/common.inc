@@ -223,6 +223,8 @@ power_off:
 
 %macro dump_state 0
     call near dump_state_bochs
+    ;mov al, 'x'
+    ;out 0xe9, al
 %endmacro
 
 dump_state_bochs:
