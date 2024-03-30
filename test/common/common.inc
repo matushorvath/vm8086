@@ -30,7 +30,6 @@ org rom_addr
 
 
 ; option rom signature, needed for booting in bochs
-; TODO x remove this for vm8086, just do a db X instead
 section header start=rom_addr
     dw  0xaa55                                              ; signature
     db  rom_size / 0x200                                    ; size in 512 byte blocks
@@ -46,8 +45,8 @@ init:
 
 
 %ifdef BOCHS
+; dummy section to make sure the image is exactly rom_size bytes long
 section image_end start=(rom_addr + rom_size - 1)
-    ; dummy section to make sure the image is exactly rom_size bytes long
     db  0
 %endif
 
@@ -55,8 +54,8 @@ section image_end start=(rom_addr + rom_size - 1)
 %ifdef VM8086
 boot_addr   equ 0xffff0
 
+; the CPU starts here at ffff:0000
 section boot start=boot_addr
-    ; the CPU starts here at ffff:0000
     jmp text_seg:init
 
     ; to have a round file size, fill the image up to 0x100000

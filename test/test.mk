@@ -86,15 +86,14 @@ all: test-prep $(BOCHS_TXT) $(VM8086_TXT)
 build: test-prep $(OBJDIR)/$(NAME).bochs.bin $(OBJDIR)/$(NAME).vm8086.bin
 	[ $(MAKELEVEL) -eq 0 ] && cat $(TESTLOG) && rm -f $(TESTLOG) || true
 
-# TODO x delete just the result we are going to re-create, not all results
 .PHONY: test-prep
 test-prep:
-	rm -rf $(RESDIR)
 	mkdir -p $(RESDIR) $(OBJDIR) $(COMMON_OBJDIR) $(COMMON_BINDIR)
 
 # Test the vm8086 binary
-$(RESDIR)/%.vm8086.txt: $(OBJDIR)/%.input
+$(RESDIR)/%.vm8086.txt: $(OBJDIR)/%.input FORCE
 	printf '$(NAME): [vm8086] executing ' >> $(TESTLOG)
+	rm -f $@
 	$(ICVM) $< > $@ 2>&1 || ( cat $@ ; true )
 	diff $(SAMPLE_TXT) $@ || $(failed-diff)
 	@$(passed)
@@ -119,13 +118,14 @@ $(RESDIR)/%.bochs.txt:
 else
 $(RESDIR)/%.bochs.txt: $(RESDIR)/%.bochs.serial $(COMMON_BINDIR)/dump_state
 	printf '$(NAME): [bochs] validating ' >> $(TESTLOG)
+	rm -f $@
 	$(COMMON_BINDIR)/dump_state $< $@ || $(failed)
 	diff $(SAMPLE_TXT) $@ || $(failed-diff)
 	@$(passed)
 endif
 
 # TODO kill bochs after a timeout
-$(RESDIR)/%.bochs.serial: $(OBJDIR)/%.bochs.bin
+$(RESDIR)/%.bochs.serial: $(OBJDIR)/%.bochs.bin FORCE
 	printf '$(NAME): [bochs] executing ' >> $(TESTLOG)
 	bochs -q -f $(COMMON_DIR)/bochsrc.${PLATFORM} -rc $(COMMON_DIR)/bochs.debugger \
 		"optromimage1:file=$<,address=0xca000" "com1:dev=$@" || true
@@ -162,3 +162,7 @@ clean:
 
 # Keep all automatically generated files (e.g. object files)
 .SECONDARY:
+
+# Force a rebuild by depending on this target
+.PHONY: FORCE
+FORCE:
