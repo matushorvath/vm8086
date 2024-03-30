@@ -127,7 +127,7 @@ $(RESDIR)/%.bochs.txt: $(RESDIR)/%.bochs.serial $(COMMON_BINDIR)/dump_state
 # TODO kill bochs after a timeout
 $(RESDIR)/%.bochs.serial: $(OBJDIR)/%.bochs.bin
 	printf '$(NAME): [bochs] executing ' >> $(TESTLOG)
-	echo continue | bochs -q -f ../common/bochsrc.${PLATFORM} \
+	bochs -q -f $(COMMON_DIR)/bochsrc.${PLATFORM} -rc $(COMMON_DIR)/bochs.debugger \
 		"optromimage1:file=$<,address=0xca000" "com1:dev=$@" || true
 	touch $@
 	@$(passed)
@@ -135,7 +135,7 @@ $(RESDIR)/%.bochs.serial: $(OBJDIR)/%.bochs.bin
 # Build the binaries
 $(OBJDIR)/%.bochs.bin: %.asm $(wildcard *.inc) $(wildcard $(COMMON_DIR)/*.inc) $(COMMON_BINDIR)/checksum
 	printf '$(NAME): [bochs] assembling ' >> $(TESTLOG)
-	nasm -i ../common -d BOCHS -f bin $< -o $@ || $(failed)
+	nasm -i $(COMMON_DIR) -d BOCHS -f bin $< -o $@ || $(failed)
 	$(COMMON_BINDIR)/checksum $@ || rm $@
 	hexdump -C $@ ; true
 	[ "$$(wc -c < $@)" -eq 90112 ] || $(failed)
@@ -143,7 +143,7 @@ $(OBJDIR)/%.bochs.bin: %.asm $(wildcard *.inc) $(wildcard $(COMMON_DIR)/*.inc) $
 
 $(OBJDIR)/%.vm8086.bin: %.asm $(wildcard *.inc) $(wildcard $(COMMON_DIR)/*.inc)
 	printf '$(NAME): [vm8086] assembling ' >> $(TESTLOG)
-	nasm -i ../common -d VM8086 -f bin $< -o $@ || $(failed)
+	nasm -i $(COMMON_DIR) -d VM8086 -f bin $< -o $@ || $(failed)
 	hexdump -C $@ ; true
 	[ "$$(wc -c < $@)" -eq 221184 ] || ( rm $@ ; $(failed) )
 	@$(passed)

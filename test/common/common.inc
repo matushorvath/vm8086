@@ -190,33 +190,72 @@ power_off:
     ; we should not ever get here
     jmp $
 
-; TODO
-; %macro mark 1
-;     call near mark_bochs
-; %endmacro
+%ifdef BOCHS
 
-; mark_bochs:
-; %ifdef BOCHS
-;     ; output a mark in raw form, to be formatted later by dump_state.c
+%macro mark 1
+    call text_seg:mark_bochs
+    db  %1
+%endmacro
 
-;     push ax
+mark_bochs:
+    ; output a mark in raw form, to be formatted later by dump_state.c
 
-;     ; record type is 0x0002
-;     mov al, 0x01
-;     call out_char
-;     mov al, 0x00
-;     call out_char
+.first_push:
+    push ax
+    push bx
+    push bp
+    push es
+    pushf
+.last_push:
 
-;     ; output the number
-;     mov al, %1
-;     call out_char
+    ; reconstruct original sp in bp
+    mov bp, sp
+    add bp, (.last_push - .first_push) * 2 + 4              ; push * + CS + IP
 
-;     pop ax
-; %elifdef VM8086
-;     ; output to the numbered port, which writes a mark to output
+    ; load return address to ES:BX
+    mov bx, [word bp - 2]
+    mov es, bx
+    mov bx, [word bp - 4]
 
+    ; instead of next instruction, this location contains the mark number
+    mov ah, [byte es:bx]
 
-; %endif
+    ; increment the return address to skip the mark number on return
+    inc bx
+    mov [word bp - 4], bx
+
+    ; record type is 0x0002
+    mov al, 0x02
+    call out_char
+    mov al, 0x00
+    call out_char
+
+    ; output the low byte of mark
+    mov al, ah
+    call out_char
+
+    ; print to bochs console
+    mov al, 'M'
+    out 0xe9, al
+
+    popf
+    pop es
+    pop bp
+    pop bx
+    pop ax
+
+    retf
+%elifdef VM8086
+
+%macro mark 1
+    ; ask the vm to print the mark
+    push ax
+    mov al, %1
+    out 0x43, al
+    pop ax
+%endmacro
+
+%endif
 
 
 %ifdef BOCHS
@@ -243,8 +282,7 @@ dump_state_bochs:
 
     ; reconstruct original sp in bp
     mov bp, sp
-    ; how many registers we pushed above + CS:IP that was pushed by the function call
-    add bp, (.last_push - .first_push) * 2 + 4
+    add bp, (.last_push - .first_push) * 2 + 4              ; push * + CS + IP
 
     ; record type is 0x0001
     mov al, 0x01
@@ -353,13 +391,11 @@ dump_state_bochs:
     pop ax
 
     retf
-%endif
-
-%ifdef VM8086
+%elifdef VM8086
 
 %macro dump_state 0
-    out 0x42, al                    ; ask the vm to dump state
-    db  3 dup (0x90)                ; 3x nop to match the length of the far call that bochs uses
+    out 0x42, al                        ; ask the vm to dump state
+    db  3 dup (0x90)                    ; 3x nop to match the length of the far call that bochs uses
 %endmacro
 
 %endif

@@ -1,4 +1,5 @@
 .EXPORT dump_state
+.EXPORT mark
 
 # From flags.s
 .IMPORT pack_flags_lo
@@ -43,7 +44,7 @@ dump_state:
 .FRAME tmp
     arb -1
 
-    add dump_state_separator, 0, [rb - 1]
+    add separator, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -307,7 +308,34 @@ dump_stack_end:
 .ENDFRAME
 
 ##########
-dump_state_separator:
+mark:
+.FRAME mark; tmp
+    arb -1
+
+    add separator, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    out 10
+
+    add mark_header, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [rb + mark], 0, [rb - 1]
+    add 16, 0, [rb - 2]
+    add 2, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
+    out 10
+
+    arb 1
+    ret 1
+.ENDFRAME
+
+##########
+separator:
     db  "----------", 0
 
 dump_state_ip:
@@ -343,5 +371,8 @@ dump_state_di:
 
 dump_state_stack:
     db  "stack:", 0
+
+mark_header:
+    db  "MARK: ", 0
 
 .EOF
