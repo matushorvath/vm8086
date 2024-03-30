@@ -56,3 +56,5 @@ jobs:
       - name: Test
         working-directory: vm8086
         run: make test
+
+        # TODO make validate

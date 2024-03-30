@@ -1,6 +1,8 @@
     ; test CALL MEM16 (NEAR), CALL MEM16 (FAR)
 
-    mov ax, 0xe000
+bss_seg     equ 0x8000
+
+    mov ax, bss_seg
     mov ds, ax
 
     dump_state                          ; 1n
@@ -24,29 +26,29 @@ near_forward_mem:
 
 test_far_mem:
     dump_state                          ; 1f
-    mov word [call_offset], far_absolute_2_mem - 0x6000     ; TODO the segment isn't a round number
-    mov word [call_segment], 0xe600
+    mov word [call_offset], far_absolute_2_mem
+    mov word [call_segment], extra_seg
     call far [call_offset]
     dump_state                          ; 5f
 
+    jmp test_end_mem
 
-    ; far target in another segment
-[section far_target_1 start=0xe4000]
-
+    ; far target in .text segment
 far_absolute_1_mem:
     dump_state                          ; 3f
     retf 2
 
-__?SECT?__
+test_end_mem:
 
-    ; far target in yet another segment
-[section far_target_2 start=0xe6000]
+
+    ; far target in extra segment
+[section far_target start=extra_addr]
 
 far_absolute_2_mem:
     dump_state                          ; 2f
     push ax
-    mov word [call_offset], far_absolute_1_mem - 0x4000     ; TODO the segment isn't a round number
-    mov word [call_segment], 0xe400
+    mov word [call_offset], far_absolute_1_mem
+    mov word [call_segment], text_seg
     call far [call_offset]
     dump_state                          ; 4f
     retf 0
@@ -55,11 +57,11 @@ __?SECT?__
 
 
     ; storage for the pointer we jump to
-[section .data start=0xe0000]
+[section .bss start=(bss_seg * 0x10)]
 
 call_offset:
-    dw  0
+    resw 1
 call_segment:
-    dw  0
+    resw 1
 
 __?SECT?__

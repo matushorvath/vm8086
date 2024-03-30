@@ -41,7 +41,7 @@
     ; PF = 1
     mov al, 0b_01010101
     clearf
-    and al, 0b_01001101
+    and al, 0b_01001100
     dump_state
 
     ; test AND REG8/MEM8, IMMED8

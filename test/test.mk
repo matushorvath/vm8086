@@ -75,15 +75,8 @@ test: test-prep $(VM8086_TXT)
 	[ $(MAKELEVEL) -eq 0 ] && cat $(TESTLOG) && rm -f $(TESTLOG) || true
 
 .PHONY: validate
-ifeq ($(DISABLE_BOCHS), 1)
-validate:
-	printf '$(NAME): [bochs] validating ' >> $(TESTLOG)
-	$(disabled)
-	[ $(MAKELEVEL) -eq 0 ] && cat $(TESTLOG) && rm -f $(TESTLOG) || true
-else
 validate: test-prep $(BOCHS_TXT)
 	[ $(MAKELEVEL) -eq 0 ] && cat $(TESTLOG) && rm -f $(TESTLOG) || true
-endif
 
 .PHONY: all
 all: test-prep $(BOCHS_TXT) $(VM8086_TXT)
@@ -95,12 +88,12 @@ build: test-prep $(OBJDIR)/$(NAME).bochs.bin $(OBJDIR)/$(NAME).vm8086.bin
 
 .PHONY: test-prep
 test-prep:
-	rm -rf $(RESDIR)
 	mkdir -p $(RESDIR) $(OBJDIR) $(COMMON_OBJDIR) $(COMMON_BINDIR)
 
 # Test the vm8086 binary
-$(RESDIR)/%.vm8086.txt: $(OBJDIR)/%.input
+$(RESDIR)/%.vm8086.txt: $(OBJDIR)/%.input FORCE
 	printf '$(NAME): [vm8086] executing ' >> $(TESTLOG)
+	rm -f $@
 	$(ICVM) $< > $@ 2>&1 || ( cat $@ ; true )
 	diff $(SAMPLE_TXT) $@ || $(failed-diff)
 	@$(passed)
@@ -117,33 +110,40 @@ $(OBJDIR)/%.o: $(OBJDIR)/%.vm8086.bin
 	@$(passed)
 
 # Test the bochs binary
+ifeq ($(DISABLE_BOCHS), 1)
+$(RESDIR)/%.bochs.txt:
+	printf '$(NAME): [bochs] validating ' >> $(TESTLOG)
+	echo "bochs test disabled" > $@
+	$(disabled)
+else
 $(RESDIR)/%.bochs.txt: $(RESDIR)/%.bochs.serial $(COMMON_BINDIR)/dump_state
-	printf '$(NAME): [bochs] comparing ' >> $(TESTLOG)
-	$(COMMON_BINDIR)/dump_state $< $@
+	printf '$(NAME): [bochs] validating ' >> $(TESTLOG)
+	rm -f $@
+	$(COMMON_BINDIR)/dump_state $< $@ || $(failed)
 	diff $(SAMPLE_TXT) $@ || $(failed-diff)
 	@$(passed)
+endif
 
 # TODO kill bochs after a timeout
-$(RESDIR)/%.bochs.serial: $(OBJDIR)/%.bochs.bin
+$(RESDIR)/%.bochs.serial: $(OBJDIR)/%.bochs.bin FORCE
 	printf '$(NAME): [bochs] executing ' >> $(TESTLOG)
-	echo continue | bochs -q -f ../common/bochsrc.${PLATFORM} \
+	bochs -q -f $(COMMON_DIR)/bochsrc.${PLATFORM} -rc $(COMMON_DIR)/bochs.debugger \
 		"optromimage1:file=$<,address=0xca000" "com1:dev=$@" || true
 	touch $@
 	@$(passed)
 
 # Build the binaries
-# TODO depend on common.inc
-$(OBJDIR)/%.bochs.bin: %.asm $(wildcard *.inc) $(COMMON_BINDIR)/checksum
+$(OBJDIR)/%.bochs.bin: %.asm $(wildcard *.inc) $(wildcard $(COMMON_DIR)/*.inc) $(COMMON_BINDIR)/checksum
 	printf '$(NAME): [bochs] assembling ' >> $(TESTLOG)
-	nasm -i ../common -d BOCHS -f bin $< -o $@ || $(failed)
+	nasm -i $(COMMON_DIR) -d BOCHS -f bin $< -o $@ || $(failed)
 	$(COMMON_BINDIR)/checksum $@ || rm $@
 	hexdump -C $@ ; true
 	[ "$$(wc -c < $@)" -eq 90112 ] || $(failed)
 	@$(passed)
 
-$(OBJDIR)/%.vm8086.bin: %.asm $(wildcard *.inc)
+$(OBJDIR)/%.vm8086.bin: %.asm $(wildcard *.inc) $(wildcard $(COMMON_DIR)/*.inc)
 	printf '$(NAME): [vm8086] assembling ' >> $(TESTLOG)
-	nasm -i ../common -d VM8086 -f bin $< -o $@ || $(failed)
+	nasm -i $(COMMON_DIR) -d VM8086 -f bin $< -o $@ || $(failed)
 	hexdump -C $@ ; true
 	[ "$$(wc -c < $@)" -eq 221184 ] || ( rm $@ ; $(failed) )
 	@$(passed)
@@ -162,3 +162,7 @@ clean:
 
 # Keep all automatically generated files (e.g. object files)
 .SECONDARY:
+
+# Force a rebuild by depending on this target
+.PHONY: FORCE
+FORCE:

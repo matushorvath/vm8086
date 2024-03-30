@@ -1,5 +1,5 @@
     ; set ds to access the data
-    mov ax, 0xe000
+    mov ax, bss_seg
     mov ds, ax
 
     ; reset the memory

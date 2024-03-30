@@ -1,10 +1,12 @@
 %include "common.inc"
 
 
-section .data start=0xe0000
+bss_seg     equ 0x8000
+
+section .bss start=(bss_seg * 0x10) nobits
 
 test_data:
-    dw  0
+    resw  0
 
 
 section .text
@@ -64,4 +66,4 @@ section .text
 
 data_segment:
     ; we load this into ds at the beginning of the test
-    dw  0xe000
+    dw  bss_seg

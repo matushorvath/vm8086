@@ -32,16 +32,16 @@ section .text
     mov di, 13
 
 %include "mem_reg_16.inc"
-    out 0x80, al
+    mark 0x80
 %include "reg_mem_16.inc"
-    out 0x81, al
+    mark 0x81
 %include "mem_reg_8.inc"
-    out 0x82, al
+    mark 0x82
 %include "reg_mem_8.inc"
-    out 0x83, al
+    mark 0x83
 %include "mem_reg_0.inc"
-    out 0x84, al
+    mark 0x84
 %include "reg_mem_0.inc"
-    out 0x85, al
+    mark 0x85
 
     call power_off

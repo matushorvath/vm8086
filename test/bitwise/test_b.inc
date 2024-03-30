@@ -38,7 +38,7 @@
     ; SF = 1
     mov al, 0b_11010101
     clearf
-    test al, 0b_11001101
+    test al, 0b_11001100
     dump_state
 
     ; ZF = 1
@@ -50,7 +50,7 @@
     ; PF = 1
     mov al, 0b_01010101
     clearf
-    test al, 0b_01001101
+    test al, 0b_01001100
     dump_state
 
     ; test TEST REG8/MEM8, IMMED8

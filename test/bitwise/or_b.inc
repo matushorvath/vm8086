@@ -29,7 +29,7 @@
     ; SF = 1
     mov al, 0b_01010101
     clearf
-    or  al, 0b_11001100
+    or  al, 0b_11001110
     dump_state
 
     ; ZF = 1
@@ -41,7 +41,7 @@
     ; PF = 1
     mov al, 0b_01010101
     clearf
-    or  al, 0b_01001101
+    or  al, 0b_01101101
     dump_state
 
     ; test OR REG8/MEM8, IMMED8

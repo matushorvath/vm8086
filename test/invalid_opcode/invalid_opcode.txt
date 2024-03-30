@@ -1,1 +1,1 @@
-vm8086 error: invalid opcode (cs:ip d000:7)
+vm8086 error: invalid opcode (cs:ip d000:4)

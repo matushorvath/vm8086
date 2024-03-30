@@ -10,6 +10,7 @@
 
 # From dump_state.s
 .IMPORT dump_state
+.IMPORT mark
 
 # From memory.s
 .IMPORT read_cs_ip_b
@@ -133,14 +134,14 @@ port_out:
 .FRAME port, value; tmp
     arb -1
 
-    # Port 0x42 is used to dump VM state to stdout, used for tests
+    # Port 0x42 is used to dump VM state to stdout, for tests
     eq  [rb + port], 0x42, [rb + tmp]
-    jz  [rb + tmp], port_out_regular
+    jnz [rb + tmp], port_out_dump_state
 
-    call dump_state
-    jz  0, port_out_done
+    # Port 0x43 is used to output a mark to stdout, for tests
+    eq  [rb + port], 0x43, [rb + tmp]
+    jnz [rb + tmp], port_out_mark
 
-port_out_regular:
     # Output the port and value to stdout
     # TODO remove temporary I/O code
 
@@ -165,6 +166,17 @@ port_out_regular:
     call print_num_radix
 
     out 10
+
+    jz  0, port_out_done
+
+port_out_dump_state:
+    call dump_state
+    jz  0, port_out_done
+
+port_out_mark:
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call mark
 
 port_out_done:
     arb 1

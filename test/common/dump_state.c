@@ -10,6 +10,19 @@ void error(const char *message) {
     exit(1);
 }
 
+uint16_t read8(FILE *fin, bool allowEof) {
+    int val = fgetc(fin);
+    if (val == EOF) {
+        if(!ferror(fin)) {
+            if (allowEof) return 0x0000;
+            else error("Unexpected end of file");
+        }
+        error("Error while reading file");
+    }
+
+    return (uint16_t)val;
+}
+
 uint16_t read16(FILE *fin, bool allowEof) {
     int lo = fgetc(fin);
     if (lo == EOF) {
@@ -73,7 +86,7 @@ void dump_stack(FILE *fin, FILE *fout) {
     }
 }
 
-void record0000(FILE *fin, FILE *fout) {
+void record0001(FILE *fin, FILE *fout) {
     fprintf(fout, "----------\n");
 
     fprintf(fout, "ip: %04x", read16(fin, false));
@@ -100,6 +113,11 @@ void record0000(FILE *fin, FILE *fout) {
     fprintf(fout, "\n");
 }
 
+void record0002(FILE *fin, FILE *fout) {
+    fprintf(fout, "----------\n");
+    fprintf(fout, "MARK: %02x\n", read8(fin, false));
+}
+
 int main(int argc, char *argv[]) {
     if (argc != 3) error("Usage: dump_state input.serial output.txt");
 
@@ -118,7 +136,8 @@ int main(int argc, char *argv[]) {
         printf("  record type 0x%04x\n", type);
 
         if (type == 0x0000) break;
-        else if (type == 0x0001) record0000(fin, fout);
+        else if (type == 0x0001) record0001(fin, fout);
+        else if (type == 0x0002) record0002(fin, fout);
         else error("Unknown record type");
     }
 

@@ -15,43 +15,52 @@
 %endmacro
 
 
+ds_seg      equ 0x2000
+ss_seg      equ 0x3000
+es_seg      equ 0x4000
+
+
 section .text
     jmp start
 
     ; make sure the data_read starts at an interesting address, not 0
     dw  17 dup 0x0000
+
 data_read:
     dw  0x1111
+
+    ; we can't write to .text since it's in ROM, but we can write to other segments
 data_write:
     dw  0x0000
 
 start:
     dump_state
-    out 0x80, al
+    mark 0x80
 
     ; some basic tests
+    ; TODO HW lock freezes on bochs, investigate
     lock nop
     repz nop
     repnz nop
 
+    ; set up ds
+    mov dx, ds_seg
+    mov ds, dx
+
     ; check segment prefix with a segment register
     mov es, [cs:data_read]
-    mov [cs:data_write], es
+    mov [ds:data_write], es
 
     ; make the value visible in dump without depending on segment prefixes
-    mov dx, cs
-    mov ds, dx
     mov dx, [data_write]
 
     dump_state
-    out 0x81, al
+    mark 0x81
 
-    ; set up segments (cs is already set up by jmp)
-    mov ax, 0x2000
-    mov ds, ax
-    mov ax, 0x3000
+    ; set up other segments
+    mov ax, ss_seg
     mov ss, ax
-    mov ax, 0x4000
+    mov ax, es_seg
     mov es, ax
 
     ; set up different data in each segment
@@ -60,7 +69,7 @@ start:
     mov word [es:data_read], 0x4444
 
     dump_state
-    out 0x82, al
+    mark 0x82
 
     ; check segment prefixes when using just displacement
     clear_registers
@@ -71,7 +80,7 @@ start:
     mov di, [es:data_read]
 
     dump_state
-    out 0x83, al
+    mark 0x83
 
     ; check segment prefixes when using bx
     clear_registers
@@ -83,7 +92,7 @@ start:
     mov di, [es:bx]
 
     dump_state
-    out 0x84, al
+    mark 0x84
 
     ; check segment prefixes when using bp
     clear_registers
@@ -95,7 +104,7 @@ start:
     mov di, [es:bp]
 
     dump_state
-    out 0x85, al
+    mark 0x85
 
     ; check the other direction
 
@@ -104,8 +113,6 @@ start:
     mov bx, data_write
     mov bp, data_write
 
-    mov ax, 0x2345
-    mov [cs:bp], ax
     mov ax, 0x3456
     mov [ds:bp], ax
     mov ax, 0x4567
@@ -114,13 +121,12 @@ start:
     mov [es:data_write], ax
 
     clear_registers
-    mov ax, [cs:data_write]             ; make the values visible in dump
     mov bx, [ds:data_write]
     mov cx, [ss:data_write]
     mov dx, [es:data_write]
 
     dump_state
-    out 0x86, al
+    mark 0x86
 
     ; check that segment prefixes get used up after one instruction
     clear_registers
@@ -132,22 +138,24 @@ start:
     mov di, [data_read]
 
     dump_state
-    out 0x87, al
+    mark 0x87
 
     ; check that combinations of prefixes work correctly
     clear_registers
 
+    ; TODO HW lock freezes on bochs, investigate
     lock mov bx, [es:data_read]
     mov cx, [data_read]
 
     rep mov dx, [es:data_read]
     mov sp, [data_read]
 
+    ; TODO HW lock freezes on bochs, investigate
     rep lock mov si, [es:data_read]
     mov di, [data_read]
 
     dump_state
-    out 0x88, al
+    mark 0x88
 
     ; check segment prefix with MOV AX
     clear_registers
@@ -156,7 +164,7 @@ start:
     mov dx, [data_write]                ; make the value visible in dump
 
     dump_state
-    out 0x89, al
+    mark 0x89
 
     clear_registers
     mov ax, [es:data_read]
@@ -164,7 +172,7 @@ start:
     mov dx, [es:data_write]             ; make the value visible in dump
 
     dump_state
-    out 0x8a, al
+    mark 0x8a
 
     ; check segment prefix with MOV MEM8, IMMED8
     clear_registers
@@ -172,14 +180,12 @@ start:
 
     mov [bp], byte 0x13
     mov [ds:bp], byte 0x24
-    mov [cs:bp], byte 0x35
 
     mov al, [bp]                        ; make the values visible in dump
     mov bl, [ds:bp]
-    mov cl, [cs:bp]
 
     dump_state
-    out 0x8b, al
+    mark 0x8b
 
     ; check segment prefix with MOV MEM16, IMMED16
     clear_registers
@@ -187,13 +193,11 @@ start:
 
     mov [bp], word 0x1357
     mov [ds:bp], word 0x2468
-    mov [cs:bp], word 0x3579
 
     mov ax, [bp]                        ; make the values visible in dump
     mov bx, [ds:bp]
-    mov cx, [cs:bp]
 
     dump_state
-    out 0x8c, al
+    mark 0x8c
 
     call power_off

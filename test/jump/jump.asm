@@ -1,23 +1,20 @@
-; TODO CALL NEAR, CALL FAR, RET NEAR IMMED16, RET NEAR 0, RET FAR IMMED16, RET FAR 0 (all immediate)
-; TODO CALL NEAR REG16/MEM16, CALL FAR MEM16
-
 %include "common.inc"
 
 
 section .text
-    out 0x80, al
+    mark 0x80
 %include "conditional.inc"
 
-    out 0x81, al
+    mark 0x81
 %include "loop.inc"
 
-    out 0x82, al
+    mark 0x82
 %include "jmp_direct.inc"
 
-    out 0x83, al
+    mark 0x83
 %include "jmp_register.inc"
 
-    out 0x84, al
+    mark 0x84
 %include "jmp_memory.inc"
 
     call power_off

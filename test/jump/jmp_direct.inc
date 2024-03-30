@@ -14,12 +14,12 @@
     mov ax, 0
 
 short_backward:
-    dump_state                        ; 3s
+    dump_state                          ; 3s
     jmp test_near
     mov ax, 0
 
 short_forward:
-    dump_state                        ; 2s
+    dump_state                          ; 2s
     jmp short_backward
     mov ax, 0
 
@@ -29,7 +29,7 @@ test_near:
     mov ax, 0
 
 near_backward:
-    dump_state                        ; 3n
+    dump_state                          ; 3n
     jmp test_far
     mov ax, 0
 
@@ -37,26 +37,25 @@ near_backward:
     db  256 dup 0
 
 near_forward:
-    dump_state                        ; 2n
+    dump_state                          ; 2n
     jmp near_backward
     mov ax, 0
 
 
 test_far:
-    ; TODO the segment isn't a round number
-    jmp 0xe400:far_absolute - 0x4000    ; 1f
+    jmp extra_seg:far_absolute          ; 1f
     mov ax, 0
 
 test_end:
-    dump_state                        ; 3f
+    dump_state                          ; 3f
 
 
-    ; far target in another segment, then resume current segment
-[section far_target start=0xe4000]
+    ; far target in extra segment
+[section far_target start=extra_addr]
 
 far_absolute:
-    dump_state                        ; 2f
-    jmp 0xd000:test_end
+    dump_state                          ; 2f
+    jmp text_seg:test_end
     mov ax, 0
 
 __?SECT?__

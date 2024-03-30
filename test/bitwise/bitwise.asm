@@ -1,12 +1,13 @@
 %include "common.inc"
 
 
-section .data start=0xe0000
+bss_seg     equ 0x8000
 
-    dw  7 dup 0x0000
+section .bss start=(bss_seg * 0x10)
+    resw  7
 
 data:
-    dw  0
+    resw  1
 
 
 section .text
@@ -21,22 +22,22 @@ section .text
     popf
 %endmacro
 
-    out 0x80, al
+    mark 0x80
 
 %include "and_b.inc"
 %include "and_w.inc"
 
-    out 0x81, al
+    mark 0x81
 
 %include "or_b.inc"
 %include "or_w.inc"
 
-    out 0x82, al
+    mark 0x82
 
 %include "xor_b.inc"
 %include "xor_w.inc"
 
-    out 0x83, al
+    mark 0x83
 
 %include "test_b.inc"
 %include "test_w.inc"

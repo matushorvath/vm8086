@@ -5,9 +5,9 @@ section .text
     dump_state
 
 %include "reg_reg.inc"
-    out 0x80, al
+    mark 0x80
 %include "reg_immed.inc"
-    out 0x81, al
+    mark 0x81
 
 ; TODO x MOV MEM8, IMMED8
 ; TODO x MOV MEM16, IMMED16

@@ -29,7 +29,7 @@
     ; SF = 1
     mov al, 0b_01010101
     clearf
-    xor al, 0b_11001100
+    xor al, 0b_11001101
     dump_state
 
     ; ZF = 1
@@ -41,7 +41,7 @@
     ; PF = 1
     mov al, 0b_01010101
     clearf
-    xor al, 0b_01001100
+    xor al, 0b_01001101
     dump_state
 
     ; test XOR REG8/MEM8, IMMED8
