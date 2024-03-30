@@ -34,7 +34,7 @@ b7_loop:
                                 add 0, 0, [new_line]
 
                                 # Calculate parity of current number
-                                add 0, 0, [tmp]
+                                add 1, 0, [tmp]
                                 eq  [tmp], [b0], [tmp]
                                 eq  [tmp], [b1], [tmp]
                                 eq  [tmp], [b2], [tmp]

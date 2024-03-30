@@ -27,7 +27,7 @@
     ; test flags, 16-bit
 
     ; SF = 1
-    mov ax, 0b_01010101_11001100
+    mov ax, 0b_01010101_11001110
     clearf
     or  ax, 0b_11001100_01010101
     dump_state
@@ -41,7 +41,7 @@
     ; PF = 1
     mov ax, 0b_01010101_11001101
     clearf
-    or  ax, 0b_01001100_01001100
+    or  ax, 0b_01001100_01101100
     dump_state
 
     ; test OR REG16/MEM16, IMMED16
