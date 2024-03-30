@@ -30,7 +30,7 @@ org rom_addr
 
 
 ; option rom signature, needed for booting in bochs
-; TODO remove this for vm8086, just do a db X instead
+; TODO x remove this for vm8086, just do a db X instead
 section header start=rom_addr
     dw  0xaa55                                              ; signature
     db  rom_size / 0x200                                    ; size in 512 byte blocks
@@ -39,7 +39,7 @@ section header start=rom_addr
 
 ; startup and initialization
 section .text start=text_addr
-    ; TODO remove these three bytes (and fix all tests)
+    ; TODO x remove these three bytes (and fix all tests)
     db  3 dup (0)
 init:
     call initialize
@@ -89,7 +89,7 @@ initialize:
     mov cx, 16
     mov si, 0xfff0
 
-    ; TODO use loop
+    ; TODO x use loop
     mov word [ds:0xfff0], 0
     mov word [ds:0xfff2], 0
     mov word [ds:0xfff4], 0
@@ -143,14 +143,12 @@ out_char:                                                   ; al is the char to 
     ; TODO jnz %wait_serial
     jz .wait_serial
 
-    ; TODO print also to bochs console (or at least print a dot)
-
     pop dx
     pop ax
 %endif
 
 %ifdef VM8086
-    ; TODO
+    ; TODO implement out_char for vm8086
 %endif
 
     retn

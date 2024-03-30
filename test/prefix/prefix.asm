@@ -143,14 +143,14 @@ start:
     ; check that combinations of prefixes work correctly
     clear_registers
 
-    ; TODO HW rep lock freezes on bochs, investigate
+    ; TODO HW lock freezes on bochs, investigate
     lock mov bx, [es:data_read]
     mov cx, [data_read]
 
     rep mov dx, [es:data_read]
     mov sp, [data_read]
 
-    ; TODO HW rep lock mov freezes on bochs, investigate
+    ; TODO HW lock freezes on bochs, investigate
     rep lock mov si, [es:data_read]
     mov di, [data_read]
 

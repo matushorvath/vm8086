@@ -29,9 +29,6 @@
 .IMPORT reg_ss
 .IMPORT inc_ip
 
-# From trace.s
-# TODO .IMPORT print_trace
-
 ##########
 execute:
 .FRAME tmp, op

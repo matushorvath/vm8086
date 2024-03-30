@@ -27,8 +27,6 @@
 .IMPORT flag_sign
 .IMPORT flag_overflow
 
-# TODO HW do logical operations calculate PF from the whole result, or just lower byte? docs say whole result
-
 ##########
 execute_and_b:
 .FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;

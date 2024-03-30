@@ -21,8 +21,6 @@
 # From stack.s
 .IMPORT execute_push_w
 
-# TODO implement rest of group 2
-
 # Group 2 8-bit instructions, first byte is MOD xxx R/M, where xxx is:
 # 000 INC REG8/MEM8
 # 001 DEC REG8/MEM8
@@ -141,10 +139,6 @@ execute_group2_w_push_w:
 execute_group2_w_end:
     ret 3
 .ENDFRAME
-
-##########
-not_implemented_message:                                    # TODO remove
-    db  "group 2 operation not implemented", 0
 
 invalid_op_message:
     db  "invalid group 2 operation", 0

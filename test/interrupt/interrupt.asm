@@ -109,39 +109,27 @@ handle_int255:
 section int_handlers start=extra_addr
 
 handle_int4:
-    ; TODO this does not work in bochs, it needs a far call
     dump_state
-    ; TODO remove db  3 dup (0x90)
 
     ; test if interrupt clears TF and IF
     mov dx, 0b_00000011_00000000
     push dx
     popf
-    ; TODO this does not work in bochs, it needs a far call
     dump_state
-    ; TODO remove db  3 dup (0x90)
     int 255
-    ; TODO this does not work in bochs, it needs a far call
     dump_state
-    ; TODO remove db  3 dup (0x90)
 
     ; test restoring flags
     std
-    ; TODO this does not work in bochs, it needs a far call
     dump_state
-    ; TODO remove db  3 dup (0x90)
 
     iret
 
 handle_int21:
-    ; TODO this does not work in bochs, it needs a far call
     dump_state
-    ; TODO remove db  3 dup (0x90)
 
     ; interrupt while processing an interrupt
     int 255
-    ; TODO this does not work in bochs, it needs a far call
     dump_state
-    ; TODO remove db  3 dup (0x90)
 
     iret
