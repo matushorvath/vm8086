@@ -222,9 +222,7 @@ power_off:
 %ifdef BOCHS
 
 %macro dump_state 0
-    call near dump_state_bochs
-    ;mov al, 'x'
-    ;out 0xe9, al
+    call text_seg:dump_state_bochs
 %endmacro
 
 dump_state_bochs:
@@ -245,8 +243,8 @@ dump_state_bochs:
 
     ; reconstruct original sp in bp
     mov bp, sp
-    ; how many registers we pushed above + IP that was pushed by function call
-    add bp, (.last_push - .first_push + 1) * 2
+    ; how many registers we pushed above + CS:IP that was pushed by the function call
+    add bp, (.last_push - .first_push) * 2 + 4
 
     ; record type is 0x0001
     mov al, 0x01
@@ -254,10 +252,11 @@ dump_state_bochs:
     mov al, 0x00
     call out_char
 
-    ; ip is on stack from the function call
-    mov ax, word [bp - 2]
-    ; we need to decrease to match the value in vm8086, because 'out 0x42, al' is just 2 bytes
-    dec ax
+    ; IP is on stack from the function call
+    mov ax, word [bp - 4]
+    ; we need to decrease IP to match the value in vm8086,
+    ; because 'out 0x42, al' is just two bytes and far call is five
+    sub ax, 3
     call out_char
     mov al, ah
     call out_char
@@ -269,7 +268,8 @@ dump_state_bochs:
     call out_char
 
     ; segment registers
-    mov ax, cs
+    ; c is on stack from the function call
+    mov ax, word [bp - 2]
     call out_char
     mov al, ah
     call out_char
@@ -352,14 +352,14 @@ dump_state_bochs:
     pop cx
     pop ax
 
-    retn
+    retf
 %endif
 
 %ifdef VM8086
 
 %macro dump_state 0
     out 0x42, al                    ; ask the vm to dump state
-    nop                             ; to match the length of the near call that bochs uses
+    db  3 dup (0x90)                ; 3x nop to match the length of the far call that bochs uses
 %endmacro
 
 %endif

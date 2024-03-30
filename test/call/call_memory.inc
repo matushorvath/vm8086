@@ -45,15 +45,12 @@ test_end_mem:
 [section far_target start=extra_addr]
 
 far_absolute_2_mem:
-    ; TODO this does not work in bochs, it needs a far call
     dump_state                          ; 2f
-    ; TODO remove db 3 dup 0x90
     push ax
     mov word [call_offset], far_absolute_1_mem
     mov word [call_segment], text_seg
     call far [call_offset]
     dump_state                          ; 4f
-    ; TODO remove db 3 dup 0x90
     retf 0
 
 __?SECT?__

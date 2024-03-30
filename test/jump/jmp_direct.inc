@@ -54,10 +54,8 @@ test_end:
 [section far_target start=extra_addr]
 
 far_absolute:
-    ; TODO this does not work in bochs, it needs a far call
     dump_state                          ; 2f
     jmp text_seg:test_end
-    ; TODO remove db  3 dup 0x90
     mov ax, 0
 
 __?SECT?__
