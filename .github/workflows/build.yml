@@ -50,9 +50,14 @@ jobs:
         shell: bash
 
       - name: Install bochs
-        run: sudo apt install -y bochs bochs-term bochsbios vgabios
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            sudo apt install -y bochs bochs-term bochsbios vgabios
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            brew install bochs
+          fi
         shell: bash
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os != 'windows-latest'
 
       - name: Build
         working-directory: vm8086
@@ -65,4 +70,4 @@ jobs:
       - name: Validate
         working-directory: vm8086
         run: make validate
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os != 'windows-latest'
