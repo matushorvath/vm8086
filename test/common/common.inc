@@ -86,18 +86,13 @@ initialize:
     mov es, ax
 
     ; clear top 16 bytes below 0000:ffff, which will be the new stack
-    mov cx, 16
+    mov cx, 8
     mov si, 0xfff0
 
-    ; TODO x use loop
-    mov word [ds:0xfff0], 0
-    mov word [ds:0xfff2], 0
-    mov word [ds:0xfff4], 0
-    mov word [ds:0xfff6], 0
-    mov word [ds:0xfff8], 0
-    mov word [ds:0xfffa], 0
-    mov word [ds:0xfffc], 0
-    mov word [ds:0xfffe], 0
+.clear_loop:
+    mov word [ds:si], 0
+    add si, 2
+    loop .clear_loop
 
     ; clear rest of the machine state
     xor bx, bx
