@@ -38,8 +38,6 @@ section header start=rom_addr
 
 ; startup and initialization
 section .text start=text_addr
-    ; TODO x remove these three bytes (and fix all tests)
-    db  3 dup (0)
 init:
     call initialize
 

@@ -1,45 +1,45 @@
 ----------
-ip: 0008 flags: ----odit sz-a-p-c 00000000 00000010 (0002)
+ip: 0005 flags: ----odit sz-a-p-c 00000000 00000010 (0002)
 cs: d000 ds: 0000 ss: 0800 es: 0000 bp: 0000 sp: 0000
 ax: 0000 bx: 0000 cx: 0000 dx: 0000 si: 0000 di: 0000
 stack: 0000 0000 0000 0000 0000 0000 0000 0000
 ----------
-ip: 0049 flags: ----odit sz-a-p-c 00000000 00000010 (0002)
+ip: 0046 flags: ----odit sz-a-p-c 00000000 00000010 (0002)
 cs: d000 ds: 0000 ss: 0800 es: 0000 bp: 0005 sp: 0006
 ax: 0001 bx: 0002 cx: 0003 dx: 0004 si: 0007 di: 0008
 stack: 0000 0000 0000 0000 0000 0000 0000 0000
 ----------
-ip: 008a flags: ----odit Sz-a-p-c 00000000 10000010 (0082)
+ip: 0087 flags: ----odit Sz-a-p-c 00000000 10000010 (0082)
 cs: d000 ds: 0000 ss: 0800 es: 0000 bp: fffc sp: fffd
 ax: fff8 bx: fff9 cx: fffa dx: fffb si: fffe di: ffff
-stack: 0600 0000 0000 0000 0000 0000 0000 0000
+stack: 0300 0000 0000 0000 0000 0000 0000 0000
 ----------
-ip: 00ef flags: ----odit sz-a-p-c 00000000 00000010 (0002)
+ip: 00ec flags: ----odit sz-a-p-c 00000000 00000010 (0002)
 cs: d000 ds: 0000 ss: 0800 es: 0000 bp: 0000 sp: 0000
 ax: 0201 bx: 0403 cx: 0605 dx: 0807 si: 0000 di: 0000
 stack: 0000 0000 0000 0000 0000 0000 0000 0000
 ----------
-ip: 0154 flags: ----odit Sz-A-P-c 00000000 10010110 (0096)
+ip: 0151 flags: ----odit Sz-A-P-c 00000000 10010110 (0096)
 cs: d000 ds: 0000 ss: 0800 es: 0000 bp: 0000 sp: 0000
 ax: f9f8 bx: fbfa cx: fdfc dx: fffe si: 0000 di: 0000
 stack: 0000 0000 0000 0000 0000 0000 0000 0000
 ----------
-ip: 0194 flags: ----odit Sz-a-p-c 00000000 10000010 (0082)
+ip: 0191 flags: ----odit Sz-a-p-c 00000000 10000010 (0082)
 cs: d000 ds: 1000 ss: 1000 es: 0000 bp: 001a sp: 001a
 ax: 1000 bx: 001a cx: fdfc dx: fffe si: 0002 di: 0000
 stack: abab abab aaaa aaaa 0000 0000 0000 0000
 ----------
-ip: 01a6 flags: ----odit Sz-a-p-c 00000000 10000010 (0082)
+ip: 01a3 flags: ----odit Sz-a-p-c 00000000 10000010 (0082)
 cs: d000 ds: 1000 ss: 1000 es: 0000 bp: 001a sp: 001a
 ax: 1000 bx: 001a cx: fdfc dx: fffe si: 0002 di: 0000
 stack: abac abac aaab aaab 0000 0000 0000 0000
 ----------
-ip: 01d0 flags: ----odit Sz-a-P-c 00000000 10000110 (0086)
+ip: 01cd flags: ----odit Sz-a-P-c 00000000 10000110 (0086)
 cs: d000 ds: 1000 ss: 1000 es: 0000 bp: 001a sp: 001a
 ax: 1000 bx: 001a cx: fdfc dx: fffe si: 0002 di: 0000
 stack: 8787 8787 8888 8888 0000 0000 0000 0000
 ----------
-ip: 01e2 flags: ----odit Sz-a-P-c 00000000 10000110 (0086)
+ip: 01df flags: ----odit Sz-a-P-c 00000000 10000110 (0086)
 cs: d000 ds: 1000 ss: 1000 es: 0000 bp: 001a sp: 001a
 ax: 1000 bx: 001a cx: fdfc dx: fffe si: 0002 di: 0000
 stack: 8786 8786 8887 8887 0000 0000 0000 0000
