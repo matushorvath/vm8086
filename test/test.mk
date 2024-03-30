@@ -75,15 +75,8 @@ test: test-prep $(VM8086_TXT)
 	[ $(MAKELEVEL) -eq 0 ] && cat $(TESTLOG) && rm -f $(TESTLOG) || true
 
 .PHONY: validate
-ifeq ($(DISABLE_BOCHS), 1)
-validate:
-	printf '$(NAME): [bochs] validating ' >> $(TESTLOG)
-	$(disabled)
-	[ $(MAKELEVEL) -eq 0 ] && cat $(TESTLOG) && rm -f $(TESTLOG) || true
-else
 validate: test-prep $(BOCHS_TXT)
 	[ $(MAKELEVEL) -eq 0 ] && cat $(TESTLOG) && rm -f $(TESTLOG) || true
-endif
 
 .PHONY: all
 all: test-prep $(BOCHS_TXT) $(VM8086_TXT)
@@ -118,11 +111,18 @@ $(OBJDIR)/%.o: $(OBJDIR)/%.vm8086.bin
 	@$(passed)
 
 # Test the bochs binary
+ifeq ($(DISABLE_BOCHS), 1)
+$(RESDIR)/%.bochs.txt:
+	printf '$(NAME): [bochs] validating ' >> $(TESTLOG)
+	echo "bochs test disabled" > $@
+	$(disabled)
+else
 $(RESDIR)/%.bochs.txt: $(RESDIR)/%.bochs.serial $(COMMON_BINDIR)/dump_state
-	printf '$(NAME): [bochs] comparing ' >> $(TESTLOG)
+	printf '$(NAME): [bochs] validating ' >> $(TESTLOG)
 	$(COMMON_BINDIR)/dump_state $< $@
 	diff $(SAMPLE_TXT) $@ || $(failed-diff)
 	@$(passed)
+endif
 
 # TODO kill bochs after a timeout
 $(RESDIR)/%.bochs.serial: $(OBJDIR)/%.bochs.bin
