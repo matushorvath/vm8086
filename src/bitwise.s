@@ -28,7 +28,6 @@
 .IMPORT flag_overflow
 
 # TODO HW do logical operations calculate PF from the whole result, or just lower byte? docs say whole result
-# TODO BUG parity flag after bitwise operations is always opposite to bochs (e.g. bitwise/and_b)
 
 ##########
 execute_and_b:
