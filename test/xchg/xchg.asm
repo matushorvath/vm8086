@@ -1,6 +1,12 @@
 %include "common.inc"
 
 
+bss_seg     equ 0x8000
+section .bss start=(bss_seg * 0x10) nobits
+data:
+    resw 0
+
+
 section .text
     dump_state
 
