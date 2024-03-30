@@ -5,6 +5,8 @@
 
     ; test JMP MEM16 (NEAR), JMP MEM16 (FAR)
 
+bss_seg     equ 0x8000
+
     ; if we execute anything we shouldn't, ax will be set to 0
     mov ax, 1
     dump_state
@@ -16,7 +18,7 @@ test_near_mem:
     mov ax, 0
 
 near_backward_mem:
-    dump_state                        ; 3n
+    dump_state                          ; 3n
     mov word [jmp_offset], test_far_mem
     jmp [jmp_offset]
     mov ax, 0
@@ -25,30 +27,31 @@ near_backward_mem:
     db  256 dup 0
 
 near_forward_mem:
-    dump_state                        ; 2n
+    dump_state                          ; 2n
     mov word [jmp_offset], near_backward_mem
     jmp [jmp_offset]
     mov ax, 0
 
 
 test_far_mem:
-    ; TODO the segment isn't a round number
-    mov word [jmp_offset], far_absolute_mem - 0x4000        ; 1f
-    mov word [jmp_segment], 0xe400
+    mov word [jmp_offset], far_absolute_mem                 ; 1f
+    mov word [jmp_segment], extra_seg
     jmp far [jmp_offset]
     mov ax, 0
 
 test_end_mem:
-    dump_state                        ; 3f
+    dump_state                          ; 3f
 
 
-    ; far target in another segment, then resume current segment
-[section far_target start=0xe4000]
+    ; far target in extra segment
+[section far_target start=extra_addr]
 
 far_absolute_mem:
-    dump_state                        ; 2f
+    ; TODO this does not work in bochs, it needs a far call
+    dump_state                          ; 2f
+    ; TODO remove db 3 dup 0x90
     mov word [jmp_offset], test_end_mem
-    mov word [jmp_segment], 0xd000
+    mov word [jmp_segment], text_seg
     jmp far [jmp_offset]
     mov ax, 0
 
@@ -56,11 +59,11 @@ __?SECT?__
 
 
     ; storage for the pointer we jump to
-[section .data start=0xe0000]
+[section .bss start=(bss_seg * 0x10)]
 
 jmp_offset:
-    dw  0
+    resw 1
 jmp_segment:
-    dw  0
+    resw 1
 
 __?SECT?__

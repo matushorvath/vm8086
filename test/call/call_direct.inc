@@ -33,7 +33,7 @@ test_end:
 
 
     ; far target in extra segment
-[section far_target_2 start=extra_addr]
+[section far_target start=extra_addr]
 
 far_absolute_2:
     ; TODO this does not work in bochs, it needs a far call

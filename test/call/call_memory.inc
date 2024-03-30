@@ -41,8 +41,8 @@ far_absolute_1_mem:
 test_end_mem:
 
 
-    ; far target in yet another segment
-[section far_target_2 start=extra_addr]
+    ; far target in extra segment
+[section far_target start=extra_addr]
 
 far_absolute_2_mem:
     ; TODO this does not work in bochs, it needs a far call

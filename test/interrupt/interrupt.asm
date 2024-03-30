@@ -1,3 +1,5 @@
+; TODO test cli, sti
+
 %include "common.inc"
 
 ints_seg            equ 0x0000
@@ -22,8 +24,6 @@ saved_int255:       resw 2
 
 
 section .text
-    ; TODO HW should we call STI here to allow interrupts?
-
     mov ax, ints_seg
     mov ds, ax
     mov ax, saved_ints_seg
@@ -139,7 +139,6 @@ handle_int21:
     ; TODO remove db  3 dup (0x90)
 
     ; interrupt while processing an interrupt
-    ; TODO HW should this work? test STI/CLI here?
     int 255
     ; TODO this does not work in bochs, it needs a far call
     dump_state

@@ -17,7 +17,7 @@ test_near_reg:
     mov ax, 0
 
 near_backward_reg:
-    dump_state                        ; 3n
+    dump_state                          ; 3n
     mov dx, test_end_reg
     jmp dx
     mov ax, 0
@@ -26,10 +26,10 @@ near_backward_reg:
     db  256 dup 0
 
 near_forward_reg:
-    dump_state                        ; 2n
+    dump_state                          ; 2n
     mov dx, near_backward_reg
     jmp dx
     mov ax, 0
 
 test_end_reg:
-    dump_state                        ; 4f
+    dump_state                          ; 4f
