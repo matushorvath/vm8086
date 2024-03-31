@@ -88,7 +88,7 @@ execute_adc_not_decimal:
     add [rb + sum], [flag_carry], [rb + sum]
 
     # Set carry flag if sum > 0xff
-    lt 0xff, [rb + sum], [flag_carry]
+    lt  0xff, [rb + sum], [flag_carry]
 
     # If carry, reduce sum by 0x100
     jz  [flag_carry], execute_adc_update_flags
