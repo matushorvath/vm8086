@@ -29,12 +29,20 @@
 .IMPORT reg_ss
 .IMPORT inc_ip
 
+# From trace.s
+.IMPORT print_trace
+
 ##########
 execute:
 .FRAME tmp, op
     arb -2
 
 execute_loop:
+    # Skip tracing if disabled
+    jz  [binary_enable_tracing], execute_tracing_done
+    call print_trace
+
+execute_tracing_done:
     # Handle prefixes; first check if they were consumed (prefix_valid == 0)
     jz  [prefix_valid], execute_prefix_done
 
