@@ -46,8 +46,8 @@
 
 ##########
 decode_mod_rm:
-.FRAME mod, rm, w; loc_type, loc_addr, disp, tmp       # returns loc_type, loc_addr
-    arb -4
+.FRAME mod, rm, w; regptr, seg_lo, seg_hi, off_lo, off_hi, disp_lo, disp_hi, tmp    # returns regptr, seg_lo, seg_hi, off_lo, off_hi
+    arb -8
 
     # Decode the mod field
     add decode_mod_rm_mod_table, [rb + mod], [ip + 2]
@@ -71,7 +71,8 @@ decode_mod_rm_mem_mod00:
 
 decode_mod_rm_mem_no_disp:
     # Memory mode with no displacement
-    add 0, 0, [rb + disp]
+    add 0, 0, [rb + disp_lo]
+    add 0, 0, [rb + disp_hi]
 
     # Jump to handling of this R/M value
     add decode_mod_rm_mem_table, [rb + rm], [ip + 2]
@@ -82,17 +83,13 @@ decode_mod_rm_mem_disp8:
 
     # Read 8-bit displacement
     call read_cs_ip_b
-    add [rb - 2], 0, [rb + disp]
-
+    add [rb - 2], 0, [rb + disp_lo]
     call inc_ip
 
     # Sign extend the displacement
-    lt  [rb + disp], 0x80, [rb + tmp]
-    jnz [rb + tmp], decode_mod_rm_mem_disp8_positive
+    lt  0x7f, [rb + disp_lo], [rb + disp_hi]
+    mul [rb + disp_hi], 0xff, [rb + disp_hi]
 
-    add [rb + disp], 0xff00, [rb + disp]
-
-decode_mod_rm_mem_disp8_positive:
     # Jump to handling of this R/M value
     add decode_mod_rm_mem_table, [rb + rm], [ip + 2]
     jz  0, [0]
@@ -102,8 +99,8 @@ decode_mod_rm_mem_disp16:
 
     # Read 16-bit displacement
     call read_cs_ip_w
-    mul [rb - 3], 0x100, [rb + disp]
-    add [rb - 2], [rb + disp], [rb + disp]
+    add [rb - 2], 0, [rb + disp_lo]
+    mul [rb - 3], 0, [rb + disp_hi]
 
     call inc_ip
     call inc_ip
@@ -125,138 +122,161 @@ decode_mod_rm_mem_table:
     db  decode_mod_rm_memory_direct
 
 decode_mod_rm_memory_bx_si:
-    # Calculations below work like this:
-    # loc_addr = (ds << 4) + bx + si
-    #
-    #      3210|7654 3210|7654 3210
-    # ds = ---dsh--- ---dsl---
-    # bx =      ---bxh--- ---bxl---
-    # si =      ---sih--- ---sil---
-    #
-    # loc_addr = (((dsh << 4) + bxh + sih) << 4 + dsl) << 4 + bxl + sil;
-
-    add [ds_segment_prefix], 1, [ip + 1]
-    mul [0], 0x10, [rb + loc_addr]
-    add [reg_bx + 1], [rb + loc_addr], [rb + loc_addr]
-    add [reg_si + 1], [rb + loc_addr], [rb + loc_addr]
-    mul [rb + loc_addr], 0x10, [rb + loc_addr]
+    # Segment to return
     add [ds_segment_prefix], 0, [ip + 1]
-    add [0], [rb + loc_addr], [rb + loc_addr]
-    mul [rb + loc_addr], 0x10, [rb + loc_addr]
-    add [reg_bx + 0], [rb + loc_addr], [rb + loc_addr]
-    add [reg_si + 0], [rb + loc_addr], [rb + loc_addr]
+    add [0], 0, [rb + seg_lo]
+    add [ds_segment_prefix], 1, [ip + 1]
+    add [0], 0, [rb + seg_hi]
 
-    jz  0, decode_mod_rm_mem_calc
+    # Offset to return, carry will be handled later
+    add [reg_bx + 0], [reg_si + 0], [rb + off_lo]
+    add [reg_bx + 1], [reg_si + 1], [rb + off_hi]
+
+    jz  0, decode_mod_rm_mem_offset_carry
 
 decode_mod_rm_memory_bx_di:
-    add [ds_segment_prefix], 1, [ip + 1]
-    mul [0], 0x10, [rb + loc_addr]
-    add [reg_bx + 1], [rb + loc_addr], [rb + loc_addr]
-    add [reg_di + 1], [rb + loc_addr], [rb + loc_addr]
-    mul [rb + loc_addr], 0x10, [rb + loc_addr]
+    # Segment to return
     add [ds_segment_prefix], 0, [ip + 1]
-    add [0], [rb + loc_addr], [rb + loc_addr]
-    mul [rb + loc_addr], 0x10, [rb + loc_addr]
-    add [reg_bx + 0], [rb + loc_addr], [rb + loc_addr]
-    add [reg_di + 0], [rb + loc_addr], [rb + loc_addr]
+    add [0], 0, [rb + seg_lo]
+    add [ds_segment_prefix], 1, [ip + 1]
+    add [0], 0, [rb + seg_hi]
 
-    jz  0, decode_mod_rm_mem_calc
+    # Offset to return, carry will be handled later
+    add [reg_bx + 0], [reg_di + 0], [rb + off_lo]
+    add [reg_bx + 1], [reg_di + 1], [rb + off_hi]
+
+    jz  0, decode_mod_rm_mem_offset_carry
 
 decode_mod_rm_memory_bp_si:
-    add [ss_segment_prefix], 1, [ip + 1]
-    mul [0], 0x10, [rb + loc_addr]
-    add [reg_bp + 1], [rb + loc_addr], [rb + loc_addr]
-    add [reg_si + 1], [rb + loc_addr], [rb + loc_addr]
-    mul [rb + loc_addr], 0x10, [rb + loc_addr]
+    # Segment to return
     add [ss_segment_prefix], 0, [ip + 1]
-    add [0], [rb + loc_addr], [rb + loc_addr]
-    mul [rb + loc_addr], 0x10, [rb + loc_addr]
-    add [reg_bp + 0], [rb + loc_addr], [rb + loc_addr]
-    add [reg_si + 0], [rb + loc_addr], [rb + loc_addr]
+    add [0], 0, [rb + seg_lo]
+    add [ss_segment_prefix], 1, [ip + 1]
+    add [0], 0, [rb + seg_hi]
 
-    jz  0, decode_mod_rm_mem_calc
+    # Offset to return, carry will be handled later
+    add [reg_bp + 0], [reg_si + 0], [rb + off_lo]
+    add [reg_bp + 1], [reg_si + 1], [rb + off_hi]
+
+    jz  0, decode_mod_rm_mem_offset_carry
 
 decode_mod_rm_memory_bp_di:
-    add [ss_segment_prefix], 1, [ip + 1]
-    mul [0], 0x10, [rb + loc_addr]
-    add [reg_bp + 1], [rb + loc_addr], [rb + loc_addr]
-    add [reg_di + 1], [rb + loc_addr], [rb + loc_addr]
-    mul [rb + loc_addr], 0x10, [rb + loc_addr]
+    # Segment to return
     add [ss_segment_prefix], 0, [ip + 1]
-    add [0], [rb + loc_addr], [rb + loc_addr]
-    mul [rb + loc_addr], 0x10, [rb + loc_addr]
-    add [reg_bp + 0], [rb + loc_addr], [rb + loc_addr]
-    add [reg_di + 0], [rb + loc_addr], [rb + loc_addr]
+    add [0], 0, [rb + seg_lo]
+    add [ss_segment_prefix], 1, [ip + 1]
+    add [0], 0, [rb + seg_hi]
 
-    jz  0, decode_mod_rm_mem_calc
+    # Offset to return, carry will be handled later
+    add [reg_bp + 0], [reg_di + 0], [rb + off_lo]
+    add [reg_bp + 1], [reg_di + 1], [rb + off_hi]
+
+    jz  0, decode_mod_rm_mem_offset_carry
 
 decode_mod_rm_memory_si:
-    add [ds_segment_prefix], 1, [ip + 1]
-    mul [0], 0x10, [rb + loc_addr]
-    add [reg_si + 1], [rb + loc_addr], [rb + loc_addr]
-    mul [rb + loc_addr], 0x10, [rb + loc_addr]
+    # Segment to return
     add [ds_segment_prefix], 0, [ip + 1]
-    add [0], [rb + loc_addr], [rb + loc_addr]
-    mul [rb + loc_addr], 0x10, [rb + loc_addr]
-    add [reg_si + 0], [rb + loc_addr], [rb + loc_addr]
+    add [0], 0, [rb + seg_lo]
+    add [ds_segment_prefix], 1, [ip + 1]
+    add [0], 0, [rb + seg_hi]
 
-    jz  0, decode_mod_rm_mem_calc
+    # Offset to return
+    add [reg_si + 0], 0, [rb + off_lo]
+    add [reg_si + 1], 0, [rb + off_hi]
+
+    jz  0, decode_mod_rm_mem_disp
 
 decode_mod_rm_memory_di:
-    add [ds_segment_prefix], 1, [ip + 1]
-    mul [0], 0x10, [rb + loc_addr]
-    add [reg_di + 1], [rb + loc_addr], [rb + loc_addr]
-    mul [rb + loc_addr], 0x10, [rb + loc_addr]
+    # Segment to return
     add [ds_segment_prefix], 0, [ip + 1]
-    add [0], [rb + loc_addr], [rb + loc_addr]
-    mul [rb + loc_addr], 0x10, [rb + loc_addr]
-    add [reg_di + 0], [rb + loc_addr], [rb + loc_addr]
+    add [0], 0, [rb + seg_lo]
+    add [ds_segment_prefix], 1, [ip + 1]
+    add [0], 0, [rb + seg_hi]
 
-    jz  0, decode_mod_rm_mem_calc
+    # Offset to return
+    add [reg_di + 0], 0, [rb + off_lo]
+    add [reg_di + 1], 0, [rb + off_hi]
+
+    jz  0, decode_mod_rm_mem_disp
 
 decode_mod_rm_memory_bp:
-    add [ss_segment_prefix], 1, [ip + 1]
-    mul [0], 0x10, [rb + loc_addr]
-    add [reg_bp + 1], [rb + loc_addr], [rb + loc_addr]
-    mul [rb + loc_addr], 0x10, [rb + loc_addr]
+    # Segment to return
     add [ss_segment_prefix], 0, [ip + 1]
-    add [0], [rb + loc_addr], [rb + loc_addr]
-    mul [rb + loc_addr], 0x10, [rb + loc_addr]
-    add [reg_bp + 0], [rb + loc_addr], [rb + loc_addr]
+    add [0], 0, [rb + seg_lo]
+    add [ss_segment_prefix], 1, [ip + 1]
+    add [0], 0, [rb + seg_hi]
 
-    jz  0, decode_mod_rm_mem_calc
+    # Offset to return
+    add [reg_bp + 0], 0, [rb + off_lo]
+    add [reg_bp + 1], 0, [rb + off_hi]
+
+    jz  0, decode_mod_rm_mem_disp
 
 decode_mod_rm_memory_bx:
-    add [ds_segment_prefix], 1, [ip + 1]
-    mul [0], 0x10, [rb + loc_addr]
-    add [reg_bx + 1], [rb + loc_addr], [rb + loc_addr]
-    mul [rb + loc_addr], 0x10, [rb + loc_addr]
+    # Segment to return
     add [ds_segment_prefix], 0, [ip + 1]
-    add [0], [rb + loc_addr], [rb + loc_addr]
-    mul [rb + loc_addr], 0x10, [rb + loc_addr]
-    add [reg_bx + 0], [rb + loc_addr], [rb + loc_addr]
+    add [0], 0, [rb + seg_lo]
+    add [ds_segment_prefix], 1, [ip + 1]
+    add [0], 0, [rb + seg_hi]
 
-    jz  0, decode_mod_rm_mem_calc
+    # Offset to return
+    add [reg_bx + 0], 0, [rb + off_lo]
+    add [reg_bx + 1], 0, [rb + off_hi]
+
+    jz  0, decode_mod_rm_mem_disp
 
 decode_mod_rm_memory_direct:
-    add [ds_segment_prefix], 1, [ip + 1]
-    mul [0], 0x100, [rb + loc_addr]
+    # Segment to return
     add [ds_segment_prefix], 0, [ip + 1]
-    add [0], [rb + loc_addr], [rb + loc_addr]
-    mul [rb + loc_addr], 0x10, [rb + loc_addr]
+    add [0], 0, [rb + seg_lo]
+    add [ds_segment_prefix], 1, [ip + 1]
+    add [0], 0, [rb + seg_hi]
 
-decode_mod_rm_mem_calc:
-    # Return an 8086 physical memory address
-    add 1, 0, [rb + loc_type]
+    # Offset to return is just the displacement that is added later
+    add 0, 0, [rb + off_lo]
+    add 0, 0, [rb + off_hi]
 
-    # Add displacement and wrap around to 20 bits
-    # TODO HW this may be incorrect; maybe we add displacement before the segment
-    # and wrap around to 16-bits, then add segment and wrap around again to 20 bits?
-    add [rb + loc_addr], [rb + disp], [rb - 1]
-    add 0x100000, 0, [rb - 2]
-    arb -2
-    call modulo
-    add [rb - 4], 0, [rb + loc_addr]
+    jz  0, decode_mod_rm_mem_disp
+
+decode_mod_rm_mem_offset_carry:
+    # Handle carry between off_lo and off_hi
+
+    # Check for carry out of low byte
+    lt  [rb + off_lo], 0x100, [rb + tmp]
+    jnz [rb + tmp], decode_mod_rm_mem_offset_after_carry_lo
+
+    add [rb + off_lo], -0x100, [rb + off_lo]
+    add [rb + off_hi], 1, [rb + off_hi]
+
+decode_mod_rm_mem_offset_after_carry_lo:
+    # Check for carry out of high byte
+    lt  [rb + off_hi], 0x100, [rb + tmp]
+    jnz [rb + tmp], decode_mod_rm_mem_disp
+
+    add [rb + off_hi], -0x100, [rb + off_hi]
+
+decode_mod_rm_mem_disp:
+    # Add displacement to offset and once again handle carry
+    add [rb + off_lo], [rb + disp_lo], [rb + off_lo]
+    add [rb + off_hi], [rb + disp_hi], [rb + off_hi]
+
+    # Check for carry out of low byte
+    lt  [rb + off_lo], 0x100, [rb + tmp]
+    jnz [rb + tmp], decode_mod_rm_mem_disp_after_carry_lo
+
+    add [rb + off_lo], -0x100, [rb + off_lo]
+    add [rb + off_hi], 1, [rb + off_hi]
+
+decode_mod_rm_mem_disp_after_carry_lo:
+    # Check for carry out of high byte
+    lt  [rb + off_hi], 0x100, [rb + tmp]
+    jnz [rb + tmp], decode_mod_rm_mem_disp_after_carry_hi
+
+    add [rb + off_hi], -0x100, [rb + off_hi]
+
+decode_mod_rm_mem_disp_after_carry_hi:
+    # Set regptr to 0, since we are returning seg:off
+    add 0, 0, [rb + regptr]
 
     jz  0, decode_mod_rm_end
 
@@ -267,12 +287,13 @@ decode_mod_rm_reg:
     add [rb + w], 0, [rb - 2]
     arb -2
     call decode_reg
+    add [rb - 4], 0, [rb + regptr]
 
-    add 0, 0, [rb + loc_type]
-    add [rb - 4], 0, [rb + loc_addr]
+    # We do not zero seg_* and off_* here to save some cycles,
+    # but non-zero regptr means seg_* and off_* are not valid
 
 decode_mod_rm_end:
-    arb 4
+    arb 8
     ret 3
 .ENDFRAME
 
