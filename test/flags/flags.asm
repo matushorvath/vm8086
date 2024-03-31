@@ -105,14 +105,14 @@ section .text
     mov ah, al
 
     ; set flag and store to ah
-    xor ah, byte %1
+    xor ah, %1
     sahf
     mov ah, 0
     lahf
     dump_state
 
     ; clear flag and store to ah
-    xor ah, byte %1
+    xor ah, %1
     sahf
     mov ah, 0
     lahf
