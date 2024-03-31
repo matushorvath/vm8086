@@ -44,8 +44,8 @@ arg_mod_reg_rm_src_b:
     add 0, 0, [rb - 2]
     arb -2
     call decode_reg
-    add [rb - 4], 0, [rb + loc_type_src]
-    add [rb - 5], 0, [rb + loc_addr_src]
+    add 0, 0, [rb + loc_type_src]
+    add [rb - 4], 0, [rb + loc_addr_src]
 
     arb 4
     ret 0
@@ -70,8 +70,8 @@ arg_mod_reg_rm_src_w:
     add 1, 0, [rb - 2]
     arb -2
     call decode_reg
-    add [rb - 4], 0, [rb + loc_type_src]
-    add [rb - 5], 0, [rb + loc_addr_src]
+    add 0, 0, [rb + loc_type_src]
+    add [rb - 4], 0, [rb + loc_addr_src]
 
     arb 4
     ret 0
@@ -96,8 +96,8 @@ arg_mod_reg_rm_dst_b:
     add 0, 0, [rb - 2]
     arb -2
     call decode_reg
-    add [rb - 4], 0, [rb + loc_type_dst]
-    add [rb - 5], 0, [rb + loc_addr_dst]
+    add 0, 0, [rb + loc_type_dst]
+    add [rb - 4], 0, [rb + loc_addr_dst]
 
     arb 4
     ret 0
@@ -122,8 +122,8 @@ arg_mod_reg_rm_dst_w:
     add 1, 0, [rb - 2]
     arb -2
     call decode_reg
-    add [rb - 4], 0, [rb + loc_type_dst]
-    add [rb - 5], 0, [rb + loc_addr_dst]
+    add 0, 0, [rb + loc_type_dst]
+    add [rb - 4], 0, [rb + loc_addr_dst]
 
     arb 4
     ret 0
@@ -147,8 +147,8 @@ arg_mod_1sr_rm_src:
     add [rb - 5], 0, [rb - 1]
     arb -1
     call decode_sr
-    add [rb - 3], 0, [rb + loc_type_src]
-    add [rb - 4], 0, [rb + loc_addr_src]
+    add 0, 0, [rb + loc_type_src]
+    add [rb - 3], 0, [rb + loc_addr_src]
 
     arb 4
     ret 0
@@ -172,8 +172,8 @@ arg_mod_1sr_rm_dst:
     add [rb - 5], 0, [rb - 1]
     arb -1
     call decode_sr
-    add [rb - 3], 0, [rb + loc_type_dst]
-    add [rb - 4], 0, [rb + loc_addr_dst]
+    add 0, 0, [rb + loc_type_dst]
+    add [rb - 3], 0, [rb + loc_addr_dst]
 
     arb 4
     ret 0

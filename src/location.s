@@ -87,6 +87,7 @@ read_location_dw:
     jz  [rb + loc_type], read_location_dw_register
 
     # Read from an 8086 address
+    # TODO x loc_addr wrap around to 20 bits
     add [rb + loc_addr], 0, [rb - 1]
     arb -1
     call read_b

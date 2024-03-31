@@ -268,8 +268,8 @@ decode_mod_rm_reg:
     arb -2
     call decode_reg
 
-    add [rb - 4], 0, [rb + loc_type]
-    add [rb - 5], 0, [rb + loc_addr]
+    add 0, 0, [rb + loc_type]
+    add [rb - 4], 0, [rb + loc_addr]
 
 decode_mod_rm_end:
     arb 4
@@ -278,21 +278,19 @@ decode_mod_rm_end:
 
 ##########
 decode_reg:
-.FRAME reg, w; loc_type, loc_addr, tmp                      # returns loc_type, loc_addr
-    arb -3
-
-    # Expect reg to be 0-7, w to be 0-1
+.FRAME reg, w; regptr, tmp                 # returns reg
+    arb -2
 
     # Return the intcode address of an 8086 register
-    add 0, 0, [rb + loc_type]
+    # Expect reg to be 0-7, w to be 0-1
 
-    # Map the REG value to an intocode address of the corresponding 8086 register
+    # Map the REG value to an intcode address of the corresponding 8086 register
     mul [rb + w], 8, [rb + tmp]
     add [rb + tmp], [rb + reg], [rb + tmp]
     add decode_reg_table, [rb + tmp], [ip + 1]
-    add [0], 0, [rb + loc_addr]
+    add [0], 0, [rb + regptr]
 
-    arb 3
+    arb 2
     ret 2
 
 decode_reg_table:
@@ -318,23 +316,21 @@ decode_reg_table:
 
 ##########
 decode_sr:
-.FRAME reg; loc_type, loc_addr, tmp                      # returns loc_type, loc_addr
-    arb -3
+.FRAME reg; regptr, tmp                    # returns reg
+    arb -2
 
+    # Return the intcode address of an 8086 register
     # Expect reg to be 0-7, w to be 0-1
 
-    # Only reg 0-3 are valid instructions
+    # Only reg 0-3 are valid values
     lt  [rb + reg], 4, [rb + tmp]
     jz  [rb + tmp], decode_sr_invalid_instruction
 
-    # Return the intcode address of an 8086 register
-    add 0, 0, [rb + loc_type]
-
-    # Map the REG value to an intocode address of the corresponding 8086 segment register
+    # Map the REG value to an intcode address of the corresponding 8086 segment register
     add decode_sr_table, [rb + reg], [ip + 1]
-    add [0], 0, [rb + loc_addr]
+    add [0], 0, [rb + regptr]
 
-    arb 3
+    arb 2
     ret 1
 
 decode_sr_invalid_instruction:
