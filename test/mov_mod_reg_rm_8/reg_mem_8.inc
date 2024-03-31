@@ -3,20 +3,20 @@
     mov cx, 0x0000
     mov dx, 0x0000
 
-    mov [5 + 11 + test_ds], al
-    mov ah, [byte bx + si + test_ds]
+    mov [5 + 11 + test_ds_8], al
+    mov ah, [byte bx + si + test_ds_8]
 
-    mov [5 + 13 + test_ds], al
-    mov cl, [byte bx + di + test_ds]
+    mov [5 + 13 + test_ds_8], al
+    mov cl, [byte bx + di + test_ds_8]
 
-    mov [11 + test_ds], al
-    mov ch, [byte si + test_ds]
+    mov [11 + test_ds_8], al
+    mov ch, [byte si + test_ds_8]
 
-    mov [13 + test_ds], al
-    mov dl, [byte di + test_ds]
+    mov [13 + test_ds_8], al
+    mov dl, [byte di + test_ds_8]
 
-    mov [5 + test_ds], al
-    mov dh, [byte bx + test_ds]
+    mov [5 + test_ds_8], al
+    mov dh, [byte bx + test_ds_8]
 
     dump_state
 
@@ -24,13 +24,13 @@
     mov cx, 0x0000
     mov dx, 0x0000
 
-    mov [ss:7 + test_ss], al
-    mov ah, [byte bp + test_ss]
+    mov [ss:7 + test_ss_8], al
+    mov ah, [byte bp + test_ss_8]
 
-    mov [ss:7 + 11 + test_ss], al
-    mov cl, [byte bp + si + test_ss]
+    mov [ss:7 + 11 + test_ss_8], al
+    mov cl, [byte bp + si + test_ss_8]
 
-    mov [ss:7 + 13 + test_ss], al
-    mov ch, [byte bp + di + test_ss]
+    mov [ss:7 + 13 + test_ss_8], al
+    mov ch, [byte bp + di + test_ss_8]
 
     dump_state

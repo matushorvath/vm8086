@@ -6,13 +6,17 @@
 
 section data_segment start=0x10000 nobits
     resw 23
-test_ds:
+test_ds_8:
+    resw 263
+test_ds_16:
     resw 1
 
 
 section stack_segment start=0x20000 nobits
     resw 17
-test_ss:
+test_ss_8:
+    resw 313
+test_ss_16:
     resw 1
 
 

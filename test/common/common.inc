@@ -201,16 +201,16 @@ mark_bochs:
     add bp, (.last_push - .first_push) * 2 + 4              ; push * + CS + IP
 
     ; load return address to ES:BX
-    mov bx, [word bp - 2]
+    mov bx, [bp - 2]
     mov es, bx
-    mov bx, [word bp - 4]
+    mov bx, [bp - 4]
 
     ; instead of next instruction, this location contains the mark number
-    mov ah, [byte es:bx]
+    mov ah, [es:bx]
 
     ; increment the return address to skip the mark number on return
     inc bx
-    mov [word bp - 4], bx
+    mov [bp - 4], bx
 
     ; record type is 0x0002
     mov al, 0x02

@@ -1,16 +1,16 @@
-    ; MOV MEM16, REG16 (16-bit displacement)
+    ; MOV MEM16, REG16 (no displacement)
     mov ax, 0x0000
     mov cx, 0x0000
     mov dx, 0x0000
     mov sp, 0xabcd
 
-    mov [byte bx + si], sp
+    mov [bx + si], sp
     mov ax, [5 + 11]
 
-    mov [byte bx + di], sp
+    mov [bx + di], sp
     mov cx, [5 + 13]
 
-    mov [byte si], sp
+    mov [si], sp
     mov dx, [11]
 
     dump_state
@@ -20,10 +20,10 @@
     mov dx, 0x0000
     mov sp, 0x0000
 
-    mov [byte di], cx
+    mov [di], cx
     mov ax, [13]
 
-    mov [byte bx], cx
+    mov [bx], cx
     mov dx, [5]
 
     dump_state
@@ -33,13 +33,13 @@
     mov dx, 0x789a
     mov sp, 0x0000
 
-    mov [byte bp], dx
+    mov [bp], dx
     mov ax, [ss:7]
 
-    mov [byte bp + si], dx
+    mov [bp + si], dx
     mov cx, [ss:7 + 11]
 
-    mov [byte bp + di], dx
+    mov [bp + di], dx
     mov sp, [ss:7 + 13]
 
     dump_state
