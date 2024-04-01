@@ -1,5 +1,8 @@
 .EXPORT execute_add_b
+.EXPORT execute_add_w
+
 .EXPORT execute_adc_b
+.EXPORT execute_adc_w
 
 # From location.s
 .IMPORT read_location_b
@@ -38,6 +41,22 @@ execute_add_b:
 .ENDFRAME
 
 ##########
+execute_add_w:
+.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
+    # Clear flag_carry so adc performs an add without carry
+    add 0, 0, [flag_carry]
+
+    add [rb + loc_type_src], 0, [rb - 1]
+    add [rb + loc_addr_src], 0, [rb - 2]
+    add [rb + loc_type_dst], 0, [rb - 3]
+    add [rb + loc_addr_dst], 0, [rb - 4]
+    arb -4
+    call execute_adc_w
+
+    ret 4
+.ENDFRAME
+
+##########
 execute_adc_b:
 .FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a, b, res, tmp
     arb -4
@@ -66,13 +85,12 @@ execute_adc_b:
 
     # Calculate the result
     add [rb + a], [rb + b], [rb + res]
-    add [flag_carry], [rb + res], [rb + res]
+    add [rb + res], [flag_carry], [rb + res]
 
-    # Set carry flag if sum > 0xff
+    # Check for carry
     lt  0xff, [rb + res], [flag_carry]
-
-    # If carry, reduce sum by 0x100
     jz  [flag_carry], execute_adc_b_after_carry
+
     add [rb + res], -0x100, [rb + res]
 
 execute_adc_b_after_carry:
@@ -97,8 +115,84 @@ execute_adc_b_after_carry:
     arb -3
     call write_location_b
 
-execute_bitwise_b_end:
     arb 4
+    ret 4
+.ENDFRAME
+
+##########
+execute_adc_w:
+.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a_lo, a_hi, b_lo, b_hi, res_lo, res_hi, tmp
+    arb -7
+
+    # Read the source value
+    add [rb + loc_type_src], 0, [rb - 1]
+    add [rb + loc_addr_src], 0, [rb - 2]
+    arb -2
+    call read_location_w
+    add [rb - 4], 0, [rb + a_lo]
+    add [rb - 5], 0, [rb + a_hi]
+
+    # Read the destination value
+    add [rb + loc_type_dst], 0, [rb - 1]
+    add [rb + loc_addr_dst], 0, [rb - 2]
+    arb -2
+    call read_location_w
+    add [rb - 4], 0, [rb + b_lo]
+    add [rb - 5], 0, [rb + b_hi]
+
+    # TODO BCD
+
+    # Update flag_auxiliary_carry before we modify flag_carry
+    add [rb + a_lo], 0, [rb - 1]
+    add [rb + b_lo], 0, [rb - 2]
+    arb -2
+    call update_auxiliary_carry_adc
+
+    # Calculate the result
+    add [rb + a_lo], [rb + b_lo], [rb + res_lo]
+    add [rb + res_lo], [flag_carry], [rb + res_lo]
+    add [rb + a_hi], [rb + b_hi], [rb + res_hi]
+
+    # Check for carry out of low byte
+    lt  0xff, [rb + res_lo], [rb + tmp]
+    jz  [rb + tmp], execute_adc_w_after_carry_lo
+
+    add [rb + res_lo], -0x100, [rb + res_lo]
+    add [rb + res_hi], 1, [rb + res_hi]
+
+execute_adc_w_after_carry_lo:
+    # Check for carry out of high byte
+    lt  0xff, [rb + res_hi], [flag_carry]
+    jz  [flag_carry], execute_adc_w_after_carry_hi
+
+    add [rb + res_hi], -0x100, [rb + res_hi]
+
+execute_adc_w_after_carry_hi:
+    # Update flags
+    lt  0x7f, [rb + res_hi], [flag_sign]
+
+    add [rb + res_lo], [rb + res_hi], [rb + tmp]
+    eq  [rb + tmp], 0, [flag_zero]
+
+    add parity, [rb + res_lo], [ip + 1]
+    add [0], 0, [flag_parity]
+
+    # Update flag_overflow
+    add [rb + a_hi], 0, [rb - 1]
+    add [rb + b_hi], 0, [rb - 2]
+    add [rb + res_hi], 0, [rb - 3]
+    arb -3
+    call update_overflow
+
+    # Write the destination value
+    add [rb + loc_type_dst], 0, [rb - 1]
+    add [rb + loc_addr_dst], 0, [rb - 2]
+    add [rb + res_lo], 0, [rb - 3]
+    add [rb + res_hi], 0, [rb - 4]
+    arb -4
+    call write_location_w
+
+    arb 7
     ret 4
 .ENDFRAME
 

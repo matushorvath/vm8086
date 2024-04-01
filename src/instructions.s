@@ -2,7 +2,9 @@
 
 # From add.s
 .IMPORT execute_add_b
+.IMPORT execute_add_w
 .IMPORT execute_adc_b
+.IMPORT execute_adc_w
 
 # From arg_al_ax_near_ptr.s
 .IMPORT arg_al_ax_near_ptr_src
@@ -196,11 +198,11 @@
 
 instructions:
     db  execute_add_b, arg_mod_reg_rm_src_b, 4              # 0x00 ADD REG8/MEM8, REG8
-    db  not_implemented, 0, 0 # TODO    db  execute_add_w, arg_mod_reg_rm_src_w, 4          # 0x01 ADD REG16/MEM16, REG16
+    db  execute_add_w, arg_mod_reg_rm_src_w, 4              # 0x01 ADD REG16/MEM16, REG16
     db  execute_add_b, arg_mod_reg_rm_dst_b, 4              # 0x02 ADD REG8, REG8/MEM8
-    db  not_implemented, 0, 0 # TODO    db  execute_add_w, arg_mod_reg_rm_dst_w, 4          # 0x03 ADD REG16, REG16/MEM16
+    db  execute_add_w, arg_mod_reg_rm_dst_w, 4              # 0x03 ADD REG16, REG16/MEM16
     db  execute_add_b, arg_al_immediate_b, 4                # 0x04 ADD AL, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_add_w, arg_ax_immediate_w               # 0x05 ADD AX, IMMED16
+    db  execute_add_w, arg_ax_immediate_w, 4                # 0x05 ADD AX, IMMED16
 
     db  execute_push_w, arg_es, 2                           # 0x06 PUSH ES
     db  execute_pop_w, arg_es, 2                            # 0x07 POP ES
@@ -216,11 +218,11 @@ instructions:
     db  invalid_opcode, 0, 0                                # 0x0f
 
     db  execute_adc_b, arg_mod_reg_rm_src_b, 4              # 0x10 ADC REG8/MEM8, REG8
-    db  not_implemented, 0, 0 # TODO    db  execute_adc_w, arg_mod_reg_rm_src_w, 4          # 0x11 ADC REG16/MEM16, REG16
+    db  execute_adc_w, arg_mod_reg_rm_src_w, 4              # 0x11 ADC REG16/MEM16, REG16
     db  execute_adc_b, arg_mod_reg_rm_dst_b, 4              # 0x12 ADC REG8, REG8/MEM8
-    db  not_implemented, 0, 0 # TODO    db  execute_adc_w, arg_mod_reg_rm_dst_w, 4          # 0x13 ADC REG16, REG16/MEM16
+    db  execute_adc_w, arg_mod_reg_rm_dst_w, 4              # 0x13 ADC REG16, REG16/MEM16
     db  execute_adc_b, arg_al_immediate_b, 4                # 0x14 ADC AL, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_adc_w, arg_ax_immediate_w               # 0x15 ADC AX, IMMED16
+    db  execute_adc_w, arg_ax_immediate_w, 4                # 0x15 ADC AX, IMMED16
 
     db  execute_push_w, arg_ss, 2                           # 0x16 PUSH SS
     db  execute_pop_w, arg_ss, 2                            # 0x17 POP SS
