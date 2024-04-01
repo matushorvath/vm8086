@@ -173,7 +173,10 @@
 .IMPORT execute_pushf
 .IMPORT execute_popf
 
-# From transfer.s
+# From transfer_address.s
+.IMPORT execute_lea
+
+# From transfer_value.s
 .IMPORT execute_mov_b
 .IMPORT execute_mov_w
 .IMPORT execute_xchg_b
@@ -354,7 +357,7 @@ instructions:
     db  execute_mov_b, arg_mod_reg_rm_dst_b, 4              # 0x8a MOV REG8, REG8/MEM8
     db  execute_mov_w, arg_mod_reg_rm_dst_w, 4              # 0x8b MOV REG16, REG16/MEM16
     db  execute_mov_w, arg_mod_1sr_rm_src, 4                # 0x8c MOV REG16/MEM16, SEGREG
-    db  not_implemented, 0, 0 # TODO x   db  execute_lea_w, arg_mod_reg_mem_dst_w            # 0x8d LEA REG16, MEM16
+    db  execute_lea, 0, 0                                   # 0x8d LEA REG16, MEM16
     db  execute_mov_w, arg_mod_1sr_rm_dst, 4                # 0x8e MOV SEGREG, REG16/MEM16
     db  execute_pop_w, arg_mod_000_rm_w, 2                  # 0x8f POP REG16/MEM16
 
@@ -444,8 +447,8 @@ instructions:
     db  not_implemented, 0, 0 # TODO    db  execute_shift_b, arg_mod_shift_rm_cl_b          # 0xd2 <shift> REG8/MEM8, CL
     db  not_implemented, 0, 0 # TODO    db  execute_shift_w, arg_mod_shift_rm_cl_w          # 0xd3 <shift> REG16/MEM16, CL
 
-    db  not_implemented, 0, 0 # TODO    db  execute_aam, 0                                  # 0xd4 AAM
-    db  not_implemented, 0, 0 # TODO    db  execute_aad, 0                                  # 0xd5 AAD
+    db  not_implemented, 0, 0 # TODO    db  execute_aam, xxx this has two bytes?, 00001010, 0                                  # 0xd4 AAM
+    db  not_implemented, 0, 0 # TODO    db  execute_aad, xxx this has two bytes?, 00001010, 0                                  # 0xd5 AAD
     db  invalid_opcode, 0, 0                                # 0xd6
     db  not_implemented, 0, 0 # TODO x   db  execute_xlat, 0                                 # 0xd7 XLAT SOURCE-TABLE
 

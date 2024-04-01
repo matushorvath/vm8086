@@ -41,9 +41,6 @@
 
 .IMPORT inc_ip
 
-# From util.s
-.IMPORT modulo
-
 ##########
 decode_mod_rm:
 .FRAME mod, rm, w; regptr, seg_lo, seg_hi, off_lo, off_hi, disp_lo, disp_hi, tmp    # returns regptr, seg_lo, seg_hi, off_lo, off_hi
