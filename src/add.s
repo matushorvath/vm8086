@@ -110,11 +110,11 @@ update_auxiliary_carry_adc:
     # Find low-order half-byte of a and b
     mul [rb + a], 2, [rb + tmp]
     add nibbles, [rb + tmp], [ip + 1]
-    eq  [0], 0, [rb + a4l]
+    add [0], 0, [rb + a4l]
 
     mul [rb + b], 2, [rb + tmp]
     add nibbles, [rb + tmp], [ip + 1]
-    eq  [0], 0, [rb + b4l]
+    add [0], 0, [rb + b4l]
 
     # Sum a4l, b4l and carry
     add [rb + a4l], [rb + b4l], [rb + tmp]
@@ -135,10 +135,10 @@ update_overflow:
     # TODO this is taken from 6502, validate the algorithm is the same for 8086
 
     lt  0x7f, [rb + a], [rb + a]
-    lt  0x7f, [rb + a], [rb + a]
+    lt  0x7f, [rb + b], [rb + b]
     lt  0x7f, [rb + res], [rb + res]
 
-    eq  [rb + a], [rb + a], [rb + tmp]
+    eq  [rb + a], [rb + b], [rb + tmp]
     jnz [rb + tmp], update_overflow_same_sign
 
     # When operands are different signs, overflow is always false
