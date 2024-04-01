@@ -100,7 +100,7 @@ decode_mod_rm_mem_disp16:
     # Read 16-bit displacement
     call read_cs_ip_w
     add [rb - 2], 0, [rb + disp_lo]
-    mul [rb - 3], 0, [rb + disp_hi]
+    add [rb - 3], 0, [rb + disp_hi]
 
     call inc_ip
     call inc_ip
