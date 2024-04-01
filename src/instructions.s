@@ -83,6 +83,7 @@
 
 # From exec.s
 .IMPORT execute_nop
+.IMPORT execute_esc
 .IMPORT invalid_opcode
 .IMPORT not_implemented             # TODO remove
 
@@ -377,7 +378,7 @@ instructions:
     db  execute_cbw, 0, 0                                   # 0x98 CBW
     db  execute_cwd, 0, 0                                   # 0x99 CWD
     db  execute_call_far, 0, 0                              # 0x9a CALL FAR-PROC
-    db  not_implemented, 0, 0 # TODO    db  execute_wait, 0                                  # 0x9b WAIT
+    db  execute_nop, 0, 0                                   # 0x9b WAIT
     db  execute_pushf, 0, 0                                 # 0x9c PUSHF
     db  execute_popf, 0, 0                                  # 0x9d POPF
     db  execute_sahf, 0, 0                                  # 0x9e SAHF
@@ -456,14 +457,14 @@ instructions:
     db  invalid_opcode, 0, 0                                # 0xd6
     db  not_implemented, 0, 0 # TODO x   db  execute_xlat, 0                                 # 0xd7 XLAT SOURCE-TABLE
 
-    db  not_implemented, 0, 0 # TODO    db  execute_esc, arg_esc_000                        # 0xd8 ESC OPCODE, SOURCE (2 bytes)
-    db  not_implemented, 0, 0 # TODO    db  execute_esc, arg_esc_yyy                        # 0xd9 ESC OPCODE, SOURCE (4 bytes)
-    db  not_implemented, 0, 0 # TODO    db  execute_esc, arg_esc_yyy                        # 0xda ESC OPCODE, SOURCE (4 bytes)
-    db  not_implemented, 0, 0 # TODO    db  execute_esc, arg_esc_yyy                        # 0xdb ESC OPCODE, SOURCE (4 bytes)
-    db  not_implemented, 0, 0 # TODO    db  execute_esc, arg_esc_yyy                        # 0xdc ESC OPCODE, SOURCE (4 bytes)
-    db  not_implemented, 0, 0 # TODO    db  execute_esc, arg_esc_yyy                        # 0xdd ESC OPCODE, SOURCE (4 bytes)
-    db  not_implemented, 0, 0 # TODO    db  execute_esc, arg_esc_yyy                        # 0xde ESC OPCODE, SOURCE (4 bytes)
-    db  not_implemented, 0, 0 # TODO    db  execute_esc, arg_esc_111                        # 0xdf ESC OPCODE, SOURCE (2 bytes)
+    db  execute_esc, arg_mod_op_rm_b, 3                     # 0xd8 ESC OPCODE, SOURCE
+    db  execute_esc, arg_mod_op_rm_w, 3                     # 0xd9 ESC OPCODE, SOURCE
+    db  execute_esc, arg_mod_op_rm_b, 3                     # 0xda ESC OPCODE, SOURCE
+    db  execute_esc, arg_mod_op_rm_w, 3                     # 0xdb ESC OPCODE, SOURCE
+    db  execute_esc, arg_mod_op_rm_b, 3                     # 0xdc ESC OPCODE, SOURCE
+    db  execute_esc, arg_mod_op_rm_w, 3                     # 0xdd ESC OPCODE, SOURCE
+    db  execute_esc, arg_mod_op_rm_b, 3                     # 0xde ESC OPCODE, SOURCE
+    db  execute_esc, arg_mod_op_rm_w, 3                     # 0xdf ESC OPCODE, SOURCE
 
     db  execute_loopnz, 0, 0                                # 0xe0 LOOPNE/LOOPNZ SHORT-LABEL
     db  execute_loopz, 0, 0                                 # 0xe1 LOOPE/LOOPZ SHORT-LABEL
