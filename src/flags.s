@@ -112,7 +112,7 @@ pack_flags_lo:
 pack_flags_lo_after_carry:
 
     # set bit 1 to match bochs (which emulates the 32-bit eflags)
-    # TODO 8086 disable this or make it configurable
+    # TODO 8086 disable this or make it configurable or modify tests to ignore the difference
     add [rb + flags_lo], 0b00000010, [rb + flags_lo]
 
     jz  [flag_parity], pack_flags_lo_after_parity
@@ -160,7 +160,7 @@ pack_flags_hi_after_direction:
     add [rb + flags_hi], 0b00001000, [rb + flags_hi]
 pack_flags_hi_after_overflow:
 
-    # TODO 8086 set bits 12-15, which wikipedia says should always be 1 on an 8086
+    # TODO 8086 set bits 12-15, which wikipedia says should always be 1 on an 8086 or modify tests to ignore the difference
     #add [rb + flags_hi], 0b11110000, [rb + flags_hi]
 
     arb 1

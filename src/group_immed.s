@@ -1,6 +1,10 @@
 .EXPORT execute_immed_b
 .EXPORT execute_immed_w
 
+# From add.s
+.IMPORT execute_add_b
+.IMPORT execute_adc_b
+
 # From bitwise.s
 .IMPORT execute_and_b
 .IMPORT execute_and_w
@@ -53,10 +57,9 @@ execute_immed_b_table:
     db  execute_immed_b_cmp
 
 execute_immed_b_add:
-    # TODO implement
-    add not_implemented_message, 0, [rb - 1]
-    arb -1
-    call report_error
+    arb -4
+    call execute_add_b
+    jz  0, execute_immed_w_end
 
 execute_immed_b_or:
     arb -4
@@ -64,10 +67,9 @@ execute_immed_b_or:
     jz  0, execute_immed_w_end
 
 execute_immed_b_adc:
-    # TODO implement
-    add not_implemented_message, 0, [rb - 1]
-    arb -1
-    call report_error
+    arb -4
+    call execute_adc_b
+    jz  0, execute_immed_w_end
 
 execute_immed_b_sbb:
     # TODO implement
