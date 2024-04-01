@@ -175,6 +175,8 @@
 
 # From transfer_address.s
 .IMPORT execute_lea
+.IMPORT execute_lds
+.IMPORT execute_les
 
 # From transfer_value.s
 .IMPORT execute_mov_b
@@ -423,8 +425,8 @@ instructions:
     db  execute_ret_near_immediate_w, 0, 0                  # 0xc2 RET IMMED16 (within segment)
     db  execute_ret_near_zero, 0, 0                         # 0xc3 RET (within segment)
 
-    db  not_implemented, 0, 0 # TODO x   db  execute_les_w, arg_mod_reg_mem_dst_w            # 0xc4 LES REG16, MEM16
-    db  not_implemented, 0, 0 # TODO x   db  execute_lds_w, arg_mod_reg_mem_dst_w            # 0xc5 LDS REG16, MEM16
+    db  execute_les, arg_mod_reg_rm_dst_w, 4                # 0xc4 LES REG16, MEM16
+    db  execute_lds, arg_mod_reg_rm_dst_w, 4                # 0xc5 LDS REG16, MEM16
 
     db  execute_mov_b, arg_mod_000_rm_immediate_b, 4        # 0xc6 MOV MEM8, IMMED8
     db  execute_mov_w, arg_mod_000_rm_immediate_w, 4        # 0xc7 MOV MEM16, IMMED16

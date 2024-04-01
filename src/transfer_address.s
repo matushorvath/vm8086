@@ -1,4 +1,6 @@
 .EXPORT execute_lea
+.EXPORT execute_lds
+.EXPORT execute_les
 
 # From decode.s
 .IMPORT decode_mod_rm
@@ -7,6 +9,10 @@
 # From error.s
 .IMPORT report_error
 
+# From location.s
+.IMPORT read_location_dw
+.IMPORT write_location_w
+
 # From memory.s
 .IMPORT read_cs_ip_b
 
@@ -14,6 +20,8 @@
 .IMPORT split233
 
 # From state.s
+.IMPORT reg_ds
+.IMPORT reg_es
 .IMPORT inc_ip
 
 ##########
@@ -70,6 +78,68 @@ execute_lea_memory:
 
 execute_lea_register_message:
     db  "cannot load effective address of a register", 0
+.ENDFRAME
+
+##########
+execute_lds:
+.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; seg_lo, seg_hi, off_lo, off_hi
+    arb -4
+
+    # Read the far pointer from source
+    add [rb + loc_type_src], 0, [rb - 1]
+    add [rb + loc_addr_src], 0, [rb - 2]
+    arb -2
+    call read_location_dw
+    add [rb - 4], 0, [rb + off_lo]
+    add [rb - 5], 0, [rb + off_hi]
+    add [rb - 6], 0, [rb + seg_lo]
+    add [rb - 7], 0, [rb + seg_hi]
+
+    # Save the offset into the destination
+    add [rb + loc_type_dst], 0, [rb - 1]
+    add [rb + loc_addr_dst], 0, [rb - 2]
+    add [rb + off_lo], 0, [rb - 3]
+    add [rb + off_hi], 0, [rb - 4]
+    arb -4
+    call write_location_w
+
+    # Save the segment into DS
+    add [rb + seg_lo], 0, [reg_ds + 0]
+    add [rb + seg_hi], 0, [reg_ds + 1]
+
+    arb 4
+    ret 4
+.ENDFRAME
+
+##########
+execute_les:
+.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; seg_lo, seg_hi, off_lo, off_hi
+    arb -4
+
+    # Read the far pointer from source
+    add [rb + loc_type_src], 0, [rb - 1]
+    add [rb + loc_addr_src], 0, [rb - 2]
+    arb -2
+    call read_location_dw
+    add [rb - 4], 0, [rb + off_lo]
+    add [rb - 5], 0, [rb + off_hi]
+    add [rb - 6], 0, [rb + seg_lo]
+    add [rb - 7], 0, [rb + seg_hi]
+
+    # Save the offset into the destination
+    add [rb + loc_type_dst], 0, [rb - 1]
+    add [rb + loc_addr_dst], 0, [rb - 2]
+    add [rb + off_lo], 0, [rb - 3]
+    add [rb + off_hi], 0, [rb - 4]
+    arb -4
+    call write_location_w
+
+    # Save the segment into ES
+    add [rb + seg_lo], 0, [reg_es + 0]
+    add [rb + seg_hi], 0, [reg_es + 1]
+
+    arb 4
+    ret 4
 .ENDFRAME
 
 .EOF
