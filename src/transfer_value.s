@@ -5,6 +5,9 @@
 .EXPORT execute_xchg_w
 .EXPORT execute_xchg_ax_w
 
+.EXPORT execute_cbw
+.EXPORT execute_cwd
+
 # From location.s
 .IMPORT read_location_b
 .IMPORT read_location_w
@@ -12,7 +15,10 @@
 .IMPORT write_location_w
 
 # From state.s
+.IMPORT reg_al
+.IMPORT reg_ah
 .IMPORT reg_ax
+.IMPORT reg_dx
 
 ##########
 execute_mov_b:
@@ -141,6 +147,27 @@ execute_xchg_ax_w:
     call execute_xchg_w
 
     ret 2
+.ENDFRAME
+
+##########
+execute_cbw:
+.FRAME;
+    # Sign extend al into ah
+    lt  0x7f, [reg_al], [reg_ah]
+    mul [reg_ah], 0xff, [reg_ah]
+
+    ret 0
+.ENDFRAME
+
+##########
+execute_cwd:
+.FRAME;
+    # Sign extend ax into dx
+    lt  0x7f, [reg_ax + 1], [reg_dx + 0]
+    mul [reg_dx + 0], 0xff, [reg_dx + 0]
+    add [reg_dx + 0], 0, [reg_dx + 1]
+
+    ret 0
 .ENDFRAME
 
 .EOF

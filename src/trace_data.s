@@ -308,14 +308,14 @@ trace_data:
     db  in_d6,   0,   0,   0,   0,   0,   0
     db  in_d7,   0,   0,   0,   0,   0,   0           # XLAT SOURCE-TABLE
 
-    db  in_d8, mer,   0,   0,   0,   0,   0           # ESC OPCODE, SOURCE (2 bytes)
-    db  in_d9, mer, dpl, dph,   0,   0,   0           # ESC OPCODE, SOURCE (4 bytes)
-    db  in_da, mer, dpl, dph,   0,   0,   0           # ESC OPCODE, SOURCE (4 bytes)
-    db  in_db, mer, dpl, dph,   0,   0,   0           # ESC OPCODE, SOURCE (4 bytes)
-    db  in_dc, mer, dpl, dph,   0,   0,   0           # ESC OPCODE, SOURCE (4 bytes)
-    db  in_dd, mer, dpl, dph,   0,   0,   0           # ESC OPCODE, SOURCE (4 bytes)
-    db  in_de, mer, dpl, dph,   0,   0,   0           # ESC OPCODE, SOURCE (4 bytes)
-    db  in_df, mer,   0,   0,   0,   0,   0           # ESC OPCODE, SOURCE (2 bytes)
+    db  in_d8, mer,   0,   0,   0,   0,   0           # ESC OPCODE, SOURCE
+    db  in_d9, mer, dpl, dph,   0,   0,   0           # ESC OPCODE, SOURCE
+    db  in_da, mer, dpl, dph,   0,   0,   0           # ESC OPCODE, SOURCE
+    db  in_db, mer, dpl, dph,   0,   0,   0           # ESC OPCODE, SOURCE
+    db  in_dc, mer, dpl, dph,   0,   0,   0           # ESC OPCODE, SOURCE
+    db  in_dd, mer, dpl, dph,   0,   0,   0           # ESC OPCODE, SOURCE
+    db  in_de, mer, dpl, dph,   0,   0,   0           # ESC OPCODE, SOURCE
+    db  in_df, mer,   0,   0,   0,   0,   0           # ESC OPCODE, SOURCE
 
     db  in_e0, ip8,   0,   0,   0,   0,   0           # LOOPNZ SHORT-LABEL
     db  in_e1, ip8,   0,   0,   0,   0,   0           # LOOPZ SHORT-LABEL
@@ -596,14 +596,14 @@ in_d5: db "AAD", 0
 in_d6: db "(invalid)", 0
 in_d7: db "XLAT SOURCE-TABLE", 0
 
-in_d8: db "ESC OPCODE, SOURCE (2 bytes)", 0
-in_d9: db "ESC OPCODE, SOURCE (4 bytes)", 0
-in_da: db "ESC OPCODE, SOURCE (4 bytes)", 0
-in_db: db "ESC OPCODE, SOURCE (4 bytes)", 0
-in_dc: db "ESC OPCODE, SOURCE (4 bytes)", 0
-in_dd: db "ESC OPCODE, SOURCE (4 bytes)", 0
-in_de: db "ESC OPCODE, SOURCE (4 bytes)", 0
-in_df: db "ESC OPCODE, SOURCE (2 bytes)", 0
+in_d8: db "ESC OPCODE, SOURCE", 0
+in_d9: db "ESC OPCODE, SOURCE", 0
+in_da: db "ESC OPCODE, SOURCE", 0
+in_db: db "ESC OPCODE, SOURCE", 0
+in_dc: db "ESC OPCODE, SOURCE", 0
+in_dd: db "ESC OPCODE, SOURCE", 0
+in_de: db "ESC OPCODE, SOURCE", 0
+in_df: db "ESC OPCODE, SOURCE", 0
 
 in_e0: db "LOOPNZ SHORT-LABEL", 0
 in_e1: db "LOOPZ SHORT-LABEL", 0

@@ -1,5 +1,6 @@
 .EXPORT execute
 .EXPORT execute_nop
+.EXPORT execute_esc
 .EXPORT invalid_opcode
 .EXPORT not_implemented             # TODO remove
 
@@ -127,6 +128,14 @@ execute_args_count:
 execute_nop:
 .FRAME
     ret 0
+.ENDFRAME
+
+##########
+execute_esc:
+.FRAME op, loc_type, loc_addr;
+    # The only thing to do here is to increase IP according to the MOD and R/M
+    # fields, which was already done by arg_mod_op_rm_b/arg_mod_op_rm_w.
+    ret 3
 .ENDFRAME
 
 ##########
