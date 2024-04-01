@@ -8,6 +8,7 @@
 .IMPORT trace_data
 
 # From state.s
+.IMPORT reg_cs
 .IMPORT reg_ip
 
 # From libxib.a
@@ -30,6 +31,15 @@ print_trace:
     add [rb - 3], 0, [rb + opcode]
 
     # Print address
+    mul [reg_cs + 1], 0x100, [rb - 1]
+    add [reg_cs + 0], [rb - 1], [rb - 1]
+    add 16, 0, [rb - 2]
+    add 4, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
+    out ':'
+
     mul [reg_ip + 1], 0x100, [rb - 1]
     add [reg_ip + 0], [rb - 1], [rb - 1]
     add 16, 0, [rb - 2]
@@ -37,7 +47,6 @@ print_trace:
     arb -3
     call print_num_radix
 
-    out ':'
     out ' '
 
     # Print instruction description and opcode
