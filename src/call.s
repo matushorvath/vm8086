@@ -49,7 +49,7 @@ execute_call_near:
     add [rb + ptr_hi], [reg_ip + 1], [reg_ip + 1]
 
     # Check for carry out of low byte
-    lt [reg_ip + 0], 0x100, [rb + tmp]
+    lt  [reg_ip + 0], 0x100, [rb + tmp]
     jnz [rb + tmp], execute_call_near_after_carry_lo
 
     add [reg_ip + 0], -0x100, [reg_ip + 0]
@@ -189,7 +189,7 @@ execute_ret_near_immediate_w:
     add [rb + data_hi], [reg_sp + 1], [reg_sp + 1]
 
     # Check for carry out of low byte
-    lt [reg_sp + 0], 0x100, [rb + tmp]
+    lt  [reg_sp + 0], 0x100, [rb + tmp]
     jnz [rb + tmp], execute_ret_near_immediate_w_after_carry_lo
 
     add [reg_sp + 0], -0x100, [reg_sp + 0]
@@ -248,7 +248,7 @@ execute_ret_far_immediate_w:
     add [rb + data_hi], [reg_sp + 1], [reg_sp + 1]
 
     # Check for carry out of low byte
-    lt [reg_sp + 0], 0x100, [rb + tmp]
+    lt  [reg_sp + 0], 0x100, [rb + tmp]
     jnz [rb + tmp], execute_ret_far_immediate_w_after_carry_lo
 
     add [reg_sp + 0], -0x100, [reg_sp + 0]

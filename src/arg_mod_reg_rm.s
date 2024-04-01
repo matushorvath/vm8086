@@ -44,8 +44,8 @@ arg_mod_reg_rm_src_b:
     add 0, 0, [rb - 2]
     arb -2
     call decode_reg
-    add [rb - 4], 0, [rb + loc_type_src]
-    add [rb - 5], 0, [rb + loc_addr_src]
+    add 0, 0, [rb + loc_type_src]
+    add [rb - 4], 0, [rb + loc_addr_src]
 
     arb 4
     ret 0
@@ -70,8 +70,8 @@ arg_mod_reg_rm_src_w:
     add 1, 0, [rb - 2]
     arb -2
     call decode_reg
-    add [rb - 4], 0, [rb + loc_type_src]
-    add [rb - 5], 0, [rb + loc_addr_src]
+    add 0, 0, [rb + loc_type_src]
+    add [rb - 4], 0, [rb + loc_addr_src]
 
     arb 4
     ret 0
@@ -96,8 +96,8 @@ arg_mod_reg_rm_dst_b:
     add 0, 0, [rb - 2]
     arb -2
     call decode_reg
-    add [rb - 4], 0, [rb + loc_type_dst]
-    add [rb - 5], 0, [rb + loc_addr_dst]
+    add 0, 0, [rb + loc_type_dst]
+    add [rb - 4], 0, [rb + loc_addr_dst]
 
     arb 4
     ret 0
@@ -122,8 +122,8 @@ arg_mod_reg_rm_dst_w:
     add 1, 0, [rb - 2]
     arb -2
     call decode_reg
-    add [rb - 4], 0, [rb + loc_type_dst]
-    add [rb - 5], 0, [rb + loc_addr_dst]
+    add 0, 0, [rb + loc_type_dst]
+    add [rb - 4], 0, [rb + loc_addr_dst]
 
     arb 4
     ret 0
@@ -147,8 +147,8 @@ arg_mod_1sr_rm_src:
     add [rb - 5], 0, [rb - 1]
     arb -1
     call decode_sr
-    add [rb - 3], 0, [rb + loc_type_src]
-    add [rb - 4], 0, [rb + loc_addr_src]
+    add 0, 0, [rb + loc_type_src]
+    add [rb - 3], 0, [rb + loc_addr_src]
 
     arb 4
     ret 0
@@ -172,8 +172,8 @@ arg_mod_1sr_rm_dst:
     add [rb - 5], 0, [rb - 1]
     arb -1
     call decode_sr
-    add [rb - 3], 0, [rb + loc_type_dst]
-    add [rb - 4], 0, [rb + loc_addr_dst]
+    add 0, 0, [rb + loc_type_dst]
+    add [rb - 3], 0, [rb + loc_addr_dst]
 
     arb 4
     ret 0
@@ -203,9 +203,43 @@ arg_mod_rm_generic:
     add [rb + w], 0, [rb - 3]
     arb -3
     call decode_mod_rm
-    add [rb - 5], 0, [rb + loc_type_rm]
-    add [rb - 6], 0, [rb + loc_addr_rm]
 
+    # Is this an 8086 register or 8086 memory?
+    jnz [rb - 5], arg_mod_rm_generic_register
+
+    # It's 8086 memory
+    add 1, 0, [rb + loc_type_rm]
+
+    # loc_addr_rm = (seg << 4) + off
+    #
+    #       3210|7654 3210|7654 3210
+    # seg = ---sgh--- ---sgl---
+    # off =      ---ofh--- ---ofl---
+    #
+    # loc_addr_rm = (((sgh << 4) + ofh) << 4 + sgl) << 4 + ofl;
+    #
+    # seg is [rb - 6], [rb - 7]
+    # off is [rb - 8], [rb - 9]
+    #
+    # loc_addr_rm = ((([rb - 7] << 4) + [rb - 9]) << 4 + [rb - 6]) << 4 + [rb - 8];
+
+    mul [rb - 7], 0x10, [rb + loc_addr_rm]
+    add [rb - 9], [rb + loc_addr_rm], [rb + loc_addr_rm]
+    mul [rb + loc_addr_rm], 0x10, [rb + loc_addr_rm]
+    add [rb - 6], [rb + loc_addr_rm], [rb + loc_addr_rm]
+    mul [rb + loc_addr_rm], 0x10, [rb + loc_addr_rm]
+    add [rb - 8], [rb + loc_addr_rm], [rb + loc_addr_rm]
+
+    # TODO loc_addr_rm should wrap around to 20 bits
+
+    jz  0, arg_mod_rm_generic_done
+
+arg_mod_rm_generic_register:
+    # It's an 8086 register
+    add 0, 0, [rb + loc_type_rm]
+    add [rb - 5], 0, [rb + loc_addr_rm]
+
+arg_mod_rm_generic_done:
     arb 6
     ret 1
 .ENDFRAME

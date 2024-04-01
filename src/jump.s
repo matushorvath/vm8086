@@ -35,7 +35,7 @@ execute_jmp_short:
     add [rb + tmp], [reg_ip + 1], [reg_ip + 1]
 
     # Check for carry out of low byte
-    lt [reg_ip + 0], 0x100, [rb + tmp]
+    lt  [reg_ip + 0], 0x100, [rb + tmp]
     jnz [rb + tmp], execute_jmp_short_after_carry_lo
 
     add [reg_ip + 0], -0x100, [reg_ip + 0]
@@ -71,7 +71,7 @@ execute_jmp_near:
     add [rb + ptr_hi], [reg_ip + 1], [reg_ip + 1]
 
     # Check for carry out of low byte
-    lt [reg_ip + 0], 0x100, [rb + tmp]
+    lt  [reg_ip + 0], 0x100, [rb + tmp]
     jnz [rb + tmp], execute_jmp_near_after_carry_lo
 
     add [reg_ip + 0], -0x100, [reg_ip + 0]
