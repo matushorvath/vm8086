@@ -53,7 +53,7 @@ execute_lea:
 
 execute_lea_memory:
     # Decode REG
-    add [rb - 5], 0, [rb - 1]
+    add [rb + reg], 0, [rb - 1]
     add 1, 0, [rb - 2]
     arb -2
     call decode_reg
