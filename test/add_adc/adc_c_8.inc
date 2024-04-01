@@ -1,76 +1,76 @@
-; ADC 8-bit, no input carry
+; ADC 8-bit, with input carry
 
-    clc
+    stc
     mov bl, 0x00
     mov bh, 0x00
     add bl, bh
     pushf
 
-    clc
+    stc
     mov bh, 0x12
-    mov cl, 0x34
+    mov cl, 0x33
     add bh, cl
     pushf
 
-    clc
+    stc
     mov cl, 0x50
-    mov ch, 0x2f
+    mov ch, 0x2e
     add cl, ch
     pushf
 
-    clc
+    stc
     mov ch, 0x75
-    mov dl, 0x0b
+    mov dl, 0x0a
     add ch, dl
     pushf
 
-    clc
+    stc
     mov dl, 0x61
-    mov dh, 0x35
+    mov dh, 0x34
     add dl, dh
     pushf
 
-    clc
+    stc
     mov dl, 0x81
-    mov dh, 0x2a
+    mov dh, 0x29
     add dl, dh
     pushf
 
     dump_state
 
-    clc
+    stc
     mov bl, 0x7d
-    mov bh, 0x82
+    mov bh, 0x81
     add bl, bh
     pushf
 
-    clc
+    stc
     mov bh, 0xa9
-    mov cl, 0x57
+    mov cl, 0x56
     add bh, cl
     pushf
 
-    clc
+    stc
     mov cl, 0xec
-    mov ch, 0x3b
+    mov ch, 0x3a
     add cl, ch
     pushf
 
-    clc
+    stc
     mov ch, 0xba
-    mov dl, 0x89
+    mov dl, 0x88
     add ch, dl
     pushf
 
-    clc
+    stc
     mov dl, 0xff
-    mov dh, 0x80
+    mov dh, 0x7f
     add dl, dh
     pushf
 
-    clc
+    stc
     mov dl, 0xec
-    mov dh, 0xdb
+    mov dh, 0xda
     add dl, dh
     pushf
 

@@ -1,4 +1,4 @@
-; ADC 8-bit, no input carry
+; ADD 8-bit
 
     clc
     mov bl, 0x00
@@ -6,7 +6,7 @@
     add bl, bh
     pushf
 
-    clc
+    stc
     mov bh, 0x12
     mov cl, 0x34
     add bh, cl
@@ -18,7 +18,7 @@
     add cl, ch
     pushf
 
-    clc
+    stc
     mov ch, 0x75
     mov dl, 0x0b
     add ch, dl
@@ -30,7 +30,7 @@
     add dl, dh
     pushf
 
-    clc
+    stc
     mov dl, 0x81
     mov dh, 0x2a
     add dl, dh
@@ -44,7 +44,7 @@
     add bl, bh
     pushf
 
-    clc
+    stc
     mov bh, 0xa9
     mov cl, 0x57
     add bh, cl
@@ -56,7 +56,7 @@
     add cl, ch
     pushf
 
-    clc
+    stc
     mov ch, 0xba
     mov dl, 0x89
     add ch, dl
@@ -68,7 +68,7 @@
     add dl, dh
     pushf
 
-    clc
+    stc
     mov dl, 0xec
     mov dh, 0xdb
     add dl, dh
