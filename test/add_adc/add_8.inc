@@ -69,8 +69,8 @@
     pushf
 
     stc
-    mov dl, 0xec
-    mov dh, 0xdb
+    mov dl, 0xff
+    mov dh, 0xff
     add dl, dh
     pushf
 

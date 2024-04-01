@@ -1,3 +1,7 @@
+; TODO ADC/ADD AL
+; TODO ADC/ADD AX
+; TODO ADC/ADD from group_immed (8 and 16 bit)
+
 %include "common.inc"
 
 
@@ -23,5 +27,12 @@ section .text
 %include "add_8.inc"
     mark 0x83
 %include "add_adc_8_mem.inc"
+
+    mark 0x90
+%include "adc_nc_16.inc"
+    mark 0x91
+%include "adc_c_16.inc"
+    mark 0x92
+%include "add_16.inc"
 
     call power_off

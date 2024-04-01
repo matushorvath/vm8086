@@ -3,37 +3,37 @@
     clc
     mov bl, 0x00
     mov bh, 0x00
-    add bl, bh
+    adc bl, bh
     pushf
 
     clc
     mov bh, 0x12
     mov cl, 0x34
-    add bh, cl
+    adc bh, cl
     pushf
 
     clc
     mov cl, 0x50
     mov ch, 0x2f
-    add cl, ch
+    adc cl, ch
     pushf
 
     clc
     mov ch, 0x75
     mov dl, 0x0b
-    add ch, dl
+    adc ch, dl
     pushf
 
     clc
     mov dl, 0x61
     mov dh, 0x35
-    add dl, dh
+    adc dl, dh
     pushf
 
     clc
     mov dl, 0x81
     mov dh, 0x2a
-    add dl, dh
+    adc dl, dh
     pushf
 
     dump_state
@@ -41,37 +41,37 @@
     clc
     mov bl, 0x7d
     mov bh, 0x82
-    add bl, bh
+    adc bl, bh
     pushf
 
     clc
     mov bh, 0xa9
     mov cl, 0x57
-    add bh, cl
+    adc bh, cl
     pushf
 
     clc
     mov cl, 0xec
     mov ch, 0x3b
-    add cl, ch
+    adc cl, ch
     pushf
 
     clc
     mov ch, 0xba
     mov dl, 0x89
-    add ch, dl
+    adc ch, dl
     pushf
 
     clc
     mov dl, 0xff
     mov dh, 0x80
-    add dl, dh
+    adc dl, dh
     pushf
 
     clc
-    mov dl, 0xec
-    mov dh, 0xdb
-    add dl, dh
+    mov dl, 0xff
+    mov dh, 0xff
+    adc dl, dh
     pushf
 
     dump_state

@@ -41,7 +41,7 @@ endef
 
 # Build
 .PHONY: build
-build: build-prep $(BINDIR)/vm8086.input
+build: build-prep $(BINDIR)/vm8086.input build-test-header
 
 .PHONY: build-prep
 build-prep:
