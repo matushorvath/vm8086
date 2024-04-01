@@ -184,6 +184,8 @@
 .IMPORT execute_xchg_b
 .IMPORT execute_xchg_w
 .IMPORT execute_xchg_ax_w
+.IMPORT execute_cbw
+.IMPORT execute_cwd
 
 # iAPX 86, 88 User's Manual; August 1981; pages 4-27 to 4-35
 
@@ -372,8 +374,8 @@ instructions:
     db  execute_xchg_ax_w, arg_si, 2                        # 0x96 XCHG AX, SI
     db  execute_xchg_ax_w, arg_di, 2                        # 0x97 XCHG AX, DI
 
-    db  not_implemented, 0, 0 # TODO x   db  execute_cbw, 0                                  # 0x98 CBW
-    db  not_implemented, 0, 0 # TODO x   db  execute_cwd, 0                                  # 0x99 CWD
+    db  execute_cbw, 0, 0                                   # 0x98 CBW
+    db  execute_cwd, 0, 0                                   # 0x99 CWD
     db  execute_call_far, 0, 0                              # 0x9a CALL FAR-PROC
     db  not_implemented, 0, 0 # TODO    db  execute_wait, 0                                  # 0x9b WAIT
     db  execute_pushf, 0, 0                                 # 0x9c PUSHF
