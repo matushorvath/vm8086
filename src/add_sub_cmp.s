@@ -34,124 +34,167 @@
 .IMPORT flag_overflow
 
 ##########
+# Operation
+.SYMBOL OP_ADD_ADC                      0
+.SYMBOL OP_SUB_SBB                      1
+.SYMBOL OP_CMP                          2
+
+##########
 execute_add_b:
 .FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
-    # Clear flag_carry so add performs an addition without carry
     add 0, 0, [flag_carry]
 
-    add [rb + loc_type_src], 0, [rb - 1]
-    add [rb + loc_addr_src], 0, [rb - 2]
-    add [rb + loc_type_dst], 0, [rb - 3]
-    add [rb + loc_addr_dst], 0, [rb - 4]
-    arb -4
-    call execute_adc_b
+    add OP_ADD_ADC, 0, [rb - 1]
+    add [rb + loc_type_src], 0, [rb - 2]
+    add [rb + loc_addr_src], 0, [rb - 3]
+    add [rb + loc_type_dst], 0, [rb - 4]
+    add [rb + loc_addr_dst], 0, [rb - 5]
+    arb -5
+    call execute_additive_b
 
     ret 4
 .ENDFRAME
 
 ##########
 execute_adc_b:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a, b, res
-    arb -3
+.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
+    add OP_ADD_ADC, 0, [rb - 1]
+    add [rb + loc_type_src], 0, [rb - 2]
+    add [rb + loc_addr_src], 0, [rb - 3]
+    add [rb + loc_type_dst], 0, [rb - 4]
+    add [rb + loc_addr_dst], 0, [rb - 5]
+    arb -5
+    call execute_additive_b
 
-    # Read the source value
-    add [rb + loc_type_src], 0, [rb - 1]
-    add [rb + loc_addr_src], 0, [rb - 2]
-    arb -2
-    call read_location_b
-    add [rb - 4], 0, [rb + a]
-
-    # Read the destination value
-    add [rb + loc_type_dst], 0, [rb - 1]
-    add [rb + loc_addr_dst], 0, [rb - 2]
-    arb -2
-    call read_location_b
-    add [rb - 4], 0, [rb + b]
-
-    # Calculate
-    add [rb + a], 0, [rb - 1]
-    add [rb + b], 0, [rb - 2]
-    arb -2
-    call add_with_carry_b
-    add [rb - 4], 0, [rb + res]
-
-    # Write the destination value
-    add [rb + loc_type_dst], 0, [rb - 1]
-    add [rb + loc_addr_dst], 0, [rb - 2]
-    add [rb + res], 0, [rb - 3]
-    arb -3
-    call write_location_b
-
-    arb 3
     ret 4
 .ENDFRAME
 
 ##########
 execute_sub_b:
 .FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
-    # Clear flag_carry so sub performs a subtraction without borrow
     add 0, 0, [flag_carry]
 
-    add [rb + loc_type_src], 0, [rb - 1]
-    add [rb + loc_addr_src], 0, [rb - 2]
-    add [rb + loc_type_dst], 0, [rb - 3]
-    add [rb + loc_addr_dst], 0, [rb - 4]
-    arb -4
-    call execute_sbb_b
+    add OP_SUB_SBB, 0, [rb - 1]
+    add [rb + loc_type_src], 0, [rb - 2]
+    add [rb + loc_addr_src], 0, [rb - 3]
+    add [rb + loc_type_dst], 0, [rb - 4]
+    add [rb + loc_addr_dst], 0, [rb - 5]
+    arb -5
+    call execute_additive_b
 
     ret 4
 .ENDFRAME
 
 ##########
 execute_sbb_b:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a, b, res
-    arb -3
+.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
+    add OP_SUB_SBB, 0, [rb - 1]
+    add [rb + loc_type_src], 0, [rb - 2]
+    add [rb + loc_addr_src], 0, [rb - 3]
+    add [rb + loc_type_dst], 0, [rb - 4]
+    add [rb + loc_addr_dst], 0, [rb - 5]
+    arb -5
+    call execute_additive_b
 
-    # Read the source value
-    add [rb + loc_type_src], 0, [rb - 1]
-    add [rb + loc_addr_src], 0, [rb - 2]
-    arb -2
-    call read_location_b
-    add [rb - 4], 0, [rb + a]
-
-    # Read the destination value
-    add [rb + loc_type_dst], 0, [rb - 1]
-    add [rb + loc_addr_dst], 0, [rb - 2]
-    arb -2
-    call read_location_b
-    add [rb - 4], 0, [rb + b]
-
-    # Create two's complement of the source value
-    jz  [rb + a], execute_sbb_b_after_negate
-    mul [rb + a], -1, [rb + a]
-    add 0x100, [rb + a], [rb + a]
-
-execute_sbb_b_after_negate:
-    # Calculate
-    add [rb + a], 0, [rb - 1]
-    add [rb + b], 0, [rb - 2]
-    arb -2
-    call add_with_carry_b
-    add [rb - 4], 0, [rb + res]
-
-    # Write the destination value
-    add [rb + loc_type_dst], 0, [rb - 1]
-    add [rb + loc_addr_dst], 0, [rb - 2]
-    add [rb + res], 0, [rb - 3]
-    arb -3
-    call write_location_b
-
-    arb 3
     ret 4
 .ENDFRAME
 
 ##########
 execute_cmp_b:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a, b
-    arb -2
-
-    # Clear flag_carry so cmp performs a subtraction without borrow
+.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
     add 0, 0, [flag_carry]
+
+    add OP_CMP, 0, [rb - 1]
+    add [rb + loc_type_src], 0, [rb - 2]
+    add [rb + loc_addr_src], 0, [rb - 3]
+    add [rb + loc_type_dst], 0, [rb - 4]
+    add [rb + loc_addr_dst], 0, [rb - 5]
+    arb -5
+    call execute_additive_b
+
+    ret 4
+.ENDFRAME
+
+##########
+execute_add_w:
+.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
+    add 0, 0, [flag_carry]
+
+    add OP_ADD_ADC, 0, [rb - 1]
+    add [rb + loc_type_src], 0, [rb - 2]
+    add [rb + loc_addr_src], 0, [rb - 3]
+    add [rb + loc_type_dst], 0, [rb - 4]
+    add [rb + loc_addr_dst], 0, [rb - 5]
+    arb -5
+    call execute_additive_w
+
+    ret 4
+.ENDFRAME
+
+##########
+execute_adc_w:
+.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
+    add OP_ADD_ADC, 0, [rb - 1]
+    add [rb + loc_type_src], 0, [rb - 2]
+    add [rb + loc_addr_src], 0, [rb - 3]
+    add [rb + loc_type_dst], 0, [rb - 4]
+    add [rb + loc_addr_dst], 0, [rb - 5]
+    arb -5
+    call execute_additive_w
+
+    ret 4
+.ENDFRAME
+
+##########
+execute_sub_w:
+.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
+    add 0, 0, [flag_carry]
+
+    add OP_SUB_SBB, 0, [rb - 1]
+    add [rb + loc_type_src], 0, [rb - 2]
+    add [rb + loc_addr_src], 0, [rb - 3]
+    add [rb + loc_type_dst], 0, [rb - 4]
+    add [rb + loc_addr_dst], 0, [rb - 5]
+    arb -5
+    call execute_additive_w
+
+    ret 4
+.ENDFRAME
+
+##########
+execute_sbb_w:
+.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
+    add OP_SUB_SBB, 0, [rb - 1]
+    add [rb + loc_type_src], 0, [rb - 2]
+    add [rb + loc_addr_src], 0, [rb - 3]
+    add [rb + loc_type_dst], 0, [rb - 4]
+    add [rb + loc_addr_dst], 0, [rb - 5]
+    arb -5
+    call execute_additive_w
+
+    ret 4
+.ENDFRAME
+
+##########
+execute_cmp_w:
+.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
+    add 0, 0, [flag_carry]
+
+    add OP_CMP, 0, [rb - 1]
+    add [rb + loc_type_src], 0, [rb - 2]
+    add [rb + loc_addr_src], 0, [rb - 3]
+    add [rb + loc_type_dst], 0, [rb - 4]
+    add [rb + loc_addr_dst], 0, [rb - 5]
+    arb -5
+    call execute_additive_w
+
+    ret 4
+.ENDFRAME
+
+##########
+execute_additive_b:
+.FRAME op, loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a, b, res, tmp
+    arb -4
 
     # Read the source value
     add [rb + loc_type_src], 0, [rb - 1]
@@ -167,27 +210,16 @@ execute_cmp_b:
     call read_location_b
     add [rb - 4], 0, [rb + b]
 
-    # Create two's complement of the source value
-    jz  [rb + a], execute_cmp_b_after_negate
+    # Are we adding, or subtracting/comparing?
+    eq  [rb + op], OP_ADD_ADC, [rb + tmp]
+    jnz [rb + tmp], execute_additive_b_after_negate
+
+    # We're not adding, create two's complement of the source value
+    jz  [rb + a], execute_additive_b_after_negate
     mul [rb + a], -1, [rb + a]
     add 0x100, [rb + a], [rb + a]
 
-execute_cmp_b_after_negate:
-    # Calculate
-    add [rb + a], 0, [rb - 1]
-    add [rb + b], 0, [rb - 2]
-    arb -2
-    call add_with_carry_b
-
-    arb 2
-    ret 4
-.ENDFRAME
-
-##########
-add_with_carry_b:
-.FRAME a, b; res, tmp                                       # returns res
-    arb -2
-
+execute_additive_b_after_negate:
     # Update flag_auxiliary_carry before we modify flag_carry
     add [rb + a], 0, [rb - 1]
     add [rb + b], 0, [rb - 2]
@@ -219,193 +251,58 @@ add_with_carry_b_after_carry:
     arb -3
     call update_overflow
 
-    arb 2
-    ret 2
-.ENDFRAME
+    # Write the destination value, unless this is the CMP instruction
+    eq  [rb + op], OP_CMP, [rb + tmp]
+    jnz [rb + tmp], execute_additive_b_end
 
-##########
-execute_add_w:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
-    # Clear flag_carry so add performs an addition without carry
-    add 0, 0, [flag_carry]
-
-    add [rb + loc_type_src], 0, [rb - 1]
-    add [rb + loc_addr_src], 0, [rb - 2]
-    add [rb + loc_type_dst], 0, [rb - 3]
-    add [rb + loc_addr_dst], 0, [rb - 4]
-    arb -4
-    call execute_adc_w
-
-    ret 4
-.ENDFRAME
-
-##########
-execute_adc_w:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a_lo, a_hi, b_lo, b_hi, res_lo, res_hi
-    arb -6
-
-    # Read the source value
-    add [rb + loc_type_src], 0, [rb - 1]
-    add [rb + loc_addr_src], 0, [rb - 2]
-    arb -2
-    call read_location_w
-    add [rb - 4], 0, [rb + a_lo]
-    add [rb - 5], 0, [rb + a_hi]
-
-    # Read the destination value
     add [rb + loc_type_dst], 0, [rb - 1]
     add [rb + loc_addr_dst], 0, [rb - 2]
-    arb -2
-    call read_location_w
-    add [rb - 4], 0, [rb + b_lo]
-    add [rb - 5], 0, [rb + b_hi]
-
-    # Calculate
-    add [rb + a_lo], 0, [rb - 1]
-    add [rb + a_hi], 0, [rb - 2]
-    add [rb + b_lo], 0, [rb - 3]
-    add [rb + b_hi], 0, [rb - 4]
-    arb -4
-    call add_with_carry_w
-    add [rb - 6], 0, [rb + res_lo]
-    add [rb - 7], 0, [rb + res_hi]
-
-    # Write the destination value
-    add [rb + loc_type_dst], 0, [rb - 1]
-    add [rb + loc_addr_dst], 0, [rb - 2]
-    add [rb + res_lo], 0, [rb - 3]
-    add [rb + res_hi], 0, [rb - 4]
-    arb -4
-    call write_location_w
-
-    arb 6
-    ret 4
-.ENDFRAME
-
-##########
-execute_sub_w:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
-    # Clear flag_carry so sub performs a subtraction without borrow
-    add 0, 0, [flag_carry]
-
-    add [rb + loc_type_src], 0, [rb - 1]
-    add [rb + loc_addr_src], 0, [rb - 2]
-    add [rb + loc_type_dst], 0, [rb - 3]
-    add [rb + loc_addr_dst], 0, [rb - 4]
-    arb -4
-    call execute_sbb_w
-
-    ret 4
-.ENDFRAME
-
-##########
-execute_sbb_w:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a_lo, a_hi, b_lo, b_hi, res_lo, res_hi
-    arb -6
-
-    # Read the source value
-    add [rb + loc_type_src], 0, [rb - 1]
-    add [rb + loc_addr_src], 0, [rb - 2]
-    arb -2
-    call read_location_w
-    add [rb - 4], 0, [rb + a_lo]
-    add [rb - 5], 0, [rb + a_hi]
-
-    # Read the destination value
-    add [rb + loc_type_dst], 0, [rb - 1]
-    add [rb + loc_addr_dst], 0, [rb - 2]
-    arb -2
-    call read_location_w
-    add [rb - 4], 0, [rb + b_lo]
-    add [rb - 5], 0, [rb + b_hi]
-
-    # Create two's complement of the source value
-    jz  [rb + a_hi], execute_sbb_b_after_negate_hi
-    mul [rb + a_hi], -1, [rb + a_hi]
-    add 0x100, [rb + a_hi], [rb + a_hi]
-
-execute_sbb_b_after_negate_hi:
-    jz  [rb + a_lo], execute_sbb_b_after_negate_lo
-    mul [rb + a_lo], -1, [rb + a_lo]
-    add 0x100, [rb + a_lo], [rb + a_lo]
-    add [rb + a_hi], -1, [rb + a_hi]
-
-execute_sbb_b_after_negate_lo:
-    # Calculate
-    add [rb + a_lo], 0, [rb - 1]
-    add [rb + a_hi], 0, [rb - 2]
-    add [rb + b_lo], 0, [rb - 3]
-    add [rb + b_hi], 0, [rb - 4]
-    arb -4
-    call add_with_carry_w
-    add [rb - 6], 0, [rb + res_lo]
-    add [rb - 7], 0, [rb + res_hi]
-
-    # Write the destination value
-    add [rb + loc_type_dst], 0, [rb - 1]
-    add [rb + loc_addr_dst], 0, [rb - 2]
-    add [rb + res_lo], 0, [rb - 3]
-    add [rb + res_hi], 0, [rb - 4]
-    arb -4
-    call write_location_w
-
-    arb 6
-    ret 4
-.ENDFRAME
-
-##########
-execute_cmp_w:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a_lo, a_hi, b_lo, b_hi
-    arb -4
-
-    # Clear flag_carry so cmp performs a subtraction without borrow
-    add 0, 0, [flag_carry]
-
-    # Read the source value
-    add [rb + loc_type_src], 0, [rb - 1]
-    add [rb + loc_addr_src], 0, [rb - 2]
-    arb -2
-    call read_location_w
-    add [rb - 4], 0, [rb + a_lo]
-    add [rb - 5], 0, [rb + a_hi]
-
-    # Read the destination value
-    add [rb + loc_type_dst], 0, [rb - 1]
-    add [rb + loc_addr_dst], 0, [rb - 2]
-    arb -2
-    call read_location_w
-    add [rb - 4], 0, [rb + b_lo]
-    add [rb - 5], 0, [rb + b_hi]
-
-    # Create two's complement of the source value
-    jz  [rb + a_hi], execute_cmp_b_after_negate_hi
-    mul [rb + a_hi], -1, [rb + a_hi]
-    add 0x100, [rb + a_hi], [rb + a_hi]
-
-execute_cmp_b_after_negate_hi:
-    jz  [rb + a_lo], execute_cmp_b_after_negate_lo
-    mul [rb + a_lo], -1, [rb + a_lo]
-    add 0x100, [rb + a_lo], [rb + a_lo]
-    add [rb + a_hi], -1, [rb + a_hi]
-
-execute_cmp_b_after_negate_lo:
-    # Calculate
-    add [rb + a_lo], 0, [rb - 1]
-    add [rb + a_hi], 0, [rb - 2]
-    add [rb + b_lo], 0, [rb - 3]
-    add [rb + b_hi], 0, [rb - 4]
-    arb -4
-    call add_with_carry_w
-
-    arb 4
-    ret 4
-.ENDFRAME
-
-##########
-add_with_carry_w:
-.FRAME a_lo, a_hi, b_lo, b_hi; res_lo, res_hi, tmp          # returns res_lo, res_hi
+    add [rb + res], 0, [rb - 3]
     arb -3
+    call write_location_b
 
+execute_additive_b_end:
+    arb 4
+    ret 5
+.ENDFRAME
+
+##########
+execute_additive_w:
+.FRAME op, loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a_lo, a_hi, b_lo, b_hi, res_lo, res_hi, tmp
+    arb -7
+
+    # Read the source value
+    add [rb + loc_type_src], 0, [rb - 1]
+    add [rb + loc_addr_src], 0, [rb - 2]
+    arb -2
+    call read_location_w
+    add [rb - 4], 0, [rb + a_lo]
+    add [rb - 5], 0, [rb + a_hi]
+
+    # Read the destination value
+    add [rb + loc_type_dst], 0, [rb - 1]
+    add [rb + loc_addr_dst], 0, [rb - 2]
+    arb -2
+    call read_location_w
+    add [rb - 4], 0, [rb + b_lo]
+    add [rb - 5], 0, [rb + b_hi]
+
+    # Are we adding, or subtracting/comparing?
+    eq  [rb + op], OP_ADD_ADC, [rb + tmp]
+    jnz [rb + tmp], execute_additive_w_after_negate_lo
+
+    # We're not adding, create two's complement of the source value
+    jz  [rb + a_hi], execute_additive_w_after_negate_hi
+    mul [rb + a_hi], -1, [rb + a_hi]
+    add 0x100, [rb + a_hi], [rb + a_hi]
+
+execute_additive_w_after_negate_hi:
+    jz  [rb + a_lo], execute_additive_w_after_negate_lo
+    mul [rb + a_lo], -1, [rb + a_lo]
+    add 0x100, [rb + a_lo], [rb + a_lo]
+    add [rb + a_hi], -1, [rb + a_hi]
+
+execute_additive_w_after_negate_lo:
     # Update flag_auxiliary_carry before we modify flag_carry
     add [rb + a_lo], 0, [rb - 1]
     add [rb + b_lo], 0, [rb - 2]
@@ -419,19 +316,19 @@ add_with_carry_w:
 
     # Check for carry out of low byte
     lt  0xff, [rb + res_lo], [rb + tmp]
-    jz  [rb + tmp], add_with_carry_w_after_carry_lo
+    jz  [rb + tmp], execute_additive_w_after_carry_lo
 
     add [rb + res_lo], -0x100, [rb + res_lo]
     add [rb + res_hi], 1, [rb + res_hi]
 
-add_with_carry_w_after_carry_lo:
+execute_additive_w_after_carry_lo:
     # Check for carry out of high byte
     lt  0xff, [rb + res_hi], [flag_carry]
-    jz  [flag_carry], add_with_carry_w_after_carry_hi
+    jz  [flag_carry], execute_additive_w_after_carry_hi
 
     add [rb + res_hi], -0x100, [rb + res_hi]
 
-add_with_carry_w_after_carry_hi:
+execute_additive_w_after_carry_hi:
     # Update flags
     lt  0x7f, [rb + res_hi], [flag_sign]
 
@@ -448,8 +345,20 @@ add_with_carry_w_after_carry_hi:
     arb -3
     call update_overflow
 
-    arb 3
-    ret 4
+    # Write the destination value, unless this is the CMP instruction
+    eq  [rb + op], OP_CMP, [rb + tmp]
+    jnz [rb + tmp], execute_additive_w_end
+
+    add [rb + loc_type_dst], 0, [rb - 1]
+    add [rb + loc_addr_dst], 0, [rb - 2]
+    add [rb + res_lo], 0, [rb - 3]
+    add [rb + res_hi], 0, [rb - 4]
+    arb -4
+    call write_location_w
+
+execute_additive_w_end:
+    arb 7
+    ret 5
 .ENDFRAME
 
 ##########
