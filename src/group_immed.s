@@ -10,6 +10,8 @@
 .IMPORT execute_sub_w
 .IMPORT execute_sbb_b
 .IMPORT execute_sbb_w
+.IMPORT execute_cmp_b
+.IMPORT execute_cmp_w
 
 # From bitwise.s
 .IMPORT execute_and_b
@@ -18,9 +20,6 @@
 .IMPORT execute_or_w
 .IMPORT execute_xor_b
 .IMPORT execute_xor_w
-
-# From error.s
-.IMPORT report_error                    # TODO remove
 
 # Group "immediate" instructions, first byte is MOD xxx R/M, where xxx is:
 # 000 ADD, 001 OR, 010 ADC, 011 SBB, 100 AND, 101 SUB, 110 XOR, 111 CMP
@@ -98,10 +97,8 @@ execute_immed_b_xor:
     jz  0, execute_immed_b_end
 
 execute_immed_b_cmp:
-    # TODO implement
-    add not_implemented_message, 0, [rb - 1]
-    arb -1
-    call report_error
+    arb -4
+    call execute_cmp_b
 
 execute_immed_b_end:
     ret 5
@@ -167,17 +164,11 @@ execute_immed_w_xor:
     jz  0, execute_immed_w_end
 
 execute_immed_w_cmp:
-    # TODO implement
-    add not_implemented_message, 0, [rb - 1]
-    arb -1
-    call report_error
+    arb -4
+    call execute_cmp_w
 
 execute_immed_w_end:
     ret 5
 .ENDFRAME
-
-##########
-not_implemented_message:                                    # TODO remove
-    db  "group imediate operation not implemented", 0
 
 .EOF
