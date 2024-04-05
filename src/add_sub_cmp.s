@@ -215,12 +215,14 @@ execute_additive_b:
     jnz [rb + tmp], execute_additive_b_after_negate
 
     # We're not adding, create two's complement of the source value
-    jz  [rb + a], execute_additive_b_after_negate
     mul [rb + a], -1, [rb + a]
     add 0x100, [rb + a], [rb + a]
 
+    # Also subtract the carry instead of adding it
+    mul [flag_carry], -1, [flag_carry]
+
 execute_additive_b_after_negate:
-    # Update flag_auxiliary_carry before we modify flag_carry
+    # Update flag_auxiliary_carry before calculating new flag_carry
     add [rb + a], 0, [rb - 1]
     add [rb + b], 0, [rb - 2]
     arb -2
@@ -237,6 +239,14 @@ execute_additive_b_after_negate:
     add [rb + res], -0x100, [rb + res]
 
 add_with_carry_b_after_carry:
+    # Negate the carry if we are subtracting
+    eq  [rb + op], OP_ADD_ADC, [rb + tmp]
+    jnz [rb + tmp], execute_additive_b_after_not_carry
+
+    eq  [flag_carry], 0, [flag_carry]
+    eq  [flag_auxiliary_carry], 0, [flag_auxiliary_carry]
+
+execute_additive_b_after_not_carry:
     # Update flags
     lt  0x7f, [rb + res], [flag_sign]
     eq  [rb + res], 0, [flag_zero]
