@@ -101,7 +101,8 @@ calculate_sbb_b:
     # Calculate the result
     mul [rb + a], -1, [rb + tmp]
     add [rb + b], [rb + tmp], [rb + res]
-    add [rb + res], [flag_carry], [rb + res]
+    mul [flag_carry], -1, [rb + tmp]
+    add [rb + res], [rb + tmp], [rb + res]
 
     # Check for carry
     lt  [rb + res], 0x00, [flag_carry]
@@ -244,9 +245,9 @@ calculate_sbb_w_after_carry_hi:
     add [0], 0, [flag_parity]
 
     # Update flag_overflow
-    add [rb + a_hi], 0, [rb - 1]
-    add [rb + b_hi], 0, [rb - 2]
-    add [rb + res_hi], 0, [rb - 3]
+    add [rb + res_hi], 0, [rb - 1]
+    add [rb + a_hi], 0, [rb - 2]
+    add [rb + b_hi], 0, [rb - 3]
     arb -3
     call update_overflow
 
@@ -267,8 +268,8 @@ calculate_sbb_w_end:
 
 ##########
 update_auxiliary_carry_sbb:
-.FRAME a, b; a4l, b4l, tmp
-    arb -3
+.FRAME a, b; a4l, b4l, tmp, res
+    arb -4
 
     # Find low-order half-byte of a and b
     mul [rb + a], 2, [rb + tmp]
@@ -279,14 +280,16 @@ update_auxiliary_carry_sbb:
     add nibbles, [rb + tmp], [ip + 1]
     add [0], 0, [rb + b4l]
 
-    # Sum a4l, b4l and carry
-    add [rb + a4l], [rb + b4l], [rb + tmp]
-    add [flag_carry], [rb + tmp], [rb + tmp]
+    # Subtract b4l - a4l - carry
+    mul [rb + a4l], -1, [rb + tmp]
+    add [rb + b4l], [rb + tmp], [rb + res]
+    mul [flag_carry], -1, [rb + tmp]
+    add [rb + res], [rb + tmp], [rb + res]
 
-    # Set auxiliary carry flag if sum > 0xf
-    lt  0xf, [rb + tmp], [flag_auxiliary_carry]
+    # Set auxiliary carry flag if sum < 0x0
+    lt  [rb + res], 0x0, [flag_auxiliary_carry]
 
-    arb 3
+    arb 4
     ret 2
 .ENDFRAME
 
