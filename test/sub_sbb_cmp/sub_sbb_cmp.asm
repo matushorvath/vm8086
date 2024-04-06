@@ -19,8 +19,8 @@ section .text
     mov ax, 0x1000
     mov ds, ax
 
-    mark 0x80
-%include "sbb_nc_8.inc"
+;     mark 0x80
+; %include "sbb_nc_8.inc"
 ;     mark 0x81
 ; %include "sbb_c_8.inc"
     mark 0x82
