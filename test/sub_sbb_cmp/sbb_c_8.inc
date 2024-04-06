@@ -1,2 +1,147 @@
 ; SBB 8-bit, with input carry
 
+    clc
+    mov bl, 0x00
+    mov bh, 0x00
+    sub bl, bh
+    pushf
+
+    clc
+    mov bh, 0x12
+    mov cl, 0x11
+    sub bh, cl
+    pushf
+
+    clc
+    mov cl, 0x7f
+    mov ch, 0x7f
+    sub cl, ch
+    pushf
+
+    clc
+    mov ch, 0x80
+    mov dl, 0x80
+    sub ch, dl
+    pushf
+
+    clc
+    mov dl, 0xdc
+    mov dh, 0xdb
+    sub dl, dh
+    pushf
+
+    clc
+    mov dl, 0xff
+    mov dh, 0xff
+    sub dl, dh
+    pushf
+
+    dump_state
+
+    clc
+    mov bl, 0x98
+    mov bh, 0x42
+    sub bl, bh
+    pushf
+
+    clc
+    mov bh, 0x23
+    mov cl, 0xdd
+    sub bh, cl
+    pushf
+
+    clc
+    mov cl, 0x00
+    mov ch, 0x80
+    sub cl, ch
+    pushf
+
+    clc
+    mov ch, 0x12
+    mov dl, 0x92
+    sub ch, dl
+    pushf
+
+    clc
+    mov dl, 0xa0
+    mov dh, 0x20
+    sub dl, dh
+    pushf
+
+    clc
+    mov dl, 0x7f
+    mov dh, 0x00
+    sub dl, dh
+    pushf
+
+    dump_state
+
+    clc
+    mov bl, 0x80
+    mov bh, 0x00
+    sub bl, bh
+    pushf
+
+    clc
+    mov bh, 0x00
+    mov cl, 0x80
+    sub bh, cl
+    pushf
+
+    clc
+    mov cl, 0xcd
+    mov ch, 0x4c
+    sub cl, ch
+    pushf
+
+    clc
+    mov ch, 0x23
+    mov dl, 0xa2
+    sub ch, dl
+    pushf
+
+    clc
+    mov dl, 0xab
+    mov dh, 0xcc
+    sub dl, dh
+    pushf
+
+    clc
+    mov dl, 0x98
+    mov dh, 0x02
+    sub dl, dh
+    pushf
+
+    dump_state
+
+    clc
+    mov bl, 0x34
+    mov bh, 0x55
+    sub bl, bh
+    pushf
+
+    clc
+    mov bh, 0xff
+    mov cl, 0x00
+    sub bh, cl
+    pushf
+
+    clc
+    mov cl, 0x00
+    mov ch, 0x01
+    sub cl, ch
+    pushf
+
+    clc
+    mov ch, 0x12
+    mov dl, 0x12
+    sub ch, dl
+    pushf
+
+    clc
+    mov dl, 0xe4
+    mov dh, 0xe4
+    sub dl, dh
+    pushf
+
+    dump_state

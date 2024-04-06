@@ -35,4 +35,6 @@ section .text
 ;     mark 0x92
 ; %include "sub_16.inc"
 
+; TODO cmp tests
+
     call power_off
