@@ -118,9 +118,9 @@ calculate_sbb_b_after_carry:
     add [0], 0, [flag_parity]
 
     # Update flag_overflow
-    add [rb + a], 0, [rb - 1]
-    add [rb + b], 0, [rb - 2]
-    add [rb + res], 0, [rb - 3]
+    add [rb + res], 0, [rb - 1]
+    add [rb + a], 0, [rb - 2]
+    add [rb + b], 0, [rb - 3]
     arb -3
     call update_overflow
 
