@@ -11,6 +11,7 @@
 # From dump_state.s
 .IMPORT dump_state
 .IMPORT mark
+.IMPORT dump_dx
 
 # From memory.s
 .IMPORT read_cs_ip_b
@@ -142,6 +143,10 @@ port_out:
     eq  [rb + port], 0x43, [rb + tmp]
     jnz [rb + tmp], port_out_mark
 
+    # Port 0x43 is used to output the DX register to stdout, for tests
+    eq  [rb + port], 0x44, [rb + tmp]
+    jnz [rb + tmp], port_out_dump_dx
+
     # Output the port and value to stdout
     # TODO remove temporary I/O code
 
@@ -177,6 +182,11 @@ port_out_mark:
     add [rb + value], 0, [rb - 1]
     arb -1
     call mark
+
+    jz  0, port_out_done
+
+port_out_dump_dx:
+    call dump_dx
 
 port_out_done:
     arb 1

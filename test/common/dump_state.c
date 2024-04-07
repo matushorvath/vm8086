@@ -11,8 +11,10 @@ void error(const char *message) {
 }
 
 uint16_t read8(FILE *fin, bool allowEof) {
-    int val = fgetc(fin);
-    if (val == EOF) {
+    unsigned int val;
+    int res = fscanf(fin, "%2x", &val);
+
+    if (res < 1) {
         if(!ferror(fin)) {
             if (allowEof) return 0x0000;
             else error("Unexpected end of file");
@@ -24,18 +26,14 @@ uint16_t read8(FILE *fin, bool allowEof) {
 }
 
 uint16_t read16(FILE *fin, bool allowEof) {
-    int lo = fgetc(fin);
-    if (lo == EOF) {
+    unsigned int lo, hi;
+    int res = fscanf(fin, "%2x %2x", &lo, &hi);
+
+    if (res < 1) {
         if(!ferror(fin)) {
             if (allowEof) return 0x0000;
             else error("Unexpected end of file");
         }
-        error("Error while reading file");
-    }
-
-    int hi = fgetc(fin);
-    if (hi == EOF) {
-        if(!ferror(fin)) error("Unexpected end of file");
         error("Error while reading file");
     }
 
@@ -118,18 +116,28 @@ void record0002(FILE *fin, FILE *fout) {
     fprintf(fout, "MARK: %02x\n", read8(fin, false));
 }
 
+void record0003(FILE *fin, FILE *fout) {
+    fprintf(fout, "%04x\n", read16(fin, false));
+}
+
 int main(int argc, char *argv[]) {
-    if (argc != 3) error("Usage: dump_state input.serial output.txt");
+    if (argc != 3) error("Usage: dump_state input.stdout output.txt");
 
-    printf("Serial log: %s\n", argv[1]);
+    printf("Bochs stdout: %s\n", argv[1]);
 
-    FILE *fin = fopen(argv[1], "rb");
+    FILE *fin = fopen(argv[1], "rt");
     if (!fin) error("Error while opening input file");
 
-    printf("Output    : %s\n", argv[2]);
+    printf("Output      : %s\n", argv[2]);
 
     FILE *fout = fopen(argv[2], "wt");
     if (!fout) error("Error while opening output file");
+
+    int res = fscanf(fin, ">>>");
+    if (res < 0) {
+        if(!ferror(fin)) error("Unexpected end of file");
+        else error("Error while reading file");
+    }
 
     while (true) {
         uint16_t type = read16(fin, true);
@@ -138,6 +146,7 @@ int main(int argc, char *argv[]) {
         if (type == 0x0000) break;
         else if (type == 0x0001) record0001(fin, fout);
         else if (type == 0x0002) record0002(fin, fout);
+        else if (type == 0x0003) record0003(fin, fout);
         else error("Unknown record type");
     }
 

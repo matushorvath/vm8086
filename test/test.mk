@@ -116,7 +116,7 @@ $(RESDIR)/%.bochs.txt:
 	echo "bochs test disabled" > $@
 	$(disabled)
 else
-$(RESDIR)/%.bochs.txt: $(RESDIR)/%.bochs.serial $(COMMON_BINDIR)/dump_state
+$(RESDIR)/%.bochs.txt: $(RESDIR)/%.bochs.data $(COMMON_BINDIR)/dump_state
 	printf '$(NAME): [bochs] validating ' >> $(TESTLOG)
 	rm -f $@
 	$(COMMON_BINDIR)/dump_state $< $@ || $(failed)
@@ -125,11 +125,11 @@ $(RESDIR)/%.bochs.txt: $(RESDIR)/%.bochs.serial $(COMMON_BINDIR)/dump_state
 endif
 
 # TODO kill bochs after a timeout
-$(RESDIR)/%.bochs.serial: $(OBJDIR)/%.bochs.bin FORCE
+$(RESDIR)/%.bochs.data: $(OBJDIR)/%.bochs.bin FORCE
 	printf '$(NAME): [bochs] executing ' >> $(TESTLOG)
 	bochs -q -f $(COMMON_DIR)/bochsrc.${PLATFORM} -rc $(COMMON_DIR)/bochs.debugger \
-		"optromimage1:file=$<,address=0xca000" "com1:dev=$@" || true
-	touch $@
+		"optromimage1:file=$<,address=0xca000" | tee $(patsubst %.data,%.stdout,$@)
+	grep '^>>>.*<<<$$' $(patsubst %.data,%.stdout,$@) > $@
 	@$(passed)
 
 # Build the binaries
