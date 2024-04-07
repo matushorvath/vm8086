@@ -37,4 +37,7 @@ section .text
 
 ; TODO cmp tests
 
+; TODO test whole range of numbers
+; %include "sub_sbb_cmp_8_all.inc"
+
     call power_off
