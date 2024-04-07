@@ -213,12 +213,12 @@ calculate_sbb_w:
     call update_auxiliary_carry_sbb
 
     # Calculate the result
-    mul [rb + b_lo], -1, [rb + tmp]
-    add [rb + a_lo], [rb + tmp], [rb + res_lo]
+    mul [rb + a_lo], -1, [rb + tmp]
+    add [rb + b_lo], [rb + tmp], [rb + res_lo]
     mul [flag_carry], -1, [rb + tmp]
     add [rb + res_lo], [rb + tmp], [rb + res_lo]
-    mul [rb + b_hi], -1, [rb + tmp]
-    add [rb + a_hi], [rb + tmp], [rb + res_hi]
+    mul [rb + a_hi], -1, [rb + tmp]
+    add [rb + b_hi], [rb + tmp], [rb + res_hi]
 
     # Check for carry out of low byte
     lt  [rb + res_lo], 0x00, [rb + tmp]
