@@ -35,4 +35,7 @@ section .text
     mark 0x92
 %include "add_16.inc"
 
+%include "add_adc_8_all.inc"
+%include "add_adc_16_all.inc"
+
     call power_off

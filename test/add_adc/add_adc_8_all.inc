@@ -5,10 +5,10 @@
     mov cl, 0       ; second number
 
 %%loop_bl:
-    mov dh, bl      ; the correct difference
+    mov dh, bl      ; the correct sum
 
 %ifidni %3,carry
-    dec dh          ; compensate for carry
+    inc dh          ; compensate for carry
 %endif
 
 %%loop_cl:
@@ -16,14 +16,12 @@
     mov dl, bl
     %1 dl, cl       ; dl = bl OP cl
 
-%ifnidni %3,no_result
-    cmp dl, dh      ; compare calculated and correct difference
+    cmp dl, dh      ; compare calculated and correct sum
     jne %%fail
-%endif
 
     ; TODO compare flags
 
-    dec dh          ; calculate next correct difference
+    inc dh          ; calculate next correct sum
 
     inc cl
     jnz %%loop_cl
@@ -45,14 +43,10 @@
 %endmacro
 
     mark 0x60
-    test_8_all sbb, clc
+    test_8_all adc, clc
     mark 0x61
-    test_8_all sbb, stc, carry
+    test_8_all adc, stc, carry
     mark 0x62
-    test_8_all sub, clc
+    test_8_all add, clc
     mark 0x63
-    test_8_all sub, stc
-    mark 0x64
-    test_8_all cmp, clc, no_result
-    mark 0x65
-    test_8_all cmp, stc, no_result
+    test_8_all add, stc
