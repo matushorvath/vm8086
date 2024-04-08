@@ -96,6 +96,7 @@
 # From exec.s
 .IMPORT execute_nop
 .IMPORT execute_esc
+.IMPORT execute_hlt
 .IMPORT invalid_opcode
 .IMPORT not_implemented             # TODO remove
 
@@ -504,8 +505,7 @@ instructions:
     db  execute_repnz, 0, 0                                 # 0xf2 REPNE/REPNZ
     db  execute_repz, 0, 0                                  # 0xf3 REP/REPE/REPZ
 
-    # HLT instruction is processed as part of the 'execute' loop
-    db  invalid_opcode, 0, 0                                # 0xf4 HLT
+    db  execute_hlt, 0, 0                                   # 0xf4 HLT
     db  execute_cmc, 0, 0                                   # 0xf5 CMC
 
     # <group 1>:
