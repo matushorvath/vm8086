@@ -53,7 +53,6 @@ SKIP    equ 128     ; skip every SKIP numbers to speed up the test
     cmp ax, si
     jne %%fail
 
-
     ; TODO use inc, dec instead of add, sub below; for now they are too slow
     sub dx, SKIP    ; calculate next correct result
 

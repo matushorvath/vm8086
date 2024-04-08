@@ -6,6 +6,7 @@
 
 %%loop_bl:
     mov dh, bl      ; the correct result
+    xor si, si      ; the correct flags
 
 %ifidni %3,carry
     inc dh          ; compensate for carry
@@ -15,11 +16,38 @@
     %2              ; clear or set carry
     mov dl, bl
     %1 dl, cl       ; dl = bl OP cl
+    pushf
 
     cmp dl, dh      ; compare calculated and correct result
     jne %%fail
 
-    ; TODO compare flags
+    ; relevant flags: ----O--- SZ-A-P-C
+    xor si, si
+
+    test dh, dh
+    jnz %%nz
+    or  si, 0b_00000000_01000000
+%%nz:
+
+    mov ah, dh
+    and ah, 0b_10000000
+    jz  %%ns
+    or  si, 0b_00000000_10000000
+%%ns:
+
+    mov al, dh
+    mov ah, 0
+    mov bp, ax
+    mov al, [cs:parity + bp]
+    test al, al
+    jz  %%np
+    or  si, 0b_00000000_00000100
+%%np:
+
+    pop ax          ; compare real flags with correct ones
+    and ax, 0b_00000000_11000100         ; TODO 0b_00001000_11010101
+    cmp ax, si
+    jne %%fail
 
     inc dh          ; calculate next correct result
 

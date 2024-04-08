@@ -7,26 +7,54 @@ SKIP    equ 128     ; skip every SKIP numbers to speed up the test
     mov cx, 0       ; second number
 
 %%loop_bx:
-    mov di, bx      ; the correct result
+    mov dx, bx      ; the correct result
+    xor si, si      ; the correct flags
 
 %ifidni %3,carry
-    inc di          ; compensate for carry
+    inc dx          ; compensate for carry
 %endif
 
 %%loop_cx:
     %2              ; clear or set carry
-    mov dx, bx
-    %1 dx, cx       ; dx = bx OP cx
+    mov di, bx
+    %1 di, cx       ; di = bx OP cx
+    pushf
 
 %ifnidni %3,no_result
-    cmp dx, di      ; compare calculated and correct result
+    cmp di, dx      ; compare calculated and correct result
     jne %%fail
 %endif
 
-    ; TODO compare flags
-    ; TODO use inc, dec instead of add, sub below; for now they are too slow
+    ; relevant flags: ----O--- SZ-A-P-C
+    xor si, si
 
-    add di, SKIP    ; calculate next correct result
+    test dx, dx
+    jnz %%nz
+    or  si, 0b_00000000_01000000
+%%nz:
+
+    mov ax, dx
+    and ax, 0b_10000000_00000000
+    jz  %%ns
+    or  si, 0b_00000000_10000000
+%%ns:
+
+    mov al, dl
+    mov ah, 0
+    mov bp, ax
+    mov al, [cs:parity + bp]
+    test al, al
+    jz  %%np
+    or  si, 0b_00000000_00000100
+%%np:
+
+    pop ax          ; compare real flags with correct ones
+    and ax, 0b_00000000_11000100         ; TODO 0b_00001000_11010101
+    cmp ax, si
+    jne %%fail
+
+    ; TODO use inc, dec instead of add, sub below; for now they are too slow
+    add dx, SKIP    ; calculate next correct result
 
     add cx, SKIP
     jnz %%loop_cx
