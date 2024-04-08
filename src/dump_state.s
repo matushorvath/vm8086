@@ -1,5 +1,6 @@
 .EXPORT dump_state
 .EXPORT mark
+.EXPORT dump_dx
 
 # From flags.s
 .IMPORT pack_flags_lo
@@ -332,6 +333,24 @@ mark:
 
     arb 1
     ret 1
+.ENDFRAME
+
+##########
+dump_dx:
+.FRAME tmp
+    arb -1
+
+    mul [reg_dx + 1], 0x100, [rb + tmp]
+    add [reg_dx + 0], [rb + tmp], [rb - 1]
+    add 16, 0, [rb - 2]
+    add 4, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
+    out 10
+
+    arb 1
+    ret 0
 .ENDFRAME
 
 ##########

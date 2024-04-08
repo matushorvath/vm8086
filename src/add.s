@@ -27,7 +27,6 @@
 ##########
 execute_add_b:
 .FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
-    # Clear flag_carry so adc performs an add without carry
     add 0, 0, [flag_carry]
 
     add [rb + loc_type_src], 0, [rb - 1]
@@ -36,22 +35,6 @@ execute_add_b:
     add [rb + loc_addr_dst], 0, [rb - 4]
     arb -4
     call execute_adc_b
-
-    ret 4
-.ENDFRAME
-
-##########
-execute_add_w:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
-    # Clear flag_carry so adc performs an add without carry
-    add 0, 0, [flag_carry]
-
-    add [rb + loc_type_src], 0, [rb - 1]
-    add [rb + loc_addr_src], 0, [rb - 2]
-    add [rb + loc_type_dst], 0, [rb - 3]
-    add [rb + loc_addr_dst], 0, [rb - 4]
-    arb -4
-    call execute_adc_w
 
     ret 4
 .ENDFRAME
@@ -74,8 +57,6 @@ execute_adc_b:
     arb -2
     call read_location_b
     add [rb - 4], 0, [rb + b]
-
-    # TODO BCD
 
     # Update flag_auxiliary_carry before we modify flag_carry
     add [rb + a], 0, [rb - 1]
@@ -120,6 +101,21 @@ execute_adc_b_after_carry:
 .ENDFRAME
 
 ##########
+execute_add_w:
+.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
+    add 0, 0, [flag_carry]
+
+    add [rb + loc_type_src], 0, [rb - 1]
+    add [rb + loc_addr_src], 0, [rb - 2]
+    add [rb + loc_type_dst], 0, [rb - 3]
+    add [rb + loc_addr_dst], 0, [rb - 4]
+    arb -4
+    call execute_adc_w
+
+    ret 4
+.ENDFRAME
+
+##########
 execute_adc_w:
 .FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a_lo, a_hi, b_lo, b_hi, res_lo, res_hi, tmp
     arb -7
@@ -139,8 +135,6 @@ execute_adc_w:
     call read_location_w
     add [rb - 4], 0, [rb + b_lo]
     add [rb - 5], 0, [rb + b_hi]
-
-    # TODO BCD
 
     # Update flag_auxiliary_carry before we modify flag_carry
     add [rb + a_lo], 0, [rb - 1]

@@ -1,6 +1,6 @@
-; TODO ADC/ADD AL
-; TODO ADC/ADD AX
-; TODO ADC/ADD from group_immed (8 and 16 bit)
+; TODO SBB/SUB AL
+; TODO SBB/SUB AX
+; TODO SBB/SUB from group_immed (8 and 16 bit)
 
 %include "common.inc"
 
@@ -20,23 +20,25 @@ section .text
     mov ds, ax
 
     mark 0x80
-%include "adc_nc_8.inc"
+%include "sbb_nc_8.inc"
     mark 0x81
-%include "adc_c_8.inc"
+%include "sbb_c_8.inc"
     mark 0x82
-%include "add_8.inc"
+%include "sub_8.inc"
     mark 0x83
-%include "add_adc_8_mem.inc"
+%include "sub_sbb_8_mem.inc"
 
-    mark 0x90
-%include "adc_nc_16.inc"
-    mark 0x91
-%include "adc_c_16.inc"
-    mark 0x92
-%include "add_16.inc"
+;     mark 0x90
+; %include "sbb_nc_16.inc"
+;     mark 0x91
+; %include "sbb_c_16.inc"
+;     mark 0x92
+; %include "sub_16.inc"
 
-%include "add_adc_8_all.inc"
-%include "add_adc_16_all.inc"
+; TODO cmp tests
+
+%include "sub_sbb_cmp_8_all.inc"
+%include "sub_sbb_cmp_16_all.inc"
 
     call power_off
 

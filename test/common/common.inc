@@ -67,14 +67,14 @@ section util start=util_addr
 
 initialize:
 %ifdef BOCHS
-    ; initialize COM1
-    mov ah, 0x00                                            ; init serial port
-    mov dx, 0                                               ; COM1
-    mov al, 0b_111_00_0_11                                  ; 9600 P0 S1 B8
-    int 0x14
-
     ; print to bochs console
-    mov al, 'I'
+    mov al, '>'
+    out 0xe9, al
+    mov al, '>'
+    out 0xe9, al
+    mov al, '>'
+    out 0xe9, al
+    mov al, ' '
     out 0xe9, al
 
     ; clear segment registers
@@ -116,36 +116,10 @@ initialize:
     retn
 
 
-out_char:                                                   ; al is the char to print
-%ifdef BOCHS
-    push ax
-    push dx
-
-    ; send character to COM1
-    mov ah, 0x01                                            ; send character
-    mov dx, 0                                               ; COM1
-    int 0x14
-
-.wait_serial:
-    mov ah, 0x03                                            ; get status
-    int 0x14
-
-    and ah, 0b_01000000                                     ; trans shift reg empty
-    jz  .wait_serial
-
-    pop dx
-    pop ax
-%endif
-
-%ifdef VM8086
-    ; TODO implement out_char for vm8086
-%endif
-
-    retn
-
-
 power_off:
 %ifdef BOCHS
+    ; alternative: output "Shutdown" to port 0x8900
+
     ; apm connect
     mov ax, 0x5301
     xor bx, bx
@@ -158,7 +132,11 @@ power_off:
     int 0x15
 
     ; print to bochs console
-    mov al, 'P'
+    mov al, '<'
+    out 0xe9, al
+    mov al, '<'
+    out 0xe9, al
+    mov al, '<'
     out 0xe9, al
     mov al, 10
     out 0xe9, al
@@ -177,6 +155,45 @@ power_off:
 
     ; we should not ever get here
     jmp $
+
+
+out_char:                                                   ; al is the char to print
+%ifdef BOCHS
+    push ax
+    push cx
+
+    mov ah, al
+
+    and al, 0xf0
+    mov cl, 4
+    shr al, cl
+    add al, '0'
+    cmp al, '9'
+    jle .out_hi
+    add al, 7
+.out_hi:
+    out 0xe9, al
+
+    mov al, ah
+
+    and al, 0x0f
+    add al, '0'
+    cmp al, '9'
+    jle .out_lo
+    add al, 7
+.out_lo:
+    out 0xe9, al
+
+    mov al, ' '
+    out 0xe9, al
+
+    pop cx
+    pop ax
+    retn
+%elifdef VM8086
+    ; TODO implement out_char for vm8086
+%endif
+
 
 %ifdef BOCHS
 
@@ -222,10 +239,6 @@ mark_bochs:
     mov al, ah
     call out_char
 
-    ; print to bochs console
-    mov al, 'M'
-    out 0xe9, al
-
     popf
     pop es
     pop bp
@@ -241,6 +254,41 @@ mark_bochs:
     mov al, %1
     out 0x43, al
     pop ax
+%endmacro
+
+%endif
+
+
+%ifdef BOCHS
+
+%macro dump_dx 0
+    call text_seg:dump_dx_bochs
+%endmacro
+
+dump_dx_bochs:
+    ; dump the dx register in raw form, to be formatted later by dump_state.c
+    push ax
+
+    ; record type is 0x0003
+    mov al, 0x03
+    call out_char
+    mov al, 0x00
+    call out_char
+
+    ; output the dx register
+    mov al, dl
+    call out_char
+    mov al, dh
+    call out_char
+
+    pop ax
+
+    retf
+%elifdef VM8086
+
+%macro dump_dx 0
+    out 0x44, al                        ; ask the vm to print dx
+    db  3 dup (0x90)                    ; 3x nop to match the length of the far call that bochs uses
 %endmacro
 
 %endif
@@ -367,10 +415,6 @@ dump_state_bochs:
 
     inc si
     loop .loop_stack
-
-    ; print to bochs console
-    mov al, 's'
-    out 0xe9, al
 
     popf
     pop bp

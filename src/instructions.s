@@ -5,6 +5,12 @@
 .IMPORT execute_add_w
 .IMPORT execute_adc_b
 .IMPORT execute_adc_w
+.IMPORT execute_sub_b
+.IMPORT execute_sub_w
+.IMPORT execute_sbb_b
+.IMPORT execute_sbb_w
+.IMPORT execute_cmp_b
+.IMPORT execute_cmp_w
 
 # From arg_al_ax_near_ptr.s
 .IMPORT arg_al_ax_near_ptr_src
@@ -227,12 +233,12 @@ instructions:
     db  execute_push_w, arg_ss, 2                           # 0x16 PUSH SS
     db  execute_pop_w, arg_ss, 2                            # 0x17 POP SS
 
-    db  not_implemented, 0, 0 # TODO    db  execute_sbb_b, arg_mod_reg_rm_src_b, 4          # 0x18 SBB REG8/MEM8, REG8
-    db  not_implemented, 0, 0 # TODO    db  execute_sbb_w, arg_mod_reg_rm_src_w, 4          # 0x19 SBB REG16/MEM16, REG16
-    db  not_implemented, 0, 0 # TODO    db  execute_sbb_b, arg_mod_reg_rm_dst_b, 4          # 0x1a SBB REG8, REG8/MEM8
-    db  not_implemented, 0, 0 # TODO    db  execute_sbb_w, arg_mod_reg_rm_dst_w, 4          # 0x1b SBB REG16, REG16/MEM16
-    db  not_implemented, 0, 0 # TODO    db  execute_sbb_b, arg_al_immediate_b               # 0x1c SBB AL, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_sbb_w, arg_ax_immediate_w               # 0x1d SBB AX, IMMED16
+    db  execute_sbb_b, arg_mod_reg_rm_src_b, 4              # 0x18 SBB REG8/MEM8, REG8
+    db  execute_sbb_w, arg_mod_reg_rm_src_w, 4              # 0x19 SBB REG16/MEM16, REG16
+    db  execute_sbb_b, arg_mod_reg_rm_dst_b, 4              # 0x1a SBB REG8, REG8/MEM8
+    db  execute_sbb_w, arg_mod_reg_rm_dst_w, 4              # 0x1b SBB REG16, REG16/MEM16
+    db  execute_sbb_b, arg_al_immediate_b, 4                # 0x1c SBB AL, IMMED8
+    db  execute_sbb_w, arg_ax_immediate_w, 4                # 0x1d SBB AX, IMMED16
 
     db  execute_push_w, arg_ds, 2                           # 0x1e PUSH DS
     db  execute_pop_w, arg_ds, 2                            # 0x1f POP DS
@@ -247,12 +253,12 @@ instructions:
     db  execute_segment_prefix_es, 0, 0                     # 0x26 ES: (segment override prefix)
     db  not_implemented, 0, 0 # TODO    db  execute_daa, 0                                  # 0x27 DAA
 
-    db  not_implemented, 0, 0 # TODO    db  execute_sub_b, arg_mod_reg_rm_src_b, 4          # 0x28 SUB REG8/MEM8, REG8
-    db  not_implemented, 0, 0 # TODO    db  execute_sub_w, arg_mod_reg_rm_src_w, 4          # 0x29 SUB REG16/MEM16, REG16
-    db  not_implemented, 0, 0 # TODO    db  execute_sub_b, arg_mod_reg_rm_dst_b, 4          # 0x2a SUB REG8, REG8/MEM8
-    db  not_implemented, 0, 0 # TODO    db  execute_sub_w, arg_mod_reg_rm_dst_w, 4          # 0x2b SUB REG16, REG16/MEM16
-    db  not_implemented, 0, 0 # TODO    db  execute_sub_b, arg_al_immediate_b               # 0x2c SUB AL, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_sub_w, arg_ax_immediate_w               # 0x2d SUB AX, IMMED16
+    db  execute_sub_b, arg_mod_reg_rm_src_b, 4              # 0x28 SUB REG8/MEM8, REG8
+    db  execute_sub_w, arg_mod_reg_rm_src_w, 4              # 0x29 SUB REG16/MEM16, REG16
+    db  execute_sub_b, arg_mod_reg_rm_dst_b, 4              # 0x2a SUB REG8, REG8/MEM8
+    db  execute_sub_w, arg_mod_reg_rm_dst_w, 4              # 0x2b SUB REG16, REG16/MEM16
+    db  execute_sub_b, arg_al_immediate_b, 4                # 0x2c SUB AL, IMMED8
+    db  execute_sub_w, arg_ax_immediate_w, 4                # 0x2d SUB AX, IMMED16
 
     db  execute_segment_prefix_cs, 0, 0                     # 0x2e CS: (segment override prefix)
     db  not_implemented, 0, 0 # TODO    db  execute_das, 0                                  # 0x2f DAS
@@ -267,12 +273,12 @@ instructions:
     db  execute_segment_prefix_ss, 0, 0                     # 0x36 SS: (segment override prefix)
     db  not_implemented, 0, 0 # TODO    db  execute_aaa, 0                                  # 0x37 AAA
 
-    db  not_implemented, 0, 0 # TODO    db  execute_cmp_b, arg_mod_reg_rm_src_b, 4          # 0x38 CMP REG8/MEM8, REG8
-    db  not_implemented, 0, 0 # TODO    db  execute_cmp_w, arg_mod_reg_rm_src_w, 4          # 0x39 CMP REG16/MEM16, REG16
-    db  not_implemented, 0, 0 # TODO    db  execute_cmp_b, arg_mod_reg_rm_dst_b, 4          # 0x3a CMP REG8, REG8/MEM8
-    db  not_implemented, 0, 0 # TODO    db  execute_cmp_w, arg_mod_reg_rm_dst_w, 4          # 0x3b CMP REG16, REG16/MEM16
-    db  not_implemented, 0, 0 # TODO    db  execute_cmp_b, arg_al_immediate_b               # 0x3c CMP AL, IMMED8
-    db  not_implemented, 0, 0 # TODO    db  execute_cmp_w, arg_ax_immediate_w               # 0x3d CMP AX, IMMED16
+    db  execute_cmp_b, arg_mod_reg_rm_src_b, 4              # 0x38 CMP REG8/MEM8, REG8
+    db  execute_cmp_w, arg_mod_reg_rm_src_w, 4              # 0x39 CMP REG16/MEM16, REG16
+    db  execute_cmp_b, arg_mod_reg_rm_dst_b, 4              # 0x3a CMP REG8, REG8/MEM8
+    db  execute_cmp_w, arg_mod_reg_rm_dst_w, 4              # 0x3b CMP REG16, REG16/MEM16
+    db  execute_cmp_b, arg_al_immediate_b, 4                # 0x3c CMP AL, IMMED8
+    db  execute_cmp_w, arg_ax_immediate_w, 4                # 0x3d CMP AX, IMMED16
 
     db  execute_segment_prefix_ds, 0, 0                     # 0x3e DS: (segment override prefix)
     db  not_implemented, 0, 0 # TODO    db  execute_aas, 0                                  # 0x3f AAS
