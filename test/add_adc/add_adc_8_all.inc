@@ -5,7 +5,7 @@
     mov cl, 0       ; second number
 
 %%loop_bl:
-    mov dh, bl      ; the correct sum
+    mov dh, bl      ; the correct result
 
 %ifidni %3,carry
     inc dh          ; compensate for carry
@@ -16,12 +16,12 @@
     mov dl, bl
     %1 dl, cl       ; dl = bl OP cl
 
-    cmp dl, dh      ; compare calculated and correct sum
+    cmp dl, dh      ; compare calculated and correct result
     jne %%fail
 
     ; TODO compare flags
 
-    inc dh          ; calculate next correct sum
+    inc dh          ; calculate next correct result
 
     inc cl
     jnz %%loop_cl
