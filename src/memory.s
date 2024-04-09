@@ -20,9 +20,6 @@
 .IMPORT reg_cs
 .IMPORT reg_ip
 
-# From util.s
-.IMPORT modulo
-
 ##########
 read_b:
 .FRAME addr; value                                          # returns value
@@ -53,28 +50,28 @@ write_b:
 
 ##########
 calc_addr:
-.FRAME seg, off; addr                                       # returns addr
-    arb -1
+.FRAME seg, off; addr, tmp                                  # returns addr
+    arb -2
 
     # Calculate the physical address
     mul [rb + seg], 0x10, [rb + addr]
-    add [rb + off], [rb + addr], [rb - 1]                   # store to param 0
+    add [rb + off], [rb + addr], [rb + addr]
 
     # Wrap around to 20 bits
-    # TODO should be less than 0x10000 over, instead of modulo just subtract 0x10000?
-    add 0x100000, 0, [rb - 2]
-    arb -2
-    call modulo
-    add [rb - 4], 0, [rb + addr]
+    lt  [rb + addr], 0x100000, [rb + tmp]
+    jnz [rb + tmp], calc_addr_done
 
-    arb 1
+    add [rb + addr], -0x100000, [rb + addr]
+
+calc_addr_done:
+    arb 2
     ret 2
 .ENDFRAME
 
 ##########
 calc_cs_ip_addr:
-.FRAME addr                                                 # returns addr
-    arb -1
+.FRAME addr, tmp                                            # returns addr
+    arb -2
 
     #      3210|7654 3210|7654 3210
     # cs = ---csh--- ---csl---
@@ -88,16 +85,16 @@ calc_cs_ip_addr:
     mul [rb + addr], 0x10, [rb + addr]
     add [reg_cs + 0], [rb + addr], [rb + addr]
     mul [rb + addr], 0x10, [rb + addr]
-    add [reg_ip + 0], [rb + addr], [rb - 1]                 # store to param 0
+    add [reg_ip + 0], [rb + addr], [rb + addr]
 
     # Wrap around to 20 bits
-    # TODO should be less than 0x10000 over, instead of modulo just subtract 0x10000?
-    add 0x100000, 0, [rb - 2]
-    arb -2
-    call modulo
-    add [rb - 4], 0, [rb + addr]
+    lt  [rb + addr], 0x100000, [rb + tmp]
+    jnz [rb + tmp], calc_cs_ip_addr_done
 
-    arb 1
+    add [rb + addr], -0x100000, [rb + addr]
+
+calc_cs_ip_addr_done:
+    arb 2
     ret 0
 .ENDFRAME
 

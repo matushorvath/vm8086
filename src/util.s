@@ -1,5 +1,4 @@
 .EXPORT check_range
-.EXPORT modulo
 
 # From error.s
 .IMPORT report_error
@@ -25,38 +24,6 @@ check_range_invalid:
 
 check_range_invalid_message:
     db  "value out of range", 0
-.ENDFRAME
-
-##########
-# Calculate value modulo divisor; should only be used if value/divisor is a small number
-modulo:
-.FRAME value, divisor; tmp                                   # returns tmp
-    arb -1
-
-    # Handle negative value
-    lt  [rb + value], 0, [rb + tmp]
-    jnz [rb + tmp], mod_negative_loop
-
-mod_positive_loop:
-    lt  [rb + value], [rb + divisor], [rb + tmp]
-    jnz [rb + tmp], mod_done
-
-    mul [rb + divisor], -1, [rb + tmp]
-    add [rb + value], [rb + tmp], [rb + value]
-    jz  0, mod_positive_loop
-
-mod_negative_loop:
-    lt  [rb + value], 0, [rb + tmp]
-    jz  [rb + tmp], mod_done
-
-    add [rb + value], [rb + divisor], [rb + value]
-    jz  0, mod_negative_loop
-
-mod_done:
-    add [rb + value], 0, [rb + tmp]
-
-    arb 1
-    ret 2
 .ENDFRAME
 
 .EOF
