@@ -24,6 +24,8 @@
 .IMPORT flag_sign
 .IMPORT flag_overflow
 
+# TODO multiple entry points pattern
+
 ##########
 execute_add_b:
 .FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
