@@ -39,7 +39,8 @@
 .IMPORT reg_ss
 .IMPORT reg_es
 
-.IMPORT inc_ip
+.IMPORT inc_ip_b
+.IMPORT inc_ip_w
 
 ##########
 decode_mod_rm:
@@ -81,7 +82,7 @@ decode_mod_rm_mem_disp8:
     # Read 8-bit displacement
     call read_cs_ip_b
     add [rb - 2], 0, [rb + disp_lo]
-    call inc_ip
+    call inc_ip_b
 
     # Sign extend the displacement
     lt  0x7f, [rb + disp_lo], [rb + disp_hi]
@@ -98,9 +99,7 @@ decode_mod_rm_mem_disp16:
     call read_cs_ip_w
     add [rb - 2], 0, [rb + disp_lo]
     add [rb - 3], 0, [rb + disp_hi]
-
-    call inc_ip
-    call inc_ip
+    call inc_ip_w
 
     # Jump to handling of this R/M value
     add decode_mod_rm_mem_table, [rb + rm], [ip + 2]

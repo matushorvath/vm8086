@@ -23,7 +23,7 @@
 .IMPORT reg_sp
 .IMPORT reg_cs
 .IMPORT reg_ip
-.IMPORT inc_ip
+.IMPORT inc_ip_w
 
 ##########
 execute_call_near:
@@ -34,9 +34,7 @@ execute_call_near:
     call read_cs_ip_w
     add [rb - 2], 0, [rb + ptr_lo]
     add [rb - 3], 0, [rb + ptr_hi]
-
-    call inc_ip
-    call inc_ip
+    call inc_ip_w
 
     # Push IP
     add [reg_ip + 0], 0, [rb - 1]
@@ -96,17 +94,13 @@ execute_call_far:
     call read_cs_ip_w
     add [rb - 2], 0, [rb + offset_lo]
     add [rb - 3], 0, [rb + offset_hi]
-
-    call inc_ip
-    call inc_ip
+    call inc_ip_w
 
     # Read the segment
     call read_cs_ip_w
     add [rb - 2], 0, [rb + segment_lo]
     add [rb - 3], 0, [rb + segment_hi]
-
-    call inc_ip
-    call inc_ip
+    call inc_ip_w
 
     # Push CS
     add [reg_cs + 0], 0, [rb - 1]

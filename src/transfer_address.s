@@ -22,7 +22,7 @@
 # From state.s
 .IMPORT reg_ds
 .IMPORT reg_es
-.IMPORT inc_ip
+.IMPORT inc_ip_b
 
 ##########
 execute_lea:
@@ -32,7 +32,7 @@ execute_lea:
     # Read the MOD REG R/M byte and split it
     call read_cs_ip_b
     add [rb - 2], 0, [rb + tmp]
-    call inc_ip
+    call inc_ip_b
 
     mul [rb + tmp], 3, [rb + tmp]
     add split233 + 0, [rb + tmp], [ip + 1]

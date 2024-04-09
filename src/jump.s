@@ -14,7 +14,8 @@
 
 .IMPORT reg_cs
 .IMPORT reg_ip
-.IMPORT inc_ip
+.IMPORT inc_ip_b
+.IMPORT inc_ip_w
 
 ##########
 execute_jmp_short:
@@ -24,7 +25,7 @@ execute_jmp_short:
     # Read the short pointer
     call read_cs_ip_b
     add [rb - 2], 0, [rb + ptr]
-    call inc_ip
+    call inc_ip_b
 
     # Calculate sign extension of ptr
     lt  0x7f, [rb + ptr], [rb + tmp]
@@ -62,9 +63,7 @@ execute_jmp_near:
     call read_cs_ip_w
     add [rb - 2], 0, [rb + ptr_lo]
     add [rb - 3], 0, [rb + ptr_hi]
-
-    call inc_ip
-    call inc_ip
+    call inc_ip_w
 
     # Add the 16-bit near pointer to the 16-bit reg_ip
     add [rb + ptr_lo], [reg_ip + 0], [reg_ip + 0]
@@ -112,17 +111,13 @@ execute_jmp_far:
     call read_cs_ip_w
     add [rb - 2], 0, [rb + offset_lo]
     add [rb - 3], 0, [rb + offset_hi]
-
-    call inc_ip
-    call inc_ip
+    call inc_ip_w
 
     # Read the segment
     call read_cs_ip_w
     add [rb - 2], 0, [rb + segment_lo]
     add [rb - 3], 0, [rb + segment_hi]
-
-    call inc_ip
-    call inc_ip
+    call inc_ip_w
 
     # Use the new values for cs:ip
     add [rb + segment_lo], 0, [reg_cs + 0]

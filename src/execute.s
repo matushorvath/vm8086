@@ -1,6 +1,7 @@
 .EXPORT execute
 .EXPORT execute_nop
 .EXPORT execute_esc
+.EXPORT execute_hlt
 .EXPORT invalid_opcode
 .EXPORT not_implemented             # TODO remove
 
@@ -28,7 +29,7 @@
 .IMPORT reg_ip
 .IMPORT reg_ds
 .IMPORT reg_ss
-.IMPORT inc_ip
+.IMPORT inc_ip_b
 
 # From trace.s
 .IMPORT print_trace
@@ -50,7 +51,7 @@ execute_tracing_done:
     # Decrease prefix lifetime
     add [prefix_valid], -1, [prefix_valid]
 
-    # If now prefix_valid == 0, we have just used the prefixes, reset them to defaults
+    # If prefix_valid == 0, we have just used the prefixes, reset them to defaults
     jnz [prefix_valid], execute_prefix_done
 
     add reg_ds, 0, [ds_segment_prefix]
@@ -63,11 +64,7 @@ execute_prefix_done:
     add [rb - 2], 0, [rb + op]
 
     # Increment ip
-    call inc_ip
-
-    # Process hlt
-    eq  [rb + op], 0xf4, [rb + tmp]
-    jnz [rb + tmp], execute_hlt
+    call inc_ip_b
 
     # Find information about this instruction
     mul [rb + op], 3, [rb + tmp]                            # one record is 3 bytes long
@@ -78,11 +75,11 @@ execute_prefix_done:
     add instructions + 1, [rb + tmp], [ip + 1]              # args function is at index 1 in the record
     add [0], 0, [execute_args_fn]
 
-    add instructions + 2, [rb + tmp], [ip + 1]              # args count is at index 2 in the record
-    mul [0], -1, [execute_args_count]
-
     # If there is an args_fn, call it; then call exec_fn
     jz  [execute_args_fn], execute_no_args_fn
+
+    add instructions + 2, [rb + tmp], [ip + 1]              # args count is at index 2 in the record
+    mul [0], -1, [execute_args_count]
 
     # Each args_fn passes a different number of arguments to the exec_fn. We can avoid having to copy them
     # all on the stack, because the return values from args_fn happen to land just one stack position below
@@ -104,15 +101,14 @@ execute_prefix_done:
     call [execute_exec_fn]
     arb 1                               # undo the adjustment explained above, stack is now safe to use
 
-    jz  0, execute_loop
+    jz  [halt], execute_loop
 
 execute_no_args_fn:
     # No args_fn, just call exec_fn with no parameters
     call [execute_exec_fn]
 
-    jz  0, execute_loop
+    jz  [halt], execute_loop
 
-execute_hlt:
     arb 2
     ret 0
 
@@ -137,6 +133,18 @@ execute_esc:
     # fields, which was already done by arg_mod_op_rm_b/arg_mod_op_rm_w.
     ret 3
 .ENDFRAME
+
+##########
+execute_hlt:
+.FRAME
+    # TODO use the BOCHS way of shutting down, output "Shutdown" to port 0x8900
+    add 1, 0, [halt]
+    ret 0
+.ENDFRAME
+
+##########
+halt:
+    db  0           # set this to non-zero to halt the VM
 
 ##########
 invalid_opcode:

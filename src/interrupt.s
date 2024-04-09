@@ -4,7 +4,7 @@
 .EXPORT execute_iret
 
 # From memory.s
-.IMPORT read_w
+.IMPORT read_b
 .IMPORT read_cs_ip_b
 
 # From stack.s
@@ -16,7 +16,7 @@
 # From state.s
 .IMPORT reg_cs
 .IMPORT reg_ip
-.IMPORT inc_ip
+.IMPORT inc_ip_b
 
 .IMPORT flag_interrupt
 .IMPORT flag_overflow
@@ -53,7 +53,7 @@ execute_int:
     # Read interrupt type from 8-bit immediate argument
     call read_cs_ip_b
     add [rb - 2], 0, [rb + type]
-    call inc_ip
+    call inc_ip_b
 
     # Process the interrupt
     add [rb + type], 0, [rb - 1]
@@ -66,7 +66,7 @@ execute_int:
 
 ##########
 interrupt:
-.FRAME type; tmp
+.FRAME type; vector
     arb -1
 
     # Push flags, then disable TF and IF
@@ -81,14 +81,19 @@ interrupt:
     arb -2
     call push_w
 
-    # Load new CS from the interrupt vector (physical address type * 4 + 2)
-    mul [rb + type], 4, [rb + tmp]
-    add [rb + tmp], 2, [rb - 1]
-    arb -1
-    call read_w
+    # Calculate physical address of the interrupt vector
+    mul [rb + type], 4, [rb + vector]
 
+    # Load new CS from [vector + 2]
+    add [rb + vector], 2, [rb - 1]
+    arb -1
+    call read_b
     add [rb - 3], 0, [reg_cs + 0]
-    add [rb - 4], 0, [reg_cs + 1]
+
+    add [rb + vector], 3, [rb - 1]
+    arb -1
+    call read_b
+    add [rb - 3], 0, [reg_cs + 1]
 
     # Push IP
     add [reg_ip + 0], 0, [rb - 1]
@@ -96,13 +101,16 @@ interrupt:
     arb -2
     call push_w
 
-    # Load new IP from the interrupt vector (physical address type * 4 + 0)
-    mul [rb + type], 4, [rb - 1]
+    # Load new IP from [vector]
+    add [rb + vector], 0, [rb - 1]
     arb -1
-    call read_w
-
+    call read_b
     add [rb - 3], 0, [reg_ip + 0]
-    add [rb - 4], 0, [reg_ip + 1]
+
+    add [rb + vector], 1, [rb - 1]
+    arb -1
+    call read_b
+    add [rb - 3], 0, [reg_ip + 1]
 
     arb 1
     ret 1

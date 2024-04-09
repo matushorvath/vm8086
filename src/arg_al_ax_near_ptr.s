@@ -11,7 +11,7 @@
 # From state.s
 .IMPORT reg_al
 .IMPORT reg_ax
-.IMPORT inc_ip
+.IMPORT inc_ip_w
 
 # The first argument is an immediate 8-bit/16-bit value, stored at cs:ip.
 # The second argument is either AL or AX.
@@ -63,9 +63,7 @@ arg_al_ax_near_ptr_generic:
     call read_cs_ip_w
     mul [rb - 3], 0x100, [rb + off]
     add [rb - 2], [rb + off], [rb + off]
-
-    call inc_ip
-    call inc_ip
+    call inc_ip_w
 
     # Calculate physical address from DS:off
     add [ds_segment_prefix], 1, [ip + 1]
