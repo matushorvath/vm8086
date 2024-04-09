@@ -75,7 +75,7 @@ execute_pop_w:
 push_w:
 .FRAME value_lo, value_hi;
     # Decrement sp by 2
-    call dec_2_sp
+    call dec_sp_w
 
     # Store the value
     mul [reg_ss + 1], 0x100, [rb - 1]
@@ -106,7 +106,7 @@ pop_w:
     add [rb - 5], 0, [rb + value_hi]
 
     # Increment sp by 2
-    call inc_2_sp
+    call inc_sp_w
 
     arb 2
     ret 0
@@ -119,7 +119,7 @@ pushf:
     arb -2
 
     # Decrement sp by 2
-    call dec_2_sp
+    call dec_sp_w
 
     # Pack the flags
     call pack_flags_lo
@@ -159,7 +159,7 @@ popf:
     add [rb - 5], 0, [rb + flags_hi]
 
     # Increment sp by 2
-    call inc_2_sp
+    call inc_sp_w
 
     # Unpack the flags
     add [rb + flags_lo], 0, [rb - 1]
@@ -176,7 +176,7 @@ popf:
 
 ##########
 # Increment sp by 2 with wrap around
-inc_2_sp:
+inc_sp_w:
 .FRAME tmp
     arb -1
 
@@ -204,7 +204,7 @@ inc_2_sp_done:
 
 ##########
 # Decrement sp by 2 with wrap around
-dec_2_sp:
+dec_sp_w:
 .FRAME tmp
     arb -1
 

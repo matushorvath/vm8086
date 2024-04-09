@@ -23,7 +23,7 @@ F8H through FFH (eight of the 64k locations) in the I/O space are reserved by In
 Possible Optimizations
 ======================
 
-- Use macros for inc_ip_b, inc_ip_w, inc_2_sp, dec_2_sp, execute_inc, execute_dec, read_b, write_b. The same algorithm is in many places.
+- Use macros for inc_ip_b, inc_ip_w, inc_sp_w, dec_sp_w, execute_inc, execute_dec, read_b, write_b. The same algorithm is in many places.
 - Use macros for all the arg_* functions, there's a lot of copy pasta there.
 - Optimize read_cs_ip_* to call read_b directly, to avoid multiple function calls.
 - Look at the most used path in decode_mod_rm, make sure it is fast.
