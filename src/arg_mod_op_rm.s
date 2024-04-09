@@ -19,7 +19,8 @@
 .IMPORT read_cs_ip_b
 
 # From state.s
-.IMPORT inc_ip
+.IMPORT inc_ip_b
+.IMPORT inc_ip_w
 
 ##########
 arg_mod_000_rm_w:
@@ -66,11 +67,9 @@ arg_mod_000_rm_immediate_b:
 
     # Return pointer to 8-bit immediate
     call calc_cs_ip_addr
-
     add 1, 0, [rb + loc_type_src]
     add [rb - 2], 0, [rb + loc_addr_src]
-
-    call inc_ip
+    call inc_ip_b
 
     arb 4
     ret 0
@@ -100,12 +99,9 @@ arg_mod_000_rm_immediate_w:
 
     # Return pointer to 16-bit immediate
     call calc_cs_ip_addr
-
     add 1, 0, [rb + loc_type_src]
     add [rb - 2], 0, [rb + loc_addr_src]
-
-    call inc_ip
-    call inc_ip
+    call inc_ip_w
 
     arb 4
     ret 0
@@ -171,11 +167,9 @@ arg_mod_op_rm_b_immediate_b:
 
     # Return pointer to 8-bit immediate
     call calc_cs_ip_addr
-
     add 1, 0, [rb + loc_type_src]
     add [rb - 2], 0, [rb + loc_addr_src]
-
-    call inc_ip
+    call inc_ip_b
 
     arb 5
     ret 0
@@ -199,7 +193,7 @@ arg_mod_op_rm_w_immediate_sxb:
     # Retrieve the 8-bit immediate into the sign-extend buffer
     call read_cs_ip_b
     add [rb - 2], 0, [sign_extend_buffer_lo]
-    call inc_ip
+    call inc_ip_b
 
     # Sign extend the value
     lt  0x7f, [sign_extend_buffer_lo], [rb + tmp]
@@ -230,12 +224,9 @@ arg_mod_op_rm_w_immediate_w:
 
     # Return pointer to 16-bit immediate
     call calc_cs_ip_addr
-
     add 1, 0, [rb + loc_type_src]
     add [rb - 2], 0, [rb + loc_addr_src]
-
-    call inc_ip
-    call inc_ip
+    call inc_ip_w
 
     arb 5
     ret 0

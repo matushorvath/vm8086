@@ -9,7 +9,7 @@
 # From state.s
 .IMPORT flag_zero
 .IMPORT reg_cx
-.IMPORT inc_ip
+.IMPORT inc_ip_b
 
 ##########
 execute_loop:
@@ -19,7 +19,7 @@ execute_loop:
     jnz [reg_cx], execute_loop_taken
 
     # Skip the pointer and don't jump
-    call inc_ip
+    call inc_ip_b
     jz  0, execute_loop_done
 
 execute_loop_taken:
@@ -42,7 +42,7 @@ execute_loopz:
 
 execute_loopz_not_taken:
     # Skip the pointer and don't jump
-    call inc_ip
+    call inc_ip_b
 
 execute_loopz_done:
     ret 0
@@ -61,7 +61,7 @@ execute_loopnz:
 
 execute_loopnz_not_taken:
     # Skip the pointer and don't jump
-    call inc_ip
+    call inc_ip_b
 
 execute_loopnz_done:
     ret 0
@@ -73,7 +73,7 @@ execute_jcxz:
     jz  [reg_cx], execute_jcxz_taken
 
     # Skip the pointer and don't jump
-    call inc_ip
+    call inc_ip_b
     jz  0, execute_jcxz_done
 
 execute_jcxz_taken:

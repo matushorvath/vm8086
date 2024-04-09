@@ -16,7 +16,7 @@
 # From state.s
 .IMPORT reg_cs
 .IMPORT reg_ip
-.IMPORT inc_ip
+.IMPORT inc_ip_b
 
 .IMPORT flag_interrupt
 .IMPORT flag_overflow
@@ -53,7 +53,7 @@ execute_int:
     # Read interrupt type from 8-bit immediate argument
     call read_cs_ip_b
     add [rb - 2], 0, [rb + type]
-    call inc_ip
+    call inc_ip_b
 
     # Process the interrupt
     add [rb + type], 0, [rb - 1]

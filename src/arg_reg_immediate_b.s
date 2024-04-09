@@ -19,7 +19,7 @@
 .IMPORT reg_bh
 .IMPORT reg_ch
 .IMPORT reg_dh
-.IMPORT inc_ip
+.IMPORT inc_ip_b
 
 # The first argument is an immediate 8-bit value, stored at cs:ip.
 # The second argument is an 8-bit register.
@@ -33,7 +33,7 @@ arg_al_immediate_b:
 
     call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr_src]
-    call inc_ip
+    call inc_ip_b
 
     add 0, 0, [rb + loc_type_dst]
     add reg_al, 0, [rb + loc_addr_dst]
@@ -51,7 +51,7 @@ arg_bl_immediate_b:
 
     call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr_src]
-    call inc_ip
+    call inc_ip_b
 
     add 0, 0, [rb + loc_type_dst]
     add reg_bl, 0, [rb + loc_addr_dst]
@@ -69,7 +69,7 @@ arg_cl_immediate_b:
 
     call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr_src]
-    call inc_ip
+    call inc_ip_b
 
     add 0, 0, [rb + loc_type_dst]
     add reg_cl, 0, [rb + loc_addr_dst]
@@ -87,7 +87,7 @@ arg_dl_immediate_b:
 
     call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr_src]
-    call inc_ip
+    call inc_ip_b
 
     add 0, 0, [rb + loc_type_dst]
     add reg_dl, 0, [rb + loc_addr_dst]
@@ -105,7 +105,7 @@ arg_ah_immediate_b:
 
     call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr_src]
-    call inc_ip
+    call inc_ip_b
 
     add 0, 0, [rb + loc_type_dst]
     add reg_ah, 0, [rb + loc_addr_dst]
@@ -123,7 +123,7 @@ arg_bh_immediate_b:
 
     call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr_src]
-    call inc_ip
+    call inc_ip_b
 
     add 0, 0, [rb + loc_type_dst]
     add reg_bh, 0, [rb + loc_addr_dst]
@@ -141,7 +141,7 @@ arg_ch_immediate_b:
 
     call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr_src]
-    call inc_ip
+    call inc_ip_b
 
     add 0, 0, [rb + loc_type_dst]
     add reg_ch, 0, [rb + loc_addr_dst]
@@ -159,7 +159,7 @@ arg_dh_immediate_b:
 
     call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr_src]
-    call inc_ip
+    call inc_ip_b
 
     add 0, 0, [rb + loc_type_dst]
     add reg_dh, 0, [rb + loc_addr_dst]

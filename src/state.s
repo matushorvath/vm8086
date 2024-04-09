@@ -37,7 +37,9 @@
 .EXPORT flag_trap
 
 .EXPORT init_state
-.EXPORT inc_ip
+
+.EXPORT inc_ip_b
+.EXPORT inc_ip_w
 
 .EXPORT mem
 
@@ -162,8 +164,8 @@ init_state:
 .ENDFRAME
 
 ##########
-# Increment ip with wrap around
-inc_ip:
+# Increment ip by 1 with wrap around
+inc_ip_b:
 .FRAME tmp
     arb -1
 
@@ -172,18 +174,45 @@ inc_ip:
 
     # Check for carry out of low byte
     lt  [reg_ip + 0], 0x100, [rb + tmp]
-    jnz [rb + tmp], inc_ip_done
+    jnz [rb + tmp], inc_ip_b_done
 
     add [reg_ip + 0], -0x100, [reg_ip + 0]
     add [reg_ip + 1], 1, [reg_ip + 1]
 
     # Check for carry out of high byte
     lt  [reg_ip + 1], 0x100, [rb + tmp]
-    jnz [rb + tmp], inc_ip_done
+    jnz [rb + tmp], inc_ip_b_done
 
     add [reg_ip + 1], -0x100, [reg_ip + 1]
 
-inc_ip_done:
+inc_ip_b_done:
+    arb 1
+    ret 0
+.ENDFRAME
+
+##########
+# Increment ip by 2 with wrap around
+inc_ip_w:
+.FRAME tmp
+    arb -1
+
+    # Increment the low byte
+    add [reg_ip + 0], 2, [reg_ip + 0]
+
+    # Check for carry out of low byte
+    lt  [reg_ip + 0], 0x100, [rb + tmp]
+    jnz [rb + tmp], inc_ip_w_done
+
+    add [reg_ip + 0], -0x100, [reg_ip + 0]
+    add [reg_ip + 1], 1, [reg_ip + 1]
+
+    # Check for carry out of high byte
+    lt  [reg_ip + 1], 0x100, [rb + tmp]
+    jnz [rb + tmp], inc_ip_w_done
+
+    add [reg_ip + 1], -0x100, [reg_ip + 1]
+
+inc_ip_w_done:
     arb 1
     ret 0
 .ENDFRAME

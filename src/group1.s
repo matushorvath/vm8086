@@ -12,7 +12,8 @@
 .IMPORT calc_cs_ip_addr
 
 # From state.s
-.IMPORT inc_ip
+.IMPORT inc_ip_b
+.IMPORT inc_ip_w
 
 # TODO implement rest of group 1
 
@@ -55,7 +56,7 @@ execute_group1_b_test:
     # TEST has an additional IMMED8 parameter
     call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr_immed]
-    call inc_ip
+    call inc_ip_b
 
     # Prepare the arguments on stack
     add [rb + loc_type], 0, [rb - 1]
@@ -137,8 +138,7 @@ execute_group1_w_test:
     # TEST has an additional IMMED16 parameter
     call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr_immed]
-    call inc_ip
-    call inc_ip
+    call inc_ip_w
 
     # Prepare the arguments on stack
     add [rb + loc_type], 0, [rb - 1]

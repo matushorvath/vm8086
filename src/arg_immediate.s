@@ -5,7 +5,8 @@
 .IMPORT calc_cs_ip_addr
 
 # From state.s
-.IMPORT inc_ip
+.IMPORT inc_ip_b
+.IMPORT inc_ip_w
 
 ##########
 arg_immediate_b:
@@ -16,7 +17,7 @@ arg_immediate_b:
 
     call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr]
-    call inc_ip
+    call inc_ip_b
 
     arb 2
     ret 0
@@ -31,9 +32,7 @@ arg_immediate_w:
 
     call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr]
-
-    call inc_ip
-    call inc_ip
+    call inc_ip_w
 
     arb 2
     ret 0

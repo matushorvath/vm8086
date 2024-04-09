@@ -20,7 +20,7 @@
 .IMPORT split233
 
 # From state.s
-.IMPORT inc_ip
+.IMPORT inc_ip_b
 
 # "_src_" means the REG field is the source
 # "_dst_" means the REG field is the destination
@@ -187,7 +187,7 @@ arg_mod_rm_generic:
     # Read the MOD REG R/M byte and split it
     call read_cs_ip_b
     add [rb - 2], 0, [rb + tmp]
-    call inc_ip
+    call inc_ip_b
 
     mul [rb + tmp], 3, [rb + tmp]
     add split233 + 0, [rb + tmp], [ip + 1]

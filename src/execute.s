@@ -29,7 +29,7 @@
 .IMPORT reg_ip
 .IMPORT reg_ds
 .IMPORT reg_ss
-.IMPORT inc_ip
+.IMPORT inc_ip_b
 
 # From trace.s
 .IMPORT print_trace
@@ -64,7 +64,7 @@ execute_prefix_done:
     add [rb - 2], 0, [rb + op]
 
     # Increment ip
-    call inc_ip
+    call inc_ip_b
 
     # Find information about this instruction
     mul [rb + op], 3, [rb + tmp]                            # one record is 3 bytes long

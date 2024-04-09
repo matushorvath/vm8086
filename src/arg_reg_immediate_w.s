@@ -19,7 +19,7 @@
 .IMPORT reg_bp
 .IMPORT reg_si
 .IMPORT reg_di
-.IMPORT inc_ip
+.IMPORT inc_ip_w
 
 # The first argument is an immediate 16-bit value, stored at cs:ip.
 # The second argument is a 16-bit register.
@@ -33,8 +33,7 @@ arg_ax_immediate_w:
 
     call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr_src]
-    call inc_ip
-    call inc_ip
+    call inc_ip_w
 
     add 0, 0, [rb + loc_type_dst]
     add reg_ax + 0, 0, [rb + loc_addr_dst]
@@ -52,8 +51,7 @@ arg_bx_immediate_w:
 
     call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr_src]
-    call inc_ip
-    call inc_ip
+    call inc_ip_w
 
     add 0, 0, [rb + loc_type_dst]
     add reg_bx + 0, 0, [rb + loc_addr_dst]
@@ -71,8 +69,7 @@ arg_cx_immediate_w:
 
     call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr_src]
-    call inc_ip
-    call inc_ip
+    call inc_ip_w
 
     add 0, 0, [rb + loc_type_dst]
     add reg_cx + 0, 0, [rb + loc_addr_dst]
@@ -90,8 +87,7 @@ arg_dx_immediate_w:
 
     call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr_src]
-    call inc_ip
-    call inc_ip
+    call inc_ip_w
 
     add 0, 0, [rb + loc_type_dst]
     add reg_dx + 0, 0, [rb + loc_addr_dst]
@@ -109,8 +105,7 @@ arg_sp_immediate_w:
 
     call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr_src]
-    call inc_ip
-    call inc_ip
+    call inc_ip_w
 
     add 0, 0, [rb + loc_type_dst]
     add reg_sp + 0, 0, [rb + loc_addr_dst]
@@ -128,8 +123,7 @@ arg_bp_immediate_w:
 
     call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr_src]
-    call inc_ip
-    call inc_ip
+    call inc_ip_w
 
     add 0, 0, [rb + loc_type_dst]
     add reg_bp + 0, 0, [rb + loc_addr_dst]
@@ -147,8 +141,7 @@ arg_si_immediate_w:
 
     call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr_src]
-    call inc_ip
-    call inc_ip
+    call inc_ip_w
 
     add 0, 0, [rb + loc_type_dst]
     add reg_si + 0, 0, [rb + loc_addr_dst]
@@ -166,8 +159,7 @@ arg_di_immediate_w:
 
     call calc_cs_ip_addr
     add [rb - 2], 0, [rb + loc_addr_src]
-    call inc_ip
-    call inc_ip
+    call inc_ip_w
 
     add 0, 0, [rb + loc_type_dst]
     add reg_di + 0, 0, [rb + loc_addr_dst]

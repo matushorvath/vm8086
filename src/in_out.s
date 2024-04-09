@@ -20,7 +20,7 @@
 .IMPORT reg_al
 .IMPORT reg_ax
 .IMPORT reg_dx
-.IMPORT inc_ip
+.IMPORT inc_ip_b
 
 # TODO remove temporary I/O code
 .IMPORT print_num_radix
@@ -40,7 +40,7 @@ execute_out_al_immediate_b:
     # Read 8-bit port number from the immediate parameter
     call read_cs_ip_b
     add [rb - 2], 0, [rb + port]
-    call inc_ip
+    call inc_ip_b
 
     # Output 8-bit value from AL to the port
     add [rb + port], 0, [rb - 1]
@@ -60,7 +60,7 @@ execute_out_ax_immediate_b:
     # Read 8-bit port number from the immediate parameter
     call read_cs_ip_b
     add [rb - 2], 0, [rb + port]
-    call inc_ip
+    call inc_ip_b
 
     # Output 16-bit value from AX to two consecutive ports
     add [rb + port], 0, [rb - 1]

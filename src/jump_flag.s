@@ -31,7 +31,7 @@
 .IMPORT flag_interrupt
 .IMPORT flag_direction
 .IMPORT flag_trap
-.IMPORT inc_ip
+.IMPORT inc_ip_b
 
 ##########
 execute_jo:
@@ -39,7 +39,7 @@ execute_jo:
     jnz [flag_overflow], execute_jo_taken
 
     # Skip the pointer and don't jump
-    call inc_ip
+    call inc_ip_b
     jz  0, execute_jo_done
 
 execute_jo_taken:
@@ -55,7 +55,7 @@ execute_jno:
     jz  [flag_overflow], execute_jno_taken
 
     # Skip the pointer and don't jump
-    call inc_ip
+    call inc_ip_b
     jz  0, execute_jno_done
 
 execute_jno_taken:
@@ -71,7 +71,7 @@ execute_jc:
     jnz [flag_carry], execute_jc_taken
 
     # Skip the pointer and don't jump
-    call inc_ip
+    call inc_ip_b
     jz  0, execute_jc_done
 
 execute_jc_taken:
@@ -87,7 +87,7 @@ execute_jnc:
     jz  [flag_carry], execute_jnc_taken
 
     # Skip the pointer and don't jump
-    call inc_ip
+    call inc_ip_b
     jz  0, execute_jnc_done
 
 execute_jnc_taken:
@@ -103,7 +103,7 @@ execute_jz:
     jnz [flag_zero], execute_jz_taken
 
     # Skip the pointer and don't jump
-    call inc_ip
+    call inc_ip_b
     jz  0, execute_jz_done
 
 execute_jz_taken:
@@ -119,7 +119,7 @@ execute_jnz:
     jz  [flag_zero], execute_jnz_taken
 
     # Skip the pointer and don't jump
-    call inc_ip
+    call inc_ip_b
     jz  0, execute_jnz_done
 
 execute_jnz_taken:
@@ -141,7 +141,7 @@ execute_ja:
 
 execute_ja_not_taken:
     # Skip the pointer and don't jump
-    call inc_ip
+    call inc_ip_b
 
 execute_ja_done:
     ret 0
@@ -155,7 +155,7 @@ execute_jna:
     jnz [flag_zero], execute_jna_taken
 
     # Skip the pointer and don't jump
-    call inc_ip
+    call inc_ip_b
     jz  0, execute_jna_done
 
 execute_jna_taken:
@@ -171,7 +171,7 @@ execute_js:
     jnz [flag_sign], execute_js_taken
 
     # Skip the pointer and don't jump
-    call inc_ip
+    call inc_ip_b
     jz  0, execute_js_done
 
 execute_js_taken:
@@ -187,7 +187,7 @@ execute_jns:
     jz  [flag_sign], execute_jns_taken
 
     # Skip the pointer and don't jump
-    call inc_ip
+    call inc_ip_b
     jz  0, execute_jns_done
 
 execute_jns_taken:
@@ -203,7 +203,7 @@ execute_jp:
     jnz [flag_parity], execute_jp_taken
 
     # Skip the pointer and don't jump
-    call inc_ip
+    call inc_ip_b
     jz  0, execute_jp_done
 
 execute_jp_taken:
@@ -219,7 +219,7 @@ execute_jnp:
     jz  [flag_parity], execute_jnp_taken
 
     # Skip the pointer and don't jump
-    call inc_ip
+    call inc_ip_b
     jz  0, execute_jnp_done
 
 execute_jnp_taken:
@@ -239,7 +239,7 @@ execute_jl:
     jz  [rb + tmp], execute_jl_taken
 
     # Skip the pointer and don't jump
-    call inc_ip
+    call inc_ip_b
     jz  0, execute_jl_done
 
 execute_jl_taken:
@@ -260,7 +260,7 @@ execute_jnl:
     jnz [rb + tmp], execute_jnl_taken
 
     # Skip the pointer and don't jump
-    call inc_ip
+    call inc_ip_b
     jz  0, execute_jnl_done
 
 execute_jnl_taken:
@@ -286,7 +286,7 @@ execute_jg:
 
 execute_jg_not_taken:
     # Skip the pointer and don't jump
-    call inc_ip
+    call inc_ip_b
 
 execute_jg_done:
     arb 1
@@ -304,7 +304,7 @@ execute_jng:
     jnz [flag_zero], execute_jng_taken
 
     # Skip the pointer and don't jump
-    call inc_ip
+    call inc_ip_b
     jz  0, execute_jng_done
 
 execute_jng_taken:
