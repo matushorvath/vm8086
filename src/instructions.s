@@ -48,12 +48,8 @@
 .IMPORT arg_ss
 .IMPORT arg_es
 
-# From arg_immediate.s
-.IMPORT arg_immediate_b
-.IMPORT arg_immediate_w
-.IMPORT arg_two_immediate_w
-
 # From arg_reg_immediate_b.s
+.IMPORT arg_immediate_b
 .IMPORT arg_al_immediate_b
 .IMPORT arg_bl_immediate_b
 .IMPORT arg_cl_immediate_b
@@ -64,6 +60,7 @@
 .IMPORT arg_dh_immediate_b
 
 # From arg_reg_immediate_w.s
+.IMPORT arg_immediate_w
 .IMPORT arg_ax_immediate_w
 .IMPORT arg_bx_immediate_w
 .IMPORT arg_cx_immediate_w

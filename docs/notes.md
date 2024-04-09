@@ -37,10 +37,36 @@ Possible Optimizations
   Wait for performance measurements first.
 
 To analyze:
-- 
-
-Analyzed:
-- exec.s, memory.s, state.s
+add.s
+binary.s
+bitwise.s
+decode.s
+dump_state.s
+flags.s
+gen_bits.s
+gen_nibbles.s
+gen_parity.s
+gen_split233.s
+group1.s
+group2.s
+group_immed.s
+inc_dec.s
+in_out.s
+instructions.s
+interrupt.s
+jump_flag.s
+jump.s
+load.s
+location.s
+loop.s
+prefix.s
+stack.s
+sub_cmp.s
+test_header.s
+trace_data.s
+trace.s
+transfer_address.s
+transfer_value.s
 
 Times:
 baseline:

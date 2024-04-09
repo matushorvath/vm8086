@@ -1,3 +1,4 @@
+.EXPORT arg_immediate_w
 .EXPORT arg_ax_immediate_w
 .EXPORT arg_bx_immediate_w
 .EXPORT arg_cx_immediate_w
@@ -25,13 +26,26 @@
 # The second argument is a 16-bit register.
 
 ##########
+arg_immediate_w:
+.FRAME loc_type, loc_addr                                                       # returns loc_type, loc_addr
+    arb -2
+
+    call calc_cs_ip_addr
+    add 1, 0, [rb + loc_type]
+    add [rb - 2], 0, [rb + loc_addr]
+    call inc_ip_w
+
+    arb 2
+    ret 0
+.ENDFRAME
+
+##########
 arg_ax_immediate_w:
 .FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
     arb -4
 
-    add 1, 0, [rb + loc_type_src]
-
     call calc_cs_ip_addr
+    add 1, 0, [rb + loc_type_src]
     add [rb - 2], 0, [rb + loc_addr_src]
     call inc_ip_w
 
@@ -47,9 +61,8 @@ arg_bx_immediate_w:
 .FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
     arb -4
 
-    add 1, 0, [rb + loc_type_src]
-
     call calc_cs_ip_addr
+    add 1, 0, [rb + loc_type_src]
     add [rb - 2], 0, [rb + loc_addr_src]
     call inc_ip_w
 
@@ -65,9 +78,8 @@ arg_cx_immediate_w:
 .FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
     arb -4
 
-    add 1, 0, [rb + loc_type_src]
-
     call calc_cs_ip_addr
+    add 1, 0, [rb + loc_type_src]
     add [rb - 2], 0, [rb + loc_addr_src]
     call inc_ip_w
 
@@ -83,9 +95,8 @@ arg_dx_immediate_w:
 .FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
     arb -4
 
-    add 1, 0, [rb + loc_type_src]
-
     call calc_cs_ip_addr
+    add 1, 0, [rb + loc_type_src]
     add [rb - 2], 0, [rb + loc_addr_src]
     call inc_ip_w
 
@@ -101,9 +112,8 @@ arg_sp_immediate_w:
 .FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
     arb -4
 
-    add 1, 0, [rb + loc_type_src]
-
     call calc_cs_ip_addr
+    add 1, 0, [rb + loc_type_src]
     add [rb - 2], 0, [rb + loc_addr_src]
     call inc_ip_w
 
@@ -119,9 +129,8 @@ arg_bp_immediate_w:
 .FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
     arb -4
 
-    add 1, 0, [rb + loc_type_src]
-
     call calc_cs_ip_addr
+    add 1, 0, [rb + loc_type_src]
     add [rb - 2], 0, [rb + loc_addr_src]
     call inc_ip_w
 
@@ -137,9 +146,8 @@ arg_si_immediate_w:
 .FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
     arb -4
 
-    add 1, 0, [rb + loc_type_src]
-
     call calc_cs_ip_addr
+    add 1, 0, [rb + loc_type_src]
     add [rb - 2], 0, [rb + loc_addr_src]
     call inc_ip_w
 
@@ -155,9 +163,8 @@ arg_di_immediate_w:
 .FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
     arb -4
 
-    add 1, 0, [rb + loc_type_src]
-
     call calc_cs_ip_addr
+    add 1, 0, [rb + loc_type_src]
     add [rb - 2], 0, [rb + loc_addr_src]
     call inc_ip_w
 
