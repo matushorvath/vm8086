@@ -1,5 +1,3 @@
-# TODO rename file to execute.s
-
 .EXPORT execute
 .EXPORT execute_nop
 .EXPORT execute_esc
