@@ -40,12 +40,10 @@ execute_jo:
 
     # Skip the pointer and don't jump
     call inc_ip_b
-    jz  0, execute_jo_done
+    ret 0
 
 execute_jo_taken:
     call execute_jmp_short
-
-execute_jo_done:
     ret 0
 .ENDFRAME
 
@@ -56,12 +54,10 @@ execute_jno:
 
     # Skip the pointer and don't jump
     call inc_ip_b
-    jz  0, execute_jno_done
+    ret 0
 
 execute_jno_taken:
     call execute_jmp_short
-
-execute_jno_done:
     ret 0
 .ENDFRAME
 
@@ -72,12 +68,10 @@ execute_jc:
 
     # Skip the pointer and don't jump
     call inc_ip_b
-    jz  0, execute_jc_done
+    ret 0
 
 execute_jc_taken:
     call execute_jmp_short
-
-execute_jc_done:
     ret 0
 .ENDFRAME
 
@@ -88,12 +82,10 @@ execute_jnc:
 
     # Skip the pointer and don't jump
     call inc_ip_b
-    jz  0, execute_jnc_done
+    ret 0
 
 execute_jnc_taken:
     call execute_jmp_short
-
-execute_jnc_done:
     ret 0
 .ENDFRAME
 
@@ -104,12 +96,10 @@ execute_jz:
 
     # Skip the pointer and don't jump
     call inc_ip_b
-    jz  0, execute_jz_done
+    ret 0
 
 execute_jz_taken:
     call execute_jmp_short
-
-execute_jz_done:
     ret 0
 .ENDFRAME
 
@@ -120,12 +110,10 @@ execute_jnz:
 
     # Skip the pointer and don't jump
     call inc_ip_b
-    jz  0, execute_jnz_done
+    ret 0
 
 execute_jnz_taken:
     call execute_jmp_short
-
-execute_jnz_done:
     ret 0
 .ENDFRAME
 
@@ -137,13 +125,11 @@ execute_ja:
     jnz [flag_zero], execute_ja_not_taken
 
     call execute_jmp_short
-    jz  0, execute_ja_done
+    ret 0
 
 execute_ja_not_taken:
     # Skip the pointer and don't jump
     call inc_ip_b
-
-execute_ja_done:
     ret 0
 .ENDFRAME
 
@@ -156,12 +142,10 @@ execute_jna:
 
     # Skip the pointer and don't jump
     call inc_ip_b
-    jz  0, execute_jna_done
+    ret 0
 
 execute_jna_taken:
     call execute_jmp_short
-
-execute_jna_done:
     ret 0
 .ENDFRAME
 
@@ -172,12 +156,10 @@ execute_js:
 
     # Skip the pointer and don't jump
     call inc_ip_b
-    jz  0, execute_js_done
+    ret 0
 
 execute_js_taken:
     call execute_jmp_short
-
-execute_js_done:
     ret 0
 .ENDFRAME
 
@@ -188,12 +170,10 @@ execute_jns:
 
     # Skip the pointer and don't jump
     call inc_ip_b
-    jz  0, execute_jns_done
+    ret 0
 
 execute_jns_taken:
     call execute_jmp_short
-
-execute_jns_done:
     ret 0
 .ENDFRAME
 
@@ -204,12 +184,10 @@ execute_jp:
 
     # Skip the pointer and don't jump
     call inc_ip_b
-    jz  0, execute_jp_done
+    ret 0
 
 execute_jp_taken:
     call execute_jmp_short
-
-execute_jp_done:
     ret 0
 .ENDFRAME
 
@@ -220,12 +198,10 @@ execute_jnp:
 
     # Skip the pointer and don't jump
     call inc_ip_b
-    jz  0, execute_jnp_done
+    ret 0
 
 execute_jnp_taken:
     call execute_jmp_short
-
-execute_jnp_done:
     ret 0
 .ENDFRAME
 
