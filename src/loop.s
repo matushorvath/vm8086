@@ -20,12 +20,10 @@ execute_loop:
 
     # Skip the pointer and don't jump
     call inc_ip_b
-    jz  0, execute_loop_done
+    ret 0
 
 execute_loop_taken:
     call execute_jmp_short
-
-execute_loop_done:
     ret 0
 .ENDFRAME
 
@@ -38,13 +36,11 @@ execute_loopz:
     jz  [flag_zero], execute_loopz_not_taken
 
     call execute_jmp_short
-    jz  0, execute_loopz_done
+    ret 0
 
 execute_loopz_not_taken:
     # Skip the pointer and don't jump
     call inc_ip_b
-
-execute_loopz_done:
     ret 0
 .ENDFRAME
 
@@ -57,13 +53,11 @@ execute_loopnz:
     jnz [flag_zero], execute_loopnz_not_taken
 
     call execute_jmp_short
-    jz  0, execute_loopnz_done
+    ret 0
 
 execute_loopnz_not_taken:
     # Skip the pointer and don't jump
     call inc_ip_b
-
-execute_loopnz_done:
     ret 0
 .ENDFRAME
 
@@ -74,12 +68,10 @@ execute_jcxz:
 
     # Skip the pointer and don't jump
     call inc_ip_b
-    jz  0, execute_jcxz_done
+    ret 0
 
 execute_jcxz_taken:
     call execute_jmp_short
-
-execute_jcxz_done:
     ret 0
 .ENDFRAME
 
