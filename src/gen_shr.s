@@ -9,191 +9,95 @@
     arb -1
     call print_str
 
+add 0, 0, [bits + 7]
 b7_loop:
+    add 0, 0, [bits + 6]
     b6_loop:
+        add 0, 0, [bits + 5]
         b5_loop:
+            add 0, 0, [bits + 4]
             b4_loop:
+                add 0, 0, [bits + 3]
                 b3_loop:
+                    add 0, 0, [bits + 2]
                     b2_loop:
+                        add 0, 0, [bits + 1]
                         b1_loop:
+                            add 0, 0, [bits + 0]
                             b0_loop:
                                 # Print line start
                                 add line_start, 0, [rb - 1]
                                 arb -1
                                 call print_str
 
-                                # Calculate the shifted numbers and print them
-                                add [b7], 0, [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b6], [tmp], [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b5], [tmp], [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b4], [tmp], [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b3], [tmp], [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b2], [tmp], [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b1], [tmp], [rb - 1]
+                                add 0, 0, [cnt]
+                                cnt_loop:
+                                    add 0, 0, [res]
+                                    add 7, 0, [bit]
 
-                                add 2, 0, [rb - 2]
-                                add 8, 0, [rb - 3]
-                                arb -3
-                                call print_num_radix
+                                    # Print the separator, unless this is the first number
+                                    jz  [cnt], bit_loop
+                                    add separator, 0, [rb - 1]
+                                    arb -1
+                                    call print_str
 
-                                # Print separator
-                                add separator, 0, [rb - 1]
-                                arb -1
-                                call print_str
+                                    bit_loop:
+                                        # Calculate the shifted number
+                                        mul [res], 2, [res]
+                                        add bits, [bit], [ip + 1]
+                                        add [0], [res], [res]
 
-                                # Calculate the shifted numbers and print them
-                                add [b7], 0, [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b6], [tmp], [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b5], [tmp], [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b4], [tmp], [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b3], [tmp], [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b2], [tmp], [rb - 1]
+                                        add [bit], -1, [bit]
+                                        eq  [bit], [cnt], [tmp]
+                                        jz  [tmp], bit_loop
 
-                                add 2, 0, [rb - 2]
-                                add 8, 0, [rb - 3]
-                                arb -3
-                                call print_num_radix
+                                    # Print the shifted number
+                                    add [res], 0, [rb - 1]
+                                    add 2, 0, [rb - 2]
+                                    add 8, 0, [rb - 3]
+                                    arb -3
+                                    call print_num_radix
 
-                                # Print separator
-                                add separator, 0, [rb - 1]
-                                arb -1
-                                call print_str
-
-                                # Calculate the shifted numbers and print them
-                                add [b7], 0, [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b6], [tmp], [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b5], [tmp], [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b4], [tmp], [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b3], [tmp], [rb - 1]
-
-                                add 2, 0, [rb - 2]
-                                add 8, 0, [rb - 3]
-                                arb -3
-                                call print_num_radix
-
-                                # Print separator
-                                add separator, 0, [rb - 1]
-                                arb -1
-                                call print_str
-
-                                # Calculate the shifted numbers and print them
-                                add [b7], 0, [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b6], [tmp], [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b5], [tmp], [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b4], [tmp], [rb - 1]
-
-                                add 2, 0, [rb - 2]
-                                add 8, 0, [rb - 3]
-                                arb -3
-                                call print_num_radix
-
-                                # Print separator
-                                add separator, 0, [rb - 1]
-                                arb -1
-                                call print_str
-
-                                # Calculate the shifted numbers and print them
-                                add [b7], 0, [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b6], [tmp], [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b5], [tmp], [rb - 1]
-
-                                add 2, 0, [rb - 2]
-                                add 8, 0, [rb - 3]
-                                arb -3
-                                call print_num_radix
-
-                                # Print separator
-                                add separator, 0, [rb - 1]
-                                arb -1
-                                call print_str
-
-                                # Calculate the shifted numbers and print them
-                                add [b7], 0, [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b6], [tmp], [rb - 1]
-
-                                add 2, 0, [rb - 2]
-                                add 8, 0, [rb - 3]
-                                arb -3
-                                call print_num_radix
-
-                                # Print separator
-                                add separator, 0, [rb - 1]
-                                arb -1
-                                call print_str
-
-                                # Calculate the shifted numbers and print them
-                                add [b7], 0, [rb - 1]
-
-                                add 2, 0, [rb - 2]
-                                add 8, 0, [rb - 3]
-                                arb -3
-                                call print_num_radix
+                                    add [cnt], 1, [cnt]
+                                    eq  [cnt], 7, [tmp]
+                                    jz  [tmp], cnt_loop
 
                                 # Print line end
                                 add line_end, 0, [rb - 1]
                                 arb -1
                                 call print_str
 
-                                add [b0], 1, [b0]
-                                eq  [b0], 2, [tmp]
+                                add [bits + 0], 1, [bits + 0]
+                                eq  [bits + 0], 2, [tmp]
                                 jz  [tmp], b0_loop
-                                add 0, 0, [b0]
 
-                            add [b1], 1, [b1]
-                            eq  [b1], 2, [tmp]
+                            add [bits + 1], 1, [bits + 1]
+                            eq  [bits + 1], 2, [tmp]
                             jz  [tmp], b1_loop
-                            add 0, 0, [b1]
 
-                        add [b2], 1, [b2]
-                        eq  [b2], 2, [tmp]
+                        add [bits + 2], 1, [bits + 2]
+                        eq  [bits + 2], 2, [tmp]
                         jz  [tmp], b2_loop
-                        add 0, 0, [b2]
 
-                    add [b3], 1, [b3]
-                    eq  [b3], 2, [tmp]
+                    add [bits + 3], 1, [bits + 3]
+                    eq  [bits + 3], 2, [tmp]
                     jz  [tmp], b3_loop
-                    add 0, 0, [b3]
 
-                add [b4], 1, [b4]
-                eq  [b4], 2, [tmp]
+                add [bits + 4], 1, [bits + 4]
+                eq  [bits + 4], 2, [tmp]
                 jz  [tmp], b4_loop
-                add 0, 0, [b4]
 
-            add [b5], 1, [b5]
-            eq  [b5], 2, [tmp]
+            add [bits + 5], 1, [bits + 5]
+            eq  [bits + 5], 2, [tmp]
             jz  [tmp], b5_loop
-            add 0, 0, [b5]
 
-        add [b6], 1, [b6]
-        eq  [b6], 2, [tmp]
+        add [bits + 6], 1, [bits + 6]
+        eq  [bits + 6], 2, [tmp]
         jz  [tmp], b6_loop
-        add 0, 0, [b6]
 
-    add [b7], 1, [b7]
-    eq  [b7], 2, [tmp]
+    add [bits + 7], 1, [bits + 7]
+    eq  [bits + 7], 2, [tmp]
     jz  [tmp], b7_loop
-    add 0, 0, [b7]
 
     add footer, 0, [rb - 1]
     arb -1
@@ -203,21 +107,13 @@ b7_loop:
 
 new_line:
     db  1
-b0:
+bits:
+    ds  8, 0
+cnt:
     db  0
-b1:
+bit:
     db  0
-b2:
-    db  0
-b3:
-    db  0
-b4:
-    db  0
-b5:
-    db  0
-b6:
-    db  0
-b7:
+res:
     db  0
 tmp:
     db  0
