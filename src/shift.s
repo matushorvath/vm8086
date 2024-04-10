@@ -25,6 +25,12 @@
 # From obj/parity.s
 .IMPORT parity
 
+# From obj/shl.s
+.IMPORT shl
+
+# From obj/shr.s
+.IMPORT shr
+
 # From state.s
 .IMPORT flag_carry
 .IMPORT flag_parity
@@ -42,7 +48,6 @@ execute_rcl_b:
 execute_rcl_w:
 execute_rcr_b:
 execute_rcr_w:
-execute_shl_b:
 execute_shl_w:
 execute_shr_b:
 execute_shr_w:
@@ -51,8 +56,8 @@ execute_sar_w:
 
 ##########
 execute_shl_b:
-.FRAME loc_type_val, loc_addr_val, loc_type_cnt, loc_addr_cnt; val, cnt, tmp
-    arb -X
+.FRAME loc_type_val, loc_addr_val, loc_type_cnt, loc_addr_cnt; val, val_bits, cnt, tmp
+    arb -4
 
     add 0, 0, [flag_auxiliary_carry]
 
@@ -60,46 +65,71 @@ execute_shl_b:
     add [rb + loc_type_cnt], 0, [rb - 1]
     add [rb + loc_addr_cnt], 0, [rb - 2]
     arb -2
-    call read_location_b
+    call read_location_b            # TODO _b even for 16-bit
     add [rb - 4], 0, [rb + cnt]
 
-    # If we are shifting by 9 or more bits, just zero the value
-    # If we are shifting by 0 or 8 bits, we still want to calculate the flags
+    # If we are shifting more than 8 bits, use fixed values
     lt  [rb + cnt], 9, [rb + tmp]
     jz  [rb + tmp], execute_shl_b_many
 
     # Read the value to shift
-    add [rb + loc_type_src], 0, [rb - 1]
-    add [rb + loc_addr_src], 0, [rb - 2]
+    add [rb + loc_type_val], 0, [rb - 1]
+    add [rb + loc_addr_val], 0, [rb - 2]
     arb -2
     call read_location_b
-    add [rb - 4], 0, [rb + a]
+    add [rb - 4], 0, [rb + val]
 
-    # Carry is the last bit shifted out
+    # If we are shifting by 0, use a simplified algorithm
+    jnz [rb + cnt], execute_shl_b_zero
+
+    # Expand val to bits
     mul [rb + val], 8, [rb + tmp]
-    add bits, [rb + tmp], [rb + tmp]
-    add [rb + a_bits], [rb + bit], [ip + 5]
-TODO
+    add bits, [rb + tmp], [rb + val_bits]
 
-    # Shift by less than 8 bits by multiplying by a power of two
-    add power_of_two, [rb + cnt], [ip + 1]
-    mul [0], [rb + val], [rb + val]
+    # Carry flag is the last bit shifted out
+    mul [rb + cnt], -1, [rb + tmp]
+    add 8, [rb + tmp], [rb + tmp]
+
+    add [rb + val_bits], [rb + tmp], [ip + 1]
+    add [0], 0, [flag_carry]
+
+    # Find shifted value in the shl table
+    mul [rb + val], 8, [rb + tmp]
+    add shl, [rb + tmp], [rb + tmp]
+    add [rb + tmp], [rb + cnt], [ip + 1]
+    add [0], 0, [rb + val]
 
     # Update flags
-    lt  0x7f, [rb + res], [flag_sign]
-    eq  [rb + res], 0, [flag_zero]
+    lt  0x7f, [rb + val], [flag_sign]
+    eq  [rb + val], 0, [flag_zero]
 
-    add parity, [rb + res], [ip + 1]
+    add parity, [rb + val], [ip + 1]
     add [0], 0, [flag_parity]
 
-    # TODO CF is last bit shifted out
-    # TODO OF undefined for multibit shift, for one bit it's 1 when hi order bit changed
+    # Overflow is 1 when high order bit was changed
+    # TODO HW docs say OF is only valid when shifting by one
+    eq  [flag_carry], [flag_sign], [flag_overflow]
+    eq  [flag_overflow], 0, [flag_overflow]
 
     jz  0, execute_shl_b_store
 
+execute_shl_b_zero:
+    # If we are shifting by 0, just calculate the flags
+    add 0, 0, [flag_carry]
+    add 0, 0, [flag_overflow]
+
+    lt  0x7f, [rb + val], [flag_sign]
+    eq  [rb + val], 0, [flag_zero]
+
+    add parity, [rb + val], [ip + 1]
+    add [0], 0, [flag_parity]
+
+    jz  0, execute_shl_b_done
+
 execute_shl_b_many:
-    # Shift by 9 or more bits
+    # If we are shifting by 9 or more bits, zero the value and use fixed flags
     add 0, 0, [rb + val]
+
     add 1, 0, [flag_parity]
     add 0, 0, [flag_sign]
     add 1, 0, [flag_zero]
@@ -113,12 +143,9 @@ execute_shl_b_store:
     arb -3
     call write_location_b
 
-    arb X
+execute_shl_b_done:
+    arb 4
     ret 4
 .ENDFRAME
-
-power_of_two:
-    db  0x01, 0x02, 0x04, 0x08
-    db  0x10, 0x20, 0x40, 0x80
 
 .EOF
