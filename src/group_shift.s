@@ -31,12 +31,12 @@
 
 ##########
 execute_shift_b:
-.FRAME op, loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
+.FRAME op, loc_type_val, loc_addr_val, loc_type_cnt, loc_addr_cnt;
     # Prepare the arguments on stack
-    add [rb + loc_type_src], 0, [rb - 1]
-    add [rb + loc_addr_src], 0, [rb - 2]
-    add [rb + loc_type_dst], 0, [rb - 3]
-    add [rb + loc_addr_dst], 0, [rb - 4]
+    add [rb + loc_type_val], 0, [rb - 1]
+    add [rb + loc_addr_val], 0, [rb - 2]
+    add [rb + loc_type_cnt], 0, [rb - 3]
+    add [rb + loc_addr_cnt], 0, [rb - 4]
 
     # Execute the operation
     add execute_shift_b_table, [rb + op], [ip + 2]
@@ -98,12 +98,12 @@ execute_shift_b_end:
 
 ##########
 execute_shift_w:
-.FRAME op, loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
+.FRAME op, loc_type_val, loc_addr_val, loc_type_cnt, loc_addr_cnt;
     # Prepare the arguments on stack
-    add [rb + loc_type_src], 0, [rb - 1]
-    add [rb + loc_addr_src], 0, [rb - 2]
-    add [rb + loc_type_dst], 0, [rb - 3]
-    add [rb + loc_addr_dst], 0, [rb - 4]
+    add [rb + loc_type_val], 0, [rb - 1]
+    add [rb + loc_addr_val], 0, [rb - 2]
+    add [rb + loc_type_cnt], 0, [rb - 3]
+    add [rb + loc_addr_cnt], 0, [rb - 4]
 
     # Execute the operation
     add execute_shift_w_table, [rb + op], [ip + 2]

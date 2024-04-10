@@ -238,6 +238,8 @@ arg_mod_op_rm_w_immediate_w:
     ret 0
 .ENDFRAME
 
+# TODO use arg_mod_op_rm_b, just one location; have shl_1_b and shl_cl_b as multiple entry point function
+
 ##########
 arg_mod_op_rm_b_1:
 .FRAME op, loc_type_val, loc_addr_val, loc_type_cnt, loc_addr_cnt               # returns op, loc_type_*, loc_addr_*

@@ -465,10 +465,10 @@ instructions:
     db  execute_iret, 0, 0                                  # 0xcf IRET
 
     # <shift>: 000 ROL, 001 ROR, 010 RCL, 011 RCR, 100 SAL/SHL, 101 SHR,          111 SAR
-    db  execute_shift_b, arg_mod_op_rm_b_1, 4               # 0xd0 <shift> REG8/MEM8, 1
-    db  execute_shift_w, arg_mod_op_rm_w_1, 4               # 0xd1 <shift> REG16/MEM16, 1
-    db  execute_shift_b, arg_mod_op_rm_b_cl, 4              # 0xd2 <shift> REG8/MEM8, CL
-    db  execute_shift_w, arg_mod_op_rm_w_cl, 4              # 0xd3 <shift> REG16/MEM16, CL
+    db  execute_shift_b, arg_mod_op_rm_b_1, 5               # 0xd0 <shift> REG8/MEM8, 1
+    db  execute_shift_w, arg_mod_op_rm_w_1, 5               # 0xd1 <shift> REG16/MEM16, 1
+    db  execute_shift_b, arg_mod_op_rm_b_cl, 5              # 0xd2 <shift> REG8/MEM8, CL
+    db  execute_shift_w, arg_mod_op_rm_w_cl, 5              # 0xd3 <shift> REG16/MEM16, CL
 
     # TODO AAM and AAD seem to have a fixed mod reg r/m 00001010 + possibly (DISP-LO) (DISP-HI)?
     db  not_implemented, 0, 0 # TODO    db  execute_aam, xxx, 0                                  # 0xd4 AAM

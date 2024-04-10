@@ -35,6 +35,7 @@ Possible Optimizations
 
 - Avoid args_fn as much as possible, I think the whole locations concept is eating too much performance.
   Wait for performance measurements first.
+- read_cs_ip_b is quite heavy (because of calc_cs_ip_addr mostly) and seems to be used a lot, try to optimize
 
 To analyze:
 add.s

@@ -80,11 +80,15 @@ execute_shl_b:
     add [rb - 4], 0, [rb + val]
 
     # If we are shifting by 0, use a simplified algorithm
-    jnz [rb + cnt], execute_shl_b_zero
+    jz  [rb + cnt], execute_shl_b_zero
 
     # Expand val to bits
     mul [rb + val], 8, [rb + tmp]
     add bits, [rb + tmp], [rb + val_bits]
+
+    # If we are shifting by 8, use a simplified algorithm
+    eq  [rb + cnt], 8, [rb + tmp]
+    jnz [rb + tmp], execute_shl_b_eight
 
     # Carry flag is the last bit shifted out
     mul [rb + cnt], -1, [rb + tmp]
@@ -94,9 +98,10 @@ execute_shl_b:
     add [0], 0, [flag_carry]
 
     # Find shifted value in the shl table
-    mul [rb + val], 8, [rb + tmp]
+    mul [rb + val], 7, [rb + tmp]
     add shl, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + cnt], [ip + 1]
+    add [rb + tmp], [rb + cnt], [rb + tmp]
+    add [rb + tmp], -1, [ip + 1]
     add [0], 0, [rb + val]
 
     # Update flags
@@ -107,33 +112,41 @@ execute_shl_b:
     add [0], 0, [flag_parity]
 
     # Overflow flag is 1 when high order bit was changed
-    # TODO HW docs say OF is only valid when shifting by one
     eq  [flag_carry], [flag_sign], [flag_overflow]
     eq  [flag_overflow], 0, [flag_overflow]
 
     jz  0, execute_shl_b_store
 
 execute_shl_b_zero:
-    # If we are shifting by 0, just calculate the flags
+    # If we are shifting by 0, SF ZF and PF are not affected
     add 0, 0, [flag_carry]
     add 0, 0, [flag_overflow]
 
-    lt  0x7f, [rb + val], [flag_sign]
-    eq  [rb + val], 0, [flag_zero]
-
-    add parity, [rb + val], [ip + 1]
-    add [0], 0, [flag_parity]
-
     jz  0, execute_shl_b_done
+
+execute_shl_b_eight:
+    # If we are shifting by 8, zero the value and use fixed flags except for CF
+    add [rb + val_bits], 0, [ip + 1]
+    add [0], 0, [flag_carry]
+
+    add 0, 0, [flag_overflow]
+    add 0, 0, [flag_sign]
+    add 1, 0, [flag_zero]
+    add 1, 0, [flag_parity]
+
+    add 0, 0, [rb + val]
+
+    jz  0, execute_shl_b_store
 
 execute_shl_b_many:
     # If we are shifting by 9 or more bits, zero the value and use fixed flags
-    add 0, 0, [rb + val]
-
-    add 1, 0, [flag_parity]
+    add 0, 0, [flag_carry]
+    add 0, 0, [flag_overflow]
     add 0, 0, [flag_sign]
     add 1, 0, [flag_zero]
-    add 0, 0, [flag_carry]
+    add 1, 0, [flag_parity]
+
+    add 0, 0, [rb + val]
 
 execute_shl_b_store:
     # Write the shifted value
@@ -174,7 +187,7 @@ execute_shr_b:
     add [rb - 4], 0, [rb + val]
 
     # If we are shifting by 0, use a simplified algorithm
-    jnz [rb + cnt], execute_shr_b_zero
+    jz  [rb + cnt], execute_shr_b_zero
 
     # Expand val to bits
     mul [rb + val], 8, [rb + tmp]
@@ -192,9 +205,10 @@ execute_shr_b:
     lt  0x7f, [rb + val], [flag_overflow]
 
     # Find shifted value in the shr table
-    mul [rb + val], 8, [rb + tmp]
+    mul [rb + val], 7, [rb + tmp]
     add shr, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + cnt], [ip + 1]
+    add [rb + tmp], [rb + cnt], [rb + tmp]
+    add [rb + tmp], -1, [ip + 1]
     add [0], 0, [rb + val]
 
     # Update flags
@@ -267,7 +281,7 @@ execute_sar_b:
     add [rb - 4], 0, [rb + val]
 
     # If we are shifting by 0, use a simplified algorithm
-    jnz [rb + cnt], execute_sar_b_zero
+    jz  [rb + cnt], execute_sar_b_zero
 
     # Expand val to bits
     mul [rb + val], 8, [rb + tmp]
@@ -280,9 +294,10 @@ execute_sar_b:
     add [0], 0, [flag_carry]
 
     # Find shifted value in the sar table
-    mul [rb + val], 8, [rb + tmp]
+    mul [rb + val], 7, [rb + tmp]
     add shr, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + cnt], [ip + 1]
+    add [rb + tmp], [rb + cnt], [rb + tmp]
+    add [rb + tmp], -1, [ip + 1]
     add [0], 0, [rb + val]
 
     # Update flags
