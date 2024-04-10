@@ -25,6 +25,10 @@
 .IMPORT arg_mod_op_rm_b_immediate_b
 .IMPORT arg_mod_op_rm_w_immediate_sxb
 .IMPORT arg_mod_op_rm_w_immediate_w
+.IMPORT arg_mod_op_rm_b_1
+.IMPORT arg_mod_op_rm_w_1
+.IMPORT arg_mod_op_rm_b_cl
+.IMPORT arg_mod_op_rm_w_cl
 
 # From arg_mod_reg_rm.s
 .IMPORT arg_mod_reg_rm_src_b
@@ -119,6 +123,10 @@
 # From group_immed.s
 .IMPORT execute_immed_b
 .IMPORT execute_immed_w
+
+# From group_shift.s
+.IMPORT execute_shift_b
+.IMPORT execute_shift_w
 
 # From in_out.s
 # TODO .IMPORT execute_in_al_immediate_b
@@ -457,10 +465,10 @@ instructions:
     db  execute_iret, 0, 0                                  # 0xcf IRET
 
     # <shift>: 000 ROL, 001 ROR, 010 RCL, 011 RCR, 100 SAL/SHL, 101 SHR,          111 SAR
-    db  not_implemented, 0, 0 # TODO    db  execute_shift_b, arg_mod_shift_rm_1_b           # 0xd0 <shift> REG8/MEM8, 1
-    db  not_implemented, 0, 0 # TODO    db  execute_shift_w, arg_mod_shift_rm_1_w           # 0xd1 <shift> REG16/MEM16, 1
-    db  not_implemented, 0, 0 # TODO    db  execute_shift_b, arg_mod_shift_rm_cl_b          # 0xd2 <shift> REG8/MEM8, CL
-    db  not_implemented, 0, 0 # TODO    db  execute_shift_w, arg_mod_shift_rm_cl_w          # 0xd3 <shift> REG16/MEM16, CL
+    db  execute_shift_b, arg_mod_op_rm_b_1, 4               # 0xd0 <shift> REG8/MEM8, 1
+    db  execute_shift_w, arg_mod_op_rm_w_1, 4               # 0xd1 <shift> REG16/MEM16, 1
+    db  execute_shift_b, arg_mod_op_rm_b_cl, 4              # 0xd2 <shift> REG8/MEM8, CL
+    db  execute_shift_w, arg_mod_op_rm_w_cl, 4              # 0xd3 <shift> REG16/MEM16, CL
 
     # TODO AAM and AAD seem to have a fixed mod reg r/m 00001010 + possibly (DISP-LO) (DISP-HI)?
     db  not_implemented, 0, 0 # TODO    db  execute_aam, xxx, 0                                  # 0xd4 AAM

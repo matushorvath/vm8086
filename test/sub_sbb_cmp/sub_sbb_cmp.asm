@@ -37,6 +37,7 @@ section .text
 
 ; TODO cmp tests
 
+; TODO select specific numbers to test + semi-random selection, don't test the whole range
 %include "sub_sbb_cmp_8_all.inc"
 %include "sub_sbb_cmp_16_all.inc"
 

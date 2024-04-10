@@ -35,6 +35,7 @@ Possible Optimizations
 
 - Avoid args_fn as much as possible, I think the whole locations concept is eating too much performance.
   Wait for performance measurements first.
+- Consider using the "multiple entry points" pattern for some instructions (e.g. bitwise, arithmetic, shift)
 
 To analyze:
 add.s

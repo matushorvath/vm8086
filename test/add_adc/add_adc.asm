@@ -35,6 +35,7 @@ section .text
     mark 0x92
 %include "add_16.inc"
 
+; TODO select specific numbers to test + semi-random selection, don't test the whole range
 %include "add_adc_8_all.inc"
 %include "add_adc_16_all.inc"
 
