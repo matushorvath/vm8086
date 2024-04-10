@@ -27,59 +27,27 @@
 .IMPORT flag_sign
 .IMPORT flag_overflow
 
-# TODO multiple entry points pattern
-
 ##########
+.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a, b, store, res, tmp
+    # Function with multiple entry points
+
 execute_sub_b:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
-    add 0, 0, [flag_carry]
-
-    add 1, 0, [rb - 1]
-    add [rb + loc_type_src], 0, [rb - 2]
-    add [rb + loc_addr_src], 0, [rb - 3]
-    add [rb + loc_type_dst], 0, [rb - 4]
-    add [rb + loc_addr_dst], 0, [rb - 5]
     arb -5
-    call calculate_sbb_b
+    add 0, 0, [flag_carry]
+    add 1, 0, [rb + store]
+    jz  0, execute_subtract_b
 
-    ret 4
-.ENDFRAME
-
-##########
 execute_sbb_b:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
-    add 1, 0, [rb - 1]
-    add [rb + loc_type_src], 0, [rb - 2]
-    add [rb + loc_addr_src], 0, [rb - 3]
-    add [rb + loc_type_dst], 0, [rb - 4]
-    add [rb + loc_addr_dst], 0, [rb - 5]
     arb -5
-    call calculate_sbb_b
+    add 1, 0, [rb + store]
+    jz  0, execute_subtract_b
 
-    ret 4
-.ENDFRAME
-
-##########
 execute_cmp_b:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
-    add 0, 0, [flag_carry]
-
-    add 0, 0, [rb - 1]
-    add [rb + loc_type_src], 0, [rb - 2]
-    add [rb + loc_addr_src], 0, [rb - 3]
-    add [rb + loc_type_dst], 0, [rb - 4]
-    add [rb + loc_addr_dst], 0, [rb - 5]
     arb -5
-    call calculate_sbb_b
+    add 0, 0, [flag_carry]
+    add 0, 0, [rb + store]
 
-    ret 4
-.ENDFRAME
-
-##########
-calculate_sbb_b:
-.FRAME store, loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a, b, res, tmp
-    arb -4
-
+execute_subtract_b:
     # Read the source value
     add [rb + loc_type_src], 0, [rb - 1]
     add [rb + loc_addr_src], 0, [rb - 2]
@@ -108,11 +76,11 @@ calculate_sbb_b:
 
     # Check for carry
     lt  [rb + res], 0x00, [flag_carry]
-    jz  [flag_carry], calculate_sbb_b_after_carry
+    jz  [flag_carry], execute_subtract_b_after_carry
 
     add [rb + res], 0x100, [rb + res]
 
-calculate_sbb_b_after_carry:
+execute_subtract_b_after_carry:
     # Update flags
     lt  0x7f, [rb + res], [flag_sign]
     eq  [rb + res], 0, [flag_zero]
@@ -128,7 +96,7 @@ calculate_sbb_b_after_carry:
     call update_overflow
 
     # Write the destination value if requested
-    jz  [rb + store], calculate_sbb_b_end
+    jz  [rb + store], execute_subtract_b_end
 
     add [rb + loc_type_dst], 0, [rb - 1]
     add [rb + loc_addr_dst], 0, [rb - 2]
@@ -136,62 +104,32 @@ calculate_sbb_b_after_carry:
     arb -3
     call write_location_b
 
-calculate_sbb_b_end:
-    arb 4
-    ret 5
+execute_subtract_b_end:
+    arb 5
+    ret 4
 .ENDFRAME
 
 ##########
+.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a_lo, a_hi, b_lo, b_hi, store, res_lo, res_hi, tmp
+    # Function with multiple entry points
+
 execute_sub_w:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
+    arb -8
     add 0, 0, [flag_carry]
+    add 1, 0, [rb + store]
+    jz  0, execute_subtract_w
 
-    add 1, 0, [rb - 1]
-    add [rb + loc_type_src], 0, [rb - 2]
-    add [rb + loc_addr_src], 0, [rb - 3]
-    add [rb + loc_type_dst], 0, [rb - 4]
-    add [rb + loc_addr_dst], 0, [rb - 5]
-    arb -5
-    call calculate_sbb_w
-
-    ret 4
-.ENDFRAME
-
-##########
 execute_sbb_w:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
-    add 1, 0, [rb - 1]
-    add [rb + loc_type_src], 0, [rb - 2]
-    add [rb + loc_addr_src], 0, [rb - 3]
-    add [rb + loc_type_dst], 0, [rb - 4]
-    add [rb + loc_addr_dst], 0, [rb - 5]
-    arb -5
-    call calculate_sbb_w
+    arb -8
+    add 1, 0, [rb + store]
+    jz  0, execute_subtract_w
 
-    ret 4
-.ENDFRAME
-
-##########
 execute_cmp_w:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
+    arb -8
     add 0, 0, [flag_carry]
+    add 0, 0, [rb + store]
 
-    add 0, 0, [rb - 1]
-    add [rb + loc_type_src], 0, [rb - 2]
-    add [rb + loc_addr_src], 0, [rb - 3]
-    add [rb + loc_type_dst], 0, [rb - 4]
-    add [rb + loc_addr_dst], 0, [rb - 5]
-    arb -5
-    call calculate_sbb_w
-
-    ret 4
-.ENDFRAME
-
-##########
-calculate_sbb_w:
-.FRAME store, loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a_lo, a_hi, b_lo, b_hi, res_lo, res_hi, tmp
-    arb -7
-
+execute_subtract_w:
     # Read the source value
     add [rb + loc_type_src], 0, [rb - 1]
     add [rb + loc_addr_src], 0, [rb - 2]
@@ -224,19 +162,19 @@ calculate_sbb_w:
 
     # Check for carry out of low byte
     lt  [rb + res_lo], 0x00, [rb + tmp]
-    jz  [rb + tmp], calculate_sbb_w_after_carry_lo
+    jz  [rb + tmp], execute_subtract_w_after_carry_lo
 
     add [rb + res_lo], 0x100, [rb + res_lo]
     add [rb + res_hi], -1, [rb + res_hi]
 
-calculate_sbb_w_after_carry_lo:
+execute_subtract_w_after_carry_lo:
     # Check for carry out of high byte
     lt  [rb + res_hi], 0x00, [flag_carry]
-    jz  [flag_carry], calculate_sbb_w_after_carry_hi
+    jz  [flag_carry], execute_subtract_w_after_carry_hi
 
     add [rb + res_hi], 0x100, [rb + res_hi]
 
-calculate_sbb_w_after_carry_hi:
+execute_subtract_w_after_carry_hi:
     # Update flags
     lt  0x7f, [rb + res_hi], [flag_sign]
 
@@ -254,7 +192,7 @@ calculate_sbb_w_after_carry_hi:
     call update_overflow
 
     # Write the destination value if requested
-    jz  [rb + store], calculate_sbb_w_end
+    jz  [rb + store], execute_subtract_w_end
 
     add [rb + loc_type_dst], 0, [rb - 1]
     add [rb + loc_addr_dst], 0, [rb - 2]
@@ -263,9 +201,9 @@ calculate_sbb_w_after_carry_hi:
     arb -4
     call write_location_w
 
-calculate_sbb_w_end:
-    arb 7
-    ret 5
+execute_subtract_w_end:
+    arb 8
+    ret 4
 .ENDFRAME
 
 ##########
@@ -296,11 +234,9 @@ update_auxiliary_carry_sbb:
 .ENDFRAME
 
 ##########
-update_overflow:
+update_overflow:                        # TODO merge with the add/adc implementation
 .FRAME a, b, res; tmp
     arb -1
-
-    # TODO this is taken from 6502, validate the algorithm is the same for 8086
 
     lt  0x7f, [rb + a], [rb + a]
     lt  0x7f, [rb + b], [rb + b]

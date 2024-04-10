@@ -24,26 +24,15 @@
 .IMPORT flag_sign
 .IMPORT flag_overflow
 
-# TODO multiple entry points pattern
-
 ##########
+.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a, b, res, tmp
+    # Function with multiple entry points
+
 execute_add_b:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
+    # Clear the carry flag when performing add without carry
     add 0, 0, [flag_carry]
 
-    add [rb + loc_type_src], 0, [rb - 1]
-    add [rb + loc_addr_src], 0, [rb - 2]
-    add [rb + loc_type_dst], 0, [rb - 3]
-    add [rb + loc_addr_dst], 0, [rb - 4]
-    arb -4
-    call execute_adc_b
-
-    ret 4
-.ENDFRAME
-
-##########
 execute_adc_b:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a, b, res, tmp
     arb -4
 
     # Read the source value
@@ -103,23 +92,14 @@ execute_adc_b_after_carry:
 .ENDFRAME
 
 ##########
+.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a_lo, a_hi, b_lo, b_hi, res_lo, res_hi, tmp
+    # Function with multiple entry points
+
 execute_add_w:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
+    # Clear the carry flag when performing add without carry
     add 0, 0, [flag_carry]
 
-    add [rb + loc_type_src], 0, [rb - 1]
-    add [rb + loc_addr_src], 0, [rb - 2]
-    add [rb + loc_type_dst], 0, [rb - 3]
-    add [rb + loc_addr_dst], 0, [rb - 4]
-    arb -4
-    call execute_adc_w
-
-    ret 4
-.ENDFRAME
-
-##########
 execute_adc_w:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a_lo, a_hi, b_lo, b_hi, res_lo, res_hi, tmp
     arb -7
 
     # Read the source value
@@ -218,11 +198,9 @@ update_auxiliary_carry_adc:
 .ENDFRAME
 
 ##########
-update_overflow:
+update_overflow:                        # TODO merge with the sub/sbb/cmp implementation
 .FRAME a, b, res; tmp
     arb -1
-
-    # TODO this is taken from 6502, validate the algorithm is the same for 8086
 
     lt  0x7f, [rb + a], [rb + a]
     lt  0x7f, [rb + b], [rb + b]

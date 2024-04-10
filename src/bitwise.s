@@ -27,125 +27,34 @@
 .IMPORT flag_sign
 .IMPORT flag_overflow
 
-# TODO multiple entry points pattern
-
 ##########
+.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a, b, function, store, res, tmp
+    # Function with multiple entry points
+
 execute_and_b:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
-    add OP_AND, 0, [rb - 1]
-    add [rb + loc_type_src], 0, [rb - 2]
-    add [rb + loc_addr_src], 0, [rb - 3]
-    add [rb + loc_type_dst], 0, [rb - 4]
-    add [rb + loc_addr_dst], 0, [rb - 5]
-    arb -5
-    call execute_bitwise_b
+    arb -6
+    add and_b, 0, [rb + function]
+    add 1, 0, [rb + store]
+    jz  0, execute_bitwise_b
 
-    ret 4
-.ENDFRAME
-
-##########
-execute_and_w:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
-    add OP_AND, 0, [rb - 1]
-    add [rb + loc_type_src], 0, [rb - 2]
-    add [rb + loc_addr_src], 0, [rb - 3]
-    add [rb + loc_type_dst], 0, [rb - 4]
-    add [rb + loc_addr_dst], 0, [rb - 5]
-    arb -5
-    call execute_bitwise_w
-
-    ret 4
-.ENDFRAME
-
-##########
 execute_or_b:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
-    add OP_OR, 0, [rb - 1]
-    add [rb + loc_type_src], 0, [rb - 2]
-    add [rb + loc_addr_src], 0, [rb - 3]
-    add [rb + loc_type_dst], 0, [rb - 4]
-    add [rb + loc_addr_dst], 0, [rb - 5]
-    arb -5
-    call execute_bitwise_b
+    arb -6
+    add or_b, 0, [rb + function]
+    add 1, 0, [rb + store]
+    jz  0, execute_bitwise_b
 
-    ret 4
-.ENDFRAME
-
-##########
-execute_or_w:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
-    add OP_OR, 0, [rb - 1]
-    add [rb + loc_type_src], 0, [rb - 2]
-    add [rb + loc_addr_src], 0, [rb - 3]
-    add [rb + loc_type_dst], 0, [rb - 4]
-    add [rb + loc_addr_dst], 0, [rb - 5]
-    arb -5
-    call execute_bitwise_w
-
-    ret 4
-.ENDFRAME
-
-##########
 execute_xor_b:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
-    add OP_XOR, 0, [rb - 1]
-    add [rb + loc_type_src], 0, [rb - 2]
-    add [rb + loc_addr_src], 0, [rb - 3]
-    add [rb + loc_type_dst], 0, [rb - 4]
-    add [rb + loc_addr_dst], 0, [rb - 5]
-    arb -5
-    call execute_bitwise_b
+    arb -6
+    add xor_b, 0, [rb + function]
+    add 1, 0, [rb + store]
+    jz  0, execute_bitwise_b
 
-    ret 4
-.ENDFRAME
-
-##########
-execute_xor_w:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
-    add OP_XOR, 0, [rb - 1]
-    add [rb + loc_type_src], 0, [rb - 2]
-    add [rb + loc_addr_src], 0, [rb - 3]
-    add [rb + loc_type_dst], 0, [rb - 4]
-    add [rb + loc_addr_dst], 0, [rb - 5]
-    arb -5
-    call execute_bitwise_w
-
-    ret 4
-.ENDFRAME
-
-##########
 execute_test_b:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
-    add OP_TEST, 0, [rb - 1]
-    add [rb + loc_type_src], 0, [rb - 2]
-    add [rb + loc_addr_src], 0, [rb - 3]
-    add [rb + loc_type_dst], 0, [rb - 4]
-    add [rb + loc_addr_dst], 0, [rb - 5]
-    arb -5
-    call execute_bitwise_b
+    arb -6
+    add and_b, 0, [rb + function]
+    add 0, 0, [rb + store]
 
-    ret 4
-.ENDFRAME
-
-##########
-execute_test_w:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
-    add OP_TEST, 0, [rb - 1]
-    add [rb + loc_type_src], 0, [rb - 2]
-    add [rb + loc_addr_src], 0, [rb - 3]
-    add [rb + loc_type_dst], 0, [rb - 4]
-    add [rb + loc_addr_dst], 0, [rb - 5]
-    arb -5
-    call execute_bitwise_w
-
-    ret 4
-.ENDFRAME
-
-##########
 execute_bitwise_b:
-.FRAME op, loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a, b, function, res, tmp
-    arb -5
-
     # Read the source value
     add [rb + loc_type_src], 0, [rb - 1]
     add [rb + loc_addr_src], 0, [rb - 2]
@@ -159,10 +68,6 @@ execute_bitwise_b:
     arb -2
     call read_location_b
     add [rb - 4], 0, [rb + b]
-
-    # Determine which function to call
-    add bitwise_table, [rb + op], [ip + 1]
-    add [0], 0, [rb + function]
 
     # Calculate the result
     add [rb + a], 0, [rb - 1]
@@ -182,9 +87,8 @@ execute_bitwise_b:
     add parity, [rb + res], [ip + 1]
     add [0], 0, [flag_parity]
 
-    # Write the destination value, unless this is the TEST instruction
-    eq  [rb + op], OP_TEST, [rb + tmp]
-    jnz [rb + tmp], execute_bitwise_b_end
+    # Write the destination value if requested
+    jz  [rb + store], execute_bitwise_b_end
 
     add [rb + loc_type_dst], 0, [rb - 1]
     add [rb + loc_addr_dst], 0, [rb - 2]
@@ -193,15 +97,38 @@ execute_bitwise_b:
     call write_location_b
 
 execute_bitwise_b_end:
-    arb 5
-    ret 5
+    arb 6
+    ret 4
 .ENDFRAME
 
 ##########
-execute_bitwise_w:
-.FRAME op, loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a_lo, a_hi, b_lo, b_hi, function, res_lo, res_hi, tmp
-    arb -8
+.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a_lo, a_hi, b_lo, b_hi, function, store, res_lo, res_hi, tmp
+    # Function with multiple entry points
 
+execute_and_w:
+    arb -9
+    add and_b, 0, [rb + function]
+    add 1, 0, [rb + store]
+    jz  0, execute_bitwise_w
+
+execute_or_w:
+    arb -9
+    add or_b, 0, [rb + function]
+    add 1, 0, [rb + store]
+    jz  0, execute_bitwise_w
+
+execute_xor_w:
+    arb -9
+    add xor_b, 0, [rb + function]
+    add 1, 0, [rb + store]
+    jz  0, execute_bitwise_w
+
+execute_test_w:
+    arb -9
+    add and_b, 0, [rb + function]
+    add 0, 0, [rb + store]
+
+execute_bitwise_w:
     # Read the source value
     add [rb + loc_type_src], 0, [rb - 1]
     add [rb + loc_addr_src], 0, [rb - 2]
@@ -217,10 +144,6 @@ execute_bitwise_w:
     call read_location_w
     add [rb - 4], 0, [rb + b_lo]
     add [rb - 5], 0, [rb + b_hi]
-
-    # Determine which function to call
-    add bitwise_table, [rb + op], [ip + 1]
-    add [0], 0, [rb + function]
 
     # Calculate the result
     add [rb + a_lo], 0, [rb - 1]
@@ -248,9 +171,8 @@ execute_bitwise_w:
     add parity, [rb + res_lo], [ip + 1]
     add [0], 0, [flag_parity]
 
-    # Write the destination value, unless this is the TEST instruction
-    eq  [rb + op], OP_TEST, [rb + tmp]
-    jnz [rb + tmp], execute_bitwise_w_end
+    # Write the destination value if requested
+    jz  [rb + store], execute_bitwise_w_end
 
     add [rb + loc_type_dst], 0, [rb - 1]
     add [rb + loc_addr_dst], 0, [rb - 2]
@@ -260,8 +182,8 @@ execute_bitwise_w:
     call write_location_w
 
 execute_bitwise_w_end:
-    arb 8
-    ret 5
+    arb 9
+    ret 4
 .ENDFRAME
 
 ##########
@@ -361,16 +283,5 @@ xor_b_loop:
     arb 5
     ret 2
 .ENDFRAME
-
-##########
-bitwise_table:
-.SYMBOL OP_AND      0
-    db  and_b
-.SYMBOL OP_OR       1
-    db  or_b
-.SYMBOL OP_XOR      2
-    db  xor_b
-.SYMBOL OP_TEST     3
-    db  and_b                           # TEST is the same as AND, but we skip writing the result
 
 .EOF
