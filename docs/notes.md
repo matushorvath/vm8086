@@ -44,18 +44,8 @@ group1.s
 group2.s
 group_immed.s
 inc_dec.s
-jump.s
-load.s
 location.s
-loop.s
-prefix.s
-stack.s
 sub_cmp.s
-test_header.s
-trace_data.s
-trace.s
-transfer_address.s
-transfer_value.s
 
 Times:
 baseline:
