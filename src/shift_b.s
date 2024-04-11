@@ -93,10 +93,9 @@ execute_shl_b:
     add [0], 0, [flag_carry]
 
     # Find shifted value in the shl table
-    mul [rb + val], 7, [rb + tmp]
+    mul [rb + val], 8, [rb + tmp]
     add shl, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [rb + tmp]
-    add [rb + tmp], -1, [ip + 1]
+    add [rb + tmp], [rb + count], [ip + 1]
     add [0], 0, [rb + val]
 
     # Update flags
@@ -204,10 +203,9 @@ execute_shr_b:
     add [0], 0, [flag_carry]
 
     # Find shifted value in the shr table
-    mul [rb + val], 7, [rb + tmp]
+    mul [rb + val], 8, [rb + tmp]
     add shr, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [rb + tmp]
-    add [rb + tmp], -1, [ip + 1]
+    add [rb + tmp], [rb + count], [ip + 1]
     add [0], 0, [rb + val]
 
     # Update flags
@@ -310,10 +308,9 @@ execute_sar_b:
     add [0], 0, [flag_carry]
 
     # Find shifted value in the sar table
-    mul [rb + val], 7, [rb + tmp]
+    mul [rb + val], 8, [rb + tmp]
     add shr, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [rb + tmp]
-    add [rb + tmp], -1, [ip + 1]
+    add [rb + tmp], [rb + count], [ip + 1]
     add [0], 0, [rb + val]
 
     # Sign-fill the left side of value

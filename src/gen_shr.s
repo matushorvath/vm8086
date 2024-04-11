@@ -47,8 +47,8 @@ b7_loop:
                                         add bits, [bit], [ip + 1]
                                         add [0], [res], [res]
 
-                                        add [bit], -1, [bit]
                                         eq  [bit], [cnt], [tmp]
+                                        add [bit], -1, [bit]
                                         jz  [tmp], bit_loop
 
                                     # Print the shifted number
@@ -59,7 +59,7 @@ b7_loop:
                                     call print_num_radix
 
                                     add [cnt], 1, [cnt]
-                                    eq  [cnt], 7, [tmp]
+                                    eq  [cnt], 8, [tmp]
                                     jz  [tmp], cnt_loop
 
                                 # Print line end
