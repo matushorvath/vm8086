@@ -316,7 +316,7 @@ execute_sar_b:
     add [rb + tmp], -1, [ip + 1]
     add [0], 0, [rb + val]
 
-    # If the value was negative, fill the right side with ones, not zeros
+    # Sign-fill the left side of value
     add ones, [rb + count], [ip + 1]
     mul [0], [flag_sign], [rb + tmp]
     add [rb + val], [rb + tmp], [rb + val]
@@ -340,7 +340,7 @@ execute_sar_b_zero:
     jz  0, execute_sar_b_done
 
 execute_sar_b_eight:
-    # If we are shifting by 8, fill the value with the sign bit and use fixed flags except for CF
+    # If we are shifting by 8, sign-fill the value and use fixed flags except for CF
     add [rb + val_bits], 7, [ip + 1]
     add [0], 0, [flag_carry]
 
@@ -353,7 +353,7 @@ execute_sar_b_eight:
     jz  0, execute_sar_b_store
 
 execute_sar_b_many:
-    # If we are shifting by 9 or more bits, fill the value with the sign bit and use fixed flags
+    # If we are shifting by 9 or more bits, sign-fill the value and use fixed flags
     add [flag_sign], 0, [flag_carry]
     add 0, 0, [flag_overflow]
     eq  [flag_sign], 0, [flag_zero]

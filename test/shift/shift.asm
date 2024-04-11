@@ -35,10 +35,10 @@ section .text
     mark 0x84
 %include "sar_b_pos.inc"
     mark 0x85
-;%include "sar_w_pos.inc"
+%include "sar_w_pos.inc"
     mark 0x86
 %include "sar_b_neg.inc"
     mark 0x87
-;%include "sar_w_neg.inc"
+%include "sar_w_neg.inc"
 
     call power_off
