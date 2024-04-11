@@ -54,50 +54,21 @@
 # TODO use this as pattern for handling other groups
 
 ##########
-.FRAME op, loc_type, loc_addr; table
-    # Function with multiple entry points
-
 execute_shift_1_b:
-    arb -1
-    add shift_1_b_table, 0, [rb + table]
-    jz  0, execute_shift
-
-execute_shift_1_w:
-    arb -1
-    add shift_1_w_table, 0, [rb + table]
-    jz  0, execute_shift
-
-execute_shift_cl_b:
-    arb -1
-    add shift_cl_b_table, 0, [rb + table]
-    jz  0, execute_shift
-
-execute_shift_cl_w:
-    arb -1
-    add shift_cl_w_table, 0, [rb + table]
-
-execute_shift:
+.FRAME op, loc_type, loc_addr;
     # Determine which function to call
-    add [rb + table], [rb + op], [ip + 1]
-    add [0], 0, [execute_shift_function]
+    add execute_shift_1_b_table, [rb + op], [ip + 1]
+    add [0], 0, [shift_function]
 
     # Call the function
     add [rb + loc_type], 0, [rb - 1]
     add [rb + loc_addr], 0, [rb - 2]
     arb -2
-    call [execute_shift_function]
+    call [shift_function]
 
-    arb 1
     ret 3
 
-execute_shift_function:
-    # Global variable to avoid issues with updated rb
-    db  0
-.ENDFRAME
-
-##########
-# Map each OP value to the function that handles it
-shift_1_b_table:
+execute_shift_1_b_table:
     db  execute_rol_1_b
     db  execute_ror_1_b
     db  execute_rcl_1_b
@@ -106,18 +77,24 @@ shift_1_b_table:
     db  execute_shr_1_b
     db  invalid_shift_op
     db  execute_sar_1_b
+.ENDFRAME
 
-shift_cl_b_table:
-    db  execute_rol_cl_b
-    db  execute_ror_cl_b
-    db  execute_rcl_cl_b
-    db  execute_rcr_cl_b
-    db  execute_shl_cl_b
-    db  execute_shr_cl_b
-    db  invalid_shift_op
-    db  execute_sar_cl_b
+##########
+execute_shift_1_w:
+.FRAME op, loc_type, loc_addr;
+    # Determine which function to call
+    add execute_shift_1_w_table, [rb + op], [ip + 1]
+    add [0], 0, [shift_function]
 
-shift_1_w_table:
+    # Call the function
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    arb -2
+    call [shift_function]
+
+    ret 3
+
+execute_shift_1_w_table:
     db  execute_rol_1_w
     db  execute_ror_1_w
     db  execute_rcl_1_w
@@ -126,8 +103,50 @@ shift_1_w_table:
     db  execute_shr_1_w
     db  invalid_shift_op
     db  execute_sar_1_w
+.ENDFRAME
 
-shift_cl_w_table:
+##########
+execute_shift_cl_b:
+.FRAME op, loc_type, loc_addr;
+    # Determine which function to call
+    add execute_shift_cl_b_table, [rb + op], [ip + 1]
+    add [0], 0, [shift_function]
+
+    # Call the function
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    arb -2
+    call [shift_function]
+
+    ret 3
+
+execute_shift_cl_b_table:
+    db  execute_rol_cl_b
+    db  execute_ror_cl_b
+    db  execute_rcl_cl_b
+    db  execute_rcr_cl_b
+    db  execute_shl_cl_b
+    db  execute_shr_cl_b
+    db  invalid_shift_op
+    db  execute_sar_cl_b
+.ENDFRAME
+
+##########
+execute_shift_cl_w:
+.FRAME op, loc_type, loc_addr;
+    # Determine which function to call
+    add execute_shift_cl_w_table, [rb + op], [ip + 1]
+    add [0], 0, [shift_function]
+
+    # Call the function
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    arb -2
+    call [shift_function]
+
+    ret 3
+
+execute_shift_cl_w_table:
     db  execute_rol_cl_w
     db  execute_ror_cl_w
     db  execute_rcl_cl_w
@@ -136,6 +155,7 @@ shift_cl_w_table:
     db  execute_shr_cl_w
     db  invalid_shift_op
     db  execute_sar_cl_w
+.ENDFRAME
 
 ##########
 invalid_shift_op:
@@ -147,5 +167,10 @@ invalid_shift_op:
 invalid_shift_op_message:
     db  "invalid group shift operation", 0
 .ENDFRAME
+
+##########
+shift_function:
+    # Global variable to avoid issues when accessing local variables with updated rb
+    db  0
 
 .EOF
