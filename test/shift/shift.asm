@@ -31,7 +31,7 @@ section .text
     mark 0x82
 %include "shr_b.inc"
     mark 0x83
-;%include "shr_w.inc"
+%include "shr_w.inc"
     mark 0x84
 %include "sar_b_pos.inc"
     mark 0x85
