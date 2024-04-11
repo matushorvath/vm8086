@@ -52,8 +52,6 @@ execute_shl_w:
 execute_shr_w:
 execute_sar_w:
 
-# TODO merge execute_shl_b/execute_shr_b/execute_sar_b? maybe also with the rotate instructions
-
 ##########
 execute_shl_b:
 .FRAME loc_type_val, loc_addr_val, loc_type_cnt, loc_addr_cnt; val, val_bits, cnt, tmp
@@ -93,7 +91,6 @@ execute_shl_b:
     # Carry flag is the last bit shifted out
     mul [rb + cnt], -1, [rb + tmp]
     add 8, [rb + tmp], [rb + tmp]
-
     add [rb + val_bits], [rb + tmp], [ip + 1]
     add [0], 0, [flag_carry]
 
@@ -193,9 +190,12 @@ execute_shr_b:
     mul [rb + val], 8, [rb + tmp]
     add bits, [rb + tmp], [rb + val_bits]
 
+    # If we are shifting by 8, use a simplified algorithm
+    eq  [rb + cnt], 8, [rb + tmp]
+    jnz [rb + tmp], execute_shr_b_eight
+
     # Carry flag is the last bit shifted out
     add [rb + cnt], -1, [rb + tmp]
-
     add [rb + val_bits], [rb + tmp], [ip + 1]
     add [0], 0, [flag_carry]
 
@@ -221,26 +221,35 @@ execute_shr_b:
     jz  0, execute_shr_b_store
 
 execute_shr_b_zero:
-    # If we are shifting by 0, just calculate the flags
+    # If we are shifting by 0, SF ZF and PF are not affected
     add 0, 0, [flag_carry]
     add 0, 0, [flag_overflow]
 
-    lt  0x7f, [rb + val], [flag_sign]
-    eq  [rb + val], 0, [flag_zero]
-
-    add parity, [rb + val], [ip + 1]
-    add [0], 0, [flag_parity]
-
     jz  0, execute_shr_b_done
+
+execute_shr_b_eight:
+    # If we are shifting by 8, zero the value and use fixed flags except for CF
+    add [rb + val_bits], 7, [ip + 1]
+    add [0], 0, [flag_carry]
+
+    add 0, 0, [flag_overflow]
+    add 0, 0, [flag_sign]
+    add 1, 0, [flag_zero]
+    add 1, 0, [flag_parity]
+
+    add 0, 0, [rb + val]
+
+    jz  0, execute_shr_b_store
 
 execute_shr_b_many:
     # If we are shifting by 9 or more bits, zero the value and use fixed flags
-    add 0, 0, [rb + val]
-
-    add 1, 0, [flag_parity]
+    add 0, 0, [flag_carry]
+    add 0, 0, [flag_overflow]
     add 0, 0, [flag_sign]
     add 1, 0, [flag_zero]
-    add 0, 0, [flag_carry]
+    add 1, 0, [flag_parity]
+
+    add 0, 0, [rb + val]
 
 execute_shr_b_store:
     # Write the shifted value
@@ -269,10 +278,6 @@ execute_sar_b:
     call read_location_b            # TODO _b even for 16-bit
     add [rb - 4], 0, [rb + cnt]
 
-    # If we are shifting more than 8 bits, use fixed values
-    lt  [rb + cnt], 9, [rb + tmp]
-    jz  [rb + tmp], execute_sar_b_many
-
     # Read the value to shift
     add [rb + loc_type_val], 0, [rb - 1]
     add [rb + loc_addr_val], 0, [rb - 2]
@@ -283,13 +288,23 @@ execute_sar_b:
     # If we are shifting by 0, use a simplified algorithm
     jz  [rb + cnt], execute_sar_b_zero
 
+    # Sign flag will remain unchanged
+    lt  0x7f, [rb + val], [flag_sign]
+
+    # If we are shifting more than 8 bits, use fixed values
+    lt  [rb + cnt], 9, [rb + tmp]
+    jz  [rb + tmp], execute_sar_b_many
+
     # Expand val to bits
     mul [rb + val], 8, [rb + tmp]
     add bits, [rb + tmp], [rb + val_bits]
 
+    # If we are shifting by 8, use a simplified algorithm
+    eq  [rb + cnt], 8, [rb + tmp]
+    jnz [rb + tmp], execute_sar_b_eight
+
     # Carry flag is the last bit shifted out
     add [rb + cnt], -1, [rb + tmp]
-
     add [rb + val_bits], [rb + tmp], [ip + 1]
     add [0], 0, [flag_carry]
 
@@ -300,8 +315,12 @@ execute_sar_b:
     add [rb + tmp], -1, [ip + 1]
     add [0], 0, [rb + val]
 
+    # If the value was negative, fill the right side with ones, not zeros
+    add ones, [rb + cnt], [ip + 1]
+    mul [0], [flag_sign], [rb + tmp]
+    add [rb + val], [rb + tmp], [rb + val]
+
     # Update flags
-    lt  0x7f, [rb + val], [flag_sign]
     eq  [rb + val], 0, [flag_zero]
 
     add parity, [rb + val], [ip + 1]
@@ -313,26 +332,33 @@ execute_sar_b:
     jz  0, execute_sar_b_store
 
 execute_sar_b_zero:
-    # If we are shifting by 0, just calculate the flags
+    # If we are shifting by 0, SF ZF and PF are not affected
     add 0, 0, [flag_carry]
     add 0, 0, [flag_overflow]
 
-    lt  0x7f, [rb + val], [flag_sign]
-    eq  [rb + val], 0, [flag_zero]
-
-    add parity, [rb + val], [ip + 1]
-    add [0], 0, [flag_parity]
-
     jz  0, execute_sar_b_done
+
+execute_sar_b_eight:
+    # If we are shifting by 8, fill the value with the sign bit and use fixed flags except for CF
+    add [rb + val_bits], 7, [ip + 1]
+    add [0], 0, [flag_carry]
+
+    add 0, 0, [flag_overflow]
+    eq  [flag_sign], 0, [flag_zero]
+    add 1, 0, [flag_parity]
+
+    mul [flag_sign], 0xff, [rb + val]
+
+    jz  0, execute_sar_b_store
 
 execute_sar_b_many:
     # If we are shifting by 9 or more bits, fill the value with the sign bit and use fixed flags
-    lt  0x7f, [rb + val], [flag_sign]
-    mul [flag_sign], 0xff, [rb + val]
-
-    add 1, 0, [flag_parity]
-    eq  [flag_sign], 0, [flag_zero]
     add [flag_sign], 0, [flag_carry]
+    add 0, 0, [flag_overflow]
+    eq  [flag_sign], 0, [flag_zero]
+    add 1, 0, [flag_parity]
+
+    mul [flag_sign], 0xff, [rb + val]
 
 execute_sar_b_store:
     # Write the shifted value
@@ -346,5 +372,10 @@ execute_sar_b_done:
     arb 4
     ret 4
 .ENDFRAME
+
+##########
+ones:
+    db  0b00000000, 0b10000000, 0b11000000, 0b11100000
+    db  0b11110000, 0b11111000, 0b11111100, 0b11111110
 
 .EOF

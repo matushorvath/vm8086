@@ -23,8 +23,19 @@ section .text
 %endmacro
 
     mark 0x80
-
 %include "shl_b.inc"
 ;%include "shl_w.inc"
+
+    mark 0x81
+%include "shr_b.inc"
+;%include "shr_w.inc"
+
+    mark 0x82
+%include "sar_b_pos.inc"
+;%include "sar_w_pos.inc"
+
+    mark 0x83
+%include "sar_b_neg.inc"
+;%include "sar_w_neg.inc"
 
     call power_off
