@@ -35,7 +35,7 @@ b7_loop:
                                     add 0, 0, [res]
 
                                     mul [cnt], -1, [tmp]
-                                    add 7, [tmp], [bit]
+                                    add 8, [tmp], [bit]
 
                                     # Print the separator, unless this is the first number
                                     jz  [cnt], bit_loop
@@ -65,7 +65,7 @@ b7_loop:
                                     call print_num_radix
 
                                     add [cnt], 1, [cnt]
-                                    eq  [cnt], 7, [tmp]
+                                    eq  [cnt], 8, [tmp]
                                     jz  [tmp], cnt_loop
 
                                 # Print line end
@@ -135,7 +135,7 @@ line_end:
 footer:
     db  10, ".EOF", 10, 0
 power_of_two:
-    db  0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80
+    db  0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80
 
     ds  50, 0
 stack:
