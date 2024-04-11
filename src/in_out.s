@@ -8,11 +8,6 @@
 .EXPORT execute_out_al_dx
 .EXPORT execute_out_ax_dx
 
-# From dump_state.s
-.IMPORT dump_state
-.IMPORT mark
-.IMPORT dump_dx
-
 # From memory.s
 .IMPORT read_cs_ip_b
 
@@ -21,6 +16,12 @@
 .IMPORT reg_ax
 .IMPORT reg_dx
 .IMPORT inc_ip_b
+
+# From test_api.s
+.IMPORT dump_state
+.IMPORT mark
+.IMPORT dump_dx
+.IMPORT handle_shutdown_api
 
 # TODO remove temporary I/O code
 .IMPORT print_num_radix
@@ -253,9 +254,13 @@ port_out:
     eq  [rb + port], 0x43, [rb + tmp]
     jnz [rb + tmp], port_out_mark
 
-    # Port 0x43 is used to output the DX register to stdout, for tests
+    # Port 0x44 is used to output the DX register to stdout, for tests
     eq  [rb + port], 0x44, [rb + tmp]
     jnz [rb + tmp], port_out_dump_dx
+
+    # Port 0x8900 is a bochs API to shutdown the computer, used by tests
+    eq  [rb + port], 0x8900, [rb + tmp]
+    jnz [rb + tmp], port_out_shutdown
 
     # Output the port and value to stdout
     # TODO remove temporary I/O code
@@ -297,6 +302,12 @@ port_out_mark:
 
 port_out_dump_dx:
     call dump_dx
+    jz  0, port_out_done
+
+port_out_shutdown:
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call handle_shutdown_api
 
 port_out_done:
     arb 1

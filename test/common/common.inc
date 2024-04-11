@@ -127,6 +127,7 @@ power_off:
     out 0xe9, al
     mov al, 10
     out 0xe9, al
+%endif
 
     ; output 'Shutdown' to port 0x8900
     ; TODO use outsb once available
@@ -148,14 +149,6 @@ power_off:
 
 .shutdown_string:
     db  "Shutdown", 0
-%endif
-
-%ifdef VM8086
-    ; TODO don't use hlt to stop the vm
-    hlt
-    ; we should never get here
-    jmp $
-%endif
 
 
 out_char:                                                   ; al is the char to print
