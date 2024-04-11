@@ -127,12 +127,12 @@
 .IMPORT execute_shift_cl_w
 
 # From in_out.s
-# TODO .IMPORT execute_in_al_immediate_b
-# TODO .IMPORT execute_in_ax_immediate_b
+.IMPORT execute_in_al_immediate_b
+.IMPORT execute_in_ax_immediate_b
 .IMPORT execute_out_al_immediate_b
 .IMPORT execute_out_ax_immediate_b
-# TODO .IMPORT execute_in_al_dx
-# TODO .IMPORT execute_in_ax_dx
+.IMPORT execute_in_al_dx
+.IMPORT execute_in_ax_dx
 .IMPORT execute_out_al_dx
 .IMPORT execute_out_ax_dx
 
@@ -488,8 +488,8 @@ instructions:
     db  execute_loop, 0, 0                                  # 0xe2 LOOP SHORT-LABEL
     db  execute_jcxz, 0, 0                                  # 0xe3 JCXZ SHORT-LABEL
 
-    db  not_implemented, 0, 0 # TODO x   db  execute_in_al_immediate_b, 0, 0                 # 0xe4 IN AL, IMMED8
-    db  not_implemented, 0, 0 # TODO x   db  execute_in_ax_immediate_b, 0, 0                 # 0xe5 IN AX, IMMED8
+    db  execute_in_al_immediate_b, 0, 0                     # 0xe4 IN AL, IMMED8
+    db  execute_in_ax_immediate_b, 0, 0                     # 0xe5 IN AX, IMMED8
     db  execute_out_al_immediate_b, 0, 0                    # 0xe6 OUT AL, IMMED8
     db  execute_out_ax_immediate_b, 0, 0                    # 0xe7 OUT AX, IMMED8
 
@@ -498,8 +498,8 @@ instructions:
     db  execute_jmp_far, 0, 0                               # 0xea JMP FAR-LABEL
     db  execute_jmp_short, 0, 0                             # 0xeb JMP SHORT-LABEL
 
-    db  not_implemented, 0, 0 # TODO x   db  execute_in_al_dx, 0, 0                          # 0xec IN AL, DX
-    db  not_implemented, 0, 0 # TODO x   db  execute_in_ax_dx, 0, 0                          # 0xed IN AX, DX
+    db  execute_in_al_dx, 0, 0                              # 0xec IN AL, DX
+    db  execute_in_ax_dx, 0, 0                              # 0xed IN AX, DX
     db  execute_out_al_dx, 0, 0                             # 0xee OUT AL, DX
     db  execute_out_ax_dx, 0, 0                             # 0xef OUT AX, DX
 
