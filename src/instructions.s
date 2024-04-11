@@ -25,10 +25,6 @@
 .IMPORT arg_mod_op_rm_b_immediate_b
 .IMPORT arg_mod_op_rm_w_immediate_sxb
 .IMPORT arg_mod_op_rm_w_immediate_w
-.IMPORT arg_mod_op_rm_b_1
-.IMPORT arg_mod_op_rm_w_1
-.IMPORT arg_mod_op_rm_b_cl
-.IMPORT arg_mod_op_rm_w_cl
 
 # From arg_mod_reg_rm.s
 .IMPORT arg_mod_reg_rm_src_b
@@ -125,16 +121,18 @@
 .IMPORT execute_immed_w
 
 # From group_shift.s
-.IMPORT execute_shift_b
-.IMPORT execute_shift_w
+.IMPORT execute_shift_1_b
+.IMPORT execute_shift_1_w
+.IMPORT execute_shift_cl_b
+.IMPORT execute_shift_cl_w
 
 # From in_out.s
-# TODO .IMPORT execute_in_al_immediate_b
-# TODO .IMPORT execute_in_ax_immediate_b
+.IMPORT execute_in_al_immediate_b
+.IMPORT execute_in_ax_immediate_b
 .IMPORT execute_out_al_immediate_b
 .IMPORT execute_out_ax_immediate_b
-# TODO .IMPORT execute_in_al_dx
-# TODO .IMPORT execute_in_ax_dx
+.IMPORT execute_in_al_dx
+.IMPORT execute_in_ax_dx
 .IMPORT execute_out_al_dx
 .IMPORT execute_out_ax_dx
 
@@ -465,10 +463,10 @@ instructions:
     db  execute_iret, 0, 0                                  # 0xcf IRET
 
     # <shift>: 000 ROL, 001 ROR, 010 RCL, 011 RCR, 100 SAL/SHL, 101 SHR,          111 SAR
-    db  execute_shift_b, arg_mod_op_rm_b_1, 4               # 0xd0 <shift> REG8/MEM8, 1
-    db  execute_shift_w, arg_mod_op_rm_w_1, 4               # 0xd1 <shift> REG16/MEM16, 1
-    db  execute_shift_b, arg_mod_op_rm_b_cl, 4              # 0xd2 <shift> REG8/MEM8, CL
-    db  execute_shift_w, arg_mod_op_rm_w_cl, 4              # 0xd3 <shift> REG16/MEM16, CL
+    db  execute_shift_1_b, arg_mod_op_rm_b, 3               # 0xd0 <shift> REG8/MEM8, 1
+    db  execute_shift_1_w, arg_mod_op_rm_w, 3               # 0xd1 <shift> REG16/MEM16, 1
+    db  execute_shift_cl_b, arg_mod_op_rm_b, 3              # 0xd2 <shift> REG8/MEM8, CL
+    db  execute_shift_cl_w, arg_mod_op_rm_w, 3              # 0xd3 <shift> REG16/MEM16, CL
 
     # TODO AAM and AAD seem to have a fixed mod reg r/m 00001010 + possibly (DISP-LO) (DISP-HI)?
     db  not_implemented, 0, 0 # TODO    db  execute_aam, xxx, 0                                  # 0xd4 AAM
@@ -490,8 +488,8 @@ instructions:
     db  execute_loop, 0, 0                                  # 0xe2 LOOP SHORT-LABEL
     db  execute_jcxz, 0, 0                                  # 0xe3 JCXZ SHORT-LABEL
 
-    db  not_implemented, 0, 0 # TODO x   db  execute_in_al_immediate_b, 0, 0                 # 0xe4 IN AL, IMMED8
-    db  not_implemented, 0, 0 # TODO x   db  execute_in_ax_immediate_b, 0, 0                 # 0xe5 IN AX, IMMED8
+    db  execute_in_al_immediate_b, 0, 0                     # 0xe4 IN AL, IMMED8
+    db  execute_in_ax_immediate_b, 0, 0                     # 0xe5 IN AX, IMMED8
     db  execute_out_al_immediate_b, 0, 0                    # 0xe6 OUT AL, IMMED8
     db  execute_out_ax_immediate_b, 0, 0                    # 0xe7 OUT AX, IMMED8
 
@@ -500,8 +498,8 @@ instructions:
     db  execute_jmp_far, 0, 0                               # 0xea JMP FAR-LABEL
     db  execute_jmp_short, 0, 0                             # 0xeb JMP SHORT-LABEL
 
-    db  not_implemented, 0, 0 # TODO x   db  execute_in_al_dx, 0, 0                          # 0xec IN AL, DX
-    db  not_implemented, 0, 0 # TODO x   db  execute_in_ax_dx, 0, 0                          # 0xed IN AX, DX
+    db  execute_in_al_dx, 0, 0                              # 0xec IN AL, DX
+    db  execute_in_ax_dx, 0, 0                              # 0xed IN AX, DX
     db  execute_out_al_dx, 0, 0                             # 0xee OUT AL, DX
     db  execute_out_ax_dx, 0, 0                             # 0xef OUT AX, DX
 

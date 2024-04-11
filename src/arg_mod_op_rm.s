@@ -8,11 +8,6 @@
 .EXPORT arg_mod_op_rm_w_immediate_sxb
 .EXPORT arg_mod_op_rm_w_immediate_w
 
-.EXPORT arg_mod_op_rm_b_1
-.EXPORT arg_mod_op_rm_w_1
-.EXPORT arg_mod_op_rm_b_cl
-.EXPORT arg_mod_op_rm_w_cl
-
 # From arg_mod_reg_rm.s
 .IMPORT arg_mod_rm_generic
 
@@ -24,7 +19,6 @@
 .IMPORT read_cs_ip_b
 
 # From state.s
-.IMPORT reg_cl
 .IMPORT inc_ip_b
 .IMPORT inc_ip_w
 
@@ -239,90 +233,6 @@ arg_mod_op_rm_w_immediate_w:
 .ENDFRAME
 
 ##########
-arg_mod_op_rm_b_1:
-.FRAME op, loc_type_val, loc_addr_val, loc_type_cnt, loc_addr_cnt               # returns op, loc_type_*, loc_addr_*
-    arb -5
-
-    # Read and decode MOD and R/M
-    add 0, 0, [rb - 1]
-    arb -1
-    call arg_mod_rm_generic
-    add [rb - 3], 0, [rb + loc_type_val]
-    add [rb - 4], 0, [rb + loc_addr_val]
-    add [rb - 5], 0, [rb + op]
-
-    # Return a constant one
-    add 0, 0, [rb + loc_type_cnt]
-    add constant_one, 0, [rb + loc_addr_cnt]
-
-    arb 5
-    ret 0
-.ENDFRAME
-
-##########
-arg_mod_op_rm_w_1:
-.FRAME op, loc_type_val, loc_addr_val, loc_type_cnt, loc_addr_cnt               # returns op, loc_type_*, loc_addr_*
-    arb -5
-
-    # Read and decode MOD and R/M
-    add 1, 0, [rb - 1]
-    arb -1
-    call arg_mod_rm_generic
-    add [rb - 3], 0, [rb + loc_type_val]
-    add [rb - 4], 0, [rb + loc_addr_val]
-    add [rb - 5], 0, [rb + op]
-
-    # Return a constant one
-    add 0, 0, [rb + loc_type_cnt]
-    add constant_one, 0, [rb + loc_addr_cnt]
-
-    arb 5
-    ret 0
-.ENDFRAME
-
-##########
-arg_mod_op_rm_b_cl:
-.FRAME op, loc_type_val, loc_addr_val, loc_type_cnt, loc_addr_cnt               # returns op, loc_type_*, loc_addr_*
-    arb -5
-
-    # Read and decode MOD and R/M
-    add 0, 0, [rb - 1]
-    arb -1
-    call arg_mod_rm_generic
-    add [rb - 3], 0, [rb + loc_type_val]
-    add [rb - 4], 0, [rb + loc_addr_val]
-    add [rb - 5], 0, [rb + op]
-
-    # Return the CL register
-    add 0, 0, [rb + loc_type_cnt]
-    add reg_cl, 0, [rb + loc_addr_cnt]
-
-    arb 5
-    ret 0
-.ENDFRAME
-
-##########
-arg_mod_op_rm_w_cl:
-.FRAME op, loc_type_val, loc_addr_val, loc_type_cnt, loc_addr_cnt               # returns op, loc_type_*, loc_addr_*
-    arb -5
-
-    # Read and decode MOD and R/M
-    add 1, 0, [rb - 1]
-    arb -1
-    call arg_mod_rm_generic
-    add [rb - 3], 0, [rb + loc_type_val]
-    add [rb - 4], 0, [rb + loc_addr_val]
-    add [rb - 5], 0, [rb + op]
-
-    # Return the CL register
-    add 0, 0, [rb + loc_type_cnt]
-    add reg_cl, 0, [rb + loc_addr_cnt]
-
-    arb 5
-    ret 0
-.ENDFRAME
-
-##########
 nonzero_reg_message:
     db  "invalid non-zero REG value", 0
 
@@ -330,8 +240,5 @@ sign_extend_buffer_lo:
     db  0
 sign_extend_buffer_hi:
     db  0
-
-constant_one:
-    db  1
 
 .EOF
