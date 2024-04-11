@@ -1,17 +1,37 @@
-.EXPORT execute_rol_b
-.EXPORT execute_rol_w
-.EXPORT execute_ror_b
-.EXPORT execute_ror_w
-.EXPORT execute_rcl_b
-.EXPORT execute_rcl_w
-.EXPORT execute_rcr_b
-.EXPORT execute_rcr_w
-.EXPORT execute_shl_b
-.EXPORT execute_shl_w
-.EXPORT execute_shr_b
-.EXPORT execute_shr_w
-.EXPORT execute_sar_b
-.EXPORT execute_sar_w
+.EXPORT execute_rol_1_b
+.EXPORT execute_rol_1_w
+.EXPORT execute_rol_cl_b
+.EXPORT execute_rol_cl_w
+
+.EXPORT execute_ror_1_b
+.EXPORT execute_ror_1_w
+.EXPORT execute_ror_cl_b
+.EXPORT execute_ror_cl_w
+
+.EXPORT execute_rcl_1_b
+.EXPORT execute_rcl_1_w
+.EXPORT execute_rcl_cl_b
+.EXPORT execute_rcl_cl_w
+
+.EXPORT execute_rcr_1_b
+.EXPORT execute_rcr_1_w
+.EXPORT execute_rcr_cl_b
+.EXPORT execute_rcr_cl_w
+
+.EXPORT execute_shl_1_b
+.EXPORT execute_shl_1_w
+.EXPORT execute_shl_cl_b
+.EXPORT execute_shl_cl_w
+
+.EXPORT execute_shr_1_b
+.EXPORT execute_shr_1_w
+.EXPORT execute_shr_cl_b
+.EXPORT execute_shr_cl_w
+
+.EXPORT execute_sar_1_b
+.EXPORT execute_sar_1_w
+.EXPORT execute_sar_cl_b
+.EXPORT execute_sar_cl_w
 
 # From location.s
 .IMPORT read_location_b
@@ -32,6 +52,7 @@
 .IMPORT shr
 
 # From state.s
+.IMPORT reg_cl
 .IMPORT flag_carry
 .IMPORT flag_parity
 .IMPORT flag_auxiliary_carry
@@ -40,39 +61,52 @@
 .IMPORT flag_overflow
 
 # TODO remove
-execute_rol_b:
-execute_rol_w:
-execute_ror_b:
-execute_ror_w:
-execute_rcl_b:
-execute_rcl_w:
-execute_rcr_b:
-execute_rcr_w:
-execute_shl_w:
-execute_shr_w:
-execute_sar_w:
+execute_rol_1_b:
+execute_rol_1_w:
+execute_ror_1_b:
+execute_ror_1_w:
+execute_rcl_1_b:
+execute_rcl_1_w:
+execute_rcr_1_b:
+execute_rcr_1_w:
+execute_shl_1_w:
+execute_shr_1_w:
+execute_sar_1_w:
+execute_rol_cl_b:
+execute_rol_cl_w:
+execute_ror_cl_b:
+execute_ror_cl_w:
+execute_rcl_cl_b:
+execute_rcl_cl_w:
+execute_rcr_cl_b:
+execute_rcr_cl_w:
+execute_shl_cl_w:
+execute_shr_cl_w:
+execute_sar_cl_w:
 
 ##########
-execute_shl_b:
-.FRAME loc_type_val, loc_addr_val, loc_type_cnt, loc_addr_cnt; val, val_bits, cnt, tmp
+.FRAME loc_type, loc_addr; val, val_bits, cnt, tmp
+    # Function with multiple entry points
+
+execute_shl_1_b:
     arb -4
+    add 1, 0, [rb + cnt]
+    jz  0, execute_shl_b
 
+execute_shl_cl_b:
+    arb -4
+    add [reg_cl], 0, [rb + cnt]
+
+execute_shl_b:
     add 0, 0, [flag_auxiliary_carry]
-
-    # Read the number of bits
-    add [rb + loc_type_cnt], 0, [rb - 1]
-    add [rb + loc_addr_cnt], 0, [rb - 2]
-    arb -2
-    call read_location_b            # TODO _b even for 16-bit
-    add [rb - 4], 0, [rb + cnt]
 
     # If we are shifting more than 8 bits, use fixed values
     lt  [rb + cnt], 9, [rb + tmp]
     jz  [rb + tmp], execute_shl_b_many
 
     # Read the value to shift
-    add [rb + loc_type_val], 0, [rb - 1]
-    add [rb + loc_addr_val], 0, [rb - 2]
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
     arb -2
     call read_location_b
     add [rb - 4], 0, [rb + val]
@@ -147,38 +181,40 @@ execute_shl_b_many:
 
 execute_shl_b_store:
     # Write the shifted value
-    add [rb + loc_type_val], 0, [rb - 1]
-    add [rb + loc_addr_val], 0, [rb - 2]
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
     add [rb + val], 0, [rb - 3]
     arb -3
     call write_location_b
 
 execute_shl_b_done:
     arb 4
-    ret 4
+    ret 2
 .ENDFRAME
 
 ##########
-execute_shr_b:
-.FRAME loc_type_val, loc_addr_val, loc_type_cnt, loc_addr_cnt; val, val_bits, cnt, tmp
+.FRAME loc_type, loc_addr; val, val_bits, cnt, tmp
+    # Function with multiple entry points
+
+execute_shr_1_b:
     arb -4
+    add 1, 0, [rb + cnt]
+    jz  0, execute_shr_b
 
+execute_shr_cl_b:
+    arb -4
+    add [reg_cl], 0, [rb + cnt]
+
+execute_shr_b:
     add 0, 0, [flag_auxiliary_carry]
-
-    # Read the number of bits
-    add [rb + loc_type_cnt], 0, [rb - 1]
-    add [rb + loc_addr_cnt], 0, [rb - 2]
-    arb -2
-    call read_location_b            # TODO _b even for 16-bit
-    add [rb - 4], 0, [rb + cnt]
 
     # If we are shifting more than 8 bits, use fixed values
     lt  [rb + cnt], 9, [rb + tmp]
     jz  [rb + tmp], execute_shr_b_many
 
     # Read the value to shift
-    add [rb + loc_type_val], 0, [rb - 1]
-    add [rb + loc_addr_val], 0, [rb - 2]
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
     arb -2
     call read_location_b
     add [rb - 4], 0, [rb + val]
@@ -253,34 +289,36 @@ execute_shr_b_many:
 
 execute_shr_b_store:
     # Write the shifted value
-    add [rb + loc_type_val], 0, [rb - 1]
-    add [rb + loc_addr_val], 0, [rb - 2]
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
     add [rb + val], 0, [rb - 3]
     arb -3
     call write_location_b
 
 execute_shr_b_done:
     arb 4
-    ret 4
+    ret 2
 .ENDFRAME
 
 ##########
-execute_sar_b:
-.FRAME loc_type_val, loc_addr_val, loc_type_cnt, loc_addr_cnt; val, val_bits, cnt, tmp
-    arb -4
+.FRAME loc_type, loc_addr; val, val_bits, cnt, tmp
+    # Function with multiple entry points
 
+execute_sar_1_b:
+    arb -4
+    add 1, 0, [rb + cnt]
+    jz  0, execute_sar_b
+
+execute_sar_cl_b:
+    arb -4
+    add [reg_cl], 0, [rb + cnt]
+
+execute_sar_b:
     add 0, 0, [flag_auxiliary_carry]
 
-    # Read the number of bits
-    add [rb + loc_type_cnt], 0, [rb - 1]
-    add [rb + loc_addr_cnt], 0, [rb - 2]
-    arb -2
-    call read_location_b            # TODO _b even for 16-bit
-    add [rb - 4], 0, [rb + cnt]
-
     # Read the value to shift
-    add [rb + loc_type_val], 0, [rb - 1]
-    add [rb + loc_addr_val], 0, [rb - 2]
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
     arb -2
     call read_location_b
     add [rb - 4], 0, [rb + val]
@@ -362,15 +400,15 @@ execute_sar_b_many:
 
 execute_sar_b_store:
     # Write the shifted value
-    add [rb + loc_type_val], 0, [rb - 1]
-    add [rb + loc_addr_val], 0, [rb - 2]
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
     add [rb + val], 0, [rb - 3]
     arb -3
     call write_location_b
 
 execute_sar_b_done:
     arb 4
-    ret 4
+    ret 2
 .ENDFRAME
 
 ##########

@@ -1,24 +1,46 @@
-.EXPORT execute_shift_b
-.EXPORT execute_shift_w
+.EXPORT execute_shift_1_b
+.EXPORT execute_shift_1_w
+.EXPORT execute_shift_cl_b
+.EXPORT execute_shift_cl_w
 
 # From error.s
 .IMPORT report_error
 
 # From shift.s
-.IMPORT execute_rol_b
-.IMPORT execute_rol_w
-.IMPORT execute_ror_b
-.IMPORT execute_ror_w
-.IMPORT execute_rcl_b
-.IMPORT execute_rcl_w
-.IMPORT execute_rcr_b
-.IMPORT execute_rcr_w
-.IMPORT execute_shl_b
-.IMPORT execute_shl_w
-.IMPORT execute_shr_b
-.IMPORT execute_shr_w
-.IMPORT execute_sar_b
-.IMPORT execute_sar_w
+.IMPORT execute_rol_1_b
+.IMPORT execute_rol_1_w
+.IMPORT execute_rol_cl_b
+.IMPORT execute_rol_cl_w
+
+.IMPORT execute_ror_1_b
+.IMPORT execute_ror_1_w
+.IMPORT execute_ror_cl_b
+.IMPORT execute_ror_cl_w
+
+.IMPORT execute_rcl_1_b
+.IMPORT execute_rcl_1_w
+.IMPORT execute_rcl_cl_b
+.IMPORT execute_rcl_cl_w
+
+.IMPORT execute_rcr_1_b
+.IMPORT execute_rcr_1_w
+.IMPORT execute_rcr_cl_b
+.IMPORT execute_rcr_cl_w
+
+.IMPORT execute_shl_1_b
+.IMPORT execute_shl_1_w
+.IMPORT execute_shl_cl_b
+.IMPORT execute_shl_cl_w
+
+.IMPORT execute_shr_1_b
+.IMPORT execute_shr_1_w
+.IMPORT execute_shr_cl_b
+.IMPORT execute_shr_cl_w
+
+.IMPORT execute_sar_1_b
+.IMPORT execute_sar_1_w
+.IMPORT execute_sar_cl_b
+.IMPORT execute_sar_cl_w
 
 # Group "shift" instructions, first byte is MOD xxx R/M, where xxx is:
 # 000 ROL, 001 ROR, 010 RCL, 011 RCR, 100 SAL/SHL, 101 SHR, 111 SAR
@@ -30,138 +52,229 @@
 # 0xd3 <op> REG16/MEM16, CL
 
 ##########
-execute_shift_b:
-.FRAME op, loc_type_val, loc_addr_val, loc_type_cnt, loc_addr_cnt;
+.FRAME op, loc_type, loc_addr; table
+    # Function with multiple entry points
+
+execute_shift_1_b:
+    arb -1
+    add shift_1_b_table, 0, [rb + table]
+    jz  0, execute_shift
+
+execute_shift_1_w:
+    arb -1
+    add shift_1_w_table, 0, [rb + table]
+    jz  0, execute_shift
+
+execute_shift_cl_b:
+    arb -1
+    add shift_cl_b_table, 0, [rb + table]
+    jz  0, execute_shift
+
+execute_shift_cl_w:
+    arb -1
+    add shift_cl_w_table, 0, [rb + table]
+    jz  0, execute_shift
+
+execute_shift:
     # Prepare the arguments on stack
-    add [rb + loc_type_val], 0, [rb - 1]
-    add [rb + loc_addr_val], 0, [rb - 2]
-    add [rb + loc_type_cnt], 0, [rb - 3]
-    add [rb + loc_addr_cnt], 0, [rb - 4]
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
 
     # Execute the operation
-    add execute_shift_b_table, [rb + op], [ip + 2]
+    add [rb + table], [rb + op], [ip + 2]
     jz  0, [0]
+    # TODO call, not jz
 
-execute_shift_b_table:
-    # Map each OP value to the label that handles it
-    db  execute_shift_b_rol
-    db  execute_shift_b_ror
-    db  execute_shift_b_rcl
-    db  execute_shift_b_rcr
-    db  execute_shift_b_shl
-    db  execute_shift_b_shr
-    db  execute_shift_b_invalid_op
-    db  execute_shift_b_sar
-
-execute_shift_b_invalid_op:
+execute_shift_invalid_op:
     add invalid_op_message, 0, [rb - 1]
     arb -1
     call report_error
 
-execute_shift_b_rol:
-    arb -4
-    call execute_rol_b
-    jz  0, execute_shift_b_end
+execute_shift_rol_1_b:
+    arb -2
+    call execute_rol_1_b
+    jz  0, execute_shift_end
 
-execute_shift_b_ror:
-    arb -4
-    call execute_ror_b
-    jz  0, execute_shift_b_end
+execute_shift_ror_1_b:
+    arb -2
+    call execute_ror_1_b
+    jz  0, execute_shift_end
 
-execute_shift_b_rcl:
-    arb -4
-    call execute_rcl_b
-    jz  0, execute_shift_b_end
+execute_shift_rcl_1_b:
+    arb -2
+    call execute_rcl_1_b
+    jz  0, execute_shift_end
 
-execute_shift_b_rcr:
-    arb -4
-    call execute_rcr_b
-    jz  0, execute_shift_b_end
+execute_shift_rcr_1_b:
+    arb -2
+    call execute_rcr_1_b
+    jz  0, execute_shift_end
 
-execute_shift_b_shl:
-    arb -4
-    call execute_shl_b
-    jz  0, execute_shift_b_end
+execute_shift_shl_1_b:
+    arb -2
+    call execute_shl_1_b
+    jz  0, execute_shift_end
 
-execute_shift_b_shr:
-    arb -4
-    call execute_shr_b
-    jz  0, execute_shift_b_end
+execute_shift_shr_1_b:
+    arb -2
+    call execute_shr_1_b
+    jz  0, execute_shift_end
 
-execute_shift_b_sar:
-    arb -4
-    call execute_sar_b
+execute_shift_sar_1_b:
+    arb -2
+    call execute_sar_1_b
+    jz  0, execute_shift_end
 
-execute_shift_b_end:
-    ret 5
+execute_shift_rol_1_w:
+    arb -2
+    call execute_rol_1_w
+    jz  0, execute_shift_end
+
+execute_shift_ror_1_w:
+    arb -2
+    call execute_ror_1_w
+    jz  0, execute_shift_end
+
+execute_shift_rcl_1_w:
+    arb -2
+    call execute_rcl_1_w
+    jz  0, execute_shift_end
+
+execute_shift_rcr_1_w:
+    arb -2
+    call execute_rcr_1_w
+    jz  0, execute_shift_end
+
+execute_shift_shl_1_w:
+    arb -2
+    call execute_shl_1_w
+    jz  0, execute_shift_end
+
+execute_shift_shr_1_w:
+    arb -2
+    call execute_shr_1_w
+    jz  0, execute_shift_end
+
+execute_shift_sar_1_w:
+    arb -2
+    call execute_sar_1_w
+    jz  0, execute_shift_end
+
+execute_shift_rol_cl_b:
+    arb -2
+    call execute_rol_cl_b
+    jz  0, execute_shift_end
+
+execute_shift_ror_cl_b:
+    arb -2
+    call execute_ror_cl_b
+    jz  0, execute_shift_end
+
+execute_shift_rcl_cl_b:
+    arb -2
+    call execute_rcl_cl_b
+    jz  0, execute_shift_end
+
+execute_shift_rcr_cl_b:
+    arb -2
+    call execute_rcr_cl_b
+    jz  0, execute_shift_end
+
+execute_shift_shl_cl_b:
+    arb -2
+    call execute_shl_cl_b
+    jz  0, execute_shift_end
+
+execute_shift_shr_cl_b:
+    arb -2
+    call execute_shr_cl_b
+    jz  0, execute_shift_end
+
+execute_shift_sar_cl_b:
+    arb -2
+    call execute_sar_cl_b
+    jz  0, execute_shift_end
+
+execute_shift_rol_cl_w:
+    arb -2
+    call execute_rol_cl_w
+    jz  0, execute_shift_end
+
+execute_shift_ror_cl_w:
+    arb -2
+    call execute_ror_cl_w
+    jz  0, execute_shift_end
+
+execute_shift_rcl_cl_w:
+    arb -2
+    call execute_rcl_cl_w
+    jz  0, execute_shift_end
+
+execute_shift_rcr_cl_w:
+    arb -2
+    call execute_rcr_cl_w
+    jz  0, execute_shift_end
+
+execute_shift_shl_cl_w:
+    arb -2
+    call execute_shl_cl_w
+    jz  0, execute_shift_end
+
+execute_shift_shr_cl_w:
+    arb -2
+    call execute_shr_cl_w
+    jz  0, execute_shift_end
+
+execute_shift_sar_cl_w:
+    arb -2
+    call execute_sar_cl_w
+
+execute_shift_end:
+    arb 1
+    ret 3
 .ENDFRAME
 
 ##########
-execute_shift_w:
-.FRAME op, loc_type_val, loc_addr_val, loc_type_cnt, loc_addr_cnt;
-    # Prepare the arguments on stack
-    add [rb + loc_type_val], 0, [rb - 1]
-    add [rb + loc_addr_val], 0, [rb - 2]
-    add [rb + loc_type_cnt], 0, [rb - 3]
-    add [rb + loc_addr_cnt], 0, [rb - 4]
+# Map each OP value to the label that handles it
+shift_1_b_table:
+    db  execute_shift_rol_1_b
+    db  execute_shift_ror_1_b
+    db  execute_shift_rcl_1_b
+    db  execute_shift_rcr_1_b
+    db  execute_shift_shl_1_b
+    db  execute_shift_shr_1_b
+    db  execute_shift_invalid_op
+    db  execute_shift_sar_1_b
 
-    # Execute the operation
-    add execute_shift_w_table, [rb + op], [ip + 2]
-    jz  0, [0]
+shift_cl_b_table:
+    db  execute_shift_rol_cl_b
+    db  execute_shift_ror_cl_b
+    db  execute_shift_rcl_cl_b
+    db  execute_shift_rcr_cl_b
+    db  execute_shift_shl_cl_b
+    db  execute_shift_shr_cl_b
+    db  execute_shift_invalid_op
+    db  execute_shift_sar_cl_b
 
-execute_shift_w_table:
-    # Map each OP value to the label that handles it
-    db  execute_shift_w_rol
-    db  execute_shift_w_ror
-    db  execute_shift_w_rcl
-    db  execute_shift_w_rcr
-    db  execute_shift_w_shl
-    db  execute_shift_w_shr
-    db  execute_shift_w_invalid_op
-    db  execute_shift_w_sar
+shift_1_w_table:
+    db  execute_shift_rol_1_w
+    db  execute_shift_ror_1_w
+    db  execute_shift_rcl_1_w
+    db  execute_shift_rcr_1_w
+    db  execute_shift_shl_1_w
+    db  execute_shift_shr_1_w
+    db  execute_shift_invalid_op
+    db  execute_shift_sar_1_w
 
-execute_shift_w_invalid_op:
-    add invalid_op_message, 0, [rb - 1]
-    arb -1
-    call report_error
-
-execute_shift_w_rol:
-    arb -4
-    call execute_rol_w
-    jz  0, execute_shift_w_end
-
-execute_shift_w_ror:
-    arb -4
-    call execute_ror_w
-    jz  0, execute_shift_w_end
-
-execute_shift_w_rcl:
-    arb -4
-    call execute_rcl_w
-    jz  0, execute_shift_w_end
-
-execute_shift_w_rcr:
-    arb -4
-    call execute_rcr_w
-    jz  0, execute_shift_w_end
-
-execute_shift_w_shl:
-    arb -4
-    call execute_shl_w
-    jz  0, execute_shift_w_end
-
-execute_shift_w_shr:
-    arb -4
-    call execute_shr_w
-    jz  0, execute_shift_w_end
-
-execute_shift_w_sar:
-    arb -4
-    call execute_sar_w
-
-execute_shift_w_end:
-    ret 5
-.ENDFRAME
+shift_cl_w_table:
+    db  execute_shift_rol_cl_w
+    db  execute_shift_ror_cl_w
+    db  execute_shift_rcl_cl_w
+    db  execute_shift_rcr_cl_w
+    db  execute_shift_shl_cl_w
+    db  execute_shift_shr_cl_w
+    db  execute_shift_invalid_op
+    db  execute_shift_sar_cl_w
 
 invalid_op_message:
     db  "invalid group shift operation", 0
