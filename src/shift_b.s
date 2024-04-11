@@ -124,7 +124,7 @@ execute_shl_b_eight:
     add [rb + val_bits], 0, [ip + 1]
     add [0], 0, [flag_carry]
 
-    add 0, 0, [flag_overflow]
+    eq  [flag_carry], 1, [flag_overflow]
     add 0, 0, [flag_sign]
     add 1, 0, [flag_zero]
     add 1, 0, [flag_parity]
@@ -231,7 +231,7 @@ execute_shr_b_eight:
     add [rb + val_bits], 7, [ip + 1]
     add [0], 0, [flag_carry]
 
-    add 0, 0, [flag_overflow]
+    eq  [flag_carry], 1, [flag_overflow]
     add 0, 0, [flag_sign]
     add 1, 0, [flag_zero]
     add 1, 0, [flag_parity]

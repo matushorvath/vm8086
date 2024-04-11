@@ -85,7 +85,9 @@ execute_shl_w:
     mul [rb + val_hi], 8, [rb + tmp]
     add bits, [rb + tmp], [rb + val_bits_hi]
 
-    # If we are shifting by 16, use a simplified algorithm
+    # If we are shifting by 8 or 16, use a simplified algorithm
+    eq  [rb + count], 8, [rb + tmp]
+    jnz [rb + tmp], execute_shl_w_8
     eq  [rb + count], 16, [rb + tmp]
     jnz [rb + tmp], execute_shl_w_16
 
@@ -142,6 +144,16 @@ execute_shl_w_8_to_15:
     # Zero the lo value
     add 0, 0, [rb + val_lo]
 
+    jz  0, execute_shl_w_update_flags
+
+execute_shl_w_8:
+    # If we are shifting by 8, move the lo byte to hi byte and zero the lo byte, then update flags
+    add [rb + val_lo], 0, [rb + val_hi]
+    add 0, 0, [rb + val_lo]
+
+    add [rb + val_bits_hi], 0, [ip + 1]
+    add [0], 0, [flag_carry]
+
 execute_shl_w_update_flags:
     # Update flags
     lt  0x7f, [rb + val_hi], [flag_sign]
@@ -169,7 +181,7 @@ execute_shl_w_16:
     add [rb + val_bits_lo], 0, [ip + 1]
     add [0], 0, [flag_carry]
 
-    add 0, 0, [flag_overflow]
+    eq  [flag_carry], 1, [flag_overflow]
     add 0, 0, [flag_sign]
     add 1, 0, [flag_zero]
     add 1, 0, [flag_parity]
@@ -281,7 +293,7 @@ execute_shr_w_sixteen:
     add [rb + val_bits], 7, [ip + 1]
     add [0], 0, [flag_carry]
 
-    add 0, 0, [flag_overflow]
+    eq  [flag_carry], 1, [flag_overflow]
     add 0, 0, [flag_sign]
     add 1, 0, [flag_zero]
     add 1, 0, [flag_parity]

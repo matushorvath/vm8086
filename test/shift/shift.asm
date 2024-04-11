@@ -17,15 +17,17 @@ section .text
     dump_state
 
 %macro clearf 0
-    mov di, 0
-    push di
+    push ax
+    mov ax, 0
+    push ax
     popf
+    pop ax
 %endmacro
 
     mark 0x80
 %include "shl_b.inc"
     mark 0x81
-;%include "shl_w.inc"
+%include "shl_w.inc"
     mark 0x82
 %include "shr_b.inc"
     mark 0x83
