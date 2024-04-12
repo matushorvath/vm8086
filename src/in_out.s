@@ -55,8 +55,8 @@ execute_in_al_immediate_b:
 
 ##########
 execute_in_ax_immediate_b:
-.FRAME port
-    arb -1
+.FRAME port, tmp
+    arb -2
 
     # Read 8-bit port number from the immediate parameter
     call read_cs_ip_b
@@ -69,13 +69,22 @@ execute_in_ax_immediate_b:
     call port_in
     add [rb - 3], 0, [reg_ax + 0]
 
-    # TODO HW If the first port is 0xff, should the second port be 0x100 or overflow to 0x00?
-    add [rb + port], 1, [rb - 1]
+    # Increment the port with wrap around
+    # TODO HW Does real hardware wrap around to 8 bits here?
+    add [rb + port], 1, [rb + port]
+
+    lt  [rb + port], 0x100, [rb + tmp]
+    jnz [rb + tmp], execute_in_ax_immediate_b_no_overflow
+
+    add [rb + port], -0x100, [rb + port]
+
+execute_in_ax_immediate_b_no_overflow:
+    add [rb + port], 0, [rb - 1]
     arb -1
     call port_in
     add [rb - 3], 0, [reg_ax + 1]
 
-    arb 1
+    arb 2
     ret 0
 .ENDFRAME
 
@@ -122,7 +131,7 @@ execute_in_ax_dx:
     add [rb + port], -0x10000, [rb + port]
 
 execute_in_ax_dx_no_overflow:
-    add [rb + port], 1, [rb - 1]
+    add [rb + port], 0, [rb - 1]
     arb -1
     call port_in
     add [rb - 3], 0, [reg_ax + 1]
@@ -153,8 +162,8 @@ execute_out_al_immediate_b:
 
 ##########
 execute_out_ax_immediate_b:
-.FRAME port
-    arb -1
+.FRAME port, tmp
+    arb -2
 
     # Read 8-bit port number from the immediate parameter
     call read_cs_ip_b
@@ -167,13 +176,22 @@ execute_out_ax_immediate_b:
     arb -2
     call port_out
 
-    # TODO HW If the first port is 0xff, should the second port be 0x100 or overflow to 0x00?
-    add [rb + port], 1, [rb - 1]
+    # Increment the port with wrap around
+    # TODO HW Does real hardware wrap around to 8 bits here?
+    add [rb + port], 1, [rb + port]
+
+    lt  [rb + port], 0x100, [rb + tmp]
+    jnz [rb + tmp], execute_out_ax_immediate_b_no_overflow
+
+    add [rb + port], -0x100, [rb + port]
+
+execute_out_ax_immediate_b_no_overflow:
+    add [rb + port], 0, [rb - 1]
     add [reg_ax + 1], 0, [rb - 2]
     arb -2
     call port_out
 
-    arb 1
+    arb 2
     ret 0
 .ENDFRAME
 
@@ -237,6 +255,20 @@ port_in:
     # Input a constant for unmapped ports
     add 0xff, 0, [rb + value]
 
+    # Output the port number stdout
+    # TODO remove temporary I/O code
+    add port_in_message_start, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [rb + port], 0, [rb - 1]
+    add 16, 0, [rb - 2]
+    add 4, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
+    out 10
+
     arb 1
     ret 1
 .ENDFRAME
@@ -271,7 +303,7 @@ port_out:
 
     add [rb + port], 0, [rb - 1]
     add 16, 0, [rb - 2]
-    add 0, 0, [rb - 3]
+    add 4, 0, [rb - 3]
     arb -3
     call print_num_radix
 
@@ -281,7 +313,7 @@ port_out:
 
     add [rb + value], 0, [rb - 1]
     add 16, 0, [rb - 2]
-    add 0, 0, [rb - 3]
+    add 2, 0, [rb - 3]
     arb -3
     call print_num_radix
 
@@ -313,8 +345,10 @@ port_out_done:
     arb 1
     ret 2
 
+port_in_message_start:
+    db  "IN port 0x", 0
 port_out_message_start:
-    db  "port 0x", 0
+    db  "OUT port 0x", 0
 port_out_message_separator:
     db  ": 0x", 0
 .ENDFRAME
