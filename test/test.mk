@@ -124,7 +124,6 @@ $(RESDIR)/%.bochs.txt: $(RESDIR)/%.bochs.data $(COMMON_BINDIR)/dump_state
 	@$(passed)
 endif
 
-# TODO kill bochs after a timeout
 $(RESDIR)/%.bochs.data: $(OBJDIR)/%.bochs.bin FORCE
 	printf '$(NAME): [bochs] executing ' >> $(TESTLOG)
 	bochs -q -f $(COMMON_DIR)/bochsrc.${PLATFORM} -rc $(COMMON_DIR)/bochs.debugger \
