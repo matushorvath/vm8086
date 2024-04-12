@@ -8,16 +8,25 @@
 .EXPORT execute_cbw
 .EXPORT execute_cwd
 
+.EXPORT execute_xlat
+
 # From location.s
 .IMPORT read_location_b
 .IMPORT read_location_w
 .IMPORT write_location_b
 .IMPORT write_location_w
 
+# From memory.s
+.IMPORT read_seg_off_b
+
+# From prefix.s
+.IMPORT ds_segment_prefix
+
 # From state.s
 .IMPORT reg_al
 .IMPORT reg_ah
 .IMPORT reg_ax
+.IMPORT reg_bx
 .IMPORT reg_dx
 
 ##########
@@ -151,7 +160,7 @@ execute_xchg_ax_w:
 
 ##########
 execute_cbw:
-.FRAME;
+.FRAME
     # Sign extend al into ah
     lt  0x7f, [reg_al], [reg_ah]
     mul [reg_ah], 0xff, [reg_ah]
@@ -161,12 +170,42 @@ execute_cbw:
 
 ##########
 execute_cwd:
-.FRAME;
+.FRAME
     # Sign extend ax into dx
     lt  0x7f, [reg_ax + 1], [reg_dx + 0]
     mul [reg_dx + 0], 0xff, [reg_dx + 0]
     add [reg_dx + 0], 0, [reg_dx + 1]
 
+    ret 0
+.ENDFRAME
+
+##########
+execute_xlat:
+.FRAME value_offset, tmp
+    arb -2
+
+    # Calculate address of the output value
+    mul [reg_bx + 1], 0x100, [rb + value_offset]
+    add [reg_bx + 0], [rb + value_offset], [rb + value_offset]
+    add [reg_al], [rb + value_offset], [rb + value_offset]
+
+    # Wrap around the offset
+    lt  [rb + value_offset], 0x10000, [rb + tmp]
+    jnz [rb + tmp], execute_xlat_no_overflow
+    add [rb + value_offset], -0x10000, [rb + value_offset]
+
+execute_xlat_no_overflow:
+    # Read the value from memory to reg_al
+    add [ds_segment_prefix], 1, [ip + 1]
+    mul [0], 0x100, [rb - 1]
+    add [ds_segment_prefix], 0, [ip + 1]
+    add [0], [rb - 1], [rb - 1]
+    add [rb + value_offset], 0, [rb - 2]
+    arb -2
+    call read_seg_off_b
+    add [rb - 4], 0, [reg_al]
+
+    arb 2
     ret 0
 .ENDFRAME
 

@@ -203,6 +203,7 @@
 .IMPORT execute_xchg_ax_w
 .IMPORT execute_cbw
 .IMPORT execute_cwd
+.IMPORT execute_xlat
 
 # iAPX 86, 88 User's Manual; August 1981; pages 4-27 to 4-35
 
@@ -472,7 +473,7 @@ instructions:
     db  not_implemented, 0, 0 # TODO    db  execute_aam, xxx, 0                                  # 0xd4 AAM
     db  not_implemented, 0, 0 # TODO    db  execute_aad, xxx, 0                                  # 0xd5 AAD
     db  invalid_opcode, 0, 0                                # 0xd6
-    db  not_implemented, 0, 0 # TODO x   db  execute_xlat, 0                                 # 0xd7 XLAT SOURCE-TABLE
+    db  execute_xlat, 0, 0                                  # 0xd7 XLAT SOURCE-TABLE
 
     db  execute_esc, arg_mod_op_rm_b, 3                     # 0xd8 ESC OPCODE, SOURCE
     db  execute_esc, arg_mod_op_rm_w, 3                     # 0xd9 ESC OPCODE, SOURCE
