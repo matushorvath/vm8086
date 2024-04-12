@@ -4,6 +4,8 @@
 # From bitwise.s
 .IMPORT execute_test_b
 .IMPORT execute_test_w
+.IMPORT execute_not_b
+.IMPORT execute_not_w
 
 # From error.s
 .IMPORT report_error
@@ -58,7 +60,7 @@ execute_group1_b_test:
     add [rb - 2], 0, [rb + loc_addr_immed]
     call inc_ip_b
 
-    # Prepare the arguments on stack
+    # Execute the instruction
     add [rb + loc_type], 0, [rb - 1]
     add [rb + loc_addr], 0, [rb - 2]
     add 1, 0, [rb - 3]
@@ -69,10 +71,12 @@ execute_group1_b_test:
     jz  0, execute_group1_b_end
 
 execute_group1_b_not:
-    # TODO implement
-    add not_implemented_message, 0, [rb - 1]
-    arb -1
-    call report_error
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    arb -2
+    call execute_not_b
+
+    jz  0, execute_group1_b_end
 
 execute_group1_b_neg:
     # TODO implement
@@ -140,7 +144,7 @@ execute_group1_w_test:
     add [rb - 2], 0, [rb + loc_addr_immed]
     call inc_ip_w
 
-    # Prepare the arguments on stack
+    # Execute the instruction
     add [rb + loc_type], 0, [rb - 1]
     add [rb + loc_addr], 0, [rb - 2]
     add 1, 0, [rb - 3]
@@ -151,10 +155,12 @@ execute_group1_w_test:
     jz  0, execute_group1_w_end
 
 execute_group1_w_not:
-    # TODO implement
-    add not_implemented_message, 0, [rb - 1]
-    arb -1
-    call report_error
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    arb -2
+    call execute_not_w
+
+    jz  0, execute_group1_w_end
 
 execute_group1_w_neg:
     # TODO implement

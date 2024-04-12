@@ -42,4 +42,7 @@ section .text
 %include "test_b.inc"
 %include "test_w.inc"
 
+    mark 0x84
+%include "not.inc"
+
     call power_off

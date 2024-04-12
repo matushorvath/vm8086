@@ -6,6 +6,8 @@
 .EXPORT execute_xor_w
 .EXPORT execute_test_b
 .EXPORT execute_test_w
+.EXPORT execute_not_b
+.EXPORT execute_not_w
 
 # From location.s
 .IMPORT read_location_b
@@ -281,6 +283,52 @@ xor_b_loop:
     jnz [rb + bit], xor_b_loop
 
     arb 5
+    ret 2
+.ENDFRAME
+
+##########
+execute_not_b:
+.FRAME loc_type, loc_addr;
+    # Read the value
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    arb -2
+    call read_location_b
+
+    # Negate the value
+    mul [rb - 4], -1, [rb - 4]
+    add 0xff, [rb - 4], [rb - 3]        # ~read_location_b() -> param 3
+
+    # Write the value
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    arb -3
+    call write_location_b
+
+    ret 2
+.ENDFRAME
+
+##########
+execute_not_w:
+.FRAME loc_type, loc_addr;
+    # Read the value
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    arb -2
+    call read_location_w
+
+    # Negate both bytes of the value
+    mul [rb - 4], -1, [rb - 4]
+    add 0xff, [rb - 4], [rb - 3]        # ~read_location_w().lo -> param 3
+    mul [rb - 5], -1, [rb - 5]
+    add 0xff, [rb - 5], [rb - 4]        # ~read_location_w().lo -> param 4
+
+    # Write the value
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    arb -4
+    call write_location_w
+
     ret 2
 .ENDFRAME
 
