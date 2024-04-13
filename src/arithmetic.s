@@ -38,9 +38,11 @@ execute_neg_b:
     add [rb - 4], 0, [rb + val]
 
     # Negate the value
+    jz  [rb + val], execute_neg_b_zero
     mul [rb + val], -1, [rb + val]
     add 0x100, [rb + val], [rb + val]
 
+execute_neg_b_zero:
     # Update flags
     lt  0x7f, [rb + val], [flag_sign]
     eq  [rb + val], 0, [flag_zero]
@@ -83,14 +85,20 @@ execute_neg_w:
     add [rb - 5], 0, [rb + val_hi]
 
     # Negate the value
+    jz  [rb + val_lo], execute_neg_b_zero_lo
     mul [rb + val_lo], -1, [rb + val_lo]
     add 0x100, [rb + val_lo], [rb + val_lo]
+    add [rb + val_hi], 1, [rb + val_hi]                     # calculating (0 - N), so there's always carry from lo to hi
+
+execute_neg_b_zero_lo:
+    jz  [rb + val_hi], execute_neg_b_zero_hi
     mul [rb + val_hi], -1, [rb + val_hi]
     add 0x100, [rb + val_hi], [rb + val_hi]
 
+execute_neg_b_zero_hi:
     # Update flags
     lt  0x7f, [rb + val_hi], [flag_sign]
-    add [rb + val_lo], [rb + val_lo], [rb + tmp]
+    add [rb + val_lo], [rb + val_hi], [rb + tmp]
     eq  [rb + tmp], 0, [flag_zero]
     eq  [flag_zero], 0, [flag_carry]
 

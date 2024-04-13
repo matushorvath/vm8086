@@ -1,7 +1,8 @@
-.EXPORT dump_state
-.EXPORT mark
 .EXPORT dump_dx
+.EXPORT dump_state
 .EXPORT handle_shutdown_api
+.EXPORT mark
+.EXPORT print_char
 
 # From execute.s
 .IMPORT halt
@@ -15,6 +16,7 @@
 
 # From state.s
 .IMPORT reg_ip
+.IMPORT reg_al
 
 .IMPORT reg_ax
 .IMPORT reg_bx
@@ -354,6 +356,13 @@ dump_dx:
     out 10
 
     arb 1
+    ret 0
+.ENDFRAME
+
+##########
+print_char:
+.FRAME
+    out [reg_al]
     ret 0
 .ENDFRAME
 
