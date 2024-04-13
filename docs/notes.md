@@ -67,3 +67,13 @@ https://github.com/YJDoc2/8086-Emulator/
 https://github.com/adriancable/8086tiny
 https://bochs.sourceforge.io/
 https://github.com/86Box/86Box
+
+
+Missing instructions
+====================
+
+MUL IMUL DIV IDIV
+DAA DAS AAA AAS AAM AAD
+MOVS CMPS STOS LODS SCAS
+REPZ REPNZ
+ROL ROR RCL RCR

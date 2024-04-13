@@ -23,8 +23,6 @@
 .IMPORT flag_sign
 .IMPORT flag_overflow
 
-# TODO test neg, including flags
-
 ##########
 execute_neg_b:
 .FRAME loc_type, loc_addr; val, tmp
