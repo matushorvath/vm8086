@@ -92,9 +92,9 @@ run-test-build:
 # The order of the object files matters: First include all the code in any order, then binary.o,
 # then the (optional) 8086 image header and data.
 
-BASE_OBJS = vm8086.o add.o arg_al_ax_near_ptr.o arg_mod_op_rm.o arg_mod_reg_rm.o arg_reg.o \
-	arg_reg_immediate_b.o arg_reg_immediate_w.o bits.o bitwise.o call.o decode.o error.o \
-	execute.o flags.o group1.o group2.o group_immed.o group_shift.o in_out.o inc_dec.o \
+BASE_OBJS = vm8086.o add.o arithmetic.o arg_al_ax_near_ptr.o arg_mod_op_rm.o arg_mod_reg_rm.o \
+	arg_reg.o arg_reg_immediate_b.o arg_reg_immediate_w.o bits.o bitwise.o call.o decode.o \
+	error.o execute.o flags.o group1.o group2.o group_immed.o group_shift.o in_out.o inc_dec.o \
 	instructions.o interrupt.o jump.o jump_flag.o load.o location.o loop.o memory.o nibbles.o \
 	parity.o prefix.o shift_b.o shift_w.o shl.o shr.o split233.o stack.o state.o sub_cmp.o \
 	test_api.o trace.o trace_data.o transfer_address.o transfer_value.o util.o
