@@ -13,9 +13,8 @@
 # Entry point
     arb stack
 
-    # Overwrite the first instruction with 'hlt', so in case we ever
-    # jump to 0 by mistake, we halt immediately
-    # TODO this exits cleanly, instead make it crash on jump to 0
+    # Overwrite the first instruction with 'hlt', so in case
+    # we ever jump to 0 by mistake, we halt immediately
     add 99, 0, [0]
 
     call main

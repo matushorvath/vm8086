@@ -4,6 +4,7 @@
 .EXPORT execute_hlt
 .EXPORT invalid_opcode
 .EXPORT not_implemented             # TODO remove
+.EXPORT halt
 
 # From the linked 8086 binary
 .IMPORT binary_enable_tracing
@@ -137,14 +138,9 @@ execute_esc:
 ##########
 execute_hlt:
 .FRAME
-    # TODO use the BOCHS way of shutting down, output "Shutdown" to port 0x8900
-    add 1, 0, [halt]
+    # This is a nop for now
     ret 0
 .ENDFRAME
-
-##########
-halt:
-    db  0           # set this to non-zero to halt the VM
 
 ##########
 invalid_opcode:
@@ -167,5 +163,9 @@ not_implemented:            # TODO remove
 not_implemented_message:
     db  "opcode not implemented", 0
 .ENDFRAME
+
+##########
+halt:
+    db  0           # set this to non-zero to halt the VM
 
 .EOF

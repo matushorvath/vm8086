@@ -67,7 +67,7 @@ section util start=util_addr
 
 initialize:
 %ifdef BOCHS
-    ; print to bochs console
+    ; mark start of output on bochs console
     mov al, '>'
     out 0xe9, al
     mov al, '>'
@@ -118,20 +118,7 @@ initialize:
 
 power_off:
 %ifdef BOCHS
-    ; alternative: output "Shutdown" to port 0x8900
-
-    ; apm connect
-    mov ax, 0x5301
-    xor bx, bx
-    int 0x15
-
-    ; apm set version to 1.2
-    mov ax, 0x530e
-    xor bx, bx
-    mov cx, 0x0102
-    int 0x15
-
-    ; print to bochs console
+    ; mark end of output on bochs console
     mov al, '<'
     out 0xe9, al
     mov al, '<'
@@ -140,21 +127,28 @@ power_off:
     out 0xe9, al
     mov al, 10
     out 0xe9, al
-
-    ; apm power off
-    mov ax, 0x5307
-    mov bx, 0x0001
-    mov cx, 0x0003
-    int 0x15
 %endif
 
-%ifdef VM8086
-    ; TODO don't use hlt to stop the vm
-    hlt
-%endif
+    ; output 'Shutdown' to port 0x8900
+    ; TODO use outsb once available
+    mov dx, 0x8900
+    mov si, 0x00
 
-    ; we should not ever get here
+.loop_char:
+    mov al, [cs:.shutdown_string + si]
+    cmp al, 0x00
+    je  .loop_done
+
+    out dx, al
+    inc si
+    jmp .loop_char
+
+.loop_done:
+    ; we should never get here
     jmp $
+
+.shutdown_string:
+    db  "Shutdown", 0
 
 
 out_char:                                                   ; al is the char to print

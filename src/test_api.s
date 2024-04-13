@@ -1,6 +1,10 @@
 .EXPORT dump_state
 .EXPORT mark
 .EXPORT dump_dx
+.EXPORT handle_shutdown_api
+
+# From execute.s
+.IMPORT halt
 
 # From flags.s
 .IMPORT pack_flags_lo
@@ -351,6 +355,39 @@ dump_dx:
 
     arb 1
     ret 0
+.ENDFRAME
+
+##########
+handle_shutdown_api:
+.FRAME value; tmp
+    arb -1
+
+    add handle_shutdown_api_string, [handle_shutdown_api_state], [ip + 1]
+    eq  [0], [rb + value], [rb + tmp]
+    jnz [rb + tmp], handle_shutdown_api_advance_state
+
+    # Wrong character, reset the state
+    add 0, 0, [handle_shutdown_api_state]
+    jz  0, handle_shutdown_api_done
+
+handle_shutdown_api_advance_state:
+    add [handle_shutdown_api_state], 1, [handle_shutdown_api_state]
+
+    # If we are not at the end of the string, return
+    add handle_shutdown_api_string, [handle_shutdown_api_state], [ip + 1]
+    jnz [0], handle_shutdown_api_done
+
+    # Halt the VM
+    add 1, 0, [halt]
+
+handle_shutdown_api_done:
+    arb 1
+    ret 1
+
+handle_shutdown_api_state:
+    db  0
+handle_shutdown_api_string:
+    db  "Shutdown", 0
 .ENDFRAME
 
 ##########
