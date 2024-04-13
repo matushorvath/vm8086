@@ -1,6 +1,10 @@
 .EXPORT execute_group1_b
 .EXPORT execute_group1_w
 
+# From arithmetic.s
+.IMPORT execute_neg_b
+.IMPORT execute_neg_w
+
 # From bitwise.s
 .IMPORT execute_test_b
 .IMPORT execute_test_w
@@ -79,10 +83,12 @@ execute_group1_b_not:
     jz  0, execute_group1_b_end
 
 execute_group1_b_neg:
-    # TODO implement
-    add not_implemented_message, 0, [rb - 1]
-    arb -1
-    call report_error
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    arb -2
+    call execute_neg_b
+
+    jz  0, execute_group1_b_end
 
 execute_group1_b_mul:
     # TODO implement
@@ -163,10 +169,12 @@ execute_group1_w_not:
     jz  0, execute_group1_w_end
 
 execute_group1_w_neg:
-    # TODO implement
-    add not_implemented_message, 0, [rb - 1]
-    arb -1
-    call report_error
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    arb -2
+    call execute_neg_w
+
+    jz  0, execute_group1_w_end
 
 execute_group1_w_mul:
     # TODO implement
