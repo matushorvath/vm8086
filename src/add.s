@@ -28,7 +28,7 @@
 .IMPORT flag_overflow
 
 ##########
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a, b, res, tmp
+.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; src, dst, res, tmp
     # Function with multiple entry points
 
 execute_add_b:
@@ -43,23 +43,23 @@ execute_adc_b:
     add [rb + loc_addr_src], 0, [rb - 2]
     arb -2
     call read_location_b
-    add [rb - 4], 0, [rb + a]
+    add [rb - 4], 0, [rb + src]
 
     # Read the destination value
     add [rb + loc_type_dst], 0, [rb - 1]
     add [rb + loc_addr_dst], 0, [rb - 2]
     arb -2
     call read_location_b
-    add [rb - 4], 0, [rb + b]
+    add [rb - 4], 0, [rb + dst]
 
     # Update flag_auxiliary_carry before we modify flag_carry
-    add [rb + a], 0, [rb - 1]
-    add [rb + b], 0, [rb - 2]
+    add [rb + src], 0, [rb - 1]
+    add [rb + dst], 0, [rb - 2]
     arb -2
     call update_auxiliary_carry_adc
 
     # Calculate the result
-    add [rb + a], [rb + b], [rb + res]
+    add [rb + src], [rb + dst], [rb + res]
     add [rb + res], [flag_carry], [rb + res]
 
     # Check for carry
@@ -77,8 +77,8 @@ execute_adc_b_after_carry:
     add [0], 0, [flag_parity]
 
     # Update flag_overflow
-    add [rb + a], 0, [rb - 1]
-    add [rb + b], 0, [rb - 2]
+    add [rb + src], 0, [rb - 1]
+    add [rb + dst], 0, [rb - 2]
     add [rb + res], 0, [rb - 3]
     arb -3
     call update_overflow
@@ -95,7 +95,7 @@ execute_adc_b_after_carry:
 .ENDFRAME
 
 ##########
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a_lo, a_hi, b_lo, b_hi, res_lo, res_hi, tmp
+.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; src_lo, src_hi, dst_lo, dst_hi, res_lo, res_hi, tmp
     # Function with multiple entry points
 
 execute_add_w:
@@ -110,27 +110,27 @@ execute_adc_w:
     add [rb + loc_addr_src], 0, [rb - 2]
     arb -2
     call read_location_w
-    add [rb - 4], 0, [rb + a_lo]
-    add [rb - 5], 0, [rb + a_hi]
+    add [rb - 4], 0, [rb + src_lo]
+    add [rb - 5], 0, [rb + src_hi]
 
     # Read the destination value
     add [rb + loc_type_dst], 0, [rb - 1]
     add [rb + loc_addr_dst], 0, [rb - 2]
     arb -2
     call read_location_w
-    add [rb - 4], 0, [rb + b_lo]
-    add [rb - 5], 0, [rb + b_hi]
+    add [rb - 4], 0, [rb + dst_lo]
+    add [rb - 5], 0, [rb + dst_hi]
 
     # Update flag_auxiliary_carry before we modify flag_carry
-    add [rb + a_lo], 0, [rb - 1]
-    add [rb + b_lo], 0, [rb - 2]
+    add [rb + src_lo], 0, [rb - 1]
+    add [rb + dst_lo], 0, [rb - 2]
     arb -2
     call update_auxiliary_carry_adc
 
     # Calculate the result
-    add [rb + a_lo], [rb + b_lo], [rb + res_lo]
+    add [rb + src_lo], [rb + dst_lo], [rb + res_lo]
     add [rb + res_lo], [flag_carry], [rb + res_lo]
-    add [rb + a_hi], [rb + b_hi], [rb + res_hi]
+    add [rb + src_hi], [rb + dst_hi], [rb + res_hi]
 
     # Check for carry out of low byte
     lt  0xff, [rb + res_lo], [rb + tmp]
@@ -157,8 +157,8 @@ execute_adc_w_after_carry_hi:
     add [0], 0, [flag_parity]
 
     # Update flag_overflow
-    add [rb + a_hi], 0, [rb - 1]
-    add [rb + b_hi], 0, [rb - 2]
+    add [rb + src_hi], 0, [rb - 1]
+    add [rb + dst_hi], 0, [rb - 2]
     add [rb + res_hi], 0, [rb - 3]
     arb -3
     call update_overflow
@@ -177,15 +177,15 @@ execute_adc_w_after_carry_hi:
 
 ##########
 update_auxiliary_carry_adc:
-.FRAME a, b; a4l, b4l, tmp
+.FRAME src, dst; a4l, b4l, tmp
     arb -3
 
-    # Find low-order half-byte of a and b
-    mul [rb + a], 2, [rb + tmp]
+    # Find low-order half-byte of src and dst
+    mul [rb + src], 2, [rb + tmp]
     add nibbles, [rb + tmp], [ip + 1]
     add [0], 0, [rb + a4l]
 
-    mul [rb + b], 2, [rb + tmp]
+    mul [rb + dst], 2, [rb + tmp]
     add nibbles, [rb + tmp], [ip + 1]
     add [0], 0, [rb + b4l]
 
