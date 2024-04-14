@@ -45,6 +45,12 @@ jobs:
             eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
             set | grep PATH
             brew install nasm
+            set | grep PATH
+            ls -l /home/linuxbrew/.linuxbrew/bin
+            ls -l /home/linuxbrew/.linuxbrew/Cellar
+            ls -l /home/linuxbrew/.linuxbrew/Cellar/nasm
+            ls -l /home/linuxbrew/.linuxbrew/Cellar/nasm/2.16.02
+            /home/linuxbrew/.linuxbrew/Cellar/nasm/2.16.02/nasm
           elif [ "$RUNNER_OS" == "Windows" ]; then
             choco install nasm
             echo "C:\Program Files\NASM" >> $GITHUB_PATH
