@@ -40,7 +40,7 @@ jobs:
       - name: Install nasm
         run: |
           if [ "$RUNNER_OS" == "Linux" ]; then
-            sudo apt install -y nasm
+            sudo brew install nasm
           elif [ "$RUNNER_OS" == "Windows" ]; then
             choco install nasm
             echo "C:\Program Files\NASM" >> $GITHUB_PATH
