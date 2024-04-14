@@ -18,10 +18,11 @@
 .IMPORT inc_ip_b
 
 # From test_api.s
-.IMPORT dump_state
-.IMPORT mark
 .IMPORT dump_dx
+.IMPORT dump_state
 .IMPORT handle_shutdown_api
+.IMPORT mark
+.IMPORT print_char
 
 # TODO remove temporary I/O code
 .IMPORT print_num_radix
@@ -290,6 +291,10 @@ port_out:
     eq  [rb + port], 0x44, [rb + tmp]
     jnz [rb + tmp], port_out_dump_dx
 
+    # Port 0xe9 is a bochs API to output a character to console, used for debugging
+    eq  [rb + port], 0xe9, [rb + tmp]
+    jnz [rb + tmp], port_out_print_char
+
     # Port 0x8900 is a bochs API to shutdown the computer, used by tests
     eq  [rb + port], 0x8900, [rb + tmp]
     jnz [rb + tmp], port_out_shutdown
@@ -334,6 +339,10 @@ port_out_mark:
 
 port_out_dump_dx:
     call dump_dx
+    jz  0, port_out_done
+
+port_out_print_char:
+    call print_char
     jz  0, port_out_done
 
 port_out_shutdown:

@@ -150,7 +150,7 @@ int main(int argc, char *argv[]) {
         else error("Unknown record type");
     }
 
-    printf("Serial log formatted\n");
+    printf("Test log was generated\n");
 
     fclose(fin);
     fclose(fout);

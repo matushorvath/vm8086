@@ -47,8 +47,6 @@
 # 0xd2 <op> REG8/MEM8, CL
 # 0xd3 <op> REG16/MEM16, CL
 
-# TODO use this as pattern for handling other groups
-
 ##########
 execute_shift_1_b:
 .FRAME op, loc_type, loc_addr;
