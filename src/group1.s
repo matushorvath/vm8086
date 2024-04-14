@@ -17,6 +17,10 @@
 # From memory.s
 .IMPORT calc_cs_ip_addr
 
+# From arithmetic.s
+.IMPORT execute_mul_b
+# TODO .IMPORT execute_mul_w
+
 # From state.s
 .IMPORT inc_ip_b
 .IMPORT inc_ip_w
@@ -91,10 +95,12 @@ execute_group1_b_neg:
     jz  0, execute_group1_b_end
 
 execute_group1_b_mul:
-    # TODO implement
-    add not_implemented_message, 0, [rb - 1]
-    arb -1
-    call report_error
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    arb -2
+    call execute_mul_b
+
+    jz  0, execute_group1_b_end
 
 execute_group1_b_imul:
     # TODO implement

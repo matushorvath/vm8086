@@ -1,5 +1,5 @@
-; ADD/ADC 8-bit with memory
-; TODO
+; MUL/IMUL 8-bit various operand modes
+; TODO implement
 
 ;     clc
 ;     mov bl, 0x00
