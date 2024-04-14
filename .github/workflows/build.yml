@@ -40,17 +40,9 @@ jobs:
       - name: Install nasm
         run: |
           if [ "$RUNNER_OS" == "Linux" ]; then
-            /home/linuxbrew/.linuxbrew/bin/brew shellenv
-            set | grep PATH
             eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-            set | grep PATH
             brew install nasm
-            set | grep PATH
-            ls -l /home/linuxbrew/.linuxbrew/bin
-            ls -l /home/linuxbrew/.linuxbrew/Cellar
-            ls -l /home/linuxbrew/.linuxbrew/Cellar/nasm
-            ls -l /home/linuxbrew/.linuxbrew/Cellar/nasm/2.16.02
-            /home/linuxbrew/.linuxbrew/Cellar/nasm/2.16.02/nasm
+            echo "/home/linuxbrew/.linuxbrew/bin" >> $GITHUB_PATH
           elif [ "$RUNNER_OS" == "Windows" ]; then
             choco install nasm
             echo "C:\Program Files\NASM" >> $GITHUB_PATH
@@ -71,6 +63,7 @@ jobs:
 
       - name: Build
         working-directory: vm8086
+        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
         run: make build
 
       - name: Test
