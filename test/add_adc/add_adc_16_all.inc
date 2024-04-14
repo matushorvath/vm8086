@@ -1,4 +1,4 @@
-; SUB/SBB 16-bit, with and without input carry, all possible numbers
+; ADD/ADC 16-bit, with and without input carry, all possible numbers
 
 SKIP    equ 128     ; skip every SKIP numbers to speed up the test
 
