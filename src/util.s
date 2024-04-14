@@ -30,7 +30,7 @@ check_range_invalid_message:
 .ENDFRAME
 
 ##########
-.FRAME vin; vh, vl, bits, bit, pow, tmp                     # returns vh, vl
+.FRAME vin; vlo, vhi, bits, bit, pow, tmp                   # returns vlo, vhi
     # Function with multiple entry points
 
     # TODO We actually need split_32_8_8_8_8 for MUL/IMUL
@@ -44,8 +44,8 @@ split_16_8_8:
     add 8, 0, [rb + bits]
 
 split_hi_lo:
-    add 0, 0, [rb + vh]
-    add [rb + vin], 0, [rb + vl]
+    add 0, 0, [rb + vhi]
+    add [rb + vin], 0, [rb + vlo]
 
     add [rb + bits], 0, [rb + bit]
 
@@ -57,16 +57,16 @@ split_hi_lo_loop:
     add [rb + tmp], [rb + bit], [ip + 1]
     add [0], 0, [rb + pow]
 
-    # Is vl smaller than pow?
-    lt  [rb + vl], [rb + pow], [rb + tmp]
+    # Is vlo smaller than pow?
+    lt  [rb + vlo], [rb + pow], [rb + tmp]
     jnz [rb + tmp], split_hi_lo_zero
 
-    # If vl >= pow: subtract pow_hi from vl, add pow_lo to vh
+    # If vlo >= pow: subtract pow_hi from vlo, add pow_lo to vhi
     mul [rb + pow], -1, [rb + pow]
-    add [rb + vl], [rb + pow], [rb + vl]
+    add [rb + vlo], [rb + pow], [rb + vlo]
 
     add split_hi_lo_pow, [rb + bit], [ip + 1]
-    add [0], [rb + vh], [rb + vh]
+    add [0], [rb + vhi], [rb + vhi]
 
 split_hi_lo_zero:
     # Next bit
