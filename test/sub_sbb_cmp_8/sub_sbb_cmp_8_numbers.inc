@@ -1,4 +1,4 @@
-; ADD/ADC 8-bit, with and without input carry
+; SUB/SBB/CMP 8-bit, with and without input carry
     mov ax, 0
     mov bx, 0
     mov dx, 0
@@ -6,7 +6,7 @@
     mov di, 0
 
 ; test given instruction and carry flag state against given test set
-%macro test_add_8 3                     ; add_instruction, carry_flag_instruction, test_set
+%macro test_sub_8 3-4 ""                ; sub_instruction, carry_flag_instruction, test_set, [ignore_result]
     mov cx, word [cs:%3]
     mov bp, 2
 
@@ -19,8 +19,10 @@
     pushf
 
     mov dh, byte [cs:%3 + bp + 2]
+%ifnidni %4,ignore_result
     cmp dl, dh                          ; compare calculated and correct result
     jne %%done
+%endif
 
     ; relevant flags: ----O--- SZ-A-P-C
     pop di                              ; compare real flags with correct ones
@@ -29,7 +31,7 @@
     cmp di, si
     jne %%done
 
-    add bp, add_8_data_size
+    add bp, sub_8_data_size
 
     loop %%loop
     xor cx, cx                          ; set ZF = 1
@@ -41,29 +43,38 @@
 
 ; run the tests
 mark 0x60
-test_add_8 adc, clc, add_8_interesting_set_0
+test_sub_8 sbb, clc, sub_8_interesting_set_0
 mark 0x61
-test_add_8 adc, clc, add_8_generic_set_0
+test_sub_8 sbb, clc, sub_8_generic_set_0
 
 mark 0x62
-test_add_8 adc, stc, add_8_interesting_set_1
+test_sub_8 sbb, stc, sub_8_interesting_set_1
 mark 0x63
-test_add_8 adc, stc, add_8_generic_set_1
+test_sub_8 sbb, stc, sub_8_generic_set_1
 
 mark 0x64
-test_add_8 add, clc, add_8_interesting_set_0
+test_sub_8 sub, clc, sub_8_interesting_set_0
 mark 0x65
-test_add_8 add, clc, add_8_generic_set_0
+test_sub_8 sub, clc, sub_8_generic_set_0
 
 mark 0x66
-test_add_8 add, stc, add_8_interesting_set_0
+test_sub_8 sub, stc, sub_8_interesting_set_0
 mark 0x67
-test_add_8 add, stc, add_8_generic_set_0
+test_sub_8 sub, stc, sub_8_generic_set_0
 
+mark 0x68
+test_sub_8 cmp, clc, sub_8_interesting_set_0, ignore_result
+mark 0x69
+test_sub_8 cmp, clc, sub_8_generic_set_0, ignore_result
 
-; generate test data for adding two numbers
-%macro add_8_data 3                     ; op1, op2, carry
-    %assign res (%1 + %2 + %3) % 0x100
+mark 0x6a
+test_sub_8 cmp, stc, sub_8_interesting_set_0, ignore_result
+mark 0x6b
+test_sub_8 cmp, stc, sub_8_generic_set_0, ignore_result
+
+; generate test data for subtracting two numbers
+%macro sub_8_data 3                     ; op1, op2, carry
+    %assign res (%1 - %2 - %3) % 0x100
 
     ; relevant flags: ----O--- SZ-A-P-C
     %assign sfl res >= 0x80 ? 0b_00000000_10000000 : 0
@@ -79,10 +90,10 @@ test_add_8 add, stc, add_8_generic_set_0
     dw  flags
 %endmacro
 
-add_8_data_size equ 1 + 1 + 1 + 2       ; op1, op2, res, flags
+sub_8_data_size equ 1 + 1 + 1 + 2       ; op1, op2, res, flags
 
 ; test interesting numbers
-%macro add_8_interesting_set 1          ; carry
+%macro sub_8_interesting_set 1          ; carry
     %assign cnt_a 8
     %assign cnt_b 8
     dw  cnt_a * cnt_b
@@ -93,7 +104,7 @@ add_8_data_size equ 1 + 1 + 1 + 2       ; op1, op2, res, flags
         %rep cnt_b
             %assign a %sel(ai, 0x00, 0x01, 0x7e, 0x7f, 0x80, 0x81, 0xfe, 0xff)
             %assign b %sel(bi, 0x00, 0x01, 0x7e, 0x7f, 0x80, 0x81, 0xfe, 0xff)
-            add_8_data a, b, %1
+            sub_8_data a, b, %1
             %assign bi bi + 1
         %endrep
         %assign ai ai + 1
@@ -101,7 +112,7 @@ add_8_data_size equ 1 + 1 + 1 + 2       ; op1, op2, res, flags
 %endmacro
 
 ; complete test data with/without carry
-%macro add_8_generic_set 1              ; carry
+%macro sub_8_generic_set 1              ; carry
     %assign step_a 13
     %assign step_b 11
     %assign cnt_a 0x100 / step_a
@@ -113,7 +124,7 @@ add_8_data_size equ 1 + 1 + 1 + 2       ; op1, op2, res, flags
     %rep cnt_a
         %assign b 0
         %rep cnt_b
-            add_8_data a, b, %1
+            sub_8_data a, b, %1
         %assign b b + step_b
         %endrep
     %assign a a + step_a
@@ -123,14 +134,14 @@ add_8_data_size equ 1 + 1 + 1 + 2       ; op1, op2, res, flags
 
 [section .data start=data_addr]
 
-add_8_interesting_set_0:
-    add_8_interesting_set 0
-add_8_interesting_set_1:
-    add_8_interesting_set 1
+sub_8_interesting_set_0:
+    sub_8_interesting_set 0
+sub_8_interesting_set_1:
+    sub_8_interesting_set 1
 
-add_8_generic_set_0:
-    add_8_generic_set 0
-add_8_generic_set_1:
-    add_8_generic_set 1
+sub_8_generic_set_0:
+    sub_8_generic_set 0
+sub_8_generic_set_1:
+    sub_8_generic_set 1
 
 __?SECT?__

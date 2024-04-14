@@ -10,7 +10,7 @@ test_ds_16:
 
 
 section .text
-     dump_state
+    dump_state
 
     mov ax, 0x1000
     mov ds, ax

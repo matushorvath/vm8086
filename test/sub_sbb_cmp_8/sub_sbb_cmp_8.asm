@@ -15,7 +15,7 @@ section .text
     mov ax, 0x1000
     mov ds, ax
 
-%include "add_adc_8_modes.inc"
-%include "add_adc_8_numbers.inc"
+%include "sub_sbb_cmp_8_modes.inc"
+%include "sub_sbb_cmp_8_numbers.inc"
 
      call power_off
