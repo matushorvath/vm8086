@@ -56,7 +56,7 @@ test_mul_8 mul, mul_8_generic_set_0
     %assign res (%1 * %2) % 0x10000
 
     ; relevant flags: ----O--- -------C
-    %assign flags (res & 0xff00 != 0x0000) ? 0b_00001000_00000001 : 0
+    %assign flags (res & 0xff00 != 0) ? 0b_00001000_00000001 : 0
 
     ;%warning %1, %2, res, flags
     db  %1, %2
