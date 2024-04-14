@@ -17,9 +17,7 @@ jobs:
 
     strategy:
       matrix:
-# TODO re-enable ubuntu once it can run the tests again
-#        os: [ubuntu-latest, windows-latest, macOS-latest]
-        os: [windows-latest, macOS-latest]
+        os: [ubuntu-latest, windows-latest, macOS-latest]
 
     steps:
       - name: Checkout vm8086
