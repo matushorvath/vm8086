@@ -25,16 +25,22 @@
 
     test_loop loop, 0
     test_loop loop, 1
+    test_loop loop, 0x101
 
-    test_loop loopz, 0, 0b_00000000_00000000
-    test_loop loopz, 0, 0b_00000000_01000000
-    test_loop loopz, 1, 0b_00000000_00000000
-    test_loop loopz, 1, 0b_00000000_01000000
+    test_loop loopz, 0,     0b_00000000_00000000
+    test_loop loopz, 0,     0b_00000000_01000000
+    test_loop loopz, 1,     0b_00000000_00000000
+    test_loop loopz, 1,     0b_00000000_01000000
+    test_loop loopz, 0x101, 0b_00000000_00000000
+    test_loop loopz, 0x101, 0b_00000000_01000000
 
-    test_loop loopnz, 0, 0b_00000000_00000000
-    test_loop loopnz, 0, 0b_00000000_01000000
-    test_loop loopnz, 1, 0b_00000000_00000000
-    test_loop loopnz, 1, 0b_00000000_01000000
+    test_loop loopnz, 0,     0b_00000000_00000000
+    test_loop loopnz, 0,     0b_00000000_01000000
+    test_loop loopnz, 1,     0b_00000000_00000000
+    test_loop loopnz, 1,     0b_00000000_01000000
+    test_loop loopnz, 0x101, 0b_00000000_00000000
+    test_loop loopnz, 0x101, 0b_00000000_01000000
 
     test_loop jcxz, 0
     test_loop jcxz, 1
+    test_loop jcxz, 0x101

@@ -16,7 +16,8 @@ execute_loop:
 .FRAME
     call dec_cx
 
-    jnz [reg_cx], execute_loop_taken
+    jnz [reg_cx + 0], execute_loop_taken
+    jnz [reg_cx + 1], execute_loop_taken
 
     # Skip the pointer and don't jump
     call inc_ip_b
@@ -32,15 +33,18 @@ execute_loopz:
 .FRAME
     call dec_cx
 
-    jz  [reg_cx], execute_loopz_not_taken
-    jz  [flag_zero], execute_loopz_not_taken
-
-    call execute_jmp_short
-    ret 0
+    jnz [reg_cx + 0], execute_loopz_taken
+    jnz [reg_cx + 1], execute_loopz_taken
 
 execute_loopz_not_taken:
     # Skip the pointer and don't jump
     call inc_ip_b
+    ret 0
+
+execute_loopz_taken:
+    jz  [flag_zero], execute_loopz_not_taken
+
+    call execute_jmp_short
     ret 0
 .ENDFRAME
 
@@ -49,29 +53,33 @@ execute_loopnz:
 .FRAME
     call dec_cx
 
-    jz  [reg_cx], execute_loopnz_not_taken
-    jnz [flag_zero], execute_loopnz_not_taken
-
-    call execute_jmp_short
-    ret 0
+    jnz [reg_cx + 0], execute_loopnz_taken
+    jnz [reg_cx + 1], execute_loopnz_taken
 
 execute_loopnz_not_taken:
     # Skip the pointer and don't jump
     call inc_ip_b
+    ret 0
+
+execute_loopnz_taken:
+    jnz [flag_zero], execute_loopnz_not_taken
+
+    call execute_jmp_short
     ret 0
 .ENDFRAME
 
 ##########
 execute_jcxz:
 .FRAME
-    jz  [reg_cx], execute_jcxz_taken
+    jnz [reg_cx + 0], execute_jcxz_not_taken
+    jnz [reg_cx + 1], execute_jcxz_not_taken
 
-    # Skip the pointer and don't jump
-    call inc_ip_b
+    call execute_jmp_short
     ret 0
 
-execute_jcxz_taken:
-    call execute_jmp_short
+execute_jcxz_not_taken:
+    # Skip the pointer and don't jump
+    call inc_ip_b
     ret 0
 .ENDFRAME
 
