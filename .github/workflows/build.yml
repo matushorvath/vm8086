@@ -63,7 +63,6 @@ jobs:
 
       - name: Build
         working-directory: vm8086
-        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
         run: make build
 
       - name: Test
