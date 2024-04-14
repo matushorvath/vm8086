@@ -1,4 +1,4 @@
-; ADD/ADC 16-bit, with and without input carry
+; SUB/SBB/CMP 16-bit, with and without input carry
     mov ax, 0
     mov bx, 0
     mov dx, 0
@@ -6,7 +6,7 @@
     mov di, 0
 
 ; test given instruction and carry flag state against given test set
-%macro test_add_16 3                    ; add_instruction, carry_flag_instruction, test_set
+%macro test_sub_16 3                    ; sub_instruction, carry_flag_instruction, test_set
     mov cx, word [cs:%3]
     mov bp, 2
 
@@ -19,8 +19,10 @@
     pushf
 
     mov di, word [cs:%3 + bp + 4]
+%ifnidni %4,ignore_result
     cmp dx, di                          ; compare calculated and correct result
     jne %%done
+%endif
 
     ; relevant flags: ----O--- SZ-A-P-C
     pop di                              ; compare real flags with correct ones
@@ -29,7 +31,7 @@
     cmp di, si
     jne %%done
 
-    add bp, add_16_data_size
+    add bp, sub_16_data_size
 
     loop %%loop
     xor cx, cx                          ; set ZF = 1
@@ -41,29 +43,29 @@
 
 ; run the tests
 mark 0x60
-test_add_16 adc, clc, add_16_interesting_set_0
+test_sub_16 adc, clc, sub_16_interesting_set_0
 mark 0x61
-test_add_16 adc, clc, add_16_generic_set_0
+test_sub_16 adc, clc, sub_16_generic_set_0
 
 mark 0x62
-test_add_16 adc, stc, add_16_interesting_set_1
+test_sub_16 adc, stc, sub_16_interesting_set_1
 mark 0x63
-test_add_16 adc, stc, add_16_generic_set_1
+test_sub_16 adc, stc, sub_16_generic_set_1
 
 mark 0x64
-test_add_16 add, clc, add_16_interesting_set_0
+test_sub_16 sub, clc, sub_16_interesting_set_0
 mark 0x65
-test_add_16 add, clc, add_16_generic_set_0
+test_sub_16 sub, clc, sub_16_generic_set_0
 
 mark 0x66
-test_add_16 add, stc, add_16_interesting_set_0
+test_sub_16 sub, stc, sub_16_interesting_set_0
 mark 0x67
-test_add_16 add, stc, add_16_generic_set_0
+test_sub_16 sub, stc, sub_16_generic_set_0
 
 
-; generate test data for adding two numbers
-%macro add_16_data 3                    ; op1, op2, carry
-    %assign res (%1 + %2 + %3) % 0x10000
+; generate test data for subtracting two numbers
+%macro sub_16_data 3                    ; op1, op2, carry
+    %assign res (%1 - %2 - %3) % 0x10000
 
     ; relevant flags: ----O--- SZ-A-P-C
     %assign sfl res >= 0x8000 ? 0b_00000000_10000000 : 0
@@ -78,10 +80,10 @@ test_add_16 add, stc, add_16_generic_set_0
     dw  %1, %2, res, flags
 %endmacro
 
-add_16_data_size equ 2 + 2 + 2 + 2      ; op1, op2, res, flags
+sub_16_data_size equ 2 + 2 + 2 + 2      ; op1, op2, res, flags
 
 ; test interesting numbers
-%macro add_16_interesting_set 1         ; carry
+%macro sub_16_interesting_set 1         ; carry
     %assign cnt_a 20
     %assign cnt_b 20
     dw  cnt_a * cnt_b
@@ -96,7 +98,7 @@ add_16_data_size equ 2 + 2 + 2 + 2      ; op1, op2, res, flags
             %assign b %sel(bi, \
                 0x0000, 0x0001, 0x007e, 0x007f, 0x0080, 0x0081, 0x00fe, 0x00ff, 0x0100, 0x0101, \
                 0x017e, 0x017f, 0x0180, 0x0181, 0x7ffe, 0x7fff, 0x8000, 0x8001, 0xfffe, 0xffff)
-            add_16_data a, b, %1
+            sub_16_data a, b, %1
             %assign bi bi + 1
         %endrep
         %assign ai ai + 1
@@ -104,7 +106,7 @@ add_16_data_size equ 2 + 2 + 2 + 2      ; op1, op2, res, flags
 %endmacro
 
 ; complete test data with/without carry
-%macro add_16_generic_set 1             ; carry
+%macro sub_16_generic_set 1             ; carry
     %assign step_a 3271
     %assign step_b 3259
     %assign cnt_a 0x10000 / step_a
@@ -116,7 +118,7 @@ add_16_data_size equ 2 + 2 + 2 + 2      ; op1, op2, res, flags
     %rep cnt_a
         %assign b 0
         %rep cnt_b
-            add_16_data a, b, %1
+            sub_16_data a, b, %1
             %assign b b + step_b
         %endrep
         %assign a a + step_a
@@ -126,14 +128,14 @@ add_16_data_size equ 2 + 2 + 2 + 2      ; op1, op2, res, flags
 
 [section .data start=data_addr]
 
-add_16_interesting_set_0:
-    add_16_interesting_set 0
-add_16_interesting_set_1:
-    add_16_interesting_set 1
+sub_16_interesting_set_0:
+    sub_16_interesting_set 0
+sub_16_interesting_set_1:
+    sub_16_interesting_set 1
 
-add_16_generic_set_0:
-    add_16_generic_set 0
-add_16_generic_set_1:
-    add_16_generic_set 1
+sub_16_generic_set_0:
+    sub_16_generic_set 0
+sub_16_generic_set_1:
+    sub_16_generic_set 1
 
 __?SECT?__

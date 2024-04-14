@@ -1,5 +1,9 @@
-; ADD/ADC 8-bit with memory
+; SUB/SBB/CMP 16-bit with memory
 ; TODO
+
+; TODO SBB/SUB AL
+; TODO SBB/SUB AX
+; TODO SBB/SUB from group_immed (8 and 16 bit)
 
 ;     clc
 ;     mov bl, 0x00

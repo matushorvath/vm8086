@@ -114,9 +114,9 @@ add_8_data_size equ 1 + 1 + 1 + 2       ; op1, op2, res, flags
         %assign b 0
         %rep cnt_b
             add_8_data a, b, %1
-        %assign b b + step_b
+            %assign b b + step_b
         %endrep
-    %assign a a + step_a
+        %assign a a + step_a
     %endrep
 %endmacro
 
