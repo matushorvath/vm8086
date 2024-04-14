@@ -1,4 +1,8 @@
-; ADD/ADC 8-bit with memory
+; ADD/ADC 8-bit various operand modes
+
+; TODO ADC/ADD AL
+; TODO ADC/ADD AX
+; TODO ADC/ADD from group_immed (8 and 16 bit)
 
     clc
     mov bl, 0x00
