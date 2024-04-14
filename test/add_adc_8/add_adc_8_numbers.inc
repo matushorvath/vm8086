@@ -74,8 +74,8 @@ test_add_8 add, stc, add_8_generic_set_0
         ) % 2 == 0 ? 0b_00000000_00000100 : 0
     %assign flags sfl | zfl | pfl
 
-    %warning %1, %2, res, flags
-    db  %1, %2, res
+    ;%warning %1, %2, res, flags
+    dw  %1, %2, res
     dw  flags
 %endmacro
 
@@ -94,16 +94,19 @@ add_8_data_size equ 1 + 1 + 1 + 2       ; op1, op2, res, flags
             %assign a %sel(ai, 0x00, 0x01, 0x7e, 0x7f, 0x80, 0x81, 0xfe, 0xff)
             %assign b %sel(bi, 0x00, 0x01, 0x7e, 0x7f, 0x80, 0x81, 0xfe, 0xff)
             add_8_data a, b, %1
-        %assign bi bi + 1
+            %assign bi bi + 1
         %endrep
-    %assign ai ai + 1
+        %assign ai ai + 1
     %endrep
 %endmacro
 
 ; complete test data with/without carry
 %macro add_8_generic_set 1              ; carry
-    %assign cnt_a 0x100 / 13
-    %assign cnt_b 0x100 / 11
+    %assign step_a 13
+    %assign step_b 11
+    %assign cnt_a 0x100 / step_a
+    %assign cnt_b 0x100 / step_b
+
     dw  cnt_a * cnt_b
 
     %assign a 0
@@ -111,9 +114,9 @@ add_8_data_size equ 1 + 1 + 1 + 2       ; op1, op2, res, flags
         %assign b 0
         %rep cnt_b
             add_8_data a, b, %1
-        %assign b b + 11
+        %assign b b + step_b
         %endrep
-    %assign a a + 13
+    %assign a a + step_a
     %endrep
 %endmacro
 
