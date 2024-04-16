@@ -19,7 +19,7 @@
 
 # From arithmetic.s
 .IMPORT execute_mul_b
-# TODO .IMPORT execute_mul_w
+.IMPORT execute_mul_w
 
 # From state.s
 .IMPORT inc_ip_b
@@ -183,10 +183,12 @@ execute_group1_w_neg:
     jz  0, execute_group1_w_end
 
 execute_group1_w_mul:
-    # TODO implement
-    add not_implemented_message, 0, [rb - 1]
-    arb -1
-    call report_error
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    arb -2
+    call execute_mul_w
+
+    jz  0, execute_group1_w_end
 
 execute_group1_w_imul:
     # TODO implement
