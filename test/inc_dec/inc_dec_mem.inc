@@ -1,3 +1,6 @@
+    ; save SP
+    mov word [orig_sp], sp
+
     ; set ds to access the data
     mov ax, 0x1000
     mov ds, ax
@@ -55,3 +58,6 @@
     dec word [bx + si + 4]
 
     dump_state
+
+    ; restore SP
+    mov sp, word [orig_sp]

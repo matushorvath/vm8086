@@ -11,21 +11,33 @@
 bss_seg     equ 0x8000
 
 section .bss start=(bss_seg * 0x10)
-    resw  13
+orig_sp:
+    resw 1
+
+    resw 12
 
 data:
-    resw  1
+    resw 1
+
+
+section .data start=data_addr
 
 
 section .text
     dump_state
 
     ; these tests break sp
+    mark 0x80
 %include "inc_reg16.inc"
+    mark 0x81
 %include "dec_reg16.inc"
+    mark 0x82
 %include "inc_reg8.inc"
+    mark 0x83
 %include "dec_reg8.inc"
 
+    mark 0x84
 %include "inc_dec_mem.inc"
+    mark 0x85
 
     call power_off
