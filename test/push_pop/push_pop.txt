@@ -4,27 +4,55 @@ cs: d000 ds: 0000 ss: 0800 es: 0000 bp: 0000 sp: 0000
 ax: 0000 bx: 0000 cx: 0000 dx: 0000 si: 0000 di: 0000
 stack: 0000 0000 0000 0000 0000 0000 0000 0000
 ----------
-ip: 0022 flags: ----odit sz-a-P-c 00000000 00000110 (0006)
+MARK: 80
+----------
+ip: 0028 flags: ----odit sz-a-P-c 00000000 00000110 (0006)
 cs: d000 ds: 0000 ss: 0800 es: 0000 bp: 0000 sp: fff4
 ax: 0006 bx: 0002 cx: 0003 dx: 0004 si: 0005 di: 0006
 stack: 0006 0005 0004 0003 0002 0001 0000 0000
 ----------
-ip: 004f flags: ----odit sz-a-P-c 00000000 00000110 (0006)
+MARK: 81
+----------
+ip: 005b flags: ----odit sz-a-P-c 00000000 00000110 (0006)
 cs: d000 ds: 8000 ss: 0800 es: 0000 bp: 001a sp: ffee
 ax: 8000 bx: 0002 cx: 0003 dx: 0004 si: 0005 di: 0002
 stack: 111c 1c1b 1b1a 0006 0005 0004 0003 0002
 ----------
-ip: 006a flags: ----odit sz-a-P-c 00000000 00000110 (0006)
+ip: 0076 flags: ----odit sz-a-P-c 00000000 00000110 (0006)
 cs: d000 ds: 8000 ss: 0800 es: 0000 bp: 001a sp: fff4
 ax: 1b1c bx: 1a1b cx: 1b1a dx: 0004 si: 0005 di: 0002
 stack: 0006 0005 0004 0003 0002 0001 0000 0000
 ----------
-ip: 0082 flags: ----odit sz-a-P-c 00000000 00000110 (0006)
-cs: d000 ds: 1234 ss: 5678 es: 9abc bp: 001a sp: ffec
-ax: 9abc bx: 1a1b cx: 1b1a dx: 0004 si: 0005 di: 0002
+MARK: 82
+----------
+ip: 008e flags: ----odit sz-a-P-c 00000000 00000110 (0006)
+cs: d000 ds: 8000 ss: 0800 es: 0000 bp: 001a sp: fffe
+ax: 3579 bx: 1a1b cx: 1b1a dx: fff4 si: 0005 di: 0002
+stack: 3579 2468 0000 0000 0000 0000 0000 0000
+----------
+ip: 0095 flags: ----odit sz-a-P-c 00000000 00000110 (0006)
+cs: d000 ds: 8000 ss: 0800 es: 0000 bp: 001a sp: 0002
+ax: 3579 bx: 3579 cx: 2468 dx: fff4 si: 0005 di: 0002
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+ip: 00ab flags: ----odit sz-a-P-c 00000000 00000110 (0006)
+cs: d000 ds: 8000 ss: 0800 es: 0000 bp: fffe sp: 0002
+ax: 3579 bx: abcd cx: fedc dx: fff4 si: 0005 di: 0002
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+ip: 00b8 flags: ----odit sz-a-P-c 00000000 00000110 (0006)
+cs: d000 ds: 8000 ss: 0800 es: 0000 bp: fffe sp: fffe
+ax: 9753 bx: abcd cx: fedc dx: fff4 si: 0005 di: 0002
+stack: 9753 8642 0000 0000 0000 0000 0000 0000
+----------
+MARK: 83
+----------
+ip: 00e7 flags: ----odit sz-a-P-c 00000000 00000110 (0006)
+cs: d000 ds: 1234 ss: 5678 es: 9abc bp: 0000 sp: ffec
+ax: 9abc bx: 0000 cx: 0000 dx: 0000 si: 0005 di: 0002
 stack: 9abc 5678 1234 d000 0000 0000 0000 0000
 ----------
-ip: 008a flags: ----odit sz-a-P-c 00000000 00000110 (0006)
-cs: d000 ds: 9abc ss: 1234 es: 5678 bp: 001a sp: fff2
-ax: 9abc bx: 1a1b cx: 1b1a dx: 0004 si: 0005 di: 0002
+ip: 00ef flags: ----odit sz-a-P-c 00000000 00000110 (0006)
+cs: d000 ds: 9abc ss: 1234 es: 5678 bp: 0000 sp: fff2
+ax: 9abc bx: 0000 cx: 0000 dx: 0000 si: 0005 di: 0002
 stack: 0000 0000 0000 0000 0000 0000 0000 0000

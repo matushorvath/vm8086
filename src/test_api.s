@@ -276,8 +276,8 @@ dump_flags:
 
 ##########
 dump_stack:
-.FRAME index, tmp
-    arb -2
+.FRAME index, segment, offset, tmp
+    arb -4
 
     add dump_state_stack, 0, [rb - 1]
     arb -1
@@ -291,11 +291,22 @@ dump_stack_loop:
 
     out ' '
 
-    mul [reg_ss + 1], 0x100, [rb - 1]
-    add [reg_ss + 0], [rb - 1], [rb - 1]
-    mul [reg_sp + 1], 0x100, [rb - 2]
-    add [reg_sp + 0], [rb - 2], [rb - 2]
-    add [rb + index], [rb - 2], [rb - 2]                    # no sp overflow support
+    # Calculate segment
+    mul [reg_ss + 1], 0x100, [rb + segment]
+    add [reg_ss + 0], [rb + segment], [rb + segment]
+
+    # Calculate offset with wrap around to 0x1000
+    mul [reg_sp + 1], 0x100, [rb + offset]
+    add [reg_sp + 0], [rb + offset], [rb + offset]
+    add [rb + index], [rb + offset], [rb + offset]
+
+    lt  [rb + offset], 0x10000, [rb + tmp]
+    jnz [rb + tmp], dump_stack_after_overflow
+    add [rb + offset], -0x10000, [rb + offset]
+
+dump_stack_after_overflow:
+    add [rb + segment], 0, [rb - 1]
+    add [rb + offset], 0, [rb - 2]
     arb -2
     call read_seg_off_w
 
@@ -310,7 +321,7 @@ dump_stack_loop:
     jz  0, dump_stack_loop
 
 dump_stack_end:
-    arb 2
+    arb 4
     ret 0
 .ENDFRAME
 

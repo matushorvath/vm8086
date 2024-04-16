@@ -1,3 +1,6 @@
+    ; save SP
+    mov word [orig_sp], sp
+
     ; reset the registers
     mov ax, 0
     mov bx, 0
@@ -53,4 +56,10 @@
     inc dh
     inc dh
 
+    ; clear stack that will be visible in dump, because it differs between bochs and vm8086
+    times 8 pushf
+
     dump_state
+
+    ; restore SP
+    mov sp, word [orig_sp]

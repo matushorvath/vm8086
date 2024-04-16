@@ -11,10 +11,16 @@ data:
 section .text
     dump_state
 
+    mark 0x80
 %include "reg.inc"
+    mark 0x81
 %include "mem.inc"
 
+    mark 0x82
+%include "overflow.inc"
+
     ; the sr.inc test messes up segments
+    mark 0x83
 %include "sr.inc"
 
     call power_off
