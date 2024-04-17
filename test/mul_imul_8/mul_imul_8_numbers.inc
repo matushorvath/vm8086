@@ -44,19 +44,32 @@ test_mul_8 mul, mul_8_interesting_set_0
 mark 0x61
 test_mul_8 mul, mul_8_generic_set_0
 
-;TODO test IMUL
-;mark 0x62
-;test_mul_8 imul, mul_8_interesting_set_0
-;mark 0x63
-;test_mul_8 imul, mul_8_generic_set_0
+mark 0x62
+test_mul_8 imul, imul_8_interesting_set_0
+mark 0x63
+test_mul_8 imul, imul_8_generic_set_0
 
 
-; generate test data for multiplying two numbers
+; generate test data for multiplying two unsigned numbers
 %macro mul_8_data 2                     ; op1, op2
     %assign res (%1 * %2) % 0x10000
 
     ; relevant flags: ----O--- -------C
-    %assign flags (res & 0xff00 != 0) ? 0b_00001000_00000001 : 0
+    %assign flags (res & 0xff00 != 0x0000) ? 0b_00001000_00000001 : 0
+
+    ;%warning %1, %2, res, flags
+    db  %1, %2
+    dw  res, flags
+%endmacro
+
+; generate test data for multiplying two signed numbers
+%macro imul_8_data 2                     ; op1, op2
+    %assign op1 (%1 < 0x80 ? %1 : %1 - 0x100)
+    %assign op2 (%2 < 0x80 ? %2 : %2 - 0x100)
+    %assign res (op1 * op2) >= 0 ? (op1 * op2) : (op1 * op2) + 0x10000
+
+    ; relevant flags: ----O--- -------C
+    %assign flags ((res & 0xff80) != 0x0000 && (res & 0xff80) != 0xff80) ? 0b_00001000_00000001 : 0
 
     ;%warning %1, %2, res, flags
     db  %1, %2
@@ -66,7 +79,7 @@ test_mul_8 mul, mul_8_generic_set_0
 mul_8_data_size equ 1 + 1 + 2 + 2       ; op1, op2, res, flags
 
 ; test interesting numbers
-%macro mul_8_interesting_set 0
+%macro mul_8_interesting_set 1
     %assign cnt_a 8
     %assign cnt_b 8
     dw  cnt_a * cnt_b
@@ -77,7 +90,7 @@ mul_8_data_size equ 1 + 1 + 2 + 2       ; op1, op2, res, flags
         %rep cnt_b
             %assign a %sel(ai, 0x00, 0x01, 0x7e, 0x7f, 0x80, 0x81, 0xfe, 0xff)
             %assign b %sel(bi, 0x00, 0x01, 0x7e, 0x7f, 0x80, 0x81, 0xfe, 0xff)
-            mul_8_data a, b
+            %1_8_data a, b
             %assign bi bi + 1
         %endrep
         %assign ai ai + 1
@@ -85,7 +98,7 @@ mul_8_data_size equ 1 + 1 + 2 + 2       ; op1, op2, res, flags
 %endmacro
 
 ; complete test data with/without carry
-%macro mul_8_generic_set 0
+%macro mul_8_generic_set 1
     %assign step_a 13
     %assign step_b 11
     %assign cnt_a 0x100 / step_a
@@ -97,7 +110,7 @@ mul_8_data_size equ 1 + 1 + 2 + 2       ; op1, op2, res, flags
     %rep cnt_a
         %assign b 0
         %rep cnt_b
-            mul_8_data a, b
+            %1_8_data a, b
             %assign b b + step_b
         %endrep
         %assign a a + step_a
@@ -108,8 +121,11 @@ mul_8_data_size equ 1 + 1 + 2 + 2       ; op1, op2, res, flags
 [section .data start=data_addr]
 
 mul_8_interesting_set_0:
-    mul_8_interesting_set
+    mul_8_interesting_set mul
 mul_8_generic_set_0:
-    mul_8_generic_set
-
+    mul_8_generic_set mul
+imul_8_interesting_set_0:
+    mul_8_interesting_set imul
+imul_8_generic_set_0:
+    mul_8_generic_set imul
 __?SECT?__
