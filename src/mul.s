@@ -68,7 +68,9 @@ execute_imul_b:
     add [rb + loc_addr], 0, [rb - 2]
     arb -2
     call read_location_b
+
     add [rb - 4], 0, [rb + op1]
+    add [reg_al], 0, [rb + op2]
 
     # Convert both operands to native intcode signed numbers
     lt  [rb + op1], 0x80, [rb + tmp]
@@ -76,9 +78,9 @@ execute_imul_b:
     add [rb + op1], -0x100, [rb + op1]
 
 execute_imul_b_op1_signed:
-    lt  [reg_al], 0x80, [rb + tmp]
+    lt  [rb + op2], 0x80, [rb + tmp]
     jnz [rb + tmp], execute_imul_b_op2_signed
-    add [reg_al], -0x100, [rb + op2]
+    add [rb + op2], -0x100, [rb + op2]
 
 execute_imul_b_op2_signed:
     # Calculate the result and convert it back to two's complement
@@ -97,16 +99,19 @@ execute_imul_b_res_tc:
     add [rb - 4], 0, [reg_ah]
 
     # Update flags
-    eq  [reg_ah], 0x00, [flag_carry]
-    eq  [reg_ah], 0xff, [rb + tmp]
-    add [flag_carry], [rb + tmp], [flag_carry]
-    eq  [flag_carry], 0, [flag_carry]
-    add [flag_carry], 0, [flag_overflow]
-
     add 0, 0, [flag_auxiliary_carry]
     add 0, 0, [flag_parity]
     add 0, 0, [flag_sign]
     add 0, 0, [flag_zero]
+
+    # Carry and overflow are false if upper half of the result contains no significant bits,
+    # i.e. the upper half and the most significant bit of the lower half are all either 0 or 1,
+    # i.e. res is between 0x0000 and 0x007f or between 0xff80 and 0xffff.
+    lt  [rb + res], 0x0080, [flag_carry]
+    lt  0xff7f, [rb + res], [rb + tmp]
+    add [flag_carry], [rb + tmp], [flag_carry]
+    eq  [flag_carry], 0, [flag_carry]
+    add [flag_carry], 0, [flag_overflow]
 
     arb 4
     ret 2
