@@ -11,10 +11,10 @@
     mov bp, 2
 
 %%loop:
-    mov si, word [cs:%2 + bp + 0]
-    mov ax, si
+    mov ax, word [cs:%2 + bp + 0]
+    mov es, ax
     mov bx, word [cs:%2 + bp + 2]
-    %1  bx                              ; dx:ax = si OP bx
+    %1  bx                              ; dx:ax = es OP bx
     pushf
 
     mov di, word [cs:%2 + bp + 4]
@@ -48,15 +48,14 @@ test_mul_16 mul, mul_16_interesting_set_0
 mark 0x61
 test_mul_16 mul, mul_16_generic_set_0
 
-;TODO test IMUL
-;mark 0x62
-;test_mul_16 imul, mul_16_interesting_set_0
-;mark 0x63
-;test_mul_16 imul, mul_16_generic_set_0
+mark 0x62
+test_mul_16 imul, imul_16_interesting_set_0
+mark 0x63
+test_mul_16 imul, imul_16_generic_set_0
 
 
-; generate test data for multiplying two numbers
-%macro mul_16_data 2                     ; op1, op2
+; generate test data for multiplying two unsigned numbers
+%macro mul_16_data 2                    ; op1, op2
     %assign res (%1 * %2) % 0x100000000
 
     ; relevant flags: ----O--- -------C
@@ -68,10 +67,25 @@ test_mul_16 mul, mul_16_generic_set_0
     dw  flags
 %endmacro
 
+; generate test data for multiplying two signed numbers
+%macro imul_16_data 2                   ; op1, op2
+    %assign op1 (%1 < 0x8000 ? %1 : %1 - 0x10000)
+    %assign op2 (%2 < 0x8000 ? %2 : %2 - 0x10000)
+    %assign res (op1 * op2) >= 0 ? (op1 * op2) : (op1 * op2) + 0x100000000
+
+    ; relevant flags: ----O--- -------C
+    %assign flags ((res & 0xffff8000) != 0x00000000 && (res & 0xffff8000) != 0xffff8000) ? 0b_00001000_00000001 : 0
+
+    ;%warning %1, %2, res, flags
+    dw  %1, %2
+    dd  res
+    dw  flags
+%endmacro
+
 mul_16_data_size equ 2 + 2 + 4 + 2       ; op1, op2, res, flags
 
 ; test interesting numbers
-%macro mul_16_interesting_set 0
+%macro mul_16_interesting_set 1
     %assign cnt_a 20
     %assign cnt_b 20
     dw  cnt_a * cnt_b
@@ -86,7 +100,7 @@ mul_16_data_size equ 2 + 2 + 4 + 2       ; op1, op2, res, flags
             %assign b %sel(bi, \
                 0x0000, 0x0001, 0x007e, 0x007f, 0x0080, 0x0081, 0x00fe, 0x00ff, 0x0100, 0x0101, \
                 0x017e, 0x017f, 0x0180, 0x0181, 0x7ffe, 0x7fff, 0x8000, 0x8001, 0xfffe, 0xffff)
-            mul_16_data a, b
+            %1_16_data a, b
             %assign bi bi + 1
         %endrep
         %assign ai ai + 1
@@ -94,7 +108,7 @@ mul_16_data_size equ 2 + 2 + 4 + 2       ; op1, op2, res, flags
 %endmacro
 
 ; complete test data with/without carry
-%macro mul_16_generic_set 0
+%macro mul_16_generic_set 1
     %assign step_a 3271
     %assign step_b 3259
     %assign cnt_a 0x10000 / step_a
@@ -106,7 +120,7 @@ mul_16_data_size equ 2 + 2 + 4 + 2       ; op1, op2, res, flags
     %rep cnt_a
         %assign b 0
         %rep cnt_b
-            mul_16_data a, b
+            %1_16_data a, b
             %assign b b + step_b
         %endrep
         %assign a a + step_a
@@ -117,8 +131,11 @@ mul_16_data_size equ 2 + 2 + 4 + 2       ; op1, op2, res, flags
 [section .data start=data_addr]
 
 mul_16_interesting_set_0:
-    mul_16_interesting_set
+    mul_16_interesting_set mul
 mul_16_generic_set_0:
-    mul_16_generic_set
-
+    mul_16_generic_set mul
+imul_16_interesting_set_0:
+    mul_16_interesting_set imul
+imul_16_generic_set_0:
+    mul_16_generic_set imul
 __?SECT?__

@@ -51,7 +51,7 @@ test_mul_8 imul, imul_8_generic_set_0
 
 
 ; generate test data for multiplying two unsigned numbers
-%macro mul_8_data 2                     ; op1, op2
+%macro mul_8_data 2                    ; op1, op2
     %assign res (%1 * %2) % 0x10000
 
     ; relevant flags: ----O--- -------C
@@ -63,7 +63,7 @@ test_mul_8 imul, imul_8_generic_set_0
 %endmacro
 
 ; generate test data for multiplying two signed numbers
-%macro imul_8_data 2                     ; op1, op2
+%macro imul_8_data 2                   ; op1, op2
     %assign op1 (%1 < 0x80 ? %1 : %1 - 0x100)
     %assign op2 (%2 < 0x80 ? %2 : %2 - 0x100)
     %assign res (op1 * op2) >= 0 ? (op1 * op2) : (op1 * op2) + 0x10000
