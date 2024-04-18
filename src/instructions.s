@@ -473,9 +473,10 @@ instructions:
     db  execute_shift_cl_b, arg_mod_op_rm_b, 3              # 0xd2 <shift> REG8/MEM8, CL
     db  execute_shift_cl_w, arg_mod_op_rm_w, 3              # 0xd3 <shift> REG16/MEM16, CL
 
-    # TODO AAM and AAD seem to have a fixed mod reg r/m 00001010 + possibly (DISP-LO) (DISP-HI)?
-    db  not_implemented, 0, 0 # TODO    db  execute_aam, xxx, 0                                  # 0xd4 AAM
-    db  not_implemented, 0, 0 # TODO    db  execute_aad, xxx, 0                                  # 0xd5 AAD
+    # TODO AAM is D4 xx, where xx is the base (D4 0A is base 10); same with AAD
+    # TODO AAM causes #DE if second byte is 0 (causes division by zero); AAD does not
+    db  not_implemented, 0, 0 # TODO    db  execute_aam, 0, 0                                  # 0xd4 AAM
+    db  not_implemented, 0, 0 # TODO    db  execute_aad, 0, 0                                  # 0xd5 AAD
     db  invalid_opcode, 0, 0                                # 0xd6
     db  execute_xlat, 0, 0                                  # 0xd7 XLAT SOURCE-TABLE
 
