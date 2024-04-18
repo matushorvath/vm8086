@@ -72,7 +72,7 @@ https://github.com/86Box/86Box
 Missing instructions
 ====================
 
-MUL IMUL DIV IDIV
+DIV IDIV
 DAA DAS AAA AAS AAM AAD
 MOVS CMPS STOS LODS SCAS
 REPZ REPNZ
