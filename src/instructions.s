@@ -70,6 +70,9 @@
 .IMPORT arg_si_immediate_w
 .IMPORT arg_di_immediate_w
 
+# From bcd.s
+.IMPORT execute_aaa
+
 # From bitwise.s
 .IMPORT execute_and_b
 .IMPORT execute_and_w
@@ -276,7 +279,7 @@ instructions:
     db  execute_xor_w, arg_ax_immediate_w, 4                # 0x35 XOR AX, IMMED16
 
     db  execute_segment_prefix_ss, 0, 0                     # 0x36 SS: (segment override prefix)
-    db  not_implemented, 0, 0 # TODO    db  execute_aaa, 0                                  # 0x37 AAA
+    db  execute_aaa, 0, 0                                   # 0x37 AAA
 
     db  execute_cmp_b, arg_mod_reg_rm_src_b, 4              # 0x38 CMP REG8/MEM8, REG8
     db  execute_cmp_w, arg_mod_reg_rm_src_w, 4              # 0x39 CMP REG16/MEM16, REG16

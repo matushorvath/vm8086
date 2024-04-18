@@ -66,6 +66,7 @@ test_add_8 add, stc, add_8_generic_set_0
     %assign res (%1 + %2 + %3) % 0x100
 
     ; relevant flags: ----O--- SZ-A-P-C
+    ; TODO calculate and test missing flags
     %assign sfl res >= 0x80 ? 0b_00000000_10000000 : 0
     %assign zfl res == 0 ? 0b_00000000_01000000 : 0
     %assign pfl (\
