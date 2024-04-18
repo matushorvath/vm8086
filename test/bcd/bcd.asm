@@ -53,6 +53,21 @@
     dw  res, flags
 %endmacro
 
+; generate test data for the AAS instruction
+%macro aas_data 3                       ; al, ah, af
+    %if (%1 & 0x0f) > 9 || %3
+        %assign res (%1 + (%2 << 8) - 0x106) & 0xff0f
+        %assign flags 0b_00000000_00010001
+    %else
+        %assign res (%1 + (%2 << 8)) & 0xff0f
+        %assign flags 0b_00000000_00000000
+    %endif
+
+    ;%warning %1, %2, res, flags
+    db  %1, %2
+    dw  res, flags
+%endmacro
+
 bcd_data_size equ 1 + 1 + 2 + 2         ; op1, op2, res, flags
 
 ; test interesting numbers
@@ -107,6 +122,15 @@ section .text
     mark 0x63
     test_bcd aaa, 1, aaa_generic_set_1
 
+    mark 0x70
+    test_bcd aas, 0, aas_interesting_set_0
+    mark 0x71
+    test_bcd aas, 0, aas_generic_set_0
+    mark 0x72
+    test_bcd aas, 1, aas_interesting_set_1
+    mark 0x73
+    test_bcd aas, 1, aas_generic_set_1
+
     call power_off
 
 
@@ -117,7 +141,17 @@ aaa_interesting_set_0:
 aaa_interesting_set_1:
     bcd_interesting_set aaa, 1
 
+aas_interesting_set_0:
+    bcd_interesting_set aas, 0
+aas_interesting_set_1:
+    bcd_interesting_set aas, 1
+
 aaa_generic_set_0:
     bcd_generic_set aaa, 0
 aaa_generic_set_1:
     bcd_generic_set aaa, 1
+
+aas_generic_set_0:
+    bcd_generic_set aas, 0
+aas_generic_set_1:
+    bcd_generic_set aas, 1

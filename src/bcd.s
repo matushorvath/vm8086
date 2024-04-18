@@ -1,4 +1,5 @@
 .EXPORT execute_aaa
+.EXPORT execute_aas
 
 # From obj/nibbles.s
 .IMPORT nibbles
@@ -14,7 +15,7 @@ execute_aaa:
 .FRAME digit, tmp
     arb -2
 
-    # Get the higher nibble of AL
+    # Get the lower nibble of AL
     mul [reg_al], 2, [rb + tmp]
     add nibbles, [rb + tmp], [ip + 1]
     add [0], 0, [rb + digit]
@@ -50,6 +51,56 @@ execute_aaa_after_ah_carry:
     add 1, 0, [flag_carry]
 
 execute_aaa_done:
+    # Clear the higher nibble of AL
+    mul [reg_al], 2, [rb + tmp]
+    add nibbles, [rb + tmp], [ip + 1]
+    add [0], 0, [reg_al]
+
+    arb 2
+    ret 0
+.ENDFRAME
+
+##########
+execute_aas:
+.FRAME digit, tmp
+    arb -2
+
+    # Get the lower nibble of AL
+    mul [reg_al], 2, [rb + tmp]
+    add nibbles, [rb + tmp], [ip + 1]
+    add [0], 0, [rb + digit]
+
+    # Handle decimal carry if AF is set, or if AL > 9
+    jnz [flag_auxiliary_carry], execute_aas_decimal_carry
+    lt  9, [rb + digit], [rb + tmp]
+    jnz [rb + tmp], execute_aas_decimal_carry
+
+    add 0, 0, [flag_auxiliary_carry]
+    add 0, 0, [flag_carry]
+
+    jz  0, execute_aas_done
+
+execute_aas_decimal_carry:
+    add [reg_al], -0x06, [reg_al]
+    add [reg_ah], -0x01, [reg_ah]
+
+    # There could be borrow from AL to AH
+    lt  [reg_al], 0x00, [rb + tmp]
+    jz  [rb + tmp], execute_aas_after_al_carry
+    add [reg_al], 0x100, [reg_al]
+    add [reg_ah], -1, [reg_ah]
+
+execute_aas_after_al_carry:
+    # There could be borrow from AH
+    lt  [reg_ah], 0x00, [rb + tmp]
+    jz  [rb + tmp], execute_aas_after_ah_carry
+    add [reg_ah], 0x100, [reg_ah]
+
+execute_aas_after_ah_carry:
+    add 1, 0, [flag_auxiliary_carry]
+    add 1, 0, [flag_carry]
+
+execute_aas_done:
     # Clear the higher nibble of AL
     mul [reg_al], 2, [rb + tmp]
     add nibbles, [rb + tmp], [ip + 1]

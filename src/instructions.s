@@ -72,6 +72,7 @@
 
 # From bcd.s
 .IMPORT execute_aaa
+.IMPORT execute_aas
 
 # From bitwise.s
 .IMPORT execute_and_b
@@ -289,7 +290,7 @@ instructions:
     db  execute_cmp_w, arg_ax_immediate_w, 4                # 0x3d CMP AX, IMMED16
 
     db  execute_segment_prefix_ds, 0, 0                     # 0x3e DS: (segment override prefix)
-    db  not_implemented, 0, 0 # TODO    db  execute_aas, 0                                  # 0x3f AAS
+    db  execute_aas, 0, 0                                   # 0x3f AAS
 
     db  execute_inc_w, arg_ax, 2                            # 0x40 INC AX
     db  execute_inc_w, arg_cx, 2                            # 0x41 INC CX
