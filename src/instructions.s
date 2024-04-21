@@ -70,6 +70,12 @@
 .IMPORT arg_si_immediate_w
 .IMPORT arg_di_immediate_w
 
+# From bcd.s
+.IMPORT execute_aaa
+.IMPORT execute_aas
+.IMPORT execute_daa
+.IMPORT execute_das
+
 # From bitwise.s
 .IMPORT execute_and_b
 .IMPORT execute_and_w
@@ -256,7 +262,7 @@ instructions:
     db  execute_and_w, arg_ax_immediate_w, 4                # 0x25 AND AX, IMMED16
 
     db  execute_segment_prefix_es, 0, 0                     # 0x26 ES: (segment override prefix)
-    db  not_implemented, 0, 0 # TODO    db  execute_daa, 0                                  # 0x27 DAA
+    db  execute_daa, 0, 0                                   # 0x27 DAA
 
     db  execute_sub_b, arg_mod_reg_rm_src_b, 4              # 0x28 SUB REG8/MEM8, REG8
     db  execute_sub_w, arg_mod_reg_rm_src_w, 4              # 0x29 SUB REG16/MEM16, REG16
@@ -266,7 +272,7 @@ instructions:
     db  execute_sub_w, arg_ax_immediate_w, 4                # 0x2d SUB AX, IMMED16
 
     db  execute_segment_prefix_cs, 0, 0                     # 0x2e CS: (segment override prefix)
-    db  not_implemented, 0, 0 # TODO    db  execute_das, 0                                  # 0x2f DAS
+    db  execute_das, 0, 0                                   # 0x2f DAS
 
     db  execute_xor_b, arg_mod_reg_rm_src_b, 4              # 0x30 XOR REG8/MEM8, REG8
     db  execute_xor_w, arg_mod_reg_rm_src_w, 4              # 0x31 XOR REG16/MEM16, REG16
@@ -276,7 +282,7 @@ instructions:
     db  execute_xor_w, arg_ax_immediate_w, 4                # 0x35 XOR AX, IMMED16
 
     db  execute_segment_prefix_ss, 0, 0                     # 0x36 SS: (segment override prefix)
-    db  not_implemented, 0, 0 # TODO    db  execute_aaa, 0                                  # 0x37 AAA
+    db  execute_aaa, 0, 0                                   # 0x37 AAA
 
     db  execute_cmp_b, arg_mod_reg_rm_src_b, 4              # 0x38 CMP REG8/MEM8, REG8
     db  execute_cmp_w, arg_mod_reg_rm_src_w, 4              # 0x39 CMP REG16/MEM16, REG16
@@ -286,7 +292,7 @@ instructions:
     db  execute_cmp_w, arg_ax_immediate_w, 4                # 0x3d CMP AX, IMMED16
 
     db  execute_segment_prefix_ds, 0, 0                     # 0x3e DS: (segment override prefix)
-    db  not_implemented, 0, 0 # TODO    db  execute_aas, 0                                  # 0x3f AAS
+    db  execute_aas, 0, 0                                   # 0x3f AAS
 
     db  execute_inc_w, arg_ax, 2                            # 0x40 INC AX
     db  execute_inc_w, arg_cx, 2                            # 0x41 INC CX
@@ -469,9 +475,10 @@ instructions:
     db  execute_shift_cl_b, arg_mod_op_rm_b, 3              # 0xd2 <shift> REG8/MEM8, CL
     db  execute_shift_cl_w, arg_mod_op_rm_w, 3              # 0xd3 <shift> REG16/MEM16, CL
 
-    # TODO AAM and AAD seem to have a fixed mod reg r/m 00001010 + possibly (DISP-LO) (DISP-HI)?
-    db  not_implemented, 0, 0 # TODO    db  execute_aam, xxx, 0                                  # 0xd4 AAM
-    db  not_implemented, 0, 0 # TODO    db  execute_aad, xxx, 0                                  # 0xd5 AAD
+    # TODO AAM is D4 xx, where xx is the base (D4 0A is base 10); same with AAD
+    # TODO AAM causes #DE if second byte is 0 (causes division by zero); AAD does not
+    db  not_implemented, 0, 0 # TODO    db  execute_aam, 0, 0                                  # 0xd4 AAM
+    db  not_implemented, 0, 0 # TODO    db  execute_aad, 0, 0                                  # 0xd5 AAD
     db  invalid_opcode, 0, 0                                # 0xd6
     db  execute_xlat, 0, 0                                  # 0xd7 XLAT SOURCE-TABLE
 

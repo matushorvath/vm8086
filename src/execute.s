@@ -35,6 +35,8 @@
 # From trace.s
 .IMPORT print_trace
 
+# TODO exception handling, see instruction reference 3.1.1.14, check how it applies to 8086
+
 ##########
 execute:
 .FRAME tmp, op
