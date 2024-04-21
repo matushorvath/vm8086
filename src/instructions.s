@@ -73,6 +73,7 @@
 # From bcd.s
 .IMPORT execute_aaa
 .IMPORT execute_aas
+.IMPORT execute_daa
 
 # From bitwise.s
 .IMPORT execute_and_b
@@ -260,7 +261,7 @@ instructions:
     db  execute_and_w, arg_ax_immediate_w, 4                # 0x25 AND AX, IMMED16
 
     db  execute_segment_prefix_es, 0, 0                     # 0x26 ES: (segment override prefix)
-    db  not_implemented, 0, 0 # TODO    db  execute_daa, 0                                  # 0x27 DAA
+    db  execute_daa, 0, 0                                   # 0x27 DAA
 
     db  execute_sub_b, arg_mod_reg_rm_src_b, 4              # 0x28 SUB REG8/MEM8, REG8
     db  execute_sub_w, arg_mod_reg_rm_src_w, 4              # 0x29 SUB REG16/MEM16, REG16

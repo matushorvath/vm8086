@@ -147,8 +147,8 @@ execute_daa_decimal_carry_lo:
     add 1, 0, [flag_carry]
 
 execute_daa_after_carry_lo:
-    # Handle decimal carry for higher digit if CF was set, or if AL > 0x99
-    jnz [flag_carry], execute_daa_decimal_carry_hi
+    # Handle decimal carry for higher digit if CF was set, or if saved AL > 0x99
+    jnz [rb + cf], execute_daa_decimal_carry_hi
     lt  0x99, [rb + al], [rb + tmp]
     jnz [rb + tmp], execute_daa_decimal_carry_hi
 
