@@ -1,6 +1,7 @@
 .EXPORT execute_aaa
 .EXPORT execute_aas
 .EXPORT execute_daa
+.EXPORT execute_das
 
 # From obj/nibbles.s
 .IMPORT nibbles
@@ -166,6 +167,64 @@ execute_daa_decimal_carry_hi:
     add [reg_al], -0x100, [reg_al]
 
 execute_daa_after_carry_hi:
+    arb 4
+    ret 0
+.ENDFRAME
+
+##########
+execute_das:
+.FRAME al_lo, al, cf, tmp
+    arb -4
+
+    # Get the lower nibble of AL
+    mul [reg_al], 2, [rb + tmp]
+    add nibbles, [rb + tmp], [ip + 1]
+    add [0], 0, [rb + al_lo]
+
+    # Save AL and carry
+    add [reg_al], 0, [rb + al]
+    add [flag_carry], 0, [rb + cf]
+    add 0, 0, [flag_carry]
+
+    # Handle decimal carry for lower digit if AF is set, or if AL_lo > 9
+    jnz [flag_auxiliary_carry], execute_das_decimal_carry_lo
+    lt  0x9, [rb + al_lo], [rb + tmp]
+    jnz [rb + tmp], execute_das_decimal_carry_lo
+
+    add 0, 0, [flag_auxiliary_carry]
+    jz  0, execute_das_after_carry_lo
+
+execute_das_decimal_carry_lo:
+    add [reg_al], -0x06, [reg_al]
+    add [rb + cf], 0, [flag_carry]
+    add 1, 0, [flag_auxiliary_carry]
+
+    # Handle borrow from AL
+    lt  [reg_al], 0x00, [rb + tmp]
+    jz  [rb + tmp], execute_das_after_carry_lo
+
+    add [reg_al], 0x100, [reg_al]
+    add 1, 0, [flag_carry]
+
+execute_das_after_carry_lo:
+    # Handle decimal carry for higher digit if CF was set, or if saved AL > 0x99
+    jnz [rb + cf], execute_das_decimal_carry_hi
+    lt  0x99, [rb + al], [rb + tmp]
+    jnz [rb + tmp], execute_das_decimal_carry_hi
+
+    jz  0, execute_das_after_carry_hi
+
+execute_das_decimal_carry_hi:
+    add [reg_al], -0x60, [reg_al]
+    add 1, 0, [flag_carry]
+
+    # Handle borrow from AL
+    lt  [reg_al], 0x00, [rb + tmp]
+    jz  [rb + tmp], execute_das_after_carry_hi
+
+    add [reg_al], 0x100, [reg_al]
+
+execute_das_after_carry_hi:
     arb 4
     ret 0
 .ENDFRAME

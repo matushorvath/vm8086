@@ -65,6 +65,37 @@
     db  in_flags, out_flags
 %endmacro
 
+; generate test data for the DAS instruction
+%macro das_data 3                       ; al, cf, af
+    %assign reg_AL %1
+    %assign flag_CF %2
+    %assign flag_AF %3
+
+    %assign in_flags (flag_AF << 4) | (flag_CF << 0)
+
+    %assign old_AL reg_AL
+    %assign old_CF flag_CF
+    %assign flag_CF 0
+
+    %if (reg_AL & 0x0f) > 9 || flag_AF == 1
+        %assign flag_CF old_CF || (reg_AL < 0x06)
+        %assign reg_AL reg_AL - 6
+        %assign flag_AF 1
+        %assign reg_AL reg_AL & 0xff
+    %else
+        %assign flag_AF 0
+    %endif
+    %if old_AL > 0x99 || old_CF == 1
+        %assign reg_AL (reg_AL - 0x60) % 0x100
+        %assign flag_CF 1
+    %endif
+    %assign out_flags (flag_AF << 4) | (flag_CF << 0)
+
+    %warning %1, reg_AL, in_flags, out_flags
+    db  %1, reg_AL
+    db  in_flags, out_flags
+%endmacro
+
 daa_das_data_size equ 1 + 1 + 1 + 1     ; op, res, in_flags, out_flags
 
 ; test interesting numbers
@@ -108,10 +139,10 @@ daa_das_data_size equ 1 + 1 + 1 + 1     ; op, res, in_flags, out_flags
     mark 0x81
     test_daa_das daa, daa_generic_set
 
-    ; mark 0x90
-    ; test_daa_das das, das_interesting_set
-    ; mark 0x91
-    ; test_daa_das das, das_generic_set
+    mark 0x90
+    test_daa_das das, das_interesting_set
+    mark 0x91
+    test_daa_das das, das_generic_set
 
 
 [section .data start=data_addr]
@@ -121,9 +152,9 @@ daa_interesting_set:
 daa_generic_set:
     daa_das_generic_set daa
 
-; das_interesting_set:
-;     daa_das_interesting_set das
-; das_generic_set:
-;     daa_das_generic_set das
+das_interesting_set:
+    daa_das_interesting_set das
+das_generic_set:
+    daa_das_generic_set das
 
 __?SECT?__
