@@ -20,119 +20,163 @@
 # From obj/shr.s
 .IMPORT shr
 
+# From obj/split233.s
+.IMPORT split233
+
 # From state.s
 .IMPORT reg_cl
 .IMPORT flag_carry
 .IMPORT flag_overflow
 
 # TODO remove
-execute_rol_1_b:
 execute_ror_1_b:
 execute_rcl_1_b:
 execute_rcr_1_b:
-execute_rol_cl_b:
 execute_ror_cl_b:
 execute_rcl_cl_b:
 execute_rcr_cl_b:
 
-# TODO remove
-.EOF
-
 ##########
-.FRAME loc_type, loc_addr; val, val_bits, count, tmp
+.FRAME loc_type, loc_addr; val, val_bits, val_times_8, not_sign, count, count_mod_8, tmp
     # Function with multiple entry points
 
-execute_shl_1_b:
-    arb -4
+execute_rol_1_b:
+    arb -7
     add 1, 0, [rb + count]
-    jz  0, execute_shl_b
+    jz  0, execute_rol_b
 
-execute_shl_cl_b:
-    arb -4
+execute_rol_cl_b:
+    arb -7
     add [reg_cl], 0, [rb + count]
 
-execute_shl_b:
-    add 0, 0, [flag_auxiliary_carry]
+execute_rol_b:
+    # Rotating by 0 is a no-operation, including flags
+    jz  [rb + count], execute_rol_b_done
 
-    # If we are shifting more than 8 bits, use fixed values
-    lt  [rb + count], 9, [rb + tmp]
-    jz  [rb + tmp], execute_shl_b_many
-
-    # Read the value to shift
+    # Read the value to rotate
     add [rb + loc_type], 0, [rb - 1]
     add [rb + loc_addr], 0, [rb - 2]
     arb -2
     call read_location_b
     add [rb - 4], 0, [rb + val]
 
-    # If we are shifting by 0, use a simplified algorithm
-    jz  [rb + count], execute_shl_b_zero
-
     # Expand val to bits
-    mul [rb + val], 8, [rb + tmp]
+    mul [rb + val], 8, [rb + val_times_8]
     add bits, [rb + tmp], [rb + val_bits]
 
-    # If we are shifting by 8, use a simplified algorithm
-    eq  [rb + count], 8, [rb + tmp]
-    jnz [rb + tmp], execute_shl_b_eight
+    # Save negation of the sign for later
+    lt  [rb + val], 0x80, [rb + not_sign]
 
-    # Carry flag is the last bit shifted out
-    mul [rb + count], -1, [rb + tmp]
-    add 8, [rb + tmp], [rb + tmp]
-    add [rb + val_bits], [rb + tmp], [ip + 1]
+    # Use the split233 table to obtain count mod 8
+    mul count, 3, [rb + tmp]
+    add split233, [rb + tmp], [ip + 1]
+    add [0], 0, [rb + count_mod_8]
+
+    # Jump to rotate by count_mod_8
+    add execute_rol_b_table, [rb + count_mod_8], [ip + 2]
+    jz  0, [0]
+
+execute_rol_b_table:
+    db execute_rol_b_by_0
+    db execute_rol_b_by_1
+    db execute_rol_b_by_2
+    db execute_rol_b_by_3
+    db execute_rol_b_by_4
+    db execute_rol_b_by_5
+    db execute_rol_b_by_6
+    db execute_rol_b_by_7
+
+execute_rol_b_by_0:
+    # Value is not changed, update just the flags
+    add bits, [rb + val_times_8], [ip + 1]
     add [0], 0, [flag_carry]
-
-    # Find shifted value in the shl table
-    mul [rb + val], 8, [rb + tmp]
-    add shl, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
-    add [0], 0, [rb + val]
-
-    # Update flags
-    lt  0x7f, [rb + val], [flag_sign]
-    eq  [rb + val], 0, [flag_zero]
-
-    add parity, [rb + val], [ip + 1]
-    add [0], 0, [flag_parity]
-
-    # Overflow flag is 1 when high order bit was changed
-    eq  [flag_carry], [flag_sign], [flag_overflow]
-    eq  [flag_overflow], 0, [flag_overflow]
-
-    jz  0, execute_shl_b_store
-
-execute_shl_b_zero:
-    # If we are shifting by 0, SF ZF and PF are not affected
-    add 0, 0, [flag_carry]
     add 0, 0, [flag_overflow]
 
-    jz  0, execute_shl_b_done
+    jz  0, execute_rol_b_done
 
-execute_shl_b_eight:
-    # If we are shifting by 8, zero the value and use fixed flags except for CF
-    add [rb + val_bits], 0, [ip + 1]
+execute_rol_b_by_1:
+    add shr + 7, [rb + val_times_8], [ip + 5]
+    add shl + 1, [rb + val_times_8], [ip + 1]
+    add [0], [0], [rb + val]
+
+    add bits + 7, [rb + val_times_8], [ip + 1]
     add [0], 0, [flag_carry]
+    add bits + 6, [rb + val_times_8], [ip + 1]
+    eq  [0], [rb + not_sign], [flag_overflow]
 
-    eq  [flag_carry], 1, [flag_overflow]
-    add 0, 0, [flag_sign]
-    add 1, 0, [flag_zero]
-    add 1, 0, [flag_parity]
+    jz  0, execute_rol_b_store
 
-    add 0, 0, [rb + val]
+execute_rol_b_by_2:
+    add shr + 6, [rb + val_times_8], [ip + 5]
+    add shl + 2, [rb + val_times_8], [ip + 1]
+    add [0], [0], [rb + val]
 
-    jz  0, execute_shl_b_store
+    add bits + 6, [rb + val_times_8], [ip + 1]
+    add [0], 0, [flag_carry]
+    add bits + 5, [rb + val_times_8], [ip + 1]
+    eq  [0], [rb + not_sign], [flag_overflow]
 
-execute_shl_b_many:
-    # If we are shifting by 9 or more bits, zero the value and use fixed flags
-    add 0, 0, [flag_carry]
-    add 0, 0, [flag_overflow]
-    add 0, 0, [flag_sign]
-    add 1, 0, [flag_zero]
-    add 1, 0, [flag_parity]
+    jz  0, execute_rol_b_store
 
-    add 0, 0, [rb + val]
+execute_rol_b_by_3:
+    add shr + 5, [rb + val_times_8], [ip + 5]
+    add shl + 3, [rb + val_times_8], [ip + 1]
+    add [0], [0], [rb + val]
 
-execute_shl_b_store:
+    add bits + 5, [rb + val_times_8], [ip + 1]
+    add [0], 0, [flag_carry]
+    add bits + 4, [rb + val_times_8], [ip + 1]
+    eq  [0], [rb + not_sign], [flag_overflow]
+
+    jz  0, execute_rol_b_store
+
+execute_rol_b_by_4:
+    add shr + 4, [rb + val_times_8], [ip + 5]
+    add shl + 4, [rb + val_times_8], [ip + 1]
+    add [0], [0], [rb + val]
+
+    add bits + 4, [rb + val_times_8], [ip + 1]
+    add [0], 0, [flag_carry]
+    add bits + 3, [rb + val_times_8], [ip + 1]
+    eq  [0], [rb + not_sign], [flag_overflow]
+
+    jz  0, execute_rol_b_store
+
+execute_rol_b_by_5:
+    add shr + 3, [rb + val_times_8], [ip + 5]
+    add shl + 5, [rb + val_times_8], [ip + 1]
+    add [0], [0], [rb + val]
+
+    add bits + 3, [rb + val_times_8], [ip + 1]
+    add [0], 0, [flag_carry]
+    add bits + 2, [rb + val_times_8], [ip + 1]
+    eq  [0], [rb + not_sign], [flag_overflow]
+
+    jz  0, execute_rol_b_store
+
+execute_rol_b_by_6:
+    add shr + 2, [rb + val_times_8], [ip + 5]
+    add shl + 6, [rb + val_times_8], [ip + 1]
+    add [0], [0], [rb + val]
+
+    add bits + 2, [rb + val_times_8], [ip + 1]
+    add [0], 0, [flag_carry]
+    add bits + 1, [rb + val_times_8], [ip + 1]
+    eq  [0], [rb + not_sign], [flag_overflow]
+
+    jz  0, execute_rol_b_store
+
+execute_rol_b_by_7:
+    add shr + 1, [rb + val_times_8], [ip + 5]
+    add shl + 7, [rb + val_times_8], [ip + 1]
+    add [0], [0], [rb + val]
+
+    add bits + 1, [rb + val_times_8], [ip + 1]
+    add [0], 0, [flag_carry]
+    add bits + 0, [rb + val_times_8], [ip + 1]
+    eq  [0], [rb + not_sign], [flag_overflow]
+
+execute_rol_b_store:
     # Write the shifted value
     add [rb + loc_type], 0, [rb - 1]
     add [rb + loc_addr], 0, [rb - 2]
@@ -140,10 +184,13 @@ execute_shl_b_store:
     arb -3
     call write_location_b
 
-execute_shl_b_done:
-    arb 4
+execute_rol_b_done:
+    arb 7
     ret 2
 .ENDFRAME
+
+# TODO remove
+.EOF
 
 ##########
 .FRAME loc_type, loc_addr; val, val_bits, count, tmp
