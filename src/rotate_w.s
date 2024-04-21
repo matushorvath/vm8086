@@ -1,9 +1,11 @@
-.EXPORT execute_shl_1_w
-.EXPORT execute_shl_cl_w
-.EXPORT execute_shr_1_w
-.EXPORT execute_shr_cl_w
-.EXPORT execute_sar_1_w
-.EXPORT execute_sar_cl_w
+.EXPORT execute_rol_1_w
+.EXPORT execute_rol_cl_w
+.EXPORT execute_ror_1_w
+.EXPORT execute_ror_cl_w
+.EXPORT execute_rcl_1_w
+.EXPORT execute_rcl_cl_w
+.EXPORT execute_rcr_1_w
+.EXPORT execute_rcr_cl_w
 
 # From location.s
 .IMPORT read_location_w
@@ -11,9 +13,6 @@
 
 # From obj/bits.s
 .IMPORT bits
-
-# From obj/parity.s
-.IMPORT parity
 
 # From obj/shl.s
 .IMPORT shl
@@ -24,11 +23,20 @@
 # From state.s
 .IMPORT reg_cl
 .IMPORT flag_carry
-.IMPORT flag_parity
-.IMPORT flag_auxiliary_carry
-.IMPORT flag_zero
-.IMPORT flag_sign
 .IMPORT flag_overflow
+
+# TODO remove
+execute_rol_1_w:
+execute_ror_1_w:
+execute_rcl_1_w:
+execute_rcr_1_w:
+execute_rol_cl_w:
+execute_ror_cl_w:
+execute_rcl_cl_w:
+execute_rcr_cl_w:
+
+# TODO remove
+.EOF
 
 ##########
 .FRAME loc_type, loc_addr; val_lo, val_hi, val_bits_lo, val_bits_hi, count, spill, tmp

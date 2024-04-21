@@ -14,6 +14,7 @@
 .EXPORT rep_prefix
 
 # TODO actually implement REPZ/REPNZ
+# TODO docs say many instructions trigger #UD when used with LOCK
 
 # From state.s
 .IMPORT reg_cs
