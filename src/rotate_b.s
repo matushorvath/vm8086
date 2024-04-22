@@ -32,34 +32,128 @@
 .IMPORT flag_overflow
 
 ##########
-.FRAME loc_type, loc_addr; table, val, valx8, count, tmp
+.FRAME loc_type, loc_addr; val, valx8, count, tmp
     # Function with multiple entry points
 
 execute_rol_1_b:
-    arb -5
+    arb -4
     add 1, 0, [rb + count]
-    add execute_rol_b_table, 0, [rb + table]
-    jz  0, execute_rotate_nc_b
+    jz  0, execute_rol_b
 
 execute_rol_cl_b:
-    arb -5
+    arb -4
     add [reg_cl], 0, [rb + count]
-    add execute_rol_b_table, 0, [rb + table]
-    jz  0, execute_rotate_nc_b
+
+execute_rol_b:
+    # Rotating by 0 is a no-operation, including flags
+    jz  [rb + count], execute_rol_b_done
+
+    # Use the split233 table to obtain count mod 8
+    mul [rb + count], 3, [rb + tmp]
+    add split233, [rb + tmp], [ip + 1]
+    add [0], 0, [rb + count]
+
+    # Read the value to rotate
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    arb -2
+    call read_location_b
+    add [rb - 4], 0, [rb + val]
+    mul [rb - 4], 8, [rb + valx8]
+
+    # Jump to the label that handles this case
+    add execute_rol_b_table, [rb + count], [ip + 2]
+    jz  0, [0]
+
+execute_rol_b_table:
+    db execute_rol_b_flags
+    db execute_rol_b_by_1
+    db execute_rol_b_by_2
+    db execute_rol_b_by_3
+    db execute_rol_b_by_4
+    db execute_rol_b_by_5
+    db execute_rol_b_by_6
+    db execute_rol_b_by_7
+
+execute_rol_b_by_1:
+    add shr + 7, [rb + valx8], [ip + 5]
+    add shl + 1, [rb + valx8], [ip + 2]
+    add [0], [0], [rb + val]
+    jz  0, execute_rol_b_flags
+
+execute_rol_b_by_2:
+    add shr + 6, [rb + valx8], [ip + 5]
+    add shl + 2, [rb + valx8], [ip + 2]
+    add [0], [0], [rb + val]
+    jz  0, execute_rol_b_flags
+
+execute_rol_b_by_3:
+    add shr + 5, [rb + valx8], [ip + 5]
+    add shl + 3, [rb + valx8], [ip + 2]
+    add [0], [0], [rb + val]
+    jz  0, execute_rol_b_flags
+
+execute_rol_b_by_4:
+    add shr + 4, [rb + valx8], [ip + 5]
+    add shl + 4, [rb + valx8], [ip + 2]
+    add [0], [0], [rb + val]
+    jz  0, execute_rol_b_flags
+
+execute_rol_b_by_5:
+    add shr + 3, [rb + valx8], [ip + 5]
+    add shl + 5, [rb + valx8], [ip + 2]
+    add [0], [0], [rb + val]
+    jz  0, execute_rol_b_flags
+
+execute_rol_b_by_6:
+    add shr + 2, [rb + valx8], [ip + 5]
+    add shl + 6, [rb + valx8], [ip + 2]
+    add [0], [0], [rb + val]
+    jz  0, execute_rol_b_flags
+
+execute_rol_b_by_7:
+    add shr + 1, [rb + valx8], [ip + 5]
+    add shl + 7, [rb + valx8], [ip + 2]
+    add [0], [0], [rb + val]
+    jz  0, execute_rol_b_flags
+
+execute_rol_b_flags:
+    # Update flags
+    mul [rb + val], 8, [rb + valx8]
+
+    add bits + 0, [rb + valx8], [ip + 1]
+    add [0], 0, [flag_carry]
+
+    add bits + 7, [rb + valx8], [ip + 1]
+    eq  [0], [flag_carry], [flag_overflow]
+    eq  [flag_overflow], 0, [flag_overflow]
+
+    # Write the shifted value
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + val], 0, [rb - 3]
+    arb -3
+    call write_location_b
+
+execute_rol_b_done:
+    arb 4
+    ret 2
+.ENDFRAME
+
+##########
+.FRAME loc_type, loc_addr; val, valx8, count, tmp
+    # Function with multiple entry points
 
 execute_ror_1_b:
-    arb -5
+    arb -4
     add 1, 0, [rb + count]
-    add execute_ror_b_table, 0, [rb + table]
-    jz  0, execute_rotate_nc_b
+    jz  0, execute_ror_b
 
 execute_ror_cl_b:
-    arb -5
+    arb -4
     add [reg_cl], 0, [rb + count]
-    add execute_ror_b_table, 0, [rb + table]
-    jz  0, execute_rotate_nc_b
 
-execute_rotate_nc_b:
+execute_ror_b:
     # Rotating by 0 is a no-operation, including flags
     jz  [rb + count], execute_rotate_nc_b_done
 
@@ -77,21 +171,11 @@ execute_rotate_nc_b:
     mul [rb - 4], 8, [rb + valx8]
 
     # Jump to the label that handles this case
-    add [rb + table], [rb + count], [ip + 2]
+    add execute_ror_b_table, [rb + count], [ip + 2]
     jz  0, [0]
 
-execute_rol_b_table:
-    db execute_rol_flags
-    db execute_rol_b_by_1
-    db execute_rol_b_by_2
-    db execute_rol_b_by_3
-    db execute_rol_b_by_4
-    db execute_rol_b_by_5
-    db execute_rol_b_by_6
-    db execute_rol_b_by_7
-
 execute_ror_b_table:
-    db execute_ror_flags
+    db execute_ror_b_flags
     db execute_ror_b_by_1
     db execute_ror_b_by_2
     db execute_ror_b_by_3
@@ -100,103 +184,50 @@ execute_ror_b_table:
     db execute_ror_b_by_6
     db execute_ror_b_by_7
 
-execute_rol_b_by_1:
-    add shr + 7, [rb + valx8], [ip + 5]
-    add shl + 1, [rb + valx8], [ip + 2]
-    add [0], [0], [rb + val]
-    jz  0, execute_rol_flags
-
-execute_rol_b_by_2:
-    add shr + 6, [rb + valx8], [ip + 5]
-    add shl + 2, [rb + valx8], [ip + 2]
-    add [0], [0], [rb + val]
-    jz  0, execute_rol_flags
-
-execute_rol_b_by_3:
-    add shr + 5, [rb + valx8], [ip + 5]
-    add shl + 3, [rb + valx8], [ip + 2]
-    add [0], [0], [rb + val]
-    jz  0, execute_rol_flags
-
-execute_rol_b_by_4:
-    add shr + 4, [rb + valx8], [ip + 5]
-    add shl + 4, [rb + valx8], [ip + 2]
-    add [0], [0], [rb + val]
-    jz  0, execute_rol_flags
-
-execute_rol_b_by_5:
-    add shr + 3, [rb + valx8], [ip + 5]
-    add shl + 5, [rb + valx8], [ip + 2]
-    add [0], [0], [rb + val]
-    jz  0, execute_rol_flags
-
-execute_rol_b_by_6:
-    add shr + 2, [rb + valx8], [ip + 5]
-    add shl + 6, [rb + valx8], [ip + 2]
-    add [0], [0], [rb + val]
-    jz  0, execute_rol_flags
-
-execute_rol_b_by_7:
-    add shr + 1, [rb + valx8], [ip + 5]
-    add shl + 7, [rb + valx8], [ip + 2]
-    add [0], [0], [rb + val]
-    jz  0, execute_rol_flags
-
 execute_ror_b_by_1:
     add shl + 7, [rb + valx8], [ip + 5]
     add shr + 1, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
-    jz  0, execute_ror_flags
+    jz  0, execute_ror_b_flags
 
 execute_ror_b_by_2:
     add shl + 6, [rb + valx8], [ip + 5]
     add shr + 2, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
-    jz  0, execute_ror_flags
+    jz  0, execute_ror_b_flags
 
 execute_ror_b_by_3:
     add shl + 5, [rb + valx8], [ip + 5]
     add shr + 3, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
-    jz  0, execute_ror_flags
+    jz  0, execute_ror_b_flags
 
 execute_ror_b_by_4:
     add shl + 4, [rb + valx8], [ip + 5]
     add shr + 4, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
-    jz  0, execute_ror_flags
+    jz  0, execute_ror_b_flags
 
 execute_ror_b_by_5:
     add shl + 3, [rb + valx8], [ip + 5]
     add shr + 5, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
-    jz  0, execute_ror_flags
+    jz  0, execute_ror_b_flags
 
 execute_ror_b_by_6:
     add shl + 2, [rb + valx8], [ip + 5]
     add shr + 6, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
-    jz  0, execute_ror_flags
+    jz  0, execute_ror_b_flags
 
 execute_ror_b_by_7:
     add shl + 1, [rb + valx8], [ip + 5]
     add shr + 7, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
-    jz  0, execute_ror_flags
+    jz  0, execute_ror_b_flags
 
-execute_rol_flags:
-    mul [rb + val], 8, [rb + valx8]
-
-    add bits + 0, [rb + valx8], [ip + 1]
-    add [0], 0, [flag_carry]
-
-    add bits + 7, [rb + valx8], [ip + 1]
-    eq  [0], [flag_carry], [flag_overflow]
-    eq  [flag_overflow], 0, [flag_overflow]
-
-    jz  0, execute_rotate_nc_b_store
-
-execute_ror_flags:
+execute_ror_b_flags:
+    # Update flags
     mul [rb + val], 8, [rb + valx8]
 
     add bits + 7, [rb + valx8], [ip + 1]
@@ -206,9 +237,6 @@ execute_ror_flags:
     eq  [0], [flag_carry], [flag_overflow]
     eq  [flag_overflow], 0, [flag_overflow]
 
-    jz  0, execute_rotate_nc_b_store
-
-execute_rotate_nc_b_store:
     # Write the shifted value
     add [rb + loc_type], 0, [rb - 1]
     add [rb + loc_addr], 0, [rb - 2]
@@ -217,7 +245,7 @@ execute_rotate_nc_b_store:
     call write_location_b
 
 execute_rotate_nc_b_done:
-    arb 5
+    arb 4
     ret 2
 .ENDFRAME
 
