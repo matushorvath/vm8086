@@ -115,7 +115,6 @@ execute_rol_b_by_7:
     add shr + 1, [rb + valx8], [ip + 5]
     add shl + 7, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
-    jz  0, execute_rol_b_flags
 
 execute_rol_b_flags:
     # Update flags
@@ -224,7 +223,6 @@ execute_ror_b_by_7:
     add shl + 1, [rb + valx8], [ip + 5]
     add shr + 7, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
-    jz  0, execute_ror_b_flags
 
 execute_ror_b_flags:
     # Update flags
