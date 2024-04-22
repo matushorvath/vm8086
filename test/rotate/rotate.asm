@@ -29,7 +29,7 @@ section .text
     mark 0x81
 ;%include "rol_w.inc"
     mark 0x82
-;%include "ror_b.inc"
+%include "ror_b.inc"
     mark 0x83
 ;%include "ror_w.inc"
 
