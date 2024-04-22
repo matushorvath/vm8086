@@ -44,6 +44,18 @@ execute_shl_cl_b:
     arb -5
     add [reg_cl], 0, [rb + count]
     add execute_shl_b_table, 0, [rb + table]
+    jz  0, execute_shift_b
+
+execute_shr_1_b:
+    arb -5
+    add 1, 0, [rb + count]
+    add execute_shr_b_table, 0, [rb + table]
+    jz  0, execute_shift_b
+
+execute_shr_cl_b:
+    arb -5
+    add execute_shr_b_table, 0, [rb + table]
+    add [reg_cl], 0, [rb + count]
 
 execute_shift_b:
     # Rotating by 0 is a no-operation, including flags
@@ -69,7 +81,7 @@ execute_shift_b:
     jz  0, [0]
 
 execute_shl_b_table:
-    db execute_shl_b_by_many
+    db execute_shl_shr_b_by_many
     db execute_shl_b_by_1
     db execute_shl_b_by_2
     db execute_shl_b_by_3
@@ -78,6 +90,17 @@ execute_shl_b_table:
     db execute_shl_b_by_6
     db execute_shl_b_by_7
     db execute_shl_b_by_8
+
+execute_shr_b_table:
+    db execute_shl_shr_b_by_many
+    db execute_shr_b_by_1
+    db execute_shr_b_by_2
+    db execute_shr_b_by_3
+    db execute_shr_b_by_4
+    db execute_shr_b_by_5
+    db execute_shr_b_by_6
+    db execute_shr_b_by_7
+    db execute_shr_b_by_8
 
 execute_shl_b_by_1:
     add shl + 1, [rb + valx8], [ip + 1]
@@ -147,7 +170,75 @@ execute_shl_b_by_8:
 
     jz  0, execute_shift_b_store
 
-execute_shl_b_by_many:
+execute_shr_b_by_1:
+    add shr + 1, [rb + valx8], [ip + 1]
+    add [0], 0, [rb + val]
+    add bits + 0, [rb + valx8], [ip + 1]
+    add [0], 0, [flag_carry]
+
+    jz  0, execute_shift_b_common_flags
+
+execute_shr_b_by_2:
+    add shr + 2, [rb + valx8], [ip + 1]
+    add [0], 0, [rb + val]
+    add bits + 1, [rb + valx8], [ip + 1]
+    add [0], 0, [flag_carry]
+
+    jz  0, execute_shift_b_common_flags
+
+execute_shr_b_by_3:
+    add shr + 3, [rb + valx8], [ip + 1]
+    add [0], 0, [rb + val]
+    add bits + 2, [rb + valx8], [ip + 1]
+    add [0], 0, [flag_carry]
+
+    jz  0, execute_shift_b_common_flags
+
+execute_shr_b_by_4:
+    add shr + 4, [rb + valx8], [ip + 1]
+    add [0], 0, [rb + val]
+    add bits + 3, [rb + valx8], [ip + 1]
+    add [0], 0, [flag_carry]
+
+    jz  0, execute_shift_b_common_flags
+
+execute_shr_b_by_5:
+    add shr + 5, [rb + valx8], [ip + 1]
+    add [0], 0, [rb + val]
+    add bits + 4, [rb + valx8], [ip + 1]
+    add [0], 0, [flag_carry]
+
+    jz  0, execute_shift_b_common_flags
+
+execute_shr_b_by_6:
+    add shr + 6, [rb + valx8], [ip + 1]
+    add [0], 0, [rb + val]
+    add bits + 5, [rb + valx8], [ip + 1]
+    add [0], 0, [flag_carry]
+
+    jz  0, execute_shift_b_common_flags
+
+execute_shr_b_by_7:
+    add shr + 7, [rb + valx8], [ip + 1]
+    add [0], 0, [rb + val]
+    add bits + 6, [rb + valx8], [ip + 1]
+    add [0], 0, [flag_carry]
+
+    jz  0, execute_shift_b_common_flags
+
+execute_shr_b_by_8:
+    add 0, 0, [rb + val]
+    add bits + 7, [rb + valx8], [ip + 1]
+    add [0], 0, [flag_carry]
+
+    add 0, 0, [flag_sign]
+    add 1, 0, [flag_zero]
+    eq  [flag_carry], 1, [flag_overflow]
+    add 1, 0, [flag_parity]
+
+    jz  0, execute_shift_b_store
+
+execute_shl_shr_b_by_many:
     add 0, 0, [rb + val]
     add 0, 0, [flag_carry]
 
@@ -162,7 +253,7 @@ execute_shift_b_common_flags:
     # Update flags
     lt  0x7f, [rb + val], [flag_sign]
     eq  [rb + val], 0, [flag_zero]
-    eq  [flag_carry], [flag_sign], [flag_overflow]
+    eq  [flag_carry], [flag_sign], [flag_overflow] xxx TODO wrong for SHR
     eq  [flag_overflow], 0, [flag_overflow]
 
     add parity, [rb + val], [ip + 1]
