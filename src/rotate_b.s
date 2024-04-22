@@ -164,9 +164,8 @@ execute_rol_b_by_8:
     # Value is not changed, update just the flags
     add bits, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
-    add 0, 0, [flag_overflow]
 
-    jz  0, execute_rotate_b_done
+    jz  0, execute_rotate_b_common_flags
 
 execute_rol_b_by_1:
     add shr + 7, [rb + valx8], [ip + 5]
@@ -175,10 +174,8 @@ execute_rol_b_by_1:
 
     add bits + 7, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
-    add bits + 6, [rb + valx8], [ip + 1]
-    eq  [0], [rb + not_sign], [flag_overflow]
 
-    jz  0, execute_rotate_b_store
+    jz  0, execute_rotate_b_common_flags
 
 execute_rol_b_by_2:
     add shr + 6, [rb + valx8], [ip + 5]
@@ -187,10 +184,8 @@ execute_rol_b_by_2:
 
     add bits + 6, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
-    add bits + 5, [rb + valx8], [ip + 1]
-    eq  [0], [rb + not_sign], [flag_overflow]
 
-    jz  0, execute_rotate_b_store
+    jz  0, execute_rotate_b_common_flags
 
 execute_rol_b_by_3:
     add shr + 5, [rb + valx8], [ip + 5]
@@ -199,10 +194,8 @@ execute_rol_b_by_3:
 
     add bits + 5, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
-    add bits + 4, [rb + valx8], [ip + 1]
-    eq  [0], [rb + not_sign], [flag_overflow]
 
-    jz  0, execute_rotate_b_store
+    jz  0, execute_rotate_b_common_flags
 
 execute_rol_b_by_4:
     add shr + 4, [rb + valx8], [ip + 5]
@@ -211,10 +204,8 @@ execute_rol_b_by_4:
 
     add bits + 4, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
-    add bits + 3, [rb + valx8], [ip + 1]
-    eq  [0], [rb + not_sign], [flag_overflow]
 
-    jz  0, execute_rotate_b_store
+    jz  0, execute_rotate_b_common_flags
 
 execute_rol_b_by_5:
     add shr + 3, [rb + valx8], [ip + 5]
@@ -223,10 +214,8 @@ execute_rol_b_by_5:
 
     add bits + 3, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
-    add bits + 2, [rb + valx8], [ip + 1]
-    eq  [0], [rb + not_sign], [flag_overflow]
 
-    jz  0, execute_rotate_b_store
+    jz  0, execute_rotate_b_common_flags
 
 execute_rol_b_by_6:
     add shr + 2, [rb + valx8], [ip + 5]
@@ -235,10 +224,8 @@ execute_rol_b_by_6:
 
     add bits + 2, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
-    add bits + 1, [rb + valx8], [ip + 1]
-    eq  [0], [rb + not_sign], [flag_overflow]
 
-    jz  0, execute_rotate_b_store
+    jz  0, execute_rotate_b_common_flags
 
 execute_rol_b_by_7:
     add shr + 1, [rb + valx8], [ip + 5]
@@ -247,10 +234,8 @@ execute_rol_b_by_7:
 
     add bits + 1, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
-    add bits + 0, [rb + valx8], [ip + 1]
-    eq  [0], [rb + not_sign], [flag_overflow]
 
-    jz  0, execute_rotate_b_store
+    jz  0, execute_rotate_b_common_flags
 
 execute_ror_b_by_8:
     # Value is not changed, update just the flags
@@ -445,6 +430,12 @@ execute_rcl_b_by_8:
     eq  [flag_carry], [rb + not_sign], [flag_overflow]
     add bits + 0, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
+
+    jz  0, execute_rotate_b_store
+
+execute_rotate_b_common_flags:
+    lt  [rb + val], 0x80, [rb + tmp]
+    eq  [flag_carry], [rb + tmp], [flag_overflow]
 
 execute_rotate_b_store:
     # Write the shifted value
