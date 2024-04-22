@@ -32,53 +32,53 @@
 .IMPORT flag_overflow
 
 ##########
-.FRAME loc_type, loc_addr; table, val, val_bits, val_times_8, not_sign, count, tmp
+.FRAME loc_type, loc_addr; table, val, valx8, not_sign, count, tmp
     # Function with multiple entry points
 
 execute_rol_1_b:
-    arb -7
+    arb -6
     add 1, 0, [rb + count]
     add execute_rol_b_table, 0, [rb + table]
     jz  0, execute_rotate_b_mod_8
 
 execute_rol_cl_b:
-    arb -7
+    arb -6
     add [reg_cl], 0, [rb + count]
     add execute_rol_b_table, 0, [rb + table]
     jz  0, execute_rotate_b_mod_8
 
 execute_ror_1_b:
-    arb -7
+    arb -6
     add 1, 0, [rb + count]
     add execute_ror_b_table, 0, [rb + table]
     jz  0, execute_rotate_b_mod_8
 
 execute_ror_cl_b:
-    arb -7
+    arb -6
     add [reg_cl], 0, [rb + count]
     add execute_ror_b_table, 0, [rb + table]
     jz  0, execute_rotate_b_mod_8
 
 execute_rcl_1_b:
-    arb -7
+    arb -6
     add 1, 0, [rb + count]
     add execute_rcl_b_table, 0, [rb + table]
     jz  0, execute_rotate_b_mod_9
 
 execute_rcl_cl_b:
-    arb -7
+    arb -6
     add [reg_cl], 0, [rb + count]
     add execute_rcl_b_table, 0, [rb + table]
     jz  0, execute_rotate_b_mod_9
 
 execute_rcr_1_b:
-    arb -7
+    arb -6
     add 1, 0, [rb + count]
     add execute_rcr_b_table, 0, [rb + table]
     jz  0, execute_rotate_b_mod_9
 
 execute_rcr_cl_b:
-    arb -7
+    arb -6
     add [reg_cl], 0, [rb + count]
     add execute_rcr_b_table, 0, [rb + table]
     jz  0, execute_rotate_b_mod_9
@@ -109,15 +109,12 @@ execute_rotate_b:
     arb -2
     call read_location_b
     add [rb - 4], 0, [rb + val]
+    mul [rb - 4], 8, [rb + valx8]
 
-    # Expand val to bits
-    mul [rb + val], 8, [rb + val_times_8]
-    add bits, [rb + tmp], [rb + val_bits]
-
-    # Save negation of the sign for later
+    # Save negated sign bit for later
     lt  [rb + val], 0x80, [rb + not_sign]
 
-    # Jump to rotate by count
+    # Jump to the label that handles this case
     add [rb + table], [rb + count], [ip + 2]
     jz  0, [0]
 
@@ -165,176 +162,176 @@ execute_rcr_b_table:
 
 execute_rol_b_by_8:
     # Value is not changed, update just the flags
-    add bits, [rb + val_times_8], [ip + 1]
+    add bits, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
     add 0, 0, [flag_overflow]
 
     jz  0, execute_rotate_b_done
 
 execute_rol_b_by_1:
-    add shr + 7, [rb + val_times_8], [ip + 5]
-    add shl + 1, [rb + val_times_8], [ip + 2]
+    add shr + 7, [rb + valx8], [ip + 5]
+    add shl + 1, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
 
-    add bits + 7, [rb + val_times_8], [ip + 1]
+    add bits + 7, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
-    add bits + 6, [rb + val_times_8], [ip + 1]
+    add bits + 6, [rb + valx8], [ip + 1]
     eq  [0], [rb + not_sign], [flag_overflow]
 
     jz  0, execute_rotate_b_store
 
 execute_rol_b_by_2:
-    add shr + 6, [rb + val_times_8], [ip + 5]
-    add shl + 2, [rb + val_times_8], [ip + 2]
+    add shr + 6, [rb + valx8], [ip + 5]
+    add shl + 2, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
 
-    add bits + 6, [rb + val_times_8], [ip + 1]
+    add bits + 6, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
-    add bits + 5, [rb + val_times_8], [ip + 1]
+    add bits + 5, [rb + valx8], [ip + 1]
     eq  [0], [rb + not_sign], [flag_overflow]
 
     jz  0, execute_rotate_b_store
 
 execute_rol_b_by_3:
-    add shr + 5, [rb + val_times_8], [ip + 5]
-    add shl + 3, [rb + val_times_8], [ip + 2]
+    add shr + 5, [rb + valx8], [ip + 5]
+    add shl + 3, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
 
-    add bits + 5, [rb + val_times_8], [ip + 1]
+    add bits + 5, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
-    add bits + 4, [rb + val_times_8], [ip + 1]
+    add bits + 4, [rb + valx8], [ip + 1]
     eq  [0], [rb + not_sign], [flag_overflow]
 
     jz  0, execute_rotate_b_store
 
 execute_rol_b_by_4:
-    add shr + 4, [rb + val_times_8], [ip + 5]
-    add shl + 4, [rb + val_times_8], [ip + 2]
+    add shr + 4, [rb + valx8], [ip + 5]
+    add shl + 4, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
 
-    add bits + 4, [rb + val_times_8], [ip + 1]
+    add bits + 4, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
-    add bits + 3, [rb + val_times_8], [ip + 1]
+    add bits + 3, [rb + valx8], [ip + 1]
     eq  [0], [rb + not_sign], [flag_overflow]
 
     jz  0, execute_rotate_b_store
 
 execute_rol_b_by_5:
-    add shr + 3, [rb + val_times_8], [ip + 5]
-    add shl + 5, [rb + val_times_8], [ip + 2]
+    add shr + 3, [rb + valx8], [ip + 5]
+    add shl + 5, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
 
-    add bits + 3, [rb + val_times_8], [ip + 1]
+    add bits + 3, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
-    add bits + 2, [rb + val_times_8], [ip + 1]
+    add bits + 2, [rb + valx8], [ip + 1]
     eq  [0], [rb + not_sign], [flag_overflow]
 
     jz  0, execute_rotate_b_store
 
 execute_rol_b_by_6:
-    add shr + 2, [rb + val_times_8], [ip + 5]
-    add shl + 6, [rb + val_times_8], [ip + 2]
+    add shr + 2, [rb + valx8], [ip + 5]
+    add shl + 6, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
 
-    add bits + 2, [rb + val_times_8], [ip + 1]
+    add bits + 2, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
-    add bits + 1, [rb + val_times_8], [ip + 1]
+    add bits + 1, [rb + valx8], [ip + 1]
     eq  [0], [rb + not_sign], [flag_overflow]
 
     jz  0, execute_rotate_b_store
 
 execute_rol_b_by_7:
-    add shr + 1, [rb + val_times_8], [ip + 5]
-    add shl + 7, [rb + val_times_8], [ip + 2]
+    add shr + 1, [rb + valx8], [ip + 5]
+    add shl + 7, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
 
-    add bits + 1, [rb + val_times_8], [ip + 1]
+    add bits + 1, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
-    add bits + 0, [rb + val_times_8], [ip + 1]
+    add bits + 0, [rb + valx8], [ip + 1]
     eq  [0], [rb + not_sign], [flag_overflow]
 
     jz  0, execute_rotate_b_store
 
 execute_ror_b_by_8:
     # Value is not changed, update just the flags
-    add bits + 7, [rb + val_times_8], [ip + 1]
+    add bits + 7, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
     add 0, 0, [flag_overflow]
 
     jz  0, execute_rotate_b_done
 
 execute_ror_b_by_1:
-    add shl + 7, [rb + val_times_8], [ip + 5]
-    add shr + 1, [rb + val_times_8], [ip + 2]
+    add shl + 7, [rb + valx8], [ip + 5]
+    add shr + 1, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
 
-    add bits + 0, [rb + val_times_8], [ip + 1]
+    add bits + 0, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
     eq  [flag_carry], [rb + not_sign], [flag_overflow]
 
     jz  0, execute_rotate_b_store
 
 execute_ror_b_by_2:
-    add shl + 6, [rb + val_times_8], [ip + 5]
-    add shr + 2, [rb + val_times_8], [ip + 2]
+    add shl + 6, [rb + valx8], [ip + 5]
+    add shr + 2, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
 
-    add bits + 1, [rb + val_times_8], [ip + 1]
+    add bits + 1, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
     eq  [flag_carry], [rb + not_sign], [flag_overflow]
 
     jz  0, execute_rotate_b_store
 
 execute_ror_b_by_3:
-    add shl + 5, [rb + val_times_8], [ip + 5]
-    add shr + 3, [rb + val_times_8], [ip + 2]
+    add shl + 5, [rb + valx8], [ip + 5]
+    add shr + 3, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
 
-    add bits + 2, [rb + val_times_8], [ip + 1]
+    add bits + 2, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
     eq  [flag_carry], [rb + not_sign], [flag_overflow]
 
     jz  0, execute_rotate_b_store
 
 execute_ror_b_by_4:
-    add shl + 4, [rb + val_times_8], [ip + 5]
-    add shr + 4, [rb + val_times_8], [ip + 2]
+    add shl + 4, [rb + valx8], [ip + 5]
+    add shr + 4, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
 
-    add bits + 3, [rb + val_times_8], [ip + 1]
+    add bits + 3, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
     eq  [flag_carry], [rb + not_sign], [flag_overflow]
 
     jz  0, execute_rotate_b_store
 
 execute_ror_b_by_5:
-    add shl + 3, [rb + val_times_8], [ip + 5]
-    add shr + 5, [rb + val_times_8], [ip + 2]
+    add shl + 3, [rb + valx8], [ip + 5]
+    add shr + 5, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
 
-    add bits + 4, [rb + val_times_8], [ip + 1]
+    add bits + 4, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
     eq  [flag_carry], [rb + not_sign], [flag_overflow]
 
     jz  0, execute_rotate_b_store
 
 execute_ror_b_by_6:
-    add shl + 2, [rb + val_times_8], [ip + 5]
-    add shr + 6, [rb + val_times_8], [ip + 2]
+    add shl + 2, [rb + valx8], [ip + 5]
+    add shr + 6, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
 
-    add bits + 5, [rb + val_times_8], [ip + 1]
+    add bits + 5, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
     eq  [flag_carry], [rb + not_sign], [flag_overflow]
 
     jz  0, execute_rotate_b_store
 
 execute_ror_b_by_7:
-    add shl + 1, [rb + val_times_8], [ip + 5]
-    add shr + 7, [rb + val_times_8], [ip + 2]
+    add shl + 1, [rb + valx8], [ip + 5]
+    add shr + 7, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
 
-    add bits + 6, [rb + val_times_8], [ip + 1]
+    add bits + 6, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
     eq  [flag_carry], [rb + not_sign], [flag_overflow]
 
@@ -346,107 +343,107 @@ execute_rcl_b_by_9:
     jz  0, execute_rotate_b_done
 
 execute_rcl_b_by_1:
-    add shl + 1, [rb + val_times_8], [ip + 1]
+    add shl + 1, [rb + valx8], [ip + 1]
     add [0], [flag_carry], [rb + val]
 
-    add bits + 7, [rb + val_times_8], [ip + 1]
+    add bits + 7, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
-    add bits + 6, [rb + val_times_8], [ip + 1]
+    add bits + 6, [rb + valx8], [ip + 1]
     eq  [0], [rb + not_sign], [flag_overflow]
 
     jz  0, execute_rotate_b_store
 
 execute_rcl_b_by_2:
-    add shr + 7, [rb + val_times_8], [ip + 5]
-    add shl + 2, [rb + val_times_8], [ip + 2]
+    add shr + 7, [rb + valx8], [ip + 5]
+    add shl + 2, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
     mul [flag_carry], 0x02, [rb + tmp]
     add [rb + val], [rb + tmp], [rb + val]
 
-    add bits + 6, [rb + val_times_8], [ip + 1]
+    add bits + 6, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
-    add bits + 5, [rb + val_times_8], [ip + 1]
+    add bits + 5, [rb + valx8], [ip + 1]
     eq  [0], [rb + not_sign], [flag_overflow]
 
     jz  0, execute_rotate_b_store
 
 execute_rcl_b_by_3:
-    add shr + 6, [rb + val_times_8], [ip + 5]
-    add shl + 3, [rb + val_times_8], [ip + 2]
+    add shr + 6, [rb + valx8], [ip + 5]
+    add shl + 3, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
     mul [flag_carry], 0x04, [rb + tmp]
     add [rb + val], [rb + tmp], [rb + val]
 
-    add bits + 5, [rb + val_times_8], [ip + 1]
+    add bits + 5, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
-    add bits + 4, [rb + val_times_8], [ip + 1]
+    add bits + 4, [rb + valx8], [ip + 1]
     eq  [0], [rb + not_sign], [flag_overflow]
 
     jz  0, execute_rotate_b_store
 
 execute_rcl_b_by_4:
-    add shr + 5, [rb + val_times_8], [ip + 5]
-    add shl + 4, [rb + val_times_8], [ip + 2]
+    add shr + 5, [rb + valx8], [ip + 5]
+    add shl + 4, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
     mul [flag_carry], 0x08, [rb + tmp]
     add [rb + val], [rb + tmp], [rb + val]
 
-    add bits + 4, [rb + val_times_8], [ip + 1]
+    add bits + 4, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
-    add bits + 3, [rb + val_times_8], [ip + 1]
+    add bits + 3, [rb + valx8], [ip + 1]
     eq  [0], [rb + not_sign], [flag_overflow]
 
     jz  0, execute_rotate_b_store
 
 execute_rcl_b_by_5:
-    add shr + 4, [rb + val_times_8], [ip + 5]
-    add shl + 5, [rb + val_times_8], [ip + 2]
+    add shr + 4, [rb + valx8], [ip + 5]
+    add shl + 5, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
     mul [flag_carry], 0x10, [rb + tmp]
     add [rb + val], [rb + tmp], [rb + val]
 
-    add bits + 3, [rb + val_times_8], [ip + 1]
+    add bits + 3, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
-    add bits + 2, [rb + val_times_8], [ip + 1]
+    add bits + 2, [rb + valx8], [ip + 1]
     eq  [0], [rb + not_sign], [flag_overflow]
 
     jz  0, execute_rotate_b_store
 
 execute_rcl_b_by_6:
-    add shr + 3, [rb + val_times_8], [ip + 5]
-    add shl + 6, [rb + val_times_8], [ip + 2]
+    add shr + 3, [rb + valx8], [ip + 5]
+    add shl + 6, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
     mul [flag_carry], 0x20, [rb + tmp]
     add [rb + val], [rb + tmp], [rb + val]
 
-    add bits + 2, [rb + val_times_8], [ip + 1]
+    add bits + 2, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
-    add bits + 1, [rb + val_times_8], [ip + 1]
+    add bits + 1, [rb + valx8], [ip + 1]
     eq  [0], [rb + not_sign], [flag_overflow]
 
     jz  0, execute_rotate_b_store
 
 execute_rcl_b_by_7:
-    add shr + 2, [rb + val_times_8], [ip + 5]
-    add shl + 7, [rb + val_times_8], [ip + 2]
+    add shr + 2, [rb + valx8], [ip + 5]
+    add shl + 7, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
     mul [flag_carry], 0x40, [rb + tmp]
     add [rb + val], [rb + tmp], [rb + val]
 
-    add bits + 1, [rb + val_times_8], [ip + 1]
+    add bits + 1, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
-    add bits + 0, [rb + val_times_8], [ip + 1]
+    add bits + 0, [rb + valx8], [ip + 1]
     eq  [0], [rb + not_sign], [flag_overflow]
 
     jz  0, execute_rotate_b_store
 
 execute_rcl_b_by_8:
-    add shr + 1, [rb + val_times_8], [ip + 5]
+    add shr + 1, [rb + valx8], [ip + 5]
     mul [flag_carry], 0x80, [rb + tmp]
     add [0], [rb + tmp], [rb + val]
 
     eq  [flag_carry], [rb + not_sign], [flag_overflow]
-    add bits + 0, [rb + val_times_8], [ip + 1]
+    add bits + 0, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
 
 execute_rotate_b_store:
@@ -458,7 +455,7 @@ execute_rotate_b_store:
     call write_location_b
 
 execute_rotate_b_done:
-    arb 7
+    arb 6
     ret 2
 .ENDFRAME
 
