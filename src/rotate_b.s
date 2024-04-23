@@ -255,35 +255,34 @@ execute_rcl_1_b:
     arb -6
     add 1, 0, [rb + count]
     add execute_rcl_b_table, 0, [rb + table]
-    jz  0, execute_rotate_b_mod_9
+    jz  0, execute_rcl_rcr_b
 
 execute_rcl_cl_b:
     arb -6
     add [reg_cl], 0, [rb + count]
     add execute_rcl_b_table, 0, [rb + table]
-    jz  0, execute_rotate_b_mod_9
+    jz  0, execute_rcl_rcr_b
 
 execute_rcr_1_b:
     arb -6
     add 1, 0, [rb + count]
     add execute_rcr_b_table, 0, [rb + table]
-    jz  0, execute_rotate_b_mod_9
+    jz  0, execute_rcl_rcr_b
 
 execute_rcr_cl_b:
     arb -6
     add [reg_cl], 0, [rb + count]
     add execute_rcr_b_table, 0, [rb + table]
-    jz  0, execute_rotate_b_mod_9
+    jz  0, execute_rcl_rcr_b
 
-execute_rotate_b_mod_9:
+execute_rcl_rcr_b:
     # Rotating by 0 is a no-operation, including flags
-    jz  [rb + count], execute_rotate_b_done
+    jz  [rb + count], execute_rcl_rcr_b_done
 
     # Use the mod9 table to obtain count mod 9
     add mod9, [rb + count], [ip + 1]
     add [0], 0, [rb + count]
 
-execute_rotate_b:
     # Read the value to rotate
     add [rb + loc_type], 0, [rb - 1]
     add [rb + loc_addr], 0, [rb - 2]
@@ -324,7 +323,7 @@ execute_rcr_b_table:
 execute_rcl_b_by_9:
     # Value and carry are not changed, overflow is zero
     add 0, 0, [flag_overflow]
-    jz  0, execute_rotate_b_done
+    jz  0, execute_rcl_rcr_b_done
 
 execute_rcl_b_by_1:
     add shl + 1, [rb + valx8], [ip + 1]
@@ -335,7 +334,7 @@ execute_rcl_b_by_1:
     add bits + 6, [rb + valx8], [ip + 1]
     eq  [0], [rb + not_sign], [flag_overflow]
 
-    jz  0, execute_rotate_b_store
+    jz  0, execute_rcl_rcr_b_store
 
 execute_rcl_b_by_2:
     add shr + 7, [rb + valx8], [ip + 5]
@@ -349,7 +348,7 @@ execute_rcl_b_by_2:
     add bits + 5, [rb + valx8], [ip + 1]
     eq  [0], [rb + not_sign], [flag_overflow]
 
-    jz  0, execute_rotate_b_store
+    jz  0, execute_rcl_rcr_b_store
 
 execute_rcl_b_by_3:
     add shr + 6, [rb + valx8], [ip + 5]
@@ -363,7 +362,7 @@ execute_rcl_b_by_3:
     add bits + 4, [rb + valx8], [ip + 1]
     eq  [0], [rb + not_sign], [flag_overflow]
 
-    jz  0, execute_rotate_b_store
+    jz  0, execute_rcl_rcr_b_store
 
 execute_rcl_b_by_4:
     add shr + 5, [rb + valx8], [ip + 5]
@@ -377,7 +376,7 @@ execute_rcl_b_by_4:
     add bits + 3, [rb + valx8], [ip + 1]
     eq  [0], [rb + not_sign], [flag_overflow]
 
-    jz  0, execute_rotate_b_store
+    jz  0, execute_rcl_rcr_b_store
 
 execute_rcl_b_by_5:
     add shr + 4, [rb + valx8], [ip + 5]
@@ -391,7 +390,7 @@ execute_rcl_b_by_5:
     add bits + 2, [rb + valx8], [ip + 1]
     eq  [0], [rb + not_sign], [flag_overflow]
 
-    jz  0, execute_rotate_b_store
+    jz  0, execute_rcl_rcr_b_store
 
 execute_rcl_b_by_6:
     add shr + 3, [rb + valx8], [ip + 5]
@@ -405,7 +404,7 @@ execute_rcl_b_by_6:
     add bits + 1, [rb + valx8], [ip + 1]
     eq  [0], [rb + not_sign], [flag_overflow]
 
-    jz  0, execute_rotate_b_store
+    jz  0, execute_rcl_rcr_b_store
 
 execute_rcl_b_by_7:
     add shr + 2, [rb + valx8], [ip + 5]
@@ -419,7 +418,7 @@ execute_rcl_b_by_7:
     add bits + 0, [rb + valx8], [ip + 1]
     eq  [0], [rb + not_sign], [flag_overflow]
 
-    jz  0, execute_rotate_b_store
+    jz  0, execute_rcl_rcr_b_store
 
 execute_rcl_b_by_8:
     add shr + 1, [rb + valx8], [ip + 5]
@@ -430,9 +429,9 @@ execute_rcl_b_by_8:
     add bits + 0, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
 
-    jz  0, execute_rotate_b_store
+    jz  0, execute_rcl_rcr_b_store
 
-execute_rotate_b_store:
+execute_rcl_rcr_b_store:
     # Write the shifted value
     add [rb + loc_type], 0, [rb - 1]
     add [rb + loc_addr], 0, [rb - 2]
@@ -440,7 +439,7 @@ execute_rotate_b_store:
     arb -3
     call write_location_b
 
-execute_rotate_b_done:
+execute_rcl_rcr_b_done:
     arb 6
     ret 2
 .ENDFRAME
