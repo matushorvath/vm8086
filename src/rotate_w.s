@@ -29,10 +29,8 @@
 .IMPORT flag_overflow
 
 # TODO remove
-execute_ror_1_w:
 execute_rcl_1_w:
 execute_rcr_1_w:
-execute_ror_cl_w:
 execute_rcl_cl_w:
 execute_rcr_cl_w:
 
@@ -261,7 +259,7 @@ execute_rol_w_flags:
     eq  [0], [flag_carry], [flag_overflow]
     eq  [flag_overflow], 0, [flag_overflow]
 
-    # Write the shifted value
+    # Write the retated value
     add [rb + loc_type], 0, [rb - 1]
     add [rb + loc_addr], 0, [rb - 2]
     add [rb + val_lo], 0, [rb - 3]
@@ -274,29 +272,26 @@ execute_rol_w_done:
     ret 2
 .ENDFRAME
 
-# TODO remove
-.EOF
-
 ##########
-.FRAME loc_type, loc_addr; val, valx8, count, tmp
+.FRAME loc_type, loc_addr; val_lo, val_hi, valx8_lo, valx8_hi, count, tmp
     # Function with multiple entry points
 
 execute_ror_1_w:
-    arb -4
+    arb -6
     add 1, 0, [rb + count]
     jz  0, execute_ror_w
 
 execute_ror_cl_w:
-    arb -4
+    arb -6
     add [reg_cl], 0, [rb + count]
 
 execute_ror_w:
     # Rotating by 0 is a no-operation, including flags
-    jz  [rb + count], execute_rotate_nc_w_done
+    jz  [rb + count], execute_ror_w_done
 
-    # Use the split233 table to obtain count mod 8
-    mul [rb + count], 3, [rb + tmp]
-    add split233, [rb + tmp], [ip + 1]
+    # Use the nibbles table to obtain count mod 16
+    mul [rb + count], 2, [rb + tmp]
+    add nibbles, [rb + tmp], [ip + 1]
     add [0], 0, [rb + count]
 
     # Read the value to rotate
@@ -304,8 +299,10 @@ execute_ror_w:
     add [rb + loc_addr], 0, [rb - 2]
     arb -2
     call read_location_w
-    add [rb - 4], 0, [rb + val]
-    mul [rb - 4], 8, [rb + valx8]
+    add [rb - 4], 0, [rb + val_lo]
+    mul [rb - 4], 8, [rb + valx8_lo]
+    add [rb - 5], 0, [rb + val_hi]
+    mul [rb - 5], 8, [rb + valx8_hi]
 
     # Jump to the label that handles this case
     add execute_ror_w_table, [rb + count], [ip + 2]
@@ -320,70 +317,200 @@ execute_ror_w_table:
     db execute_ror_w_by_5
     db execute_ror_w_by_6
     db execute_ror_w_by_7
+    db execute_ror_w_by_8
+    db execute_ror_w_by_9
+    db execute_ror_w_by_a
+    db execute_ror_w_by_b
+    db execute_ror_w_by_c
+    db execute_ror_w_by_d
+    db execute_ror_w_by_e
+    db execute_ror_w_by_f
 
 execute_ror_w_by_1:
-    add shl + 7, [rb + valx8], [ip + 5]
-    add shr + 1, [rb + valx8], [ip + 2]
-    add [0], [0], [rb + val]
+    add shl + 7, [rb + valx8_lo], [ip + 5]
+    add shr + 1, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    add shl + 7, [rb + valx8_hi], [ip + 5]
+    add shr + 1, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
     jz  0, execute_ror_w_flags
 
 execute_ror_w_by_2:
-    add shl + 6, [rb + valx8], [ip + 5]
-    add shr + 2, [rb + valx8], [ip + 2]
-    add [0], [0], [rb + val]
+    add shl + 6, [rb + valx8_lo], [ip + 5]
+    add shr + 2, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    add shl + 6, [rb + valx8_hi], [ip + 5]
+    add shr + 2, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
     jz  0, execute_ror_w_flags
 
 execute_ror_w_by_3:
-    add shl + 5, [rb + valx8], [ip + 5]
-    add shr + 3, [rb + valx8], [ip + 2]
-    add [0], [0], [rb + val]
+    add shl + 5, [rb + valx8_lo], [ip + 5]
+    add shr + 3, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    add shl + 5, [rb + valx8_hi], [ip + 5]
+    add shr + 3, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
     jz  0, execute_ror_w_flags
 
 execute_ror_w_by_4:
-    add shl + 4, [rb + valx8], [ip + 5]
-    add shr + 4, [rb + valx8], [ip + 2]
-    add [0], [0], [rb + val]
+    add shl + 4, [rb + valx8_lo], [ip + 5]
+    add shr + 4, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    add shl + 4, [rb + valx8_hi], [ip + 5]
+    add shr + 4, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
     jz  0, execute_ror_w_flags
 
 execute_ror_w_by_5:
-    add shl + 3, [rb + valx8], [ip + 5]
-    add shr + 5, [rb + valx8], [ip + 2]
-    add [0], [0], [rb + val]
+    add shl + 3, [rb + valx8_lo], [ip + 5]
+    add shr + 5, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    add shl + 3, [rb + valx8_hi], [ip + 5]
+    add shr + 5, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
     jz  0, execute_ror_w_flags
 
 execute_ror_w_by_6:
-    add shl + 2, [rb + valx8], [ip + 5]
-    add shr + 6, [rb + valx8], [ip + 2]
-    add [0], [0], [rb + val]
+    add shl + 2, [rb + valx8_lo], [ip + 5]
+    add shr + 6, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    add shl + 2, [rb + valx8_hi], [ip + 5]
+    add shr + 6, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
     jz  0, execute_ror_w_flags
 
 execute_ror_w_by_7:
-    add shl + 1, [rb + valx8], [ip + 5]
-    add shr + 7, [rb + valx8], [ip + 2]
-    add [0], [0], [rb + val]
+    add shl + 1, [rb + valx8_lo], [ip + 5]
+    add shr + 7, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    add shl + 1, [rb + valx8_hi], [ip + 5]
+    add shr + 7, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    jz  0, execute_ror_w_flags
+
+execute_ror_w_by_8:
+    add [rb + val_hi], 0, [rb + tmp]
+    add [rb + val_lo], 0, [rb + val_hi]
+    add [rb + tmp], 0, [rb + val_lo]
+
+    jz  0, execute_ror_w_flags
+
+execute_ror_w_by_9:
+    add shl + 7, [rb + valx8_lo], [ip + 5]
+    add shr + 1, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    add shl + 7, [rb + valx8_hi], [ip + 5]
+    add shr + 1, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    jz  0, execute_ror_w_flags
+
+execute_ror_w_by_a:
+    add shl + 6, [rb + valx8_lo], [ip + 5]
+    add shr + 2, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    add shl + 6, [rb + valx8_hi], [ip + 5]
+    add shr + 2, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    jz  0, execute_ror_w_flags
+
+execute_ror_w_by_b:
+    add shl + 5, [rb + valx8_lo], [ip + 5]
+    add shr + 3, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    add shl + 5, [rb + valx8_hi], [ip + 5]
+    add shr + 3, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    jz  0, execute_ror_w_flags
+
+execute_ror_w_by_c:
+    add shl + 4, [rb + valx8_lo], [ip + 5]
+    add shr + 4, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    add shl + 4, [rb + valx8_hi], [ip + 5]
+    add shr + 4, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    jz  0, execute_ror_w_flags
+
+execute_ror_w_by_d:
+    add shl + 3, [rb + valx8_lo], [ip + 5]
+    add shr + 5, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    add shl + 3, [rb + valx8_hi], [ip + 5]
+    add shr + 5, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    jz  0, execute_ror_w_flags
+
+execute_ror_w_by_e:
+    add shl + 2, [rb + valx8_lo], [ip + 5]
+    add shr + 6, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    add shl + 2, [rb + valx8_hi], [ip + 5]
+    add shr + 6, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    jz  0, execute_ror_w_flags
+
+execute_ror_w_by_f:
+    add shl + 1, [rb + valx8_lo], [ip + 5]
+    add shr + 7, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    add shl + 1, [rb + valx8_hi], [ip + 5]
+    add shr + 7, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_hi]
 
 execute_ror_w_flags:
     # Update flags
-    mul [rb + val], 8, [rb + valx8]
+    mul [rb + val_hi], 8, [rb + valx8_hi]
 
-    add bits + 7, [rb + valx8], [ip + 1]
+    add bits + 7, [rb + valx8_hi], [ip + 1]
     add [0], 0, [flag_carry]
 
-    add bits + 6, [rb + valx8], [ip + 1]
+    add bits + 6, [rb + valx8_hi], [ip + 1]
     eq  [0], [flag_carry], [flag_overflow]
     eq  [flag_overflow], 0, [flag_overflow]
 
-    # Write the shifted value
+    # Write the retated value
     add [rb + loc_type], 0, [rb - 1]
     add [rb + loc_addr], 0, [rb - 2]
-    add [rb + val], 0, [rb - 3]
-    arb -3
+    add [rb + val_lo], 0, [rb - 3]
+    add [rb + val_hi], 0, [rb - 4]
+    arb -4
     call write_location_w
 
-execute_rotate_nc_w_done:
-    arb 4
+execute_ror_w_done:
+    arb 6
     ret 2
 .ENDFRAME
+
+# TODO remove
+.EOF
 
 ##########
 .FRAME loc_type, loc_addr; table, overflow_algorithm, val, valx8, count, tmp
@@ -569,7 +696,7 @@ execute_rcr_w_flags:
     eq  [flag_overflow], 0, [flag_overflow]
 
 execute_rcl_rcr_w_store:
-    # Write the shifted value
+    # Write the retated value
     add [rb + loc_type], 0, [rb - 1]
     add [rb + loc_addr], 0, [rb - 2]
     add [rb + val], 0, [rb - 3]

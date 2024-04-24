@@ -31,8 +31,8 @@ section .text
 
     mark 0x88
 %include "ror_b.inc"
-;    mark 0x89
-;%include "ror_w.inc"
+    mark 0x89
+%include "ror_w.inc"
 
     mark 0x90
 %include "rcl_b_c0.inc"
