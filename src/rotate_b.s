@@ -248,32 +248,35 @@ execute_rotate_nc_b_done:
 .ENDFRAME
 
 ##########
-.FRAME loc_type, loc_addr; table, val, valx8, count, tmp
+.FRAME loc_type, loc_addr; table, overflow_algorithm, val, valx8, count, tmp
     # Function with multiple entry points
 
 execute_rcl_1_b:
-    arb -5
+    arb -6
     add 1, 0, [rb + count]
     add execute_rcl_b_table, 0, [rb + table]
+    add execute_rcl_b_flags, 0, [rb + overflow_algorithm]
     jz  0, execute_rcl_rcr_b
 
 execute_rcl_cl_b:
-    arb -5
+    arb -6
     add [reg_cl], 0, [rb + count]
     add execute_rcl_b_table, 0, [rb + table]
+    add execute_rcl_b_flags, 0, [rb + overflow_algorithm]
     jz  0, execute_rcl_rcr_b
 
 execute_rcr_1_b:
-    arb -5
+    arb -6
     add 1, 0, [rb + count]
     add execute_rcr_b_table, 0, [rb + table]
+    add execute_rcr_b_flags, 0, [rb + overflow_algorithm]
     jz  0, execute_rcl_rcr_b
 
 execute_rcr_cl_b:
-    arb -5
+    arb -6
     add [reg_cl], 0, [rb + count]
     add execute_rcr_b_table, 0, [rb + table]
-    jz  0, execute_rcl_rcr_b
+    add execute_rcr_b_flags, 0, [rb + overflow_algorithm]
 
 execute_rcl_rcr_b:
     # Use the mod9 table to obtain count mod 9
@@ -296,7 +299,7 @@ execute_rcl_rcr_b:
     jz  0, [0]
 
 execute_rcl_b_table:
-    db execute_rcl_b_flags
+    db 0
     db execute_rcl_b_by_1
     db execute_rcl_b_by_2
     db execute_rcl_b_by_3
@@ -307,7 +310,7 @@ execute_rcl_b_table:
     db execute_rcl_b_by_8
 
 execute_rcr_b_table:
-    db execute_rcl_b_flags
+    db 0
     db execute_rcl_b_by_8
     db execute_rcl_b_by_7
     db execute_rcl_b_by_6
@@ -324,7 +327,7 @@ execute_rcl_b_by_1:
     add bits + 7, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
 
-    jz  0, execute_rcl_b_flags
+    jz  0, [rb + overflow_algorithm]
 
 execute_rcl_b_by_2:
     add shr + 7, [rb + valx8], [ip + 5]
@@ -336,7 +339,7 @@ execute_rcl_b_by_2:
     add bits + 6, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
 
-    jz  0, execute_rcl_b_flags
+    jz  0, [rb + overflow_algorithm]
 
 execute_rcl_b_by_3:
     add shr + 6, [rb + valx8], [ip + 5]
@@ -348,7 +351,7 @@ execute_rcl_b_by_3:
     add bits + 5, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
 
-    jz  0, execute_rcl_b_flags
+    jz  0, [rb + overflow_algorithm]
 
 execute_rcl_b_by_4:
     add shr + 5, [rb + valx8], [ip + 5]
@@ -360,7 +363,7 @@ execute_rcl_b_by_4:
     add bits + 4, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
 
-    jz  0, execute_rcl_b_flags
+    jz  0, [rb + overflow_algorithm]
 
 execute_rcl_b_by_5:
     add shr + 4, [rb + valx8], [ip + 5]
@@ -372,7 +375,7 @@ execute_rcl_b_by_5:
     add bits + 3, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
 
-    jz  0, execute_rcl_b_flags
+    jz  0, [rb + overflow_algorithm]
 
 execute_rcl_b_by_6:
     add shr + 3, [rb + valx8], [ip + 5]
@@ -384,7 +387,7 @@ execute_rcl_b_by_6:
     add bits + 2, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
 
-    jz  0, execute_rcl_b_flags
+    jz  0, [rb + overflow_algorithm]
 
 execute_rcl_b_by_7:
     add shr + 2, [rb + valx8], [ip + 5]
@@ -396,7 +399,7 @@ execute_rcl_b_by_7:
     add bits + 1, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
 
-    jz  0, execute_rcl_b_flags
+    jz  0, [rb + overflow_algorithm]
 
 execute_rcl_b_by_8:
     add shr + 1, [rb + valx8], [ip + 5]
@@ -406,14 +409,28 @@ execute_rcl_b_by_8:
     add bits + 0, [rb + valx8], [ip + 1]
     add [0], 0, [flag_carry]
 
+    jz  0, [rb + overflow_algorithm]
+
 execute_rcl_b_flags:
-    # Update flags
+    # Update flags for rcl
     mul [rb + val], 8, [rb + valx8]
 
     add bits + 7, [rb + valx8], [ip + 1]
     eq  [0], [flag_carry], [flag_overflow]
     eq  [flag_overflow], 0, [flag_overflow]
 
+    jz  0, execute_rcl_rcr_b_store
+
+execute_rcr_b_flags:
+    # Update flags for rcr
+    mul [rb + val], 8, [rb + valx8]
+
+    add bits + 6, [rb + valx8], [ip + 5]
+    add bits + 7, [rb + valx8], [ip + 2]
+    eq  [0], [0], [flag_overflow]
+    eq  [flag_overflow], 0, [flag_overflow]
+
+execute_rcl_rcr_b_store:
     # Write the shifted value
     add [rb + loc_type], 0, [rb - 1]
     add [rb + loc_addr], 0, [rb - 2]
@@ -422,7 +439,7 @@ execute_rcl_b_flags:
     call write_location_b
 
 execute_rcl_rcr_b_done:
-    arb 5
+    arb 6
     ret 2
 .ENDFRAME
 

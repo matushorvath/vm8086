@@ -43,10 +43,10 @@ section .text
 ;    mark 0x93
 ;%include "rcl_w_c1.inc"
 
-;     mark 0x98
-; %include "rcr_b_c0.inc"
-;     mark 0x99
-; %include "rcr_b_c1.inc"
+     mark 0x98
+ %include "rcr_b_c0.inc"
+     mark 0x99
+ %include "rcr_b_c1.inc"
 ;     mark 0x9a
 ; %include "rcr_w_c0.inc"
 ;     mark 0x9b
