@@ -6,7 +6,7 @@
 # From error.s
 .IMPORT report_error
 
-# From shift_b.s
+# From rotate_b.s
 .IMPORT execute_rol_1_b
 .IMPORT execute_rol_cl_b
 .IMPORT execute_ror_1_b
@@ -15,14 +15,8 @@
 .IMPORT execute_rcl_cl_b
 .IMPORT execute_rcr_1_b
 .IMPORT execute_rcr_cl_b
-.IMPORT execute_shl_1_b
-.IMPORT execute_shl_cl_b
-.IMPORT execute_shr_1_b
-.IMPORT execute_shr_cl_b
-.IMPORT execute_sar_1_b
-.IMPORT execute_sar_cl_b
 
-# From shift_w.s
+# From rotate_w.s
 .IMPORT execute_rol_1_w
 .IMPORT execute_rol_cl_w
 .IMPORT execute_ror_1_w
@@ -31,6 +25,16 @@
 .IMPORT execute_rcl_cl_w
 .IMPORT execute_rcr_1_w
 .IMPORT execute_rcr_cl_w
+
+# From shift_b.s
+.IMPORT execute_shl_1_b
+.IMPORT execute_shl_cl_b
+.IMPORT execute_shr_1_b
+.IMPORT execute_shr_cl_b
+.IMPORT execute_sar_1_b
+.IMPORT execute_sar_cl_b
+
+# From shift_w.s
 .IMPORT execute_shl_1_w
 .IMPORT execute_shl_cl_w
 .IMPORT execute_shr_1_w

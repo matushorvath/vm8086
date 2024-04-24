@@ -1,11 +1,3 @@
-.EXPORT execute_rol_1_b
-.EXPORT execute_rol_cl_b
-.EXPORT execute_ror_1_b
-.EXPORT execute_ror_cl_b
-.EXPORT execute_rcl_1_b
-.EXPORT execute_rcl_cl_b
-.EXPORT execute_rcr_1_b
-.EXPORT execute_rcr_cl_b
 .EXPORT execute_shl_1_b
 .EXPORT execute_shl_cl_b
 .EXPORT execute_shr_1_b
@@ -37,16 +29,6 @@
 .IMPORT flag_zero
 .IMPORT flag_sign
 .IMPORT flag_overflow
-
-# TODO remove
-execute_rol_1_b:
-execute_ror_1_b:
-execute_rcl_1_b:
-execute_rcr_1_b:
-execute_rol_cl_b:
-execute_ror_cl_b:
-execute_rcl_cl_b:
-execute_rcr_cl_b:
 
 ##########
 .FRAME loc_type, loc_addr; val, val_bits, count, tmp
