@@ -127,7 +127,7 @@ execute_rol_b_flags:
     eq  [0], [flag_carry], [flag_overflow]
     eq  [flag_overflow], 0, [flag_overflow]
 
-    # Write the shifted value
+    # Write the rotated value
     add [rb + loc_type], 0, [rb - 1]
     add [rb + loc_addr], 0, [rb - 2]
     add [rb + val], 0, [rb - 3]
@@ -154,7 +154,7 @@ execute_ror_cl_b:
 
 execute_ror_b:
     # Rotating by 0 is a no-operation, including flags
-    jz  [rb + count], execute_rotate_nc_b_done
+    jz  [rb + count], execute_ror_b_done
 
     # Use the split233 table to obtain count mod 8
     mul [rb + count], 3, [rb + tmp]
@@ -235,14 +235,14 @@ execute_ror_b_flags:
     eq  [0], [flag_carry], [flag_overflow]
     eq  [flag_overflow], 0, [flag_overflow]
 
-    # Write the shifted value
+    # Write the rotated value
     add [rb + loc_type], 0, [rb - 1]
     add [rb + loc_addr], 0, [rb - 2]
     add [rb + val], 0, [rb - 3]
     arb -3
     call write_location_b
 
-execute_rotate_nc_b_done:
+execute_ror_b_done:
     arb 4
     ret 2
 .ENDFRAME
@@ -431,7 +431,7 @@ execute_rcr_b_flags:
     eq  [flag_overflow], 0, [flag_overflow]
 
 execute_rcl_rcr_b_store:
-    # Write the shifted value
+    # Write the rotated value
     add [rb + loc_type], 0, [rb - 1]
     add [rb + loc_addr], 0, [rb - 2]
     add [rb + val], 0, [rb - 3]

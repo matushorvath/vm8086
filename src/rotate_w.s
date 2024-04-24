@@ -14,6 +14,12 @@
 # From obj/bits.s
 .IMPORT bits
 
+# From obj/mod17.s
+.IMPORT mod17
+
+# From obj/nibbles.s
+.IMPORT nibbles
+
 # From obj/shl.s
 .IMPORT shl
 
@@ -25,171 +31,232 @@
 .IMPORT flag_carry
 .IMPORT flag_overflow
 
-# TODO remove
-execute_rol_1_w:
-execute_ror_1_w:
-execute_rcl_1_w:
-execute_rcr_1_w:
-execute_rol_cl_w:
-execute_ror_cl_w:
-execute_rcl_cl_w:
-execute_rcr_cl_w:
-
-# TODO remove
-.EOF
-
 ##########
-.FRAME loc_type, loc_addr; val_lo, val_hi, val_bits_lo, val_bits_hi, count, spill, tmp
+.FRAME loc_type, loc_addr; val_lo, val_hi, valx8_lo, valx8_hi, count, tmp
     # Function with multiple entry points
 
-execute_shl_1_w:
-    arb -7
+execute_rol_1_w:
+    arb -6
     add 1, 0, [rb + count]
-    jz  0, execute_shl_w
+    jz  0, execute_rol_w
 
-execute_shl_cl_w:
-    arb -7
+execute_rol_cl_w:
+    arb -6
     add [reg_cl], 0, [rb + count]
 
-execute_shl_w:
-    add 0, 0, [flag_auxiliary_carry]
+execute_rol_w:
+    # Rotating by 0 is a no-operation, including flags
+    jz  [rb + count], execute_rol_w_done
 
-    # If we are shifting more than 16 bits, use fixed values
-    lt  [rb + count], 17, [rb + tmp]
-    jz  [rb + tmp], execute_shl_w_many
+    # Use the nibbles table to obtain count mod 16
+    mul [rb + count], 2, [rb + tmp]
+    add nibbles, [rb + tmp], [ip + 1]
+    add [0], 0, [rb + count]
 
-    # Read the value to shift
+    # Read the value to rotate
     add [rb + loc_type], 0, [rb - 1]
     add [rb + loc_addr], 0, [rb - 2]
     arb -2
     call read_location_w
     add [rb - 4], 0, [rb + val_lo]
+    mul [rb - 4], 8, [rb + valx8_lo]
     add [rb - 5], 0, [rb + val_hi]
+    mul [rb - 5], 8, [rb + valx8_hi]
 
-    # If we are shifting by 0, use a simplified algorithm
-    jz  [rb + count], execute_shl_w_0
+    # Jump to the label that handles this case
+    add execute_rol_w_table, [rb + count], [ip + 2]
+    jz  0, [0]
 
-    # Expand val to bits
-    mul [rb + val_lo], 8, [rb + tmp]
-    add bits, [rb + tmp], [rb + val_bits_lo]
-    mul [rb + val_hi], 8, [rb + tmp]
-    add bits, [rb + tmp], [rb + val_bits_hi]
+execute_rol_w_table:
+    db execute_rol_w_flags
+    db execute_rol_w_by_1
+    db execute_rol_w_by_2
+    db execute_rol_w_by_3
+    db execute_rol_w_by_4
+    db execute_rol_w_by_5
+    db execute_rol_w_by_6
+    db execute_rol_w_by_7
+    db execute_rol_w_by_8
+    db execute_rol_w_by_9
+    db execute_rol_w_by_a
+    db execute_rol_w_by_b
+    db execute_rol_w_by_c
+    db execute_rol_w_by_d
+    db execute_rol_w_by_e
+    db execute_rol_w_by_f
 
-    # If we are shifting by 8 or 16, use a simplified algorithm
-    eq  [rb + count], 8, [rb + tmp]
-    jnz [rb + tmp], execute_shl_w_8
-    eq  [rb + count], 16, [rb + tmp]
-    jnz [rb + tmp], execute_shl_w_16
+execute_rol_w_by_1:
+    add shr + 7, [rb + valx8_hi], [ip + 5]
+    add shl + 1, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_lo]
 
-    # If we are shifting by 1-7, we need to calculate both bytes
-    lt  [rb + count], 8, [rb + tmp]
-    jz  [rb + tmp], execute_shl_w_8_to_15
+    add shr + 7, [rb + valx8_lo], [ip + 5]
+    add shl + 1, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
 
-    # Carry flag is the last bit shifted out of hi byte
-    mul [rb + count], -1, [rb + tmp]
-    add 8, [rb + tmp], [rb + spill]
-    add [rb + val_bits_hi], [rb + spill], [ip + 1]
-    add [0], 0, [flag_carry]
+    jz  0, execute_rol_w_flags
 
-    # Find shifted hi value in the shl table
-    mul [rb + val_hi], 8, [rb + tmp]
-    add shl, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
-    add [0], 0, [rb + val_hi]
+execute_rol_w_by_2:
+    add shr + 6, [rb + valx8_hi], [ip + 5]
+    add shl + 2, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_lo]
 
-    # Shift the lo value right to calculate carry from lo to hi
-    mul [rb + val_lo], 8, [rb + tmp]
-    add shr, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + spill], [ip + 1]
-    add [0], [rb + val_hi], [rb + val_hi]
+    add shr + 6, [rb + valx8_lo], [ip + 5]
+    add shl + 2, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
 
-    # Find shifted lo value in the shl table
-    mul [rb + val_lo], 8, [rb + tmp]
-    add shl, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
-    add [0], 0, [rb + val_lo]
+    jz  0, execute_rol_w_flags
 
-    jz  0, execute_shl_w_update_flags
+execute_rol_w_by_3:
+    add shr + 5, [rb + valx8_hi], [ip + 5]
+    add shl + 3, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_lo]
 
-execute_shl_w_8_to_15:
-    # Shifting by 8-15, shift the lo byte by (count - 8) and store it in hi byte
-    add [rb + count], -8, [rb + count]
+    add shr + 5, [rb + valx8_lo], [ip + 5]
+    add shl + 3, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
 
-    # Carry flag is the last bit shifted out of lo byte
-    mul [rb + count], -1, [rb + tmp]
-    add 8, [rb + tmp], [rb + spill]
-    add [rb + val_bits_lo], [rb + spill], [ip + 1]
-    add [0], 0, [flag_carry]
+    jz  0, execute_rol_w_flags
 
-    # Find shifted lo value in the shl table and use it as hi value
-    mul [rb + val_lo], 8, [rb + tmp]
-    add shl, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
-    add [0], 0, [rb + val_hi]
+execute_rol_w_by_4:
+    add shr + 4, [rb + valx8_hi], [ip + 5]
+    add shl + 4, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_lo]
 
-    # Zero the lo value
-    add 0, 0, [rb + val_lo]
+    add shr + 4, [rb + valx8_lo], [ip + 5]
+    add shl + 4, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
 
-    jz  0, execute_shl_w_update_flags
+    jz  0, execute_rol_w_flags
 
-execute_shl_w_8:
-    # If we are shifting by 8, move the lo byte to hi byte and zero the lo byte, then update flags
-    add [rb + val_lo], 0, [rb + val_hi]
-    add 0, 0, [rb + val_lo]
+execute_rol_w_by_5:
+    add shr + 3, [rb + valx8_hi], [ip + 5]
+    add shl + 5, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_lo]
 
-    add [rb + val_bits_hi], 0, [ip + 1]
-    add [0], 0, [flag_carry]
+    add shr + 3, [rb + valx8_lo], [ip + 5]
+    add shl + 5, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
 
-execute_shl_w_update_flags:
+    jz  0, execute_rol_w_flags
+
+execute_rol_w_by_6:
+    add shr + 2, [rb + valx8_hi], [ip + 5]
+    add shl + 6, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    add shr + 2, [rb + valx8_lo], [ip + 5]
+    add shl + 6, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    jz  0, execute_rol_w_flags
+
+execute_rol_w_by_7:
+    add shr + 1, [rb + valx8_hi], [ip + 5]
+    add shl + 7, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    add shr + 1, [rb + valx8_lo], [ip + 5]
+    add shl + 7, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    jz  0, execute_rol_w_flags
+
+execute_rol_w_by_8:
+    add [rb + val_lo], 0, [rb + tmp]
+    add [rb + val_hi], 0, [rb + val_lo]
+    add [rb + tmp], 0, [rb + val_hi]
+
+    jz  0, execute_rol_w_flags
+
+execute_rol_w_by_9:
+    add shr + 7, [rb + valx8_hi], [ip + 5]
+    add shl + 1, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    add shr + 7, [rb + valx8_lo], [ip + 5]
+    add shl + 1, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    jz  0, execute_rol_w_flags
+
+execute_rol_w_by_a:
+    add shr + 6, [rb + valx8_hi], [ip + 5]
+    add shl + 2, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    add shr + 6, [rb + valx8_lo], [ip + 5]
+    add shl + 2, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    jz  0, execute_rol_w_flags
+
+execute_rol_w_by_b:
+    add shr + 5, [rb + valx8_hi], [ip + 5]
+    add shl + 3, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    add shr + 5, [rb + valx8_lo], [ip + 5]
+    add shl + 3, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    jz  0, execute_rol_w_flags
+
+execute_rol_w_by_c:
+    add shr + 4, [rb + valx8_hi], [ip + 5]
+    add shl + 4, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    add shr + 4, [rb + valx8_lo], [ip + 5]
+    add shl + 4, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    jz  0, execute_rol_w_flags
+
+execute_rol_w_by_d:
+    add shr + 3, [rb + valx8_hi], [ip + 5]
+    add shl + 5, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    add shr + 3, [rb + valx8_lo], [ip + 5]
+    add shl + 5, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    jz  0, execute_rol_w_flags
+
+execute_rol_w_by_e:
+    add shr + 2, [rb + valx8_hi], [ip + 5]
+    add shl + 6, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    add shr + 2, [rb + valx8_lo], [ip + 5]
+    add shl + 6, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    jz  0, execute_rol_w_flags
+
+execute_rol_w_by_f:
+    add shr + 1, [rb + valx8_hi], [ip + 5]
+    add shl + 7, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    add shr + 1, [rb + valx8_lo], [ip + 5]
+    add shl + 7, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+execute_rol_w_flags:
     # Update flags
-    lt  0x7f, [rb + val_hi], [flag_sign]
-    add [rb + val_lo], [rb + val_hi], [rb + tmp]
-    eq  [rb + tmp], 0, [flag_zero]
+    mul [rb + val_lo], 8, [rb + valx8_lo]
+    mul [rb + val_hi], 8, [rb + valx8_hi]
 
-    add parity, [rb + val_lo], [ip + 1]
-    add [0], 0, [flag_parity]
+    add bits + 0, [rb + valx8_lo], [ip + 1]
+    add [0], 0, [flag_carry]
 
-    # Overflow flag is 1 when high order bit was changed
-    eq  [flag_carry], [flag_sign], [flag_overflow]
+    add bits + 7, [rb + valx8_hi], [ip + 1]
+    eq  [0], [flag_carry], [flag_overflow]
     eq  [flag_overflow], 0, [flag_overflow]
 
-    jz  0, execute_shl_w_store
-
-execute_shl_w_0:
-    # If we are shifting by 0, SF ZF and PF are not affected
-    add 0, 0, [flag_carry]
-    add 0, 0, [flag_overflow]
-
-    jz  0, execute_shl_w_done
-
-execute_shl_w_16:
-    # If we are shifting by 16, zero the value and use fixed flags except for CF
-    add [rb + val_bits_lo], 0, [ip + 1]
-    add [0], 0, [flag_carry]
-
-    eq  [flag_carry], 1, [flag_overflow]
-    add 0, 0, [flag_sign]
-    add 1, 0, [flag_zero]
-    add 1, 0, [flag_parity]
-
-    add 0, 0, [rb + val_lo]
-    add 0, 0, [rb + val_hi]
-
-    jz  0, execute_shl_w_store
-
-execute_shl_w_many:
-    # If we are shifting by 17 or more bits, zero the value and use fixed flags
-    add 0, 0, [flag_carry]
-    add 0, 0, [flag_overflow]
-    add 0, 0, [flag_sign]
-    add 1, 0, [flag_zero]
-    add 1, 0, [flag_parity]
-
-    add 0, 0, [rb + val_lo]
-    add 0, 0, [rb + val_hi]
-
-execute_shl_w_store:
-    # Write the shifted value
+    # Write the rotated value
     add [rb + loc_type], 0, [rb - 1]
     add [rb + loc_addr], 0, [rb - 2]
     add [rb + val_lo], 0, [rb - 3]
@@ -197,164 +264,236 @@ execute_shl_w_store:
     arb -4
     call write_location_w
 
-execute_shl_w_done:
-    arb 7
+execute_rol_w_done:
+    arb 6
     ret 2
 .ENDFRAME
 
 ##########
-.FRAME loc_type, loc_addr; val_lo, val_hi, val_bits_lo, val_bits_hi, count, spill, tmp
+.FRAME loc_type, loc_addr; val_lo, val_hi, valx8_lo, valx8_hi, count, tmp
     # Function with multiple entry points
 
-execute_shr_1_w:
-    arb -7
+execute_ror_1_w:
+    arb -6
     add 1, 0, [rb + count]
-    jz  0, execute_shr_w
+    jz  0, execute_ror_w
 
-execute_shr_cl_w:
-    arb -7
+execute_ror_cl_w:
+    arb -6
     add [reg_cl], 0, [rb + count]
 
-execute_shr_w:
-    add 0, 0, [flag_auxiliary_carry]
+execute_ror_w:
+    # Rotating by 0 is a no-operation, including flags
+    jz  [rb + count], execute_ror_w_done
 
-    # If we are shifting more than 16 bits, use fixed values
-    lt  [rb + count], 17, [rb + tmp]
-    jz  [rb + tmp], execute_shr_w_many
+    # Use the nibbles table to obtain count mod 16
+    mul [rb + count], 2, [rb + tmp]
+    add nibbles, [rb + tmp], [ip + 1]
+    add [0], 0, [rb + count]
 
-    # Read the value to shift
+    # Read the value to rotate
     add [rb + loc_type], 0, [rb - 1]
     add [rb + loc_addr], 0, [rb - 2]
     arb -2
     call read_location_w
     add [rb - 4], 0, [rb + val_lo]
+    mul [rb - 4], 8, [rb + valx8_lo]
     add [rb - 5], 0, [rb + val_hi]
+    mul [rb - 5], 8, [rb + valx8_hi]
 
-    # If we are shifting by 0, use a simplified algorithm
-    jz  [rb + count], execute_shr_w_0
+    # Jump to the label that handles this case
+    add execute_ror_w_table, [rb + count], [ip + 2]
+    jz  0, [0]
 
-    # Expand val to bits
-    mul [rb + val_lo], 8, [rb + tmp]
-    add bits, [rb + tmp], [rb + val_bits_lo]
-    mul [rb + val_hi], 8, [rb + tmp]
-    add bits, [rb + tmp], [rb + val_bits_hi]
+execute_ror_w_table:
+    db execute_ror_w_flags
+    db execute_ror_w_by_1
+    db execute_ror_w_by_2
+    db execute_ror_w_by_3
+    db execute_ror_w_by_4
+    db execute_ror_w_by_5
+    db execute_ror_w_by_6
+    db execute_ror_w_by_7
+    db execute_ror_w_by_8
+    db execute_ror_w_by_9
+    db execute_ror_w_by_a
+    db execute_ror_w_by_b
+    db execute_ror_w_by_c
+    db execute_ror_w_by_d
+    db execute_ror_w_by_e
+    db execute_ror_w_by_f
 
-    # If we are shifting by 8 or 16, use a simplified algorithm
-    eq  [rb + count], 8, [rb + tmp]
-    jnz [rb + tmp], execute_shr_w_8
-    eq  [rb + count], 16, [rb + tmp]
-    jnz [rb + tmp], execute_shr_w_16
+execute_ror_w_by_1:
+    add shl + 7, [rb + valx8_lo], [ip + 5]
+    add shr + 1, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
 
-    # Overflow flag is 1 when high order bit was changed,
-    # and it will be changed to 0 if it is currently 1
-    lt  0x7f, [rb + val_hi], [flag_overflow]
+    add shl + 7, [rb + valx8_hi], [ip + 5]
+    add shr + 1, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_lo]
 
-    # If we are shifting by 1-7, we need to calculate both bytes
-    lt  [rb + count], 8, [rb + tmp]
-    jz  [rb + tmp], execute_shr_w_8_to_15
+    jz  0, execute_ror_w_flags
 
-    # Carry flag is the last bit shifted out of lo byte
-    add [rb + count], -1, [rb + tmp]
-    add [rb + val_bits_lo], [rb + tmp], [ip + 1]
-    add [0], 0, [flag_carry]
+execute_ror_w_by_2:
+    add shl + 6, [rb + valx8_lo], [ip + 5]
+    add shr + 2, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
 
-    # Find shifted lo value in the shr table
-    mul [rb + val_lo], 8, [rb + tmp]
-    add shr, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
-    add [0], 0, [rb + val_lo]
+    add shl + 6, [rb + valx8_hi], [ip + 5]
+    add shr + 2, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_lo]
 
-    # Shift the hi value left to calculate carry from hi to lo
-    mul [rb + count], -1, [rb + tmp]
-    add 8, [rb + tmp], [rb + spill]
+    jz  0, execute_ror_w_flags
 
-    mul [rb + val_hi], 8, [rb + tmp]
-    add shl, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + spill], [ip + 1]
-    add [0], [rb + val_lo], [rb + val_lo]
+execute_ror_w_by_3:
+    add shl + 5, [rb + valx8_lo], [ip + 5]
+    add shr + 3, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
 
-    # Find shifted hi value in the shr table
-    mul [rb + val_hi], 8, [rb + tmp]
-    add shr, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
-    add [0], 0, [rb + val_hi]
+    add shl + 5, [rb + valx8_hi], [ip + 5]
+    add shr + 3, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_lo]
 
-    jz  0, execute_shr_w_update_flags
+    jz  0, execute_ror_w_flags
 
-execute_shr_w_8_to_15:
-    # Shifting by 8-15, shift the hi byte by (count - 8) and store it in lo byte
-    add [rb + count], -8, [rb + count]
+execute_ror_w_by_4:
+    add shl + 4, [rb + valx8_lo], [ip + 5]
+    add shr + 4, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
 
-    # Carry flag is the last bit shifted out of hi byte
-    add [rb + count], -1, [rb + tmp]
-    add [rb + val_bits_hi], [rb + tmp], [ip + 1]
-    add [0], 0, [flag_carry]
+    add shl + 4, [rb + valx8_hi], [ip + 5]
+    add shr + 4, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_lo]
 
-    # Find shifted hi value in the shr table and use it as lo value
-    mul [rb + val_hi], 8, [rb + tmp]
-    add shr, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
-    add [0], 0, [rb + val_lo]
+    jz  0, execute_ror_w_flags
 
-    # Zero the hi value
-    add 0, 0, [rb + val_hi]
+execute_ror_w_by_5:
+    add shl + 3, [rb + valx8_lo], [ip + 5]
+    add shr + 5, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
 
-    jz  0, execute_shr_w_update_flags
+    add shl + 3, [rb + valx8_hi], [ip + 5]
+    add shr + 5, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_lo]
 
-execute_shr_w_8:
-    # If we are shifting by 8, move the hi byte to lo byte and zero the hi byte, then update flags
-    add [rb + val_hi], 0, [rb + val_lo]
-    add 0, 0, [rb + val_hi]
+    jz  0, execute_ror_w_flags
 
-    add [rb + val_bits_lo], 7, [ip + 1]
-    add [0], 0, [flag_carry]
+execute_ror_w_by_6:
+    add shl + 2, [rb + valx8_lo], [ip + 5]
+    add shr + 6, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
 
-execute_shr_w_update_flags:
+    add shl + 2, [rb + valx8_hi], [ip + 5]
+    add shr + 6, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    jz  0, execute_ror_w_flags
+
+execute_ror_w_by_7:
+    add shl + 1, [rb + valx8_lo], [ip + 5]
+    add shr + 7, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    add shl + 1, [rb + valx8_hi], [ip + 5]
+    add shr + 7, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    jz  0, execute_ror_w_flags
+
+execute_ror_w_by_8:
+    add [rb + val_hi], 0, [rb + tmp]
+    add [rb + val_lo], 0, [rb + val_hi]
+    add [rb + tmp], 0, [rb + val_lo]
+
+    jz  0, execute_ror_w_flags
+
+execute_ror_w_by_9:
+    add shl + 7, [rb + valx8_lo], [ip + 5]
+    add shr + 1, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    add shl + 7, [rb + valx8_hi], [ip + 5]
+    add shr + 1, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    jz  0, execute_ror_w_flags
+
+execute_ror_w_by_a:
+    add shl + 6, [rb + valx8_lo], [ip + 5]
+    add shr + 2, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    add shl + 6, [rb + valx8_hi], [ip + 5]
+    add shr + 2, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    jz  0, execute_ror_w_flags
+
+execute_ror_w_by_b:
+    add shl + 5, [rb + valx8_lo], [ip + 5]
+    add shr + 3, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    add shl + 5, [rb + valx8_hi], [ip + 5]
+    add shr + 3, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    jz  0, execute_ror_w_flags
+
+execute_ror_w_by_c:
+    add shl + 4, [rb + valx8_lo], [ip + 5]
+    add shr + 4, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    add shl + 4, [rb + valx8_hi], [ip + 5]
+    add shr + 4, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    jz  0, execute_ror_w_flags
+
+execute_ror_w_by_d:
+    add shl + 3, [rb + valx8_lo], [ip + 5]
+    add shr + 5, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    add shl + 3, [rb + valx8_hi], [ip + 5]
+    add shr + 5, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    jz  0, execute_ror_w_flags
+
+execute_ror_w_by_e:
+    add shl + 2, [rb + valx8_lo], [ip + 5]
+    add shr + 6, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    add shl + 2, [rb + valx8_hi], [ip + 5]
+    add shr + 6, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    jz  0, execute_ror_w_flags
+
+execute_ror_w_by_f:
+    add shl + 1, [rb + valx8_lo], [ip + 5]
+    add shr + 7, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    add shl + 1, [rb + valx8_hi], [ip + 5]
+    add shr + 7, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+execute_ror_w_flags:
     # Update flags
-    lt  0x7f, [rb + val_hi], [flag_sign]
-    add [rb + val_lo], [rb + val_hi], [rb + tmp]
-    eq  [rb + tmp], 0, [flag_zero]
+    mul [rb + val_hi], 8, [rb + valx8_hi]
 
-    add parity, [rb + val_lo], [ip + 1]
-    add [0], 0, [flag_parity]
-
-    jz  0, execute_shr_w_store
-
-execute_shr_w_0:
-    # If we are shifting by 0, SF ZF and PF are not affected
-    add 0, 0, [flag_carry]
-    add 0, 0, [flag_overflow]
-
-    jz  0, execute_shr_w_done
-
-execute_shr_w_16:
-    # If we are shifting by 16, zero the value and use fixed flags except for CF
-    add [rb + val_bits_hi], 7, [ip + 1]
+    add bits + 7, [rb + valx8_hi], [ip + 1]
     add [0], 0, [flag_carry]
 
-    eq  [flag_carry], 1, [flag_overflow]
-    add 0, 0, [flag_sign]
-    add 1, 0, [flag_zero]
-    add 1, 0, [flag_parity]
+    add bits + 6, [rb + valx8_hi], [ip + 1]
+    eq  [0], [flag_carry], [flag_overflow]
+    eq  [flag_overflow], 0, [flag_overflow]
 
-    add 0, 0, [rb + val_lo]
-    add 0, 0, [rb + val_hi]
-
-    jz  0, execute_shr_w_store
-
-execute_shr_w_many:
-    # If we are shifting by 17 or more bits, zero the value and use fixed flags
-    add 0, 0, [flag_carry]
-    add 0, 0, [flag_overflow]
-    add 0, 0, [flag_sign]
-    add 1, 0, [flag_zero]
-    add 1, 0, [flag_parity]
-
-    add 0, 0, [rb + val_lo]
-    add 0, 0, [rb + val_hi]
-
-execute_shr_w_store:
-    # Write the shifted value
+    # Write the rotated value
     add [rb + loc_type], 0, [rb - 1]
     add [rb + loc_addr], 0, [rb - 2]
     add [rb + val_lo], 0, [rb - 3]
@@ -362,171 +501,377 @@ execute_shr_w_store:
     arb -4
     call write_location_w
 
-execute_shr_w_done:
-    arb 7
+execute_ror_w_done:
+    arb 6
     ret 2
 .ENDFRAME
 
 ##########
-.FRAME loc_type, loc_addr; val_lo, val_hi, val_bits_lo, val_bits_hi, count, spill, tmp
+.FRAME loc_type, loc_addr; table, overflow_algorithm, val_lo, val_hi, valx8_lo, valx8_hi, count, tmp
     # Function with multiple entry points
 
-execute_sar_1_w:
-    arb -7
+execute_rcl_1_w:
+    arb -8
     add 1, 0, [rb + count]
-    jz  0, execute_sar_w
+    add execute_rcl_w_table, 0, [rb + table]
+    add execute_rcl_w_flags, 0, [rb + overflow_algorithm]
+    jz  0, execute_rcl_rcr_w
 
-execute_sar_cl_w:
-    arb -7
+execute_rcl_cl_w:
+    arb -8
     add [reg_cl], 0, [rb + count]
+    add execute_rcl_w_table, 0, [rb + table]
+    add execute_rcl_w_flags, 0, [rb + overflow_algorithm]
+    jz  0, execute_rcl_rcr_w
 
-execute_sar_w:
-    add 0, 0, [flag_auxiliary_carry]
+execute_rcr_1_w:
+    arb -8
+    add 1, 0, [rb + count]
+    add execute_rcr_w_table, 0, [rb + table]
+    add execute_rcr_w_flags, 0, [rb + overflow_algorithm]
+    jz  0, execute_rcl_rcr_w
 
-    # Read the value to shift
+execute_rcr_cl_w:
+    arb -8
+    add [reg_cl], 0, [rb + count]
+    add execute_rcr_w_table, 0, [rb + table]
+    add execute_rcr_w_flags, 0, [rb + overflow_algorithm]
+
+execute_rcl_rcr_w:
+    # Use the mod17 table to obtain count mod 17
+    add mod17, [rb + count], [ip + 1]
+    add [0], 0, [rb + count]
+
+    # Rotating by 0 (mod 17) is a no-operation, including flags
+    jz  [rb + count], execute_rcl_rcr_w_done
+
+    # Read the value to rotate
     add [rb + loc_type], 0, [rb - 1]
     add [rb + loc_addr], 0, [rb - 2]
     arb -2
     call read_location_w
     add [rb - 4], 0, [rb + val_lo]
+    mul [rb - 4], 8, [rb + valx8_lo]
     add [rb - 5], 0, [rb + val_hi]
+    mul [rb - 5], 8, [rb + valx8_hi]
 
-    # If we are shifting by 0, use a simplified algorithm
-    jz  [rb + count], execute_sar_w_0
+    # Jump to the label that handles this case
+    add [rb + table], [rb + count], [ip + 2]
+    jz  0, [0]
 
-    # Sign flag will remain unchanged
-    lt  0x7f, [rb + val_hi], [flag_sign]
+execute_rcl_w_table:
+    db 0
+    db execute_rcl_w_by_1
+    db execute_rcl_w_by_2
+    db execute_rcl_w_by_3
+    db execute_rcl_w_by_4
+    db execute_rcl_w_by_5
+    db execute_rcl_w_by_6
+    db execute_rcl_w_by_7
+    db execute_rcl_w_by_8
+    db execute_rcl_w_by_9
+    db execute_rcl_w_by_a
+    db execute_rcl_w_by_b
+    db execute_rcl_w_by_c
+    db execute_rcl_w_by_d
+    db execute_rcl_w_by_e
+    db execute_rcl_w_by_f
+    db execute_rcl_w_by_10
 
-    # If we are shifting more than 16 bits, use fixed values
-    lt  [rb + count], 17, [rb + tmp]
-    jz  [rb + tmp], execute_sar_w_many
+execute_rcr_w_table:
+    db 0
+    db execute_rcl_w_by_10
+    db execute_rcl_w_by_f
+    db execute_rcl_w_by_e
+    db execute_rcl_w_by_d
+    db execute_rcl_w_by_c
+    db execute_rcl_w_by_b
+    db execute_rcl_w_by_a
+    db execute_rcl_w_by_9
+    db execute_rcl_w_by_8
+    db execute_rcl_w_by_7
+    db execute_rcl_w_by_6
+    db execute_rcl_w_by_5
+    db execute_rcl_w_by_4
+    db execute_rcl_w_by_3
+    db execute_rcl_w_by_2
+    db execute_rcl_w_by_1
 
-    # Expand val to bits
-    mul [rb + val_lo], 8, [rb + tmp]
-    add bits, [rb + tmp], [rb + val_bits_lo]
-    mul [rb + val_hi], 8, [rb + tmp]
-    add bits, [rb + tmp], [rb + val_bits_hi]
+execute_rcl_w_by_1:
+    add shr + 7, [rb + valx8_lo], [ip + 5]
+    add shl + 1, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
 
-    # If we are shifting by 8 or 16, use a simplified algorithm
-    eq  [rb + count], 8, [rb + tmp]
-    jnz [rb + tmp], execute_sar_w_8
-    eq  [rb + count], 16, [rb + tmp]
-    jnz [rb + tmp], execute_sar_w_16
+    add shl + 1, [rb + valx8_lo], [ip + 1]
+    add [0], [flag_carry], [rb + val_lo]
 
-    # If we are shifting by 1-7, we need to calculate both bytes
-    lt  [rb + count], 8, [rb + tmp]
-    jz  [rb + tmp], execute_sar_w_8_to_15
-
-    # Carry flag is the last bit shifted out of lo byte
-    add [rb + count], -1, [rb + tmp]
-    add [rb + val_bits_lo], [rb + tmp], [ip + 1]
+    add bits + 7, [rb + valx8_hi], [ip + 1]
     add [0], 0, [flag_carry]
 
-    # Find shifted lo value in the shr table
-    mul [rb + val_lo], 8, [rb + tmp]
-    add shr, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
-    add [0], 0, [rb + val_lo]
+    jz  0, [rb + overflow_algorithm]
 
-    # Shift the hi value left to calculate carry from hi to lo
-    mul [rb + count], -1, [rb + tmp]
-    add 8, [rb + tmp], [rb + spill]
+execute_rcl_w_by_2:
+    add shr + 6, [rb + valx8_lo], [ip + 5]
+    add shl + 2, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
 
-    mul [rb + val_hi], 8, [rb + tmp]
-    add shl, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + spill], [ip + 1]
-    add [0], [rb + val_lo], [rb + val_lo]
+    add shr + 7, [rb + valx8_hi], [ip + 5]
+    add shl + 2, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_lo]
 
-    # Find shifted hi value in the shr table
-    mul [rb + val_hi], 8, [rb + tmp]
-    add shr, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
-    add [0], 0, [rb + val_hi]
+    mul [flag_carry], 0x02, [rb + tmp]
+    add [rb + val_lo], [rb + tmp], [rb + val_lo]
 
-    # Sign-fill the left side of hi byte
-    add ones, [rb + count], [ip + 1]
-    mul [0], [flag_sign], [rb + tmp]
+    add bits + 6, [rb + valx8_hi], [ip + 1]
+    add [0], 0, [flag_carry]
+
+    jz  0, [rb + overflow_algorithm]
+
+execute_rcl_w_by_3:
+    add shr + 5, [rb + valx8_lo], [ip + 5]
+    add shl + 3, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    add shr + 6, [rb + valx8_hi], [ip + 5]
+    add shl + 3, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    mul [flag_carry], 0x04, [rb + tmp]
+    add [rb + val_lo], [rb + tmp], [rb + val_lo]
+
+    add bits + 5, [rb + valx8_hi], [ip + 1]
+    add [0], 0, [flag_carry]
+
+    jz  0, [rb + overflow_algorithm]
+
+execute_rcl_w_by_4:
+    add shr + 4, [rb + valx8_lo], [ip + 5]
+    add shl + 4, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    add shr + 5, [rb + valx8_hi], [ip + 5]
+    add shl + 4, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    mul [flag_carry], 0x08, [rb + tmp]
+    add [rb + val_lo], [rb + tmp], [rb + val_lo]
+
+    add bits + 4, [rb + valx8_hi], [ip + 1]
+    add [0], 0, [flag_carry]
+
+    jz  0, [rb + overflow_algorithm]
+
+execute_rcl_w_by_5:
+    add shr + 3, [rb + valx8_lo], [ip + 5]
+    add shl + 5, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    add shr + 4, [rb + valx8_hi], [ip + 5]
+    add shl + 5, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    mul [flag_carry], 0x10, [rb + tmp]
+    add [rb + val_lo], [rb + tmp], [rb + val_lo]
+
+    add bits + 3, [rb + valx8_hi], [ip + 1]
+    add [0], 0, [flag_carry]
+
+    jz  0, [rb + overflow_algorithm]
+
+execute_rcl_w_by_6:
+    add shr + 2, [rb + valx8_lo], [ip + 5]
+    add shl + 6, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    add shr + 3, [rb + valx8_hi], [ip + 5]
+    add shl + 6, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    mul [flag_carry], 0x20, [rb + tmp]
+    add [rb + val_lo], [rb + tmp], [rb + val_lo]
+
+    add bits + 2, [rb + valx8_hi], [ip + 1]
+    add [0], 0, [flag_carry]
+
+    jz  0, [rb + overflow_algorithm]
+
+execute_rcl_w_by_7:
+    add shr + 1, [rb + valx8_lo], [ip + 5]
+    add shl + 7, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    add shr + 2, [rb + valx8_hi], [ip + 5]
+    add shl + 7, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    mul [flag_carry], 0x40, [rb + tmp]
+    add [rb + val_lo], [rb + tmp], [rb + val_lo]
+
+    add bits + 1, [rb + valx8_hi], [ip + 1]
+    add [0], 0, [flag_carry]
+
+    jz  0, [rb + overflow_algorithm]
+
+execute_rcl_w_by_8:
+    add [rb + val_lo], 0, [rb + val_hi]
+
+    mul [flag_carry], 0x80, [rb + tmp]
+    add shr + 1, [rb + valx8_hi], [ip + 1]
+    add [0], [rb + tmp], [rb + val_lo]
+
+    add bits + 0, [rb + valx8_hi], [ip + 1]
+    add [0], 0, [flag_carry]
+
+    jz  0, [rb + overflow_algorithm]
+
+execute_rcl_w_by_9:
+    add [rb + val_hi], 0, [rb + val_lo]
+
+    add shl + 1, [rb + valx8_lo], [ip + 1]
+    add [0], [flag_carry], [rb + val_hi]
+
+    add bits + 7, [rb + valx8_lo], [ip + 1]
+    add [0], 0, [flag_carry]
+
+    jz  0, [rb + overflow_algorithm]
+
+execute_rcl_w_by_a:
+    add shr + 7, [rb + valx8_lo], [ip + 5]
+    add shl + 1, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    add shr + 7, [rb + valx8_hi], [ip + 5]
+    add shl + 2, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    mul [flag_carry], 0x02, [rb + tmp]
     add [rb + val_hi], [rb + tmp], [rb + val_hi]
 
-    jz  0, execute_sar_w_update_flags
-
-execute_sar_w_8_to_15:
-    # Shifting by 8-15, shift the hi byte by (count - 8) and store it in lo byte
-    add [rb + count], -8, [rb + count]
-
-    # Carry flag is the last bit shifted out of hi byte
-    add [rb + count], -1, [rb + tmp]
-    add [rb + val_bits_hi], [rb + tmp], [ip + 1]
+    add bits + 6, [rb + valx8_lo], [ip + 1]
     add [0], 0, [flag_carry]
 
-    # Find shifted hi value in the shr table and use it as lo value
-    mul [rb + val_hi], 8, [rb + tmp]
-    add shr, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
-    add [0], 0, [rb + val_lo]
+    jz  0, [rb + overflow_algorithm]
 
-    # Sign-fill the left side of lo byte and the whole hi byte
-    add ones, [rb + count], [ip + 1]
-    mul [0], [flag_sign], [rb + tmp]
-    add [rb + val_lo], [rb + tmp], [rb + val_lo]
-    mul [flag_sign], 0xff, [rb + val_hi]
+execute_rcl_w_by_b:
+    add shr + 6, [rb + valx8_lo], [ip + 5]
+    add shl + 2, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
 
-    jz  0, execute_sar_w_update_flags
+    add shr + 6, [rb + valx8_hi], [ip + 5]
+    add shl + 3, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_hi]
 
-execute_sar_w_8:
-    # If we are shifting by 8, move the hi byte to lo byte and sign-fill the hi byte, then update flags
-    add [rb + val_hi], 0, [rb + val_lo]
-    mul [flag_sign], 0xff, [rb + val_hi]
+    mul [flag_carry], 0x04, [rb + tmp]
+    add [rb + val_hi], [rb + tmp], [rb + val_hi]
 
-    add [rb + val_bits_lo], 7, [ip + 1]
+    add bits + 5, [rb + valx8_lo], [ip + 1]
     add [0], 0, [flag_carry]
 
-execute_sar_w_update_flags:
-    # Update flags
-    add [rb + val_lo], [rb + val_hi], [rb + tmp]
-    eq  [rb + tmp], 0, [flag_zero]
+    jz  0, [rb + overflow_algorithm]
 
-    add parity, [rb + val_lo], [ip + 1]
-    add [0], 0, [flag_parity]
+execute_rcl_w_by_c:
+    add shr + 5, [rb + valx8_lo], [ip + 5]
+    add shl + 3, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
 
-    # Overflow flag is always 0 because we never change the high order bit
-    add 0, 0, [flag_overflow]
+    add shr + 5, [rb + valx8_hi], [ip + 5]
+    add shl + 4, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_hi]
 
-    jz  0, execute_sar_w_store
+    mul [flag_carry], 0x08, [rb + tmp]
+    add [rb + val_hi], [rb + tmp], [rb + val_hi]
 
-execute_sar_w_0:
-    # If we are shifting by 0, SF ZF and PF are not affected
-    add 0, 0, [flag_carry]
-    add 0, 0, [flag_overflow]
-
-    jz  0, execute_sar_w_done
-
-execute_sar_w_16:
-    # If we are shifting by 16, sign-fill the value and use fixed flags except for CF
-    add [rb + val_bits_hi], 7, [ip + 1]
+    add bits + 4, [rb + valx8_lo], [ip + 1]
     add [0], 0, [flag_carry]
 
-    add 0, 0, [flag_overflow]
-    eq  [flag_sign], 0, [flag_zero]
-    add 1, 0, [flag_parity]
+    jz  0, [rb + overflow_algorithm]
 
-    mul [flag_sign], 0xff, [rb + val_lo]
-    mul [flag_sign], 0xff, [rb + val_hi]
+execute_rcl_w_by_d:
+    add shr + 4, [rb + valx8_lo], [ip + 5]
+    add shl + 4, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
 
-    jz  0, execute_sar_w_store
+    add shr + 4, [rb + valx8_hi], [ip + 5]
+    add shl + 5, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_hi]
 
-execute_sar_w_many:
-    # If we are shifting by 17 or more bits, sign-fill the value and use fixed flags
-    add [flag_sign], 0, [flag_carry]
-    add 0, 0, [flag_overflow]
-    eq  [flag_sign], 0, [flag_zero]
-    add 1, 0, [flag_parity]
+    mul [flag_carry], 0x10, [rb + tmp]
+    add [rb + val_hi], [rb + tmp], [rb + val_hi]
 
-    mul [flag_sign], 0xff, [rb + val_lo]
-    mul [flag_sign], 0xff, [rb + val_hi]
+    add bits + 3, [rb + valx8_lo], [ip + 1]
+    add [0], 0, [flag_carry]
 
-execute_sar_w_store:
-    # Write the shifted value
+    jz  0, [rb + overflow_algorithm]
+
+execute_rcl_w_by_e:
+    add shr + 3, [rb + valx8_lo], [ip + 5]
+    add shl + 5, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    add shr + 3, [rb + valx8_hi], [ip + 5]
+    add shl + 6, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    mul [flag_carry], 0x20, [rb + tmp]
+    add [rb + val_hi], [rb + tmp], [rb + val_hi]
+
+    add bits + 2, [rb + valx8_lo], [ip + 1]
+    add [0], 0, [flag_carry]
+
+    jz  0, [rb + overflow_algorithm]
+
+execute_rcl_w_by_f:
+    add shr + 2, [rb + valx8_lo], [ip + 5]
+    add shl + 6, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    add shr + 2, [rb + valx8_hi], [ip + 5]
+    add shl + 7, [rb + valx8_lo], [ip + 2]
+    add [0], [0], [rb + val_hi]
+
+    mul [flag_carry], 0x40, [rb + tmp]
+    add [rb + val_hi], [rb + tmp], [rb + val_hi]
+
+    add bits + 1, [rb + valx8_lo], [ip + 1]
+    add [0], 0, [flag_carry]
+
+    jz  0, [rb + overflow_algorithm]
+
+execute_rcl_w_by_10:
+    add shr + 1, [rb + valx8_lo], [ip + 5]
+    add shl + 7, [rb + valx8_hi], [ip + 2]
+    add [0], [0], [rb + val_lo]
+
+    mul [flag_carry], 0x80, [rb + tmp]
+    add shr + 1, [rb + valx8_hi], [ip + 1]
+    add [0], [rb + tmp], [rb + val_hi]
+
+    add bits + 0, [rb + valx8_lo], [ip + 1]
+    add [0], 0, [flag_carry]
+
+    jz  0, [rb + overflow_algorithm]
+
+execute_rcl_w_flags:
+    # Update flags for rcl
+    mul [rb + val_hi], 8, [rb + valx8_hi]
+
+    add bits + 7, [rb + valx8_hi], [ip + 1]
+    eq  [0], [flag_carry], [flag_overflow]
+    eq  [flag_overflow], 0, [flag_overflow]
+
+    jz  0, execute_rcl_rcr_w_store
+
+execute_rcr_w_flags:
+    # Update flags for rcr
+    mul [rb + val_hi], 8, [rb + valx8_hi]
+
+    add bits + 6, [rb + valx8_hi], [ip + 5]
+    add bits + 7, [rb + valx8_hi], [ip + 2]
+    eq  [0], [0], [flag_overflow]
+    eq  [flag_overflow], 0, [flag_overflow]
+
+execute_rcl_rcr_w_store:
+    # Write the rotated value
     add [rb + loc_type], 0, [rb - 1]
     add [rb + loc_addr], 0, [rb - 2]
     add [rb + val_lo], 0, [rb - 3]
@@ -534,14 +879,9 @@ execute_sar_w_store:
     arb -4
     call write_location_w
 
-execute_sar_w_done:
-    arb 7
+execute_rcl_rcr_w_done:
+    arb 8
     ret 2
 .ENDFRAME
-
-##########
-ones:
-    db  0b00000000, 0b10000000, 0b11000000, 0b11100000
-    db  0b11110000, 0b11111000, 0b11111100, 0b11111110
 
 .EOF
