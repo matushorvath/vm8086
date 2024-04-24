@@ -73,6 +73,6 @@ Missing instructions
 ====================
 
 DIV IDIV
-AAM AAD
+AAM
 MOVS CMPS STOS LODS SCAS
 REPZ REPNZ

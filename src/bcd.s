@@ -2,15 +2,29 @@
 .EXPORT execute_aas
 .EXPORT execute_daa
 .EXPORT execute_das
+.EXPORT execute_aad
+
+# From memory.s
+.IMPORT read_cs_ip_b
 
 # From obj/nibbles.s
 .IMPORT nibbles
 
+# From obj/parity.s
+.IMPORT parity
+
 # From state.s
+.IMPORT inc_ip_b
 .IMPORT reg_al
 .IMPORT reg_ah
 .IMPORT flag_carry
+.IMPORT flag_sign
+.IMPORT flag_zero
+.IMPORT flag_parity
 .IMPORT flag_auxiliary_carry
+
+# From util.s
+.IMPORT split_16_8_8
 
 ##########
 execute_aaa:
@@ -226,6 +240,38 @@ execute_das_decimal_carry_hi:
 
 execute_das_after_carry_hi:
     arb 4
+    ret 0
+.ENDFRAME
+
+# TODO AAM causes #DE if second byte is 0 (causes division by zero)
+# TODO test AAD
+
+##########
+execute_aad:
+.FRAME base, tmp
+    arb -2
+
+    # Read immediate value from the second byte
+    call read_cs_ip_b
+    add [rb - 2], 0, [rb + base]
+    call inc_ip_b
+
+    # Calculate new AL, take the lower byte of the result
+    mul [reg_ah], [rb + base], [rb + tmp]
+    add [reg_al], [rb + tmp], [rb - 1]
+    arb -1
+    call split_16_8_8
+    add [rb - 3], 0, [reg_al]
+    add 0, 0, [reg_ah]
+
+    # Update flags
+    lt  0x7f, [reg_al], [flag_sign]
+    eq  [reg_al], 0, [flag_zero]
+
+    add parity, [reg_al], [ip + 1]
+    add [0], 0, [flag_parity]
+
+    arb 2
     ret 0
 .ENDFRAME
 
