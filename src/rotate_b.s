@@ -127,7 +127,7 @@ execute_rol_b_flags:
     eq  [0], [flag_carry], [flag_overflow]
     eq  [flag_overflow], 0, [flag_overflow]
 
-    # Write the retated value
+    # Write the rotated value
     add [rb + loc_type], 0, [rb - 1]
     add [rb + loc_addr], 0, [rb - 2]
     add [rb + val], 0, [rb - 3]
@@ -235,7 +235,7 @@ execute_ror_b_flags:
     eq  [0], [flag_carry], [flag_overflow]
     eq  [flag_overflow], 0, [flag_overflow]
 
-    # Write the retated value
+    # Write the rotated value
     add [rb + loc_type], 0, [rb - 1]
     add [rb + loc_addr], 0, [rb - 2]
     add [rb + val], 0, [rb - 3]
@@ -431,7 +431,7 @@ execute_rcr_b_flags:
     eq  [flag_overflow], 0, [flag_overflow]
 
 execute_rcl_rcr_b_store:
-    # Write the retated value
+    # Write the rotated value
     add [rb + loc_type], 0, [rb - 1]
     add [rb + loc_addr], 0, [rb - 2]
     add [rb + val], 0, [rb - 3]
