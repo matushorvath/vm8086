@@ -26,8 +26,8 @@ section .text
 
     mark 0x80
 %include "rol_b.inc"
-;    mark 0x81
-;%include "rol_w.inc"
+    mark 0x81
+%include "rol_w.inc"
 
     mark 0x88
 %include "ror_b.inc"
