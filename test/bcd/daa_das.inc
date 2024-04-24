@@ -60,7 +60,7 @@
     %endif
     %assign out_flags (flag_AF << 4) | (flag_CF << 0)
 
-    %warning %1, reg_AL, in_flags, out_flags
+    ;%warning %1, reg_AL, in_flags, out_flags
     db  %1, reg_AL
     db  in_flags, out_flags
 %endmacro
@@ -91,7 +91,7 @@
     %endif
     %assign out_flags (flag_AF << 4) | (flag_CF << 0)
 
-    %warning %1, reg_AL, in_flags, out_flags
+    ;%warning %1, reg_AL, in_flags, out_flags
     db  %1, reg_AL
     db  in_flags, out_flags
 %endmacro
