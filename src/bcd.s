@@ -2,7 +2,11 @@
 .EXPORT execute_aas
 .EXPORT execute_daa
 .EXPORT execute_das
+.EXPORT execute_aam
 .EXPORT execute_aad
+
+# From div.s
+.IMPORT divide_b
 
 # From memory.s
 .IMPORT read_cs_ip_b
@@ -243,8 +247,36 @@ execute_das_after_carry_hi:
     ret 0
 .ENDFRAME
 
-# TODO AAM causes #DE if second byte is 0 (causes division by zero)
-# TODO test AAD
+##########
+execute_aam:
+.FRAME base
+    arb -1
+
+    # Read immediate value from the second byte
+    call read_cs_ip_b
+    add [rb - 2], 0, [rb + base]
+    call inc_ip_b
+
+    # TODO #DE if [rb + base] is zero; perhaps trigger that inside divide_b
+
+    # Divide AL by the base
+    add [reg_al], 0, [rb - 1]
+    add [rb + base], 0, [rb - 2]
+    arb -2
+    call divide_b
+    add [rb - 4], 0, [reg_ah]
+    add [rb - 5], 0, [reg_al]
+
+    # Update flags
+    lt  0x7f, [reg_al], [flag_sign]
+    eq  [reg_al], 0, [flag_zero]
+
+    add parity, [reg_al], [ip + 1]
+    add [0], 0, [flag_parity]
+
+    arb 1
+    ret 0
+.ENDFRAME
 
 ##########
 execute_aad:
