@@ -13,7 +13,7 @@
 .EXPORT ss_segment_prefix
 .EXPORT rep_prefix
 
-# TODO actually implement REPZ/REPNZ
+# TODO implement REPZ/REPNZ
 # TODO docs say many instructions trigger #UD when used with LOCK
 
 # From state.s
