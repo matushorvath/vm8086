@@ -11,6 +11,12 @@
 .IMPORT execute_not_b
 .IMPORT execute_not_w
 
+# From div.s
+.IMPORT execute_div_b
+#.IMPORT execute_div_w
+#.IMPORT execute_idiv_b
+#.IMPORT execute_idiv_w
+
 # From error.s
 .IMPORT report_error
 
@@ -111,10 +117,12 @@ execute_group1_b_imul:
     jz  0, execute_group1_b_end
 
 execute_group1_b_div:
-    # TODO implement DIV
-    add not_implemented_message, 0, [rb - 1]
-    arb -1
-    call report_error
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    arb -2
+    call execute_div_b
+
+    jz  0, execute_group1_b_end
 
 execute_group1_b_idiv:
     # TODO implement IDIV

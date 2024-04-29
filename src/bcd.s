@@ -6,7 +6,7 @@
 .EXPORT execute_aad
 
 # From div.s
-.IMPORT divide_b
+.IMPORT divide
 
 # From memory.s
 .IMPORT read_cs_ip_b
@@ -257,15 +257,16 @@ execute_aam:
     add [rb - 2], 0, [rb + base]
     call inc_ip_b
 
-    # TODO #DE if [rb + base] is zero; perhaps trigger that inside divide_b
+    # TODO #DE if [rb + base] is zero; perhaps trigger that inside divide
 
     # Divide AL by the base
-    add [reg_al], 0, [rb - 1]
-    add [rb + base], 0, [rb - 2]
-    arb -2
-    call divide_b
-    add [rb - 4], 0, [reg_ah]
-    add [rb - 5], 0, [reg_al]
+    add 1, 0, [rb - 1]
+    add [reg_al], 0, [rb - 5]
+    add [rb + base], 0, [rb - 6]
+    arb -6
+    call divide
+    add [rb - 8], 0, [reg_ah]
+    add [rb - 9], 0, [reg_al]
 
     # Update flags
     lt  0x7f, [reg_al], [flag_sign]
