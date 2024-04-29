@@ -6,26 +6,22 @@
 %%loop:
     mov al, byte [cs:%2 + bp + 0]
     mov bl, al
-    mov bh, %2
 
     ; encode the aam instruction with the second byte taken from bh
     db  0xd4                            ; d4 = opcode of aam
     db  %1                              ; base
     pushf
 
-    mov dx, word [cs:%2 + bp + 2]
+    mov dx, word [cs:%2 + bp + 1]
     cmp dx, ax                          ; compare calculated and correct result
     jne %%done
 
     ; relevant flags: -------- SZ---P--
     pop di                              ; compare real flags with correct ones
     and di, 0b_00000000_11000100
-    mov si, word [cs:%2 + bp + 4]
+    mov si, word [cs:%2 + bp + 3]
     cmp di, si
     jne %%done
-
-    mov al, '.'
-    out 0xe9, al
 
     add bp, aam_data_size
 
@@ -39,8 +35,8 @@
 ; generate test data for the AAA instruction
 %macro aam_data 2                       ; al, base
     ; TODO handle %2 == 0 (division by zero)
-    %assign new_al (%1 / %2)
-    %assign new_ah (%1 % %2)
+    %assign new_al (%1 % %2)
+    %assign new_ah (%1 / %2)
 
     %assign sfl new_al >= 0x80 ? 0b_00000000_10000000 : 0
     %assign zfl new_al == 0 ? 0b_00000000_01000000 : 0
@@ -50,7 +46,7 @@
         ) % 2 == 0 ? 0b_00000000_00000100 : 0
     %assign flags sfl | zfl | pfl
 
-    ;%warning %1, %2, new_al, new_ah, flags
+    ;%warning %1, new_al, new_ah, flags
     db  %1, new_al, new_ah
     dw  flags
 %endmacro

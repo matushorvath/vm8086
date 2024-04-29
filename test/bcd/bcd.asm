@@ -8,7 +8,6 @@ section .text
 %include "aaa_aas.inc"
 %include "daa_das.inc"
 %include "aam.inc"
-
-; TODO test AAD
+%include "aad.inc"
 
     call power_off
