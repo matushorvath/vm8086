@@ -10,7 +10,7 @@ divide_b:
 
     add 0, 0, [rb + res]
     add 0, 0, [rb + mod]
-    add 0, 0, [rb + bit]
+    add 8, 0, [rb + bit]
 
     # Convert the dividend to bits
     mul [rb + dvd], 8, [rb + tmp]
@@ -20,6 +20,8 @@ divide_b:
     mul [rb + dvr], -1, [rb + dvr_neg]
 
 divide_b_loop:
+    add [rb + bit], -1, [rb + bit]
+
     # Move one additional bit from dvd to mod
     mul [rb + mod], 2, [rb + mod]
     add [rb + dvd_bits], [rb + bit], [ip + 1]
@@ -40,9 +42,7 @@ divide_b_loop:
 
 divide_b_does_not_go_in:
     # If this wasn't the last bit, loop
-    add [rb + bit], 1, [rb + bit]
-    eq  [rb + bit], 8, [rb + tmp]
-    jz  [rb + tmp], divide_b_loop
+    jnz [rb + bit], divide_b_loop
 
     arb 6
     ret 2
