@@ -65,5 +65,3 @@ handle_int0:
     pop ax
 
     iret
-
-; TODO check interrupt behavior with IF = 0/1
