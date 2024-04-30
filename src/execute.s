@@ -134,6 +134,7 @@ execute_esc:
 .FRAME op, loc_type, loc_addr;
     # The only thing to do here is to increase IP according to the MOD and R/M
     # fields, which was already done by arg_mod_op_rm_b/arg_mod_op_rm_w.
+    # TODO should this raise #NM (INT 7)?
     ret 3
 .ENDFRAME
 
@@ -147,6 +148,8 @@ execute_hlt:
 ##########
 invalid_opcode:
 .FRAME
+    # TODO raise #UD (INT 6)
+
     add invalid_opcode_message, 0, [rb - 1]
     arb -1
     call report_error

@@ -14,12 +14,16 @@
     mov dx, word [cs:%2 + bp + 0]
     mov ax, dx
     mov bl, byte [cs:%2 + bp + 2]
-
     mov bh, byte [cs:%2 + bp + 3]
-    test bh, bh
-    jnz %%divide_error
 
+    clc
     %1  bl                              ; al,ah = dx OP bl
+    ;jmp %%done ; TODO
+    jc  %%divide_error
+
+    ; was division supposed to pass without an interrupt?
+    test bh, bh
+    jnz %%done
 
     mov di, word [cs:%2 + bp + 4]
     cmp di, ax                          ; compare calculated and correct result
@@ -28,7 +32,10 @@
     jmp %%next
 
 %%divide_error:
-    ; TODO check for divide error
+    ; was the division supposed to fail?
+    test bh, bh
+    jnz %%next
+    or  cx, 0xff                        ; set ZF = 0
 
 %%next:
     add bp, div_8_data_size

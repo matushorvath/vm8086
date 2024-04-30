@@ -18,4 +18,4 @@ section .text
 %include "mul_imul_16_modes.inc"
 %include "mul_imul_16_numbers.inc"
 
-     call power_off
+    call power_off

@@ -18,4 +18,4 @@ section .text
 %include "sub_sbb_cmp_16_modes.inc"
 %include "sub_sbb_cmp_16_numbers.inc"
 
-     call power_off
+    call power_off
