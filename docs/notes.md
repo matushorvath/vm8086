@@ -72,7 +72,6 @@ https://github.com/86Box/86Box
 Missing instructions
 ====================
 
-DIV IDIV
-AAM AAD
+IDIV
 MOVS CMPS STOS LODS SCAS
 REPZ REPNZ

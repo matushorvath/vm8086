@@ -11,6 +11,12 @@
 .IMPORT execute_not_b
 .IMPORT execute_not_w
 
+# From div.s
+.IMPORT execute_div_b
+.IMPORT execute_div_w
+#.IMPORT execute_idiv_b
+#.IMPORT execute_idiv_w
+
 # From error.s
 .IMPORT report_error
 
@@ -26,8 +32,6 @@
 # From state.s
 .IMPORT inc_ip_b
 .IMPORT inc_ip_w
-
-# TODO implement rest of group 1
 
 # Group 1, first byte is MOD xxx R/M, where xxx is:
 # 000 TEST REG/MEM, IMMED
@@ -113,13 +117,15 @@ execute_group1_b_imul:
     jz  0, execute_group1_b_end
 
 execute_group1_b_div:
-    # TODO implement
-    add not_implemented_message, 0, [rb - 1]
-    arb -1
-    call report_error
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    arb -2
+    call execute_div_b
+
+    jz  0, execute_group1_b_end
 
 execute_group1_b_idiv:
-    # TODO implement
+    # TODO implement IDIV
     add not_implemented_message, 0, [rb - 1]
     arb -1
     call report_error
@@ -203,13 +209,15 @@ execute_group1_w_imul:
     jz  0, execute_group1_w_end
 
 execute_group1_w_div:
-    # TODO implement
-    add not_implemented_message, 0, [rb - 1]
-    arb -1
-    call report_error
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    arb -2
+    call execute_div_w
+
+    jz  0, execute_group1_w_end
 
 execute_group1_w_idiv:
-    # TODO implement
+    # TODO implement IDIV
     add not_implemented_message, 0, [rb - 1]
     arb -1
     call report_error

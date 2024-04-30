@@ -2,6 +2,7 @@
 .EXPORT execute_int3
 .EXPORT execute_into
 .EXPORT execute_iret
+.EXPORT interrupt
 
 # From memory.s
 .IMPORT read_b
@@ -111,6 +112,8 @@ interrupt:
     arb -1
     call read_b
     add [rb - 3], 0, [reg_ip + 1]
+
+    # TODO raise #DF (INT 8) for double fault, reset for triple fault
 
     arb 1
     ret 1

@@ -112,7 +112,6 @@ pack_flags_lo:
 pack_flags_lo_after_carry:
 
     # set bit 1 to match bochs (which emulates the 32-bit eflags)
-    # TODO 8086 disable this or make it configurable or modify tests to ignore the difference
     add [rb + flags_lo], 0b00000010, [rb + flags_lo]
 
     jz  [flag_parity], pack_flags_lo_after_parity

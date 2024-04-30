@@ -5,6 +5,7 @@
 .EXPORT invalid_opcode
 .EXPORT not_implemented             # TODO remove
 .EXPORT halt
+.EXPORT exec_ip
 
 # From the linked 8086 binary
 .IMPORT binary_enable_tracing
@@ -62,6 +63,9 @@ execute_tracing_done:
     add 0, 0, [rep_prefix]
 
 execute_prefix_done:
+    add [reg_ip + 0], 0, [exec_ip + 0]
+    add [reg_ip + 1], 0, [exec_ip + 1]
+
     # Read op code
     call read_cs_ip_b
     add [rb - 2], 0, [rb + op]
@@ -134,6 +138,7 @@ execute_esc:
 .FRAME op, loc_type, loc_addr;
     # The only thing to do here is to increase IP according to the MOD and R/M
     # fields, which was already done by arg_mod_op_rm_b/arg_mod_op_rm_w.
+    # TODO should this raise #NM (INT 7)?
     ret 3
 .ENDFRAME
 
@@ -147,6 +152,8 @@ execute_hlt:
 ##########
 invalid_opcode:
 .FRAME
+    # TODO raise #UD (INT 6)
+
     add invalid_opcode_message, 0, [rb - 1]
     arb -1
     call report_error
@@ -167,7 +174,10 @@ not_implemented_message:
 .ENDFRAME
 
 ##########
-halt:
-    db  0           # set this to non-zero to halt the VM
+halt:                                   # set this to non-zero to halt the VM
+    db  0
+exec_ip:                                # IP where the currently executed instruction started
+    db  0
+    db  0
 
 .EOF

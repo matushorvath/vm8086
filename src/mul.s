@@ -5,9 +5,7 @@
 
 # From location.s
 .IMPORT read_location_b
-.IMPORT write_location_b
 .IMPORT read_location_w
-.IMPORT write_location_w
 
 # From state.s
 .IMPORT reg_al

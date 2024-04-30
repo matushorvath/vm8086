@@ -2,15 +2,40 @@
 .EXPORT execute_aas
 .EXPORT execute_daa
 .EXPORT execute_das
+.EXPORT execute_aam
+.EXPORT execute_aad
+
+# From div.s
+.IMPORT divide
+
+# From execute.s
+.IMPORT exec_ip
+
+# From interrupt.s
+.IMPORT interrupt
+
+# From memory.s
+.IMPORT read_cs_ip_b
 
 # From obj/nibbles.s
 .IMPORT nibbles
 
+# From obj/parity.s
+.IMPORT parity
+
 # From state.s
+.IMPORT inc_ip_b
+.IMPORT reg_ip
 .IMPORT reg_al
 .IMPORT reg_ah
 .IMPORT flag_carry
+.IMPORT flag_sign
+.IMPORT flag_zero
+.IMPORT flag_parity
 .IMPORT flag_auxiliary_carry
+
+# From util.s
+.IMPORT split_16_8_8
 
 ##########
 execute_aaa:
@@ -226,6 +251,79 @@ execute_das_decimal_carry_hi:
 
 execute_das_after_carry_hi:
     arb 4
+    ret 0
+.ENDFRAME
+
+##########
+execute_aam:
+.FRAME base
+    arb -1
+
+    # Read immediate value from the second byte
+    call read_cs_ip_b
+    add [rb - 2], 0, [rb + base]
+    call inc_ip_b
+
+    # Raise #DE on division by zero
+    jnz [rb + base], execute_aam_non_zero
+
+    add [exec_ip + 0], 0, [reg_ip + 0]
+    add [exec_ip + 1], 0, [reg_ip + 1]
+
+    add 0, 0, [rb - 1]
+    arb -1
+    call interrupt
+
+    jz  0, execute_aam_done
+
+execute_aam_non_zero:
+    # Divide AL by the base
+    add 1, 0, [rb - 1]
+    add [reg_al], 0, [rb - 5]
+    add [rb + base], 0, [rb - 6]
+    arb -6
+    call divide
+    add [rb - 8], 0, [reg_ah]
+    add [rb - 9], 0, [reg_al]
+
+    # Update flags
+    lt  0x7f, [reg_al], [flag_sign]
+    eq  [reg_al], 0, [flag_zero]
+
+    add parity, [reg_al], [ip + 1]
+    add [0], 0, [flag_parity]
+
+execute_aam_done:
+    arb 1
+    ret 0
+.ENDFRAME
+
+##########
+execute_aad:
+.FRAME base, tmp
+    arb -2
+
+    # Read immediate value from the second byte
+    call read_cs_ip_b
+    add [rb - 2], 0, [rb + base]
+    call inc_ip_b
+
+    # Calculate new AL, take the lower byte of the result
+    mul [reg_ah], [rb + base], [rb + tmp]
+    add [reg_al], [rb + tmp], [rb - 1]
+    arb -1
+    call split_16_8_8
+    add [rb - 3], 0, [reg_al]
+    add 0, 0, [reg_ah]
+
+    # Update flags
+    lt  0x7f, [reg_al], [flag_sign]
+    eq  [reg_al], 0, [flag_zero]
+
+    add parity, [reg_al], [ip + 1]
+    add [0], 0, [flag_parity]
+
+    arb 2
     ret 0
 .ENDFRAME
 

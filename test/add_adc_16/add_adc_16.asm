@@ -18,4 +18,4 @@ section .text
 %include "add_adc_16_modes.inc"
 %include "add_adc_16_numbers.inc"
 
-     call power_off
+    call power_off
