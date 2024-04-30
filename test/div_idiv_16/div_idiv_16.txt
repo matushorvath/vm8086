@@ -6,14 +6,14 @@ stack: 0000 0000 0000 0000 0000 0000 0000 0000
 ----------
 MARK: 60
 ----------
-ip: 0080 flags: ----odit sZ-a-P-c 00000000 01000110 (0046)
-cs: d000 ds: 1000 ss: 0800 es: 0000 bp: 03c2 sp: 0000
-ax: ffff bx: 01ff cx: 0000 dx: ffff si: 0000 di: 8180
+ip: 0090 flags: ----odit sZ-a-P-c 00000000 01000110 (0046)
+cs: d000 ds: 1000 ss: 0800 es: 0000 bp: 165a sp: 0000
+ax: ffff bx: ffff cx: 0000 dx: ffff si: 0001 di: 8000
 stack: 0000 0000 0000 0000 0000 0000 0000 0000
 ----------
 MARK: 61
 ----------
-ip: 00c6 flags: ----odit sZ-a-P-c 00000000 01000110 (0046)
-cs: d000 ds: 1000 ss: 0800 es: 0000 bp: 0aca sp: 0000
-ax: f2c5 bx: 01f2 cx: 0000 dx: f2c5 si: 0000 di: 48f3
+ip: 00e6 flags: ----odit sZ-a-P-c 00000000 01000110 (0046)
+cs: d000 ds: 1000 ss: 0800 es: 0000 bp: 000d sp: 0000
+ax: 0000 bx: 0000 cx: 0000 dx: 0000 si: 0001 di: 8000
 stack: 0000 0000 0000 0000 0000 0000 0000 0000

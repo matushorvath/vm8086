@@ -8,6 +8,12 @@
 # From div.s
 .IMPORT divide
 
+# From execute.s
+.IMPORT exec_ip
+
+# From interrupt.s
+.IMPORT interrupt
+
 # From memory.s
 .IMPORT read_cs_ip_b
 
@@ -19,6 +25,7 @@
 
 # From state.s
 .IMPORT inc_ip_b
+.IMPORT reg_ip
 .IMPORT reg_al
 .IMPORT reg_ah
 .IMPORT flag_carry
@@ -257,8 +264,19 @@ execute_aam:
     add [rb - 2], 0, [rb + base]
     call inc_ip_b
 
-    # TODO #DE if [rb + base] is zero; perhaps trigger that inside divide
+    # Raise #DE on division by zero
+    jnz [rb + base], execute_aam_non_zero
 
+    add [exec_ip + 0], 0, [reg_ip + 0]
+    add [exec_ip + 1], 0, [reg_ip + 1]
+
+    add 0, 0, [rb - 1]
+    arb -1
+    call interrupt
+
+    jz  0, execute_aam_done
+
+execute_aam_non_zero:
     # Divide AL by the base
     add 1, 0, [rb - 1]
     add [reg_al], 0, [rb - 5]
@@ -275,6 +293,7 @@ execute_aam:
     add parity, [reg_al], [ip + 1]
     add [0], 0, [flag_parity]
 
+execute_aam_done:
     arb 1
     ret 0
 .ENDFRAME

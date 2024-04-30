@@ -37,6 +37,19 @@ execute_div_b:
     call read_location_b
     add [rb - 4], 0, [rb + dvr]
 
+    # Raise #DE on division by zero
+    jnz [rb + dvr], execute_div_b_non_zero
+
+    add [exec_ip + 0], 0, [reg_ip + 0]
+    add [exec_ip + 1], 0, [reg_ip + 1]
+
+    add 0, 0, [rb - 1]
+    arb -1
+    call interrupt
+
+    jz  0, execute_div_b_done
+
+execute_div_b_non_zero:
     # Calculate the quotient and remainder
     add 2, 0, [rb - 1]
     add [reg_ah], 0, [rb - 4]
@@ -81,6 +94,19 @@ execute_div_w:
     mul [rb - 5], 0x100, [rb + dvr]
     add [rb - 4], [rb + dvr], [rb + dvr]
 
+    # Raise #DE on division by zero
+    jnz [rb + dvr], execute_div_w_non_zero
+
+    add [exec_ip + 0], 0, [reg_ip + 0]
+    add [exec_ip + 1], 0, [reg_ip + 1]
+
+    add 0, 0, [rb - 1]
+    arb -1
+    call interrupt
+
+    jz  0, execute_div_w_done
+
+execute_div_w_non_zero:
     # Calculate the quotient and remainder
     add 4, 0, [rb - 1]
     add [reg_dh], 0, [rb - 2]
@@ -131,19 +157,6 @@ divide:
 .FRAME byte, dvd3, dvd2, dvd1, dvd0, dvr; res, mod, bit, dvd_bits, dvr_neg, tmp                    # returns res, mod
     arb -6
 
-    # Raise #UD on division by zero
-    jnz [rb + dvr], divide_non_zero
-
-    add [exec_ip + 0], 0, [reg_ip + 0]
-    add [exec_ip + 1], 0, [reg_ip + 1]
-
-    add 0, 0, [rb - 1]
-    arb -1
-    call interrupt
-
-    jz  0, divide_done
-
-divide_non_zero:
     add 0, 0, [rb + res]
     add 0, 0, [rb + mod]
 
@@ -170,6 +183,11 @@ divide_bit_loop:
 
     # Make space for one additional bit in the result
     mul [rb + res], 2, [rb + res]
+
+    # Anything larger than 16-bits will be a #DE, don't bother calculating it
+    # Also, this avoids creating results that don't fit into a 32-bit signed int
+    lt  0xffff, [rb + res], [rb + tmp]
+    jnz [rb + tmp], divide_done
 
     # Does the divisor fit into mod?
     lt  [rb + mod], [rb + dvr], [rb + tmp]
