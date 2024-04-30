@@ -17,7 +17,7 @@
     mov bh, byte [cs:%2 + bp + 3]
 
     clc
-    %1  bl                              ; al,ah = ax OP bl
+    %1  bl                              ; al,ah = dx OP bl
     jc  %%divide_error
 
     ; was division supposed to pass without an interrupt?
@@ -53,15 +53,14 @@ test_div_8 div, div_8_interesting_set
 mark 0x61
 test_div_8 div, div_8_generic_set
 
-; TODO enable
-; mark 0x62
-; test_div_8 idiv, idiv_8_interesting_set
-; mark 0x63
-; test_div_8 idiv, idiv_8_generic_set
+mark 0x62
+test_div_8 idiv, idiv_8_interesting_set
+mark 0x63
+test_div_8 idiv, idiv_8_generic_set
 
 
 ; generate test data for dividing two unsigned numbers
-%macro div_8_data 2                    ; op1, op2
+%macro div_8_data 2                     ; op1, op2
     %assign res 0x00
     %assign mod 0x00
 
@@ -82,20 +81,35 @@ test_div_8 div, div_8_generic_set
     db  %2, de, res, mod
 %endmacro
 
-; TODO enable
 ; generate test data for dividing two signed numbers
-; %macro idiv_8_data 2                   ; op1, op2
-;     %assign op1 (%1 < 0x80 ? %1 : %1 - 0x100)
-;     %assign op2 (%2 < 0x80 ? %2 : %2 - 0x100)
-;     %assign res (op1 * op2) >= 0 ? (op1 * op2) : (op1 * op2) + 0x10000
+%macro idiv_8_data 2                    ; op1, op2
+    %assign op1 (%1 < 0x8000 ? %1 : %1 - 0x10000)
+    %assign op2 (%2 < 0x80 ? %2 : %2 - 0x100)
 
-;     ; relevant flags: ----O--- -------C
-;     %assign flags ((res & 0xff80) != 0x0000 && (res & 0xff80) != 0xff80) ? 0b_00001000_00000001 : 0
+    %assign res 0x00
+    %assign mod 0x00
 
-;     ;%warning %1, %2, res, flags
-;     db  %1, %2
-;     dw  res, flags
-; %endmacro
+    %if op2 == 0
+        %assign de 1
+    %else
+        %if (op1 // op2) < -0x80 || (op1 // op2) > 0x7f
+            %assign de 1
+        %else
+            %assign res (op1 // op2) >= 0 ? (op1 // op2) : (op1 // op2) + 0x100
+            %assign mod (op1 %% op2)
+            %assign de 0
+        %endif
+    %endif
+
+    ; %warning %1, %2, de, res, mod
+    ; %if op2 != 0
+    ;     %assign tmp1 (op1 // op2)
+    ;     %assign tmp2 (op1 %% op2)
+    ;     %warning "xxx", op1, op2, tmp1, tmp2
+    ; %endif
+    dw  %1
+    db  %2, de, res, mod
+%endmacro
 
 div_8_data_size equ 2 + 1 + 1 + 1 + 1   ; op1, op2, de, res, mod
 
@@ -147,9 +161,9 @@ div_8_interesting_set:
     make_div_8_interesting_set div
 div_8_generic_set:
     make_div_8_generic_set div
-; idiv_8_interesting_set:
-;     make_div_8_interesting_set idiv
-; idiv_8_generic_set:
-;     make_div_8_generic_set idiv
+idiv_8_interesting_set:
+    make_div_8_interesting_set idiv
+idiv_8_generic_set:
+    make_div_8_generic_set idiv
 
 __?SECT?__

@@ -1,5 +1,8 @@
 .EXPORT execute_div_b
 .EXPORT execute_div_w
+
+.EXPORT execute_idiv_b
+
 .EXPORT divide
 
 # From execute.s
@@ -78,6 +81,97 @@ execute_div_b_quotient_ok:
 
 execute_div_b_done:
     arb 2
+    ret 2
+.ENDFRAME
+
+##########
+execute_idiv_b:
+.FRAME loc_type, loc_addr; dvd_lo, dvd_hi, dvr, sign, tmp
+    arb -5
+
+    # Read the divisor
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    arb -2
+    call read_location_b
+    add [rb - 4], 0, [rb + dvr]
+
+    # Raise #DE on division by zero
+    jnz [rb + dvr], execute_idiv_b_non_zero
+
+    add [exec_ip + 0], 0, [reg_ip + 0]
+    add [exec_ip + 1], 0, [reg_ip + 1]
+
+    add 0, 0, [rb - 1]
+    arb -1
+    call interrupt
+
+    jz  0, execute_idiv_b_done
+
+execute_idiv_b_non_zero:
+    add [reg_al], 0, [rb + dvd_lo]
+    add [reg_ah], 0, [rb + dvd_hi]
+
+    add 0, 0, [rb + sign]
+
+    # Convert both operands to positive numbers, remembering how many signs we flip
+    lt  [rb + dvd_hi], 0x80, [rb + tmp]
+    jnz [rb + tmp], execute_idiv_b_dvd_positive_hi
+    eq  [rb + sign], 0, [rb + sign]
+
+    jz  [rb + dvd_lo], execute_idiv_b_dvd_positive_lo
+    mul [rb + dvd_lo], -1, [rb + dvd_lo]
+    add 0x100, [rb + dvd_lo], [rb + dvd_lo]
+    add [rb + dvd_hi], 1, [rb + dvd_hi]
+
+execute_idiv_b_dvd_positive_lo:
+    jz  [rb + dvd_hi], execute_idiv_b_dvd_positive_hi
+    mul [rb + dvd_hi], -1, [rb + dvd_hi]
+    add 0x100, [rb + dvd_hi], [rb + dvd_hi]
+
+execute_idiv_b_dvd_positive_hi:
+    lt  [rb + dvr], 0x80, [rb + tmp]
+    jnz [rb + tmp], execute_idiv_b_dvr_positive
+    eq  [rb + sign], 0, [rb + sign]
+
+    mul [rb + dvr], -1, [rb + dvr]
+    add 0x100, [rb + dvr], [rb + dvr]
+
+execute_idiv_b_dvr_positive:
+    # Calculate the quotient and remainder
+    add 2, 0, [rb - 1]
+    add [rb + dvd_hi], 0, [rb - 4]
+    add [rb + dvd_lo], 0, [rb - 5]
+    add [rb + dvr], 0, [rb - 6]
+    arb -6
+    call divide
+
+    # Check if the quotient fits into a single byte
+    lt  0xff, [rb - 8], [rb + tmp]
+    jz  [rb + tmp], execute_idiv_b_quotient_ok
+
+    # Raise #DE
+    add [exec_ip + 0], 0, [reg_ip + 0]
+    add [exec_ip + 1], 0, [reg_ip + 1]
+
+    add 0, 0, [rb - 1]
+    arb -1
+    call interrupt
+
+    jz  0, execute_idiv_b_done
+
+execute_idiv_b_quotient_ok:
+    add [rb - 8], 0, [reg_al]
+    add [rb - 9], 0, [reg_ah]
+
+    # Negate the quotient based on the sign we calculated in the beginning
+    jz  [rb + sign], execute_idiv_b_done
+    jz  [reg_al], execute_idiv_b_done
+    mul [reg_al], -1, [reg_al]
+    add 0x100, [reg_al], [reg_al]
+
+execute_idiv_b_done:
+    arb 5
     ret 2
 .ENDFRAME
 
