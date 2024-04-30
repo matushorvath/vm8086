@@ -44,14 +44,14 @@
 
 ; run the tests
 mark 0x60
-test_mul_16 mul, mul_16_interesting_set_0
+test_mul_16 mul, mul_16_interesting_set
 mark 0x61
-test_mul_16 mul, mul_16_generic_set_0
+test_mul_16 mul, mul_16_generic_set
 
 mark 0x62
-test_mul_16 imul, imul_16_interesting_set_0
+test_mul_16 imul, imul_16_interesting_set
 mark 0x63
-test_mul_16 imul, imul_16_generic_set_0
+test_mul_16 imul, imul_16_generic_set
 
 
 ; generate test data for multiplying two unsigned numbers
@@ -85,7 +85,7 @@ test_mul_16 imul, imul_16_generic_set_0
 mul_16_data_size equ 2 + 2 + 4 + 2       ; op1, op2, res, flags
 
 ; test interesting numbers
-%macro mul_16_interesting_set 1
+%macro make_mul_16_interesting_set 1
     %assign cnt_a 20
     %assign cnt_b 20
     dw  cnt_a * cnt_b
@@ -108,7 +108,7 @@ mul_16_data_size equ 2 + 2 + 4 + 2       ; op1, op2, res, flags
 %endmacro
 
 ; complete test data with/without carry
-%macro mul_16_generic_set 1
+%macro make_mul_16_generic_set 1
     %assign step_a 3271
     %assign step_b 3259
     %assign cnt_a 0x10000 / step_a
@@ -130,12 +130,13 @@ mul_16_data_size equ 2 + 2 + 4 + 2       ; op1, op2, res, flags
 
 [section .data start=data_addr]
 
-mul_16_interesting_set_0:
-    mul_16_interesting_set mul
-mul_16_generic_set_0:
-    mul_16_generic_set mul
-imul_16_interesting_set_0:
-    mul_16_interesting_set imul
-imul_16_generic_set_0:
-    mul_16_generic_set imul
+mul_16_interesting_set:
+    make_mul_16_interesting_set mul
+mul_16_generic_set:
+    make_mul_16_generic_set mul
+imul_16_interesting_set:
+    make_mul_16_interesting_set imul
+imul_16_generic_set:
+    make_mul_16_generic_set imul
+
 __?SECT?__

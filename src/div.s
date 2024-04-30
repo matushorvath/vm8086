@@ -14,13 +14,6 @@
 #.IMPORT reg_dl
 #.IMPORT reg_dh
 
-.IMPORT flag_carry
-.IMPORT flag_parity
-.IMPORT flag_auxiliary_carry
-.IMPORT flag_zero
-.IMPORT flag_sign
-.IMPORT flag_overflow
-
 ##########
 execute_div_b:
 .FRAME loc_type, loc_addr; dvr, tmp
@@ -50,18 +43,8 @@ execute_div_b:
     # TODO #DE here, quotient is too large
 
 execute_div_b_quotient_ok:
-    add [rb - 8], 0, [reg_ah]
-    add [rb - 9], 0, [reg_al]
-
-    # Update flags
-    eq  [reg_ah], 0, [flag_carry]
-    eq  [flag_carry], 0, [flag_carry]
-    add [flag_carry], 0, [flag_overflow]
-
-    add 0, 0, [flag_auxiliary_carry]
-    add 0, 0, [flag_parity]
-    add 0, 0, [flag_sign]
-    add 0, 0, [flag_zero]
+    add [rb - 8], 0, [reg_al]
+    add [rb - 9], 0, [reg_ah]
 
     arb 2
     ret 2
