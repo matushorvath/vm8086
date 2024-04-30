@@ -13,7 +13,7 @@
 
 # From div.s
 .IMPORT execute_div_b
-#.IMPORT execute_div_w
+.IMPORT execute_div_w
 #.IMPORT execute_idiv_b
 #.IMPORT execute_idiv_w
 
@@ -209,10 +209,12 @@ execute_group1_w_imul:
     jz  0, execute_group1_w_end
 
 execute_group1_w_div:
-    # TODO implement DIV
-    add not_implemented_message, 0, [rb - 1]
-    arb -1
-    call report_error
+    add [rb + loc_type], 0, [rb - 1]
+    add [rb + loc_addr], 0, [rb - 2]
+    arb -2
+    call execute_div_w
+
+    jz  0, execute_group1_w_end
 
 execute_group1_w_idiv:
     # TODO implement IDIV
