@@ -75,3 +75,12 @@ Missing instructions
 IDIV
 MOVS CMPS STOS LODS SCAS
 REPZ REPNZ
+
+
+Tests for 8086
+==============
+
+https://github.com/TomHarte/ProcessorTests  
+https://github.com/barotto/test386.asm  
+https://github.com/xoreaxeaxeax/sandsifter  
+https://www.pcjs.org/software/pcx86/test/cpu/  
