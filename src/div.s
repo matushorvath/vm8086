@@ -1,6 +1,12 @@
 .EXPORT execute_div_b
 .EXPORT divide
 
+# From execute.s
+.IMPORT exec_ip
+
+# From interrupt.s
+.IMPORT interrupt
+
 # From location.s
 .IMPORT read_location_b
 #.IMPORT read_location_w
@@ -9,6 +15,7 @@
 .IMPORT bits
 
 # From state.s
+.IMPORT reg_ip
 .IMPORT reg_al
 .IMPORT reg_ah
 #.IMPORT reg_dl
@@ -26,8 +33,6 @@ execute_div_b:
     call read_location_b
     add [rb - 4], 0, [rb + dvr]
 
-    # TODO #DE if [rb + dvr] is zero; perhaps trigger that inside divide
-
     # Calculate the quotient and remainder
     add 2, 0, [rb - 1]
     add [reg_ah], 0, [rb - 4]
@@ -38,14 +43,23 @@ execute_div_b:
 
     # Check if the quotient fits to a single byte
     lt  0xff, [rb - 8], [rb + tmp]
-    jz  0, execute_div_b_quotient_ok
+    jz  [rb + tmp], execute_div_b_quotient_ok
 
-    # TODO #DE here, quotient is too large
+    # Raise #DE
+    add [exec_ip + 0], 0, [reg_ip + 0]
+    add [exec_ip + 1], 0, [reg_ip + 1]
+
+    add 0, 0, [rb - 1]
+    arb -1
+    call interrupt
+
+    jz  0, execute_div_b_done
 
 execute_div_b_quotient_ok:
     add [rb - 8], 0, [reg_al]
     add [rb - 9], 0, [reg_ah]
 
+execute_div_b_done:
     arb 2
     ret 2
 .ENDFRAME
@@ -55,6 +69,19 @@ divide:
 .FRAME byte, dvd3, dvd2, dvd1, dvd0, dvr; res, mod, bit, dvd_bits, dvr_neg, tmp                    # returns res, mod
     arb -6
 
+    # Raise #UD on division by zero
+    jnz [rb + dvr], divide_non_zero
+
+    add [exec_ip + 0], 0, [reg_ip + 0]
+    add [exec_ip + 1], 0, [reg_ip + 1]
+
+    add 0, 0, [rb - 1]
+    arb -1
+    call interrupt
+
+    jz  0, divide_done
+
+divide_non_zero:
     add 0, 0, [rb + res]
     add 0, 0, [rb + mod]
 
@@ -84,7 +111,7 @@ divide_bit_loop:
 
     # Does the divisor fit into mod?
     lt  [rb + mod], [rb + dvr], [rb + tmp]
-    jnz [rb + tmp], divide_b_does_not_go_in
+    jnz [rb + tmp], divide_does_not_go_in
 
     # Divisor fits in mod, add a 1 to the result
     add [rb + res], 1, [rb + res]
@@ -92,13 +119,14 @@ divide_bit_loop:
     # Subtract divisor from mod
     add [rb + mod], [rb + dvr_neg], [rb + mod]
 
-divide_b_does_not_go_in:
+divide_does_not_go_in:
     # If this wasn't the last bit, loop
     jnz [rb + bit], divide_bit_loop
 
     # If this wasn't the last byte, loop
     jnz [rb + byte], divide_byte_loop
 
+divide_done:
     arb 6
     ret 6
 .ENDFRAME

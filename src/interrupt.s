@@ -2,6 +2,7 @@
 .EXPORT execute_int3
 .EXPORT execute_into
 .EXPORT execute_iret
+.EXPORT interrupt
 
 # From memory.s
 .IMPORT read_b

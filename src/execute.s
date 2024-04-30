@@ -5,6 +5,7 @@
 .EXPORT invalid_opcode
 .EXPORT not_implemented             # TODO remove
 .EXPORT halt
+.EXPORT exec_ip
 
 # From the linked 8086 binary
 .IMPORT binary_enable_tracing
@@ -62,6 +63,9 @@ execute_tracing_done:
     add 0, 0, [rep_prefix]
 
 execute_prefix_done:
+    add [reg_ip + 0], 0, [exec_ip + 0]
+    add [reg_ip + 1], 0, [exec_ip + 1]
+
     # Read op code
     call read_cs_ip_b
     add [rb - 2], 0, [rb + op]
@@ -170,7 +174,10 @@ not_implemented_message:
 .ENDFRAME
 
 ##########
-halt:
-    db  0           # set this to non-zero to halt the VM
+halt:                                   # set this to non-zero to halt the VM
+    db  0
+exec_ip:                                # IP where the currently executed instruction started
+    db  0
+    db  0
 
 .EOF

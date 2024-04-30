@@ -18,7 +18,6 @@
 
     clc
     %1  bl                              ; al,ah = dx OP bl
-    ;jmp %%done ; TODO
     jc  %%divide_error
 
     ; was division supposed to pass without an interrupt?
