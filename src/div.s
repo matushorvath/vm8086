@@ -86,8 +86,8 @@ execute_div_b_done:
 
 ##########
 execute_idiv_b:
-.FRAME loc_type, loc_addr; dvd_lo, dvd_hi, dvr, sign, tmp
-    arb -5
+.FRAME loc_type, loc_addr; dvd_lo, dvd_hi, dvr, res_sign, mod_sign, res, mod, tmp
+    arb -8
 
     # Read the divisor
     add [rb + loc_type], 0, [rb - 1]
@@ -112,12 +112,14 @@ execute_idiv_b_non_zero:
     add [reg_al], 0, [rb + dvd_lo]
     add [reg_ah], 0, [rb + dvd_hi]
 
-    add 0, 0, [rb + sign]
+    add 0, 0, [rb + res_sign]
+    add 0, 0, [rb + mod_sign]
 
     # Convert both operands to positive numbers, remembering how many signs we flip
     lt  [rb + dvd_hi], 0x80, [rb + tmp]
     jnz [rb + tmp], execute_idiv_b_dvd_positive_hi
-    eq  [rb + sign], 0, [rb + sign]
+    eq  [rb + res_sign], 0, [rb + res_sign]
+    eq  [rb + mod_sign], 0, [rb + mod_sign]
 
     jz  [rb + dvd_lo], execute_idiv_b_dvd_positive_lo
     mul [rb + dvd_lo], -1, [rb + dvd_lo]
@@ -132,7 +134,7 @@ execute_idiv_b_dvd_positive_lo:
 execute_idiv_b_dvd_positive_hi:
     lt  [rb + dvr], 0x80, [rb + tmp]
     jnz [rb + tmp], execute_idiv_b_dvr_positive
-    eq  [rb + sign], 0, [rb + sign]
+    eq  [rb + res_sign], 0, [rb + res_sign]
 
     mul [rb + dvr], -1, [rb + dvr]
     add 0x100, [rb + dvr], [rb + dvr]
@@ -145,9 +147,12 @@ execute_idiv_b_dvr_positive:
     add [rb + dvr], 0, [rb - 6]
     arb -6
     call divide
+    add [rb - 8], 0, [rb + res]
+    add [rb - 9], 0, [rb + mod]
 
     # Check if the quotient fits into a single byte
-    lt  0xff, [rb - 8], [rb + tmp]
+    add 0x7f, [rb + res_sign], [rb + tmp]
+    lt  [rb + tmp], [rb + res], [rb + tmp]
     jz  [rb + tmp], execute_idiv_b_quotient_ok
 
     # Raise #DE
@@ -161,17 +166,24 @@ execute_idiv_b_dvr_positive:
     jz  0, execute_idiv_b_done
 
 execute_idiv_b_quotient_ok:
-    add [rb - 8], 0, [reg_al]
-    add [rb - 9], 0, [reg_ah]
+    add [rb + res], 0, [reg_al]
+    add [rb + mod], 0, [reg_ah]
 
     # Negate the quotient based on the sign we calculated in the beginning
-    jz  [rb + sign], execute_idiv_b_done
-    jz  [reg_al], execute_idiv_b_done
+    jz  [rb + res_sign], execute_idiv_b_res_done
+    jz  [reg_al], execute_idiv_b_res_done
     mul [reg_al], -1, [reg_al]
     add 0x100, [reg_al], [reg_al]
 
+execute_idiv_b_res_done:
+    # Negate the remainder based on the sign we calculated in the beginning
+    jz  [rb + mod_sign], execute_idiv_b_done
+    jz  [reg_ah], execute_idiv_b_done
+    mul [reg_ah], -1, [reg_ah]
+    add 0x100, [reg_ah], [reg_ah]
+
 execute_idiv_b_done:
-    arb 5
+    arb 8
     ret 2
 .ENDFRAME
 
