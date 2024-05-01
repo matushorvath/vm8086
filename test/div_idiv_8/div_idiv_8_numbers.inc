@@ -102,11 +102,6 @@ test_div_8 idiv, idiv_8_generic_set
     %endif
 
     ; %warning %1, %2, de, res, mod
-    ; %if op2 != 0
-    ;     %assign tmp1 (op1 // op2)
-    ;     %assign tmp2 (op1 %% op2)
-    ;     %warning "xxx", op1, op2, tmp1, tmp2
-    ; %endif
     dw  %1
     db  %2, de, res, mod
 %endmacro
