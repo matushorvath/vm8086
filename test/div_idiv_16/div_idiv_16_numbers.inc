@@ -60,11 +60,10 @@ test_div_16 div, div_16_interesting_set
 mark 0x61
 test_div_16 div, div_16_generic_set
 
-; TODO enable
-; mark 0x62
-; test_div_16 idiv, idiv_16_interesting_set
-; mark 0x63
-; test_div_16 idiv, idiv_16_generic_set
+mark 0x62
+test_div_16 idiv, idiv_16_interesting_set
+mark 0x63
+test_div_16 idiv, idiv_16_generic_set
 
 
 ; generate test data for dividing two unsigned numbers
@@ -91,20 +90,32 @@ test_div_16 div, div_16_generic_set
     dw  res, mod
 %endmacro
 
-; TODO enable
 ; generate test data for dividing two signed numbers
-; %macro idiv_16_data 2                   ; op1, op2
-;     %assign op1 (%1 < 0x80 ? %1 : %1 - 0x100)
-;     %assign op2 (%2 < 0x80 ? %2 : %2 - 0x100)
-;     %assign res (op1 * op2) >= 0 ? (op1 * op2) : (op1 * op2) + 0x10000
+%macro idiv_16_data 2                   ; op1, op2
+    %assign op1 (%1 < 0x80000000 ? %1 : %1 - 0x100000000)
+    %assign op2 (%2 < 0x8000 ? %2 : %2 - 0x10000)
 
-;     ; relevant flags: ----O--- -------C
-;     %assign flags ((res & 0xff80) != 0x0000 && (res & 0xff80) != 0xff80) ? 0b_00001000_00000001 : 0
+    %assign res 0x0000
+    %assign mod 0x0000
 
-;     ;%warning %1, %2, res, flags
-;     db  %1, %2
-;     dw  res, flags
-; %endmacro
+    %if op2 == 0
+        %assign de 1
+    %else
+        %if (op1 // op2) < -0x8000 || (op1 // op2) > 0x7fff
+            %assign de 1
+        %else
+            %assign res (op1 // op2) >= 0 ? (op1 // op2) : (op1 // op2) + 0x10000
+            %assign mod (op1 %% op2)
+            %assign de 0
+        %endif
+    %endif
+
+    ;%warning %1, %2, de, res, mod
+    dd  %1
+    dw  %2
+    db  de
+    dw  res, mod
+%endmacro
 
 div_16_data_size equ 4 + 2 + 1 + 2 + 2   ; op1, op2, de, res, mod
 
@@ -158,9 +169,9 @@ div_16_interesting_set:
     make_div_16_interesting_set div
 div_16_generic_set:
     make_div_16_generic_set div
-; idiv_16_interesting_set:
-;     make_div_16_interesting_set idiv
-; idiv_16_generic_set:
-;     make_div_16_generic_set idiv
+idiv_16_interesting_set:
+    make_div_16_interesting_set idiv
+idiv_16_generic_set:
+    make_div_16_generic_set idiv
 
 __?SECT?__
