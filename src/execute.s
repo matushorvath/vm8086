@@ -3,7 +3,6 @@
 .EXPORT execute_esc
 .EXPORT execute_hlt
 .EXPORT invalid_opcode
-.EXPORT not_implemented             # TODO remove
 .EXPORT halt
 .EXPORT exec_ip
 
@@ -160,17 +159,6 @@ invalid_opcode:
 
 invalid_opcode_message:
     db  "invalid opcode", 0
-.ENDFRAME
-
-##########
-not_implemented:            # TODO remove
-.FRAME
-    add not_implemented_message, 0, [rb - 1]
-    arb -1
-    call report_error
-
-not_implemented_message:
-    db  "opcode not implemented", 0
 .ENDFRAME
 
 ##########

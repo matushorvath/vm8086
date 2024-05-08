@@ -13,8 +13,13 @@
 .EXPORT ss_segment_prefix
 .EXPORT rep_prefix
 
-# TODO implement REPZ/REPNZ
-# TODO docs say many instructions trigger #UD when used with LOCK
+# TODO The LOCK prefix can be prepended only to the following instructions and only to those forms of the instructions
+# where the destination operand is a memory operand: ADD, ADC, AND, BTC, BTR, BTS, CMPXCHG, CMPXCH8B,
+# CMPXCHG16B, DEC, INC, NEG, NOT, OR, SBB, SUB, XOR, XADD, and XCHG. If the LOCK prefix is used with one of
+# these instructions and the source operand is a memory operand, an undefined opcode exception (#UD) may be
+# generated. An undefined opcode exception will also be generated if the LOCK prefix is used with any instruction not
+# in the above list. The XCHG instruction always asserts the LOCK# signal regardless of the presence or absence of
+# the LOCK prefix.
 
 # From state.s
 .IMPORT reg_cs
@@ -86,7 +91,7 @@ execute_segment_prefix_es:
 ##########
 execute_repz:
 .FRAME
-    add 'Z', 0, [rep_prefix]
+    add '0', 0, [rep_prefix]
     add 2, 0, [prefix_valid]
     ret 0
 .ENDFRAME
@@ -94,7 +99,7 @@ execute_repz:
 ##########
 execute_repnz:
 .FRAME
-    add 'N', 0, [rep_prefix]
+    add '1', 0, [rep_prefix]
     add 2, 0, [prefix_valid]
     ret 0
 .ENDFRAME

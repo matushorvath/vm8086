@@ -2,6 +2,7 @@
 .EXPORT execute_loopz
 .EXPORT execute_loopnz
 .EXPORT execute_jcxz
+.EXPORT dec_cx
 
 # From jump.s
 .IMPORT execute_jmp_short
