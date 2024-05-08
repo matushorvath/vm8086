@@ -1,5 +1,7 @@
 ; MOVS 16-bit
 
+    mov cx, 0
+
     mark 0x80
 
     ; standalone instruction

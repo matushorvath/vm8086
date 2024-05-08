@@ -1,5 +1,7 @@
 ; CMPS 16-bit
 
+    mov cx, 0
+
     mark 0x90
 
     ; prepare destination data

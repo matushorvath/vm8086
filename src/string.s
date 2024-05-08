@@ -2,8 +2,8 @@
 .EXPORT execute_movs_w
 .EXPORT execute_cmps_b
 .EXPORT execute_cmps_w
-#.EXPORT execute_scas_b
-#.EXPORT execute_scas_w
+.EXPORT execute_scas_b
+.EXPORT execute_scas_w
 #.EXPORT execute_lods_b
 #.EXPORT execute_lods_w
 #.EXPORT execute_stos_b
@@ -21,8 +21,8 @@
 .IMPORT rep_prefix
 
 # From state.s
-# .IMPORT reg_al
-# .IMPORT reg_ax
+.IMPORT reg_al
+.IMPORT reg_ax
 .IMPORT reg_cx
 .IMPORT reg_si
 .IMPORT reg_di
@@ -74,6 +74,26 @@ execute_cmps_w:
     arb -11
 
     add execute_string_cmpsw, 0, [rb + operation]
+    add 2, 0, [rb + index_delta]
+    add 0, 0, [rb + calc_hi_ptr]        # hi pointer is calculated inside execute_cmp_w
+    add 1, 0, [rb + check_zf]
+
+    jz  0, execute_string
+
+execute_scas_b:
+    arb -11
+
+    add execute_string_scasb, 0, [rb + operation]
+    add 1, 0, [rb + index_delta]
+    add 0, 0, [rb + calc_hi_ptr]
+    add 1, 0, [rb + check_zf]
+
+    jz  0, execute_string
+
+execute_scas_w:
+    arb -11
+
+    add execute_string_scasw, 0, [rb + operation]
     add 2, 0, [rb + index_delta]
     add 0, 0, [rb + calc_hi_ptr]        # hi pointer is calculated inside execute_cmp_w
     add 1, 0, [rb + check_zf]
@@ -165,11 +185,33 @@ execute_string_cmpsb:
     jz  0, execute_string_after_operation
 
 execute_string_cmpsw:
-    # Call execute_cmp_b with the two memory locations
+    # Call execute_cmp_w with the two memory locations
     add 1, 0, [rb - 1]
     add [rb + dst_lo_addr], 0, [rb - 2]
     add 1, 0, [rb - 3]
     add [rb + src_lo_addr], 0, [rb - 4]
+    arb -4
+    call execute_cmp_w
+
+    jz  0, execute_string_after_operation
+
+execute_string_scasb:
+    # Call execute_cmp_b with the memory and AL locations
+    add 1, 0, [rb - 1]
+    add [rb + dst_lo_addr], 0, [rb - 2]
+    add 0, 0, [rb - 3]
+    add reg_al, 0, [rb - 4]
+    arb -4
+    call execute_cmp_b
+
+    jz  0, execute_string_after_operation
+
+execute_string_scasw:
+    # Call execute_cmp_w with the memory and AX locations
+    add 1, 0, [rb - 1]
+    add [rb + dst_lo_addr], 0, [rb - 2]
+    add 0, 0, [rb - 3]
+    add reg_ax, 0, [rb - 4]
     arb -4
     call execute_cmp_w
 

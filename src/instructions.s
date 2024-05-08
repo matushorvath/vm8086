@@ -203,8 +203,8 @@
 .IMPORT execute_movs_w
 .IMPORT execute_cmps_b
 .IMPORT execute_cmps_w
-#.IMPORT execute_scas_b
-#.IMPORT execute_scas_w
+.IMPORT execute_scas_b
+.IMPORT execute_scas_w
 #.IMPORT execute_lods_b
 #.IMPORT execute_lods_w
 #.IMPORT execute_stos_b
@@ -434,12 +434,12 @@ instructions:
     db  execute_test_b, arg_al_immediate_b, 4               # 0xa8 TEST AL, IMMED8
     db  execute_test_w, arg_ax_immediate_w, 4               # 0xa9 TEST AX, IMMED16
 
-    db  not_implemented, 0, 0 # TODO    db  execute_stos_b, 0                               # 0xaa STOS DEST-STR8
-    db  not_implemented, 0, 0 # TODO    db  execute_stos_w, 0                               # 0xab STOS DEST-STR16
-    db  not_implemented, 0, 0 # TODO    db  execute_lods_b, 0                               # 0xac LODS SRC-STR8
-    db  not_implemented, 0, 0 # TODO    db  execute_lods_w, 0                               # 0xad LODS SRC-STR16
-    db  not_implemented, 0, 0 # TODO    db  execute_scas_b, 0                               # 0xae SCAS DEST-STR8
-    db  not_implemented, 0, 0 # TODO    db  execute_scas_w, 0                               # 0xaf SCAS DEST-STR16
+    db  not_implemented, 0, 0 # TODO    db  execute_stos_b, 0, 0                                # 0xaa STOS DEST-STR8
+    db  not_implemented, 0, 0 # TODO    db  execute_stos_w, 0, 0                                # 0xab STOS DEST-STR16
+    db  not_implemented, 0, 0 # TODO    db  execute_lods_b, 0, 0                                # 0xac LODS SRC-STR8
+    db  not_implemented, 0, 0 # TODO    db  execute_lods_w, 0, 0                                # 0xad LODS SRC-STR16
+    db  execute_scas_b, 0, 0                                # 0xae SCAS DEST-STR8
+    db  execute_scas_w, 0, 0                                # 0xaf SCAS DEST-STR16
 
     db  execute_mov_b, arg_al_immediate_b, 4                # 0xb0 MOV AL, IMMED8
     db  execute_mov_b, arg_cl_immediate_b, 4                # 0xb1 MOV CL, IMMED8
