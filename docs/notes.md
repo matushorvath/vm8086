@@ -72,7 +72,7 @@ https://github.com/86Box/86Box
 Missing instructions
 ====================
 
-STOS LODS SCAS
+STOS LODS
 
 
 Tests for 8086

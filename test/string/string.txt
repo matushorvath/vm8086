@@ -255,12 +255,170 @@ stack: 0201 0403 0605 0807 0a09 0c0b 0e0d 100f
 ----------
 MARK: 30
 ----------
-ip: 09c4 flags: ----odit sZ-a-P-c 00000000 01000110 (0046)
+ip: 09bf flags: ----odit sZ-a-P-c 00000000 01000110 (0046)
 cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
-ax: 00ab bx: 0000 cx: 0000 dx: 0e0d si: 0040 di: 0063
+ax: 00ab bx: 0000 cx: 0000 dx: 0e0d si: 0040 di: 004c
 stack: 0000 0000 0000 0000 0000 0000 0000 0000
 ----------
-ip: 09ce flags: ----odit Sz-A-P-C 00000000 10010111 (0097)
+ip: 09c9 flags: ----odit sZ-a-P-c 00000000 01000110 (0046)
 cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
 ax: 00ab bx: 0000 cx: 0000 dx: 0e0d si: 0040 di: 00a3
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+ip: 09d3 flags: ----odit Sz-A-P-C 00000000 10010111 (0097)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: 00ab bx: 0000 cx: 0000 dx: 0e0d si: 0040 di: 00e3
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+MARK: 31
+----------
+ip: 09e7 flags: ----odit sZ-a-P-c 00000000 01000110 (0046)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: 00ab bx: 0000 cx: 0000 dx: 0e0d si: 0040 di: 00a9
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+ip: 09f5 flags: ----odit Sz-A-P-C 00000000 10010111 (0097)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: 00ab bx: 0000 cx: 000a dx: 0e0d si: 0040 di: 00e3
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+ip: 0a03 flags: ----odit Sz-A-P-C 00000000 10010111 (0097)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: 00ab bx: 0000 cx: 0007 dx: 0e0d si: 0040 di: 00e3
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+MARK: 32
+----------
+ip: 0a17 flags: ----odit sZ-a-P-c 00000000 01000110 (0046)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: 00ab bx: 0000 cx: 000a dx: 0e0d si: 0040 di: 00a3
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+ip: 0a25 flags: ----odit Sz-A-P-C 00000000 10010111 (0097)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: 00ab bx: 0000 cx: 0000 dx: 0e0d si: 0040 di: 00ef
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+ip: 0a33 flags: ----odit sZ-a-P-c 00000000 01000110 (0046)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: 00ab bx: 0000 cx: 0009 dx: 0e0d si: 0040 di: 00a3
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+MARK: 33
+----------
+ip: 0a47 flags: ----oDit sZ-a-P-c 00000100 01000110 (0446)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: 00ab bx: 0000 cx: 0000 dx: 0e0d si: 0040 di: 00dc
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+ip: 0a55 flags: ----oDit Sz-A-P-C 00000100 10010111 (0497)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: 00ab bx: 0000 cx: 0006 dx: 0e0d si: 0040 di: 00a0
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+ip: 0a63 flags: ----oDit Sz-A-P-C 00000100 10010111 (0497)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: 00ab bx: 0000 cx: 0008 dx: 0e0d si: 0040 di: 00a0
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+MARK: 34
+----------
+ip: 0a77 flags: ----oDit sZ-a-P-c 00000100 01000110 (0446)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: 00ab bx: 0000 cx: 0006 dx: 0e0d si: 0040 di: 00e0
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+ip: 0a85 flags: ----oDit Sz-A-P-C 00000100 10010111 (0497)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: 00ab bx: 0000 cx: 0000 dx: 0e0d si: 0040 di: 0094
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+ip: 0a93 flags: ----oDit sZ-a-P-c 00000100 01000110 (0446)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: 00ab bx: 0000 cx: 0002 dx: 0e0d si: 0040 di: 00e0
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+MARK: a0
+----------
+ip: 0c2f flags: ----odit sZ-a-P-c 00000000 01000110 (0046)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: cdef bx: 0000 cx: 0000 dx: 0e0d si: 0040 di: 00e0
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+ip: 0c39 flags: ----odit sZ-a-P-c 00000000 01000110 (0046)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: cdef bx: 0000 cx: 0000 dx: 0e0d si: 0040 di: 00e5
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+ip: 0c43 flags: ----odit sz-a-P-c 00000000 00000110 (0006)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: cdef bx: 0000 cx: 0000 dx: 0e0d si: 0040 di: 0165
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+MARK: a1
+----------
+ip: 0c57 flags: ----odit sZ-a-P-c 00000000 01000110 (0046)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: cdef bx: 0000 cx: 0000 dx: 0e0d si: 0040 di: 00f1
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+ip: 0c65 flags: ----odit sz-a-P-c 00000000 00000110 (0006)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: cdef bx: 0000 cx: 000a dx: 0e0d si: 0040 di: 0165
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+ip: 0c73 flags: ----odit sz-a-P-c 00000000 00000110 (0006)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: cdef bx: 0000 cx: 0009 dx: 0e0d si: 0040 di: 0165
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+MARK: a2
+----------
+ip: 0c87 flags: ----odit sZ-a-P-c 00000000 01000110 (0046)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: cdef bx: 0000 cx: 000a dx: 0e0d si: 0040 di: 00e5
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+ip: 0c95 flags: ----odit Sz-a-P-c 00000000 10000110 (0086)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: cdef bx: 0000 cx: 0000 dx: 0e0d si: 0040 di: 017d
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+ip: 0ca3 flags: ----odit sZ-a-P-c 00000000 01000110 (0046)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: cdef bx: 0000 cx: 000c dx: 0e0d si: 0040 di: 00e5
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+MARK: a3
+----------
+ip: 0cb7 flags: ----oDit sZ-a-P-c 00000100 01000110 (0446)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: cdef bx: 0000 cx: 0000 dx: 0e0d si: 0040 di: 0157
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+ip: 0cc5 flags: ----oDit sz-a-P-c 00000100 00000110 (0406)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: cdef bx: 0000 cx: 0006 dx: 0e0d si: 0040 di: 00df
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+ip: 0cd3 flags: ----oDit sz-a-P-c 00000100 00000110 (0406)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: cdef bx: 0000 cx: 000d dx: 0e0d si: 0040 di: 00df
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+MARK: a4
+----------
+ip: 0ce7 flags: ----oDit sZ-a-P-c 00000100 01000110 (0446)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: cdef bx: 0000 cx: 0006 dx: 0e0d si: 0040 di: 015f
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+ip: 0cf5 flags: ----oDit sz-a-P-c 00000100 00000110 (0406)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: cdef bx: 0000 cx: 0000 dx: 0e0d si: 0040 di: 00c7
+stack: 0000 0000 0000 0000 0000 0000 0000 0000
+----------
+ip: 0d03 flags: ----oDit sZ-a-P-c 00000100 01000110 (0446)
+cs: d000 ds: cb00 ss: 1000 es: cb00 bp: 0000 sp: 002e
+ax: cdef bx: 0000 cx: 0005 dx: 0e0d si: 0040 di: 015f
 stack: 0000 0000 0000 0000 0000 0000 0000 0000

@@ -1,131 +1,131 @@
-; SCAS 8-bit
+; SCAS 16-bit
 
     ; SCAS uses es:di, but the data is in src_seg
     mov ax, src_seg
     mov es, ax
 
-    mov ax, 0x00ab
+    mov ax, 0xcdef
     mov cx, 0
 
-    mark 0x30
+    mark 0xa0
 
     dump_state
 
     ; standalone instruction, equal values
     cld
-    mov di, value_ab_b - src_addr
-    scasb
+    mov di, value_cdef_w - src_addr
+    scasw
 
     dump_state
 
     ; standalone instruction, different values
     cld
-    mov di, value_ab_b_end - src_addr
-    scasb
+    mov di, value_cdef_w_end - src_addr
+    scasw
 
     dump_state
 
-    mark 0x31
+    mark 0xa1
 
     ; REPZ with increment, equal values
     cld
-    mov di, value_ab_b - src_addr
+    mov di, value_cdef_w - src_addr
     mov cx, 7
-    repz scasb
+    repz scasw
 
     dump_state
 
     ; REPZ with increment, all different values
     cld
-    mov di, value_ab_b_end - src_addr
+    mov di, value_cdef_w_end - src_addr
     mov cx, 11
-    repz scasb
+    repz scasw
 
     dump_state
 
     ; REPZ with increment, some equal values
     cld
-    mov di, value_ab_b_end - 5 - src_addr
+    mov di, value_cdef_w_end - 6 - src_addr
     mov cx, 13
-    repz scasb
+    repz scasw
 
     dump_state
 
-    mark 0x32
+    mark 0xa2
 
     ; REPNZ with increment, equal values
     cld
-    mov di, value_ab_b - src_addr
+    mov di, value_cdef_w - src_addr
     mov cx, 11
-    repnz scasb
+    repnz scasw
 
     dump_state
 
     ; REPNZ with increment, all different values
     cld
-    mov di, value_ab_b_end - src_addr
+    mov di, value_cdef_w_end - src_addr
     mov cx, 13
-    repnz scasb
+    repnz scasw
 
     dump_state
 
     ; REPNZ with increment, some different values
     cld
-    mov di, value_ab_b - 7 - src_addr
+    mov di, value_cdef_w - 8 - src_addr
     mov cx, 17
-    repnz scasb
+    repnz scasw
 
     dump_state
 
-    mark 0x33
+    mark 0xa3
 
     ; REPZ with decrement, equal values
     std
-    mov di, value_ab_b_end - 1 - src_addr
+    mov di, value_cdef_w_end - 2 - src_addr
     mov cx, 5
-    repz scasb
+    repz scasw
 
     dump_state
 
     ; REPZ with decrement, all different values
     std
-    mov di, value_ab_b - 1 - src_addr
+    mov di, value_cdef_w - 2 - src_addr
     mov cx, 7
-    repz scasb
+    repz scasw
 
     dump_state
 
     ; REPZ with decrement, some equal values
     std
-    mov di, value_ab_b + 11 - src_addr
+    mov di, value_cdef_w + 12 - src_addr
     mov cx, 21
-    repz scasb
+    repz scasw
 
     dump_state
 
-    mark 0x34
+    mark 0xa4
 
     ; REPNZ with decrement, equal values
     std
-    mov di, value_ab_b_end - 1 - src_addr
+    mov di, value_cdef_w_end - 2 - src_addr
     mov cx, 7
-    repnz scasb
+    repnz scasw
 
     dump_state
 
     ; REPNZ with decrement, all different values
     std
-    mov di, value_ab_b - 1 - src_addr
+    mov di, value_cdef_w - 2 - src_addr
     mov cx, 13
-    repnz scasb
+    repnz scasw
 
     dump_state
 
     ; REPNZ with decrement, some different values
     std
-    mov di, value_ab_b_end + 7 - src_addr
+    mov di, value_cdef_w_end + 8 - src_addr
     mov cx, 11
-    repnz scasb
+    repnz scasw
 
     dump_state
 

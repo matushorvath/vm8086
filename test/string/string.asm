@@ -15,6 +15,8 @@ src_data:
         %assign i i + 1
     %endrep
 
+    db  src_data_count dup (0xff)
+
 value_ab_b:
     db  src_data_count dup (0xab)
 value_ab_b_end:
@@ -24,6 +26,8 @@ value_cdef_w:
     dw  src_data_count dup (0xcdef)
 value_cdef_w_end:
     dw 0xcdab
+
+    dw  src_data_count dup (0xff)
 
 
 dst_seg             equ 0x1000
@@ -73,7 +77,7 @@ clear_dst
 
 %include "scas_b.inc"
 clear_dst
-; %include "scas_w.inc"
-; clear_dst
+%include "scas_w.inc"
+clear_dst
 
     call power_off
