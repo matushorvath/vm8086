@@ -72,8 +72,7 @@ https://github.com/86Box/86Box
 Missing instructions
 ====================
 
-MOVS CMPS STOS LODS SCAS
-REPZ REPNZ
+CMPS STOS LODS SCAS
 
 
 Tests for 8086

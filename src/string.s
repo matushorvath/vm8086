@@ -61,9 +61,15 @@ execute_string:
     mul [rb + delta], [rb + tmp], [rb + delta]
 
     # Precalculate segment base addresses
+    add [ds_segment_prefix], 1, [ip + 1]
+    mul [0], 0x100, [rb + tmp]
     add [ds_segment_prefix], 0, [ip + 1]
-    mul [0], 0x10, [rb + src_seg_addr]
-    mul [reg_es], 0x10, [rb + dst_seg_addr]
+    add [0], [rb + tmp], [rb + tmp]
+    mul [rb + tmp], 0x10, [rb + src_seg_addr]
+
+    mul [reg_es + 1], 0x100, [rb + tmp]
+    add [reg_es + 0], [rb + tmp], [rb + tmp]
+    mul [rb + tmp], 0x10, [rb + dst_seg_addr]
 
     # Check for REPZ/REPNZ
     jz  [rep_prefix], execute_string_after_rep
@@ -79,7 +85,9 @@ execute_string_loop:
 
 execute_string_after_rep:
     # Calculate source physical address
-    add [reg_si], [rb + src_seg_addr], [rb + src_lo_addr]
+    mul [reg_si + 1], 0x100, [rb + tmp]
+    add [reg_si + 0], [rb + tmp], [rb + tmp]
+    add [rb + src_seg_addr], [rb + tmp], [rb + src_lo_addr]
 
     lt  [rb + src_lo_addr], 0x100000, [rb + tmp]
     jnz [rb + tmp], execute_string_src_lo_addr_done
@@ -98,7 +106,9 @@ execute_string_src_lo_addr_done:
 
 execute_string_src_hi_addr_done:
     # Calculate destination physical address
-    add [reg_di], [rb + dst_seg_addr], [rb + dst_lo_addr]
+    mul [reg_di + 1], 0x100, [rb + tmp]
+    add [reg_di + 0], [rb + tmp], [rb + tmp]
+    add [rb + dst_seg_addr], [rb + tmp], [rb + dst_lo_addr]
 
     lt  [rb + dst_lo_addr], 0x100000, [rb + tmp]
     jnz [rb + tmp], execute_string_dst_lo_addr_done
