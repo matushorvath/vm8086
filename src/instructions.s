@@ -198,6 +198,18 @@
 .IMPORT execute_pushf
 .IMPORT execute_popf
 
+# From string.s
+.IMPORT execute_movs_b
+.IMPORT execute_movs_w
+#.IMPORT execute_cmps_b
+#.IMPORT execute_cmps_w
+#.IMPORT execute_scas_b
+#.IMPORT execute_scas_w
+#.IMPORT execute_lods_b
+#.IMPORT execute_lods_w
+#.IMPORT execute_stos_b
+#.IMPORT execute_stos_w
+
 # From transfer_address.s
 .IMPORT execute_lea
 .IMPORT execute_lds
@@ -414,8 +426,8 @@ instructions:
     db  execute_mov_b, arg_al_ax_near_ptr_src, 4            # 0xa2 MOV MEM8, AL
     db  execute_mov_w, arg_al_ax_near_ptr_src, 4            # 0xa3 MOV MEM16, AX
 
-    db  not_implemented, 0, 0 # TODO    db  execute_movs_b, 0                               # 0xa4 MOVS DEST-STR8, SRC-STR8
-    db  not_implemented, 0, 0 # TODO    db  execute_movs_w, 0                               # 0xa5 MOVS DEST-STR16, SRC-STR16
+    db  execute_movs_b, 0, 0                                # 0xa4 MOVS DEST-STR8, SRC-STR8
+    db  execute_movs_w, 0, 0                                # 0xa5 MOVS DEST-STR16, SRC-STR16
     db  not_implemented, 0, 0 # TODO    db  execute_cmps_b, 0                               # 0xa6 CMPS DEST-STR8, SRC-STR8
     db  not_implemented, 0, 0 # TODO    db  execute_cmps_w, 0                               # 0xa7 CMPS DEST-STR16, SRC-STR16
 
