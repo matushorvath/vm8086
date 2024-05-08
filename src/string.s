@@ -4,8 +4,8 @@
 .EXPORT execute_cmps_w
 .EXPORT execute_scas_b
 .EXPORT execute_scas_w
-#.EXPORT execute_lods_b
-#.EXPORT execute_lods_w
+.EXPORT execute_lods_b
+.EXPORT execute_lods_w
 #.EXPORT execute_stos_b
 #.EXPORT execute_stos_w
 
@@ -109,6 +109,30 @@ execute_scas_w:
     add 0, 0, [rb + do_si]
     add 1, 0, [rb + do_di]
     add 1, 0, [rb + check_zf]
+
+    jz  0, execute_string
+
+execute_lods_b:
+    arb -13
+
+    add execute_string_lodsb, 0, [rb + operation]
+    add 1, 0, [rb + index_delta]
+    add 0, 0, [rb + calc_hi_ptr]
+    add 1, 0, [rb + do_si]
+    add 0, 0, [rb + do_di]
+    add 0, 0, [rb + check_zf]
+
+    jz  0, execute_string
+
+execute_lods_w:
+    arb -13
+
+    add execute_string_lodsw, 0, [rb + operation]
+    add 2, 0, [rb + index_delta]
+    add 1, 0, [rb + calc_hi_ptr]
+    add 1, 0, [rb + do_si]
+    add 0, 0, [rb + do_di]
+    add 0, 0, [rb + check_zf]
 
 execute_string:
     # Make index delta negative if DF is set
@@ -236,6 +260,24 @@ execute_string_scasw:
     add reg_ax, 0, [rb - 4]
     arb -4
     call execute_cmp_w
+
+    jz  0, execute_string_after_operation
+
+execute_string_lodsw:
+    # Copy hi byte from source to AH
+    add [rb + src_hi_addr], 0, [rb - 1]
+    arb -1
+    call read_b
+    add [rb - 3], 0, [reg_ax + 1]
+
+    # fall through
+
+execute_string_lodsb:
+    # Copy lo byte from source to AL
+    add [rb + src_lo_addr], 0, [rb - 1]
+    arb -1
+    call read_b
+    add [rb - 3], 0, [reg_ax + 0]
 
     jz  0, execute_string_after_operation
 

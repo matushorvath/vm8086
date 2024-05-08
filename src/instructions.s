@@ -205,8 +205,8 @@
 .IMPORT execute_cmps_w
 .IMPORT execute_scas_b
 .IMPORT execute_scas_w
-#.IMPORT execute_lods_b
-#.IMPORT execute_lods_w
+.IMPORT execute_lods_b
+.IMPORT execute_lods_w
 #.IMPORT execute_stos_b
 #.IMPORT execute_stos_w
 
@@ -436,8 +436,8 @@ instructions:
 
     db  not_implemented, 0, 0 # TODO    db  execute_stos_b, 0, 0                                # 0xaa STOS DEST-STR8
     db  not_implemented, 0, 0 # TODO    db  execute_stos_w, 0, 0                                # 0xab STOS DEST-STR16
-    db  not_implemented, 0, 0 # TODO    db  execute_lods_b, 0, 0                                # 0xac LODS SRC-STR8
-    db  not_implemented, 0, 0 # TODO    db  execute_lods_w, 0, 0                                # 0xad LODS SRC-STR16
+    db  execute_lods_b, 0, 0                                # 0xac LODS SRC-STR8
+    db  execute_lods_w, 0, 0                                # 0xad LODS SRC-STR16
     db  execute_scas_b, 0, 0                                # 0xae SCAS DEST-STR8
     db  execute_scas_w, 0, 0                                # 0xaf SCAS DEST-STR16
 
