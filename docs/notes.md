@@ -69,12 +69,6 @@ https://bochs.sourceforge.io/
 https://github.com/86Box/86Box
 
 
-Missing instructions
-====================
-
-STOS
-
-
 Tests for 8086
 ==============
 

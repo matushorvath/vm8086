@@ -103,7 +103,6 @@
 .IMPORT execute_esc
 .IMPORT execute_hlt
 .IMPORT invalid_opcode
-.IMPORT not_implemented             # TODO remove
 
 # From flags.s
 .IMPORT execute_clc
@@ -207,8 +206,8 @@
 .IMPORT execute_scas_w
 .IMPORT execute_lods_b
 .IMPORT execute_lods_w
-#.IMPORT execute_stos_b
-#.IMPORT execute_stos_w
+.IMPORT execute_stos_b
+.IMPORT execute_stos_w
 
 # From transfer_address.s
 .IMPORT execute_lea
@@ -434,8 +433,8 @@ instructions:
     db  execute_test_b, arg_al_immediate_b, 4               # 0xa8 TEST AL, IMMED8
     db  execute_test_w, arg_ax_immediate_w, 4               # 0xa9 TEST AX, IMMED16
 
-    db  not_implemented, 0, 0 # TODO    db  execute_stos_b, 0, 0                                # 0xaa STOS DEST-STR8
-    db  not_implemented, 0, 0 # TODO    db  execute_stos_w, 0, 0                                # 0xab STOS DEST-STR16
+    db  execute_stos_b, 0, 0                                # 0xaa STOS DEST-STR8
+    db  execute_stos_w, 0, 0                                # 0xab STOS DEST-STR16
     db  execute_lods_b, 0, 0                                # 0xac LODS SRC-STR8
     db  execute_lods_w, 0, 0                                # 0xad LODS SRC-STR16
     db  execute_scas_b, 0, 0                                # 0xae SCAS DEST-STR8

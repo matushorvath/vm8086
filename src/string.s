@@ -6,8 +6,8 @@
 .EXPORT execute_scas_w
 .EXPORT execute_lods_b
 .EXPORT execute_lods_w
-#.EXPORT execute_stos_b
-#.EXPORT execute_stos_w
+.EXPORT execute_stos_b
+.EXPORT execute_stos_w
 
 # From loop.s
 .IMPORT dec_cx
@@ -132,6 +132,30 @@ execute_lods_w:
     add 1, 0, [rb + calc_hi_ptr]
     add 1, 0, [rb + do_si]
     add 0, 0, [rb + do_di]
+    add 0, 0, [rb + check_zf]
+
+    jz  0, execute_string
+
+execute_stos_b:
+    arb -13
+
+    add execute_string_stosb, 0, [rb + operation]
+    add 1, 0, [rb + index_delta]
+    add 0, 0, [rb + calc_hi_ptr]
+    add 0, 0, [rb + do_si]
+    add 1, 0, [rb + do_di]
+    add 0, 0, [rb + check_zf]
+
+    jz  0, execute_string
+
+execute_stos_w:
+    arb -13
+
+    add execute_string_stosw, 0, [rb + operation]
+    add 2, 0, [rb + index_delta]
+    add 1, 0, [rb + calc_hi_ptr]
+    add 0, 0, [rb + do_si]
+    add 1, 0, [rb + do_di]
     add 0, 0, [rb + check_zf]
 
 execute_string:
@@ -278,6 +302,24 @@ execute_string_lodsb:
     arb -1
     call read_b
     add [rb - 3], 0, [reg_ax + 0]
+
+    jz  0, execute_string_after_operation
+
+execute_string_stosw:
+    # Copy hi byte from AH to destination
+    add [rb + dst_hi_addr], 0, [rb - 1]
+    add [reg_ax + 1], 0, [rb - 2]
+    arb -2
+    call write_b
+
+    # fall through
+
+execute_string_stosb:
+    # Copy lo byte from AL to destination
+    add [rb + dst_lo_addr], 0, [rb - 1]
+    add [reg_ax + 0], 0, [rb - 2]
+    arb -2
+    call write_b
 
     jz  0, execute_string_after_operation
 

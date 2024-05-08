@@ -85,4 +85,9 @@ clear_dst
 %include "lods_w.inc"
 clear_dst
 
+%include "stos_b.inc"
+clear_dst
+%include "stos_w.inc"
+clear_dst
+
     call power_off
