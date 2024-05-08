@@ -91,7 +91,7 @@ execute_segment_prefix_es:
 ##########
 execute_repz:
 .FRAME
-    add 'Z', 0, [rep_prefix]
+    add '0', 0, [rep_prefix]
     add 2, 0, [prefix_valid]
     ret 0
 .ENDFRAME
@@ -99,7 +99,7 @@ execute_repz:
 ##########
 execute_repnz:
 .FRAME
-    add 'N', 0, [rep_prefix]
+    add '1', 0, [rep_prefix]
     add 2, 0, [prefix_valid]
     ret 0
 .ENDFRAME
