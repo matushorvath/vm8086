@@ -1,10 +1,10 @@
-; MOVS 8-bit
+; MOVS 16-bit
 
-    mark 0x80
+    mark 0x90
 
     ; standalone instruction
-    mov si, src_data - src_addr + 5
+    mov si, src_data - src_addr + 11
     mov di, dst_data - dst_addr
-    movsb
+    movsw
 
     dump_state

@@ -34,10 +34,11 @@ section .text
 
     ; make destination data visible in dump_state by setting up stack at that location
     mov ss, ax
-    mov sp, dst_data - 0xf
+    mov sp, dst_data
 
     dump_state
 
 %include "movs_b.inc"
+%include "movs_w.inc"
 
     call power_off
