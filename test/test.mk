@@ -136,14 +136,14 @@ $(OBJDIR)/%.bochs.bin: %.asm $(wildcard *.inc) $(wildcard $(COMMON_DIR)/*.inc) $
 	printf '$(NAME): [bochs] assembling ' >> $(TESTLOG)
 	nasm -i $(COMMON_DIR) -d BOCHS -f bin $< -o $@ || $(failed)
 	$(COMMON_BINDIR)/checksum $@ || rm $@
-	hexdump -C $@ ; true
+	# hexdump -C $@ ; true
 	[ "$$(wc -c < $@)" -eq 90112 ] || $(failed)
 	@$(passed)
 
 $(OBJDIR)/%.vm8086.bin: %.asm $(wildcard *.inc) $(wildcard $(COMMON_DIR)/*.inc)
 	printf '$(NAME): [vm8086] assembling ' >> $(TESTLOG)
 	nasm -i $(COMMON_DIR) -d VM8086 -f bin $< -o $@ || $(failed)
-	hexdump -C $@ ; true
+	# hexdump -C $@ ; true
 	[ "$$(wc -c < $@)" -eq 221184 ] || ( rm $@ ; $(failed) )
 	@$(passed)
 
