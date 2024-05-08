@@ -31,7 +31,6 @@
 .IMPORT flag_zero
 
 # TODO 8086 check what REPNZ does with MOVS and other instructions; probably works same as REP/REPZ?
-# TODO test all the wraparounds: SI/DI (16-bit), src/dst physical address (20-bit)
 
 ##########
 .FRAME operation, word_data, check_zf, delta, src_seg_addr, dst_seg_addr, src_lo_addr, src_hi_addr, dst_lo_addr, dst_hi_addr, tmp
