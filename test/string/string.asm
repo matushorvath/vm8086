@@ -7,7 +7,7 @@ src_seg             equ extra_addr / 0x10
 src_addr            equ src_seg * 0x10
 
 section src_segment start=src_addr
-    resw 17
+    dw  17 dup (0x0000)
 src_data:
     %assign i 1
     %rep src_data_count
@@ -54,6 +54,11 @@ section .text
 %include "movs_b.inc"
 clear_dst
 %include "movs_w.inc"
+clear_dst
+
+%include "cmps_b.inc"
+clear_dst
+%include "cmps_w.inc"
 clear_dst
 
     call power_off

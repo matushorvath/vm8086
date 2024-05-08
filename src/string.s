@@ -1,7 +1,7 @@
 .EXPORT execute_movs_b
 .EXPORT execute_movs_w
-#.EXPORT execute_cmps_b
-#.EXPORT execute_cmps_w
+.EXPORT execute_cmps_b
+.EXPORT execute_cmps_w
 #.EXPORT execute_scas_b
 #.EXPORT execute_scas_w
 #.EXPORT execute_lods_b
@@ -30,17 +30,22 @@
 .IMPORT flag_direction
 .IMPORT flag_zero
 
+# From sub_cmp.s
+.IMPORT execute_cmp_b
+.IMPORT execute_cmp_w
+
 # TODO 8086 check what REPNZ does with MOVS and other instructions; probably works same as REP/REPZ?
 
 ##########
-.FRAME operation, word_data, check_zf, delta, src_seg_addr, dst_seg_addr, src_lo_addr, src_hi_addr, dst_lo_addr, dst_hi_addr, tmp
+.FRAME operation, calc_hi_ptr, index_delta, check_zf, src_seg_addr, dst_seg_addr, src_lo_addr, src_hi_addr, dst_lo_addr, dst_hi_addr, tmp
     # Function with multiple entry points
 
 execute_movs_b:
     arb -11
 
     add execute_string_movsb, 0, [rb + operation]
-    add 0, 0, [rb + word_data]
+    add 1, 0, [rb + index_delta]
+    add 0, 0, [rb + calc_hi_ptr]
     add 0, 0, [rb + check_zf]
 
     jz  0, execute_string
@@ -49,15 +54,35 @@ execute_movs_w:
     arb -11
 
     add execute_string_movsw, 0, [rb + operation]
-    add 1, 0, [rb + word_data]
+    add 2, 0, [rb + index_delta]
+    add 1, 0, [rb + calc_hi_ptr]
     add 0, 0, [rb + check_zf]
 
+    jz  0, execute_string
+
+execute_cmps_b:
+    arb -11
+
+    add execute_string_cmpsb, 0, [rb + operation]
+    add 1, 0, [rb + index_delta]
+    add 0, 0, [rb + calc_hi_ptr]
+    add 1, 0, [rb + check_zf]
+
+    jz  0, execute_string
+
+execute_cmps_w:
+    arb -11
+
+    add execute_string_cmpsw, 0, [rb + operation]
+    add 2, 0, [rb + index_delta]
+    add 0, 0, [rb + calc_hi_ptr]        # hi pointer is calculated inside execute_cmp_w
+    add 1, 0, [rb + check_zf]
+
 execute_string:
-    # Calculate delta, make it negative if DF is set
+    # Make index delta negative if DF is set
     mul -2, [flag_direction], [rb + tmp]
     add 1, [rb + tmp], [rb + tmp]
-    add [rb + word_data], 1, [rb + delta]
-    mul [rb + delta], [rb + tmp], [rb + delta]
+    mul [rb + index_delta], [rb + tmp], [rb + index_delta]
 
     # Precalculate segment base addresses
     add [ds_segment_prefix], 1, [ip + 1]
@@ -94,7 +119,7 @@ execute_string_after_rep:
     add [rb + src_lo_addr], -0x100000, [rb + src_lo_addr]
 
 execute_string_src_lo_addr_done:
-    jz  [rb + word_data], execute_string_src_hi_addr_done
+    jz  [rb + calc_hi_ptr], execute_string_src_hi_addr_done
 
     add [rb + src_lo_addr], 1, [rb + src_hi_addr]
 
@@ -115,7 +140,7 @@ execute_string_src_hi_addr_done:
     add [rb + dst_lo_addr], -0x100000, [rb + dst_lo_addr]
 
 execute_string_dst_lo_addr_done:
-    jz  [rb + word_data], execute_string_dst_hi_addr_done
+    jz  [rb + calc_hi_ptr], execute_string_dst_hi_addr_done
 
     add [rb + dst_lo_addr], 1, [rb + dst_hi_addr]
 
@@ -127,6 +152,28 @@ execute_string_dst_lo_addr_done:
 execute_string_dst_hi_addr_done:
     # Execute the operation itself
     jz  0, [rb + operation]
+
+execute_string_cmpsb:
+    # Call execute_cmp_b with the two memory locations
+    add 1, 0, [rb - 1]
+    add [rb + dst_lo_addr], 0, [rb - 2]
+    add 1, 0, [rb - 3]
+    add [rb + src_lo_addr], 0, [rb - 4]
+    arb -4
+    call execute_cmp_b
+
+    jz  0, execute_string_after_operation
+
+execute_string_cmpsw:
+    # Call execute_cmp_b with the two memory locations
+    add 1, 0, [rb - 1]
+    add [rb + dst_lo_addr], 0, [rb - 2]
+    add 1, 0, [rb - 3]
+    add [rb + src_lo_addr], 0, [rb - 4]
+    arb -4
+    call execute_cmp_w
+
+    jz  0, execute_string_after_operation
 
 execute_string_movsw:
     # Copy hi byte from source to destination
@@ -152,14 +199,12 @@ execute_string_movsb:
     arb -2
     call write_b
 
-    jz  0, execute_string_after_operation
-
 execute_string_after_operation:
     # Are we incrementing or decrementing SI/DI?
     jz  [flag_direction], execute_string_increment
 
     # Decrement SI
-    add [reg_si + 0], [rb + delta], [reg_si + 0]
+    add [reg_si + 0], [rb + index_delta], [reg_si + 0]
 
     # Check for borrow into low byte
     lt  [reg_si + 0], 0x00, [rb + tmp]
@@ -176,7 +221,7 @@ execute_string_after_operation:
 
 execute_string_decrement_si_done:
     # Decrement DI
-    add [reg_di + 0], [rb + delta], [reg_di + 0]
+    add [reg_di + 0], [rb + index_delta], [reg_di + 0]
 
     # Check for borrow into low byte
     lt  [reg_di + 0], 0x00, [rb + tmp]
@@ -196,7 +241,7 @@ execute_string_decrement_di_done:
 
 execute_string_increment:
     # Increment SI
-    add [reg_si + 0], [rb + delta], [reg_si + 0]
+    add [reg_si + 0], [rb + index_delta], [reg_si + 0]
 
     # Check for carry out of low byte
     lt  [reg_si + 0], 0x100, [rb + tmp]
@@ -213,7 +258,7 @@ execute_string_increment:
 
 execute_string_increment_si_done:
     # Increment DI
-    add [reg_di + 0], [rb + delta], [reg_di + 0]
+    add [reg_di + 0], [rb + index_delta], [reg_di + 0]
 
     # Check for carry out of low byte
     lt  [reg_di + 0], 0x100, [rb + tmp]
@@ -239,7 +284,7 @@ execute_string_after_si_di:
     # Exit the loop if ZF does not match the REPZ/REPNZ prefix
     eq  [rep_prefix], '1', [rb + tmp]
     eq  [flag_zero], [rb + tmp], [rb + tmp]
-    jz  [rb + tmp], execute_string_done
+    jnz [rb + tmp], execute_string_done
 
     jz  0, execute_string_loop
 
