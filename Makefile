@@ -1,19 +1,7 @@
 # ICDIR=~/xzintbit make
 
-ICVM_TYPE ?= c
-
 ICDIR ?= $(abspath ../xzintbit)
-
-ifeq ($(shell test -d $(ICDIR) || echo error),error)
-	$(error ICDIR variable is invalid; point it where https://github.com/matushorvath/xzintbit is built)
-endif
-
-ICVM ?= $(abspath $(ICDIR)/vms)/$(ICVM_TYPE)/ic
-ICAS ?= $(abspath $(ICDIR)/bin/as.input)
-ICBIN2OBJ ?= $(abspath $(ICDIR)/bin/bin2obj.input)
-ICLD ?= $(abspath $(ICDIR)/bin/ld.input)
-ICLDMAP ?= $(abspath $(ICDIR)/bin/ldmap.input)
-LIBXIB ?= $(abspath $(ICDIR)/bin/libxib.a)
+include intcode.mk
 
 SRCDIR = src
 BINDIR ?= bin
@@ -21,23 +9,6 @@ OBJDIR ?= obj
 
 TESTDIRS = $(sort $(dir $(wildcard test/*/Makefile)))
 export TESTLOG = $(abspath test/test.log)
-
-define run-as
-	cat $^ | $(ICVM) $(ICAS) > $@ || ( cat $@ ; false )
-endef
-
-define run-ar
-	cat $^ | sed 's/^.C$$/.L/g' > $@ || ( cat $@ ; false )
-endef
-
-define run-ld
-	echo .$$ | cat $^ - | $(ICVM) $(ICLD) > $@ || ( cat $@ ; false )
-	echo .$$ | cat $^ - | $(ICVM) $(ICLDMAP) > $@.map.yaml || ( cat $@.map.yaml ; false )
-endef
-
-define run-bin2obj
-	wc -c $< | sed 's/$$/\/binary/' | cat - $< | $(ICVM) $(ICBIN2OBJ) > $@ || ( cat $@ ; false )
-endef
 
 # Build
 .PHONY: build
@@ -101,22 +72,22 @@ CPU_OBJS = add.o arithmetic.o arg_al_ax_near_ptr.o arg_mod_op_rm.o arg_mod_reg_r
 	transfer_address.o transfer_value.o util.o
 
 $(BINDIR)/libcpu.a: $(CPU_OBJS:%.o=$(OBJDIR)/%.o)
-	$(run-ar)
+	$(run-intcode-ar)
 
 VM8086_OBJS = vm8086.o $(BINDIR)/libcpu.a $(LIBXIB) binary.o
 
 $(BINDIR)/vm8086.input: $(VM8086_OBJS:%.o=$(OBJDIR)/%.o)
-	$(run-ld)
+	$(run-intcode-ld)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.s
-	$(run-as)
+	$(run-intcode-as)
 
 # Intcode does not have a convenient way to manipulate individual bits of a number.
 # For speed and convenience we will sacrifice some memory and memoize a few useful bit operations.
 
 .PRECIOUS: $(OBJDIR)/%.o
 $(OBJDIR)/%.o: $(OBJDIR)/%.s
-	$(run-as)
+	$(run-intcode-as)
 
 .PRECIOUS: $(OBJDIR)/%.s
 $(OBJDIR)/%.s: $(OBJDIR)/gen_%.input
@@ -124,7 +95,7 @@ $(OBJDIR)/%.s: $(OBJDIR)/gen_%.input
 
 .PRECIOUS: $(OBJDIR)/gen_%.input
 $(OBJDIR)/gen_%.input: $(OBJDIR)/gen_%.o $(LIBXIB)
-	$(run-ld)
+	$(run-intcode-ld)
 
 # Clean
 .PHONY: clean
