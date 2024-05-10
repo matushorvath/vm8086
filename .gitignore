@@ -1,6 +1,6 @@
 /obj
 /bin
-/test/*/bin
-/test/*/obj
-/test/*/res
-/test/test.log
+/test-bochs/*/bin
+/test-bochs/*/obj
+/test-bochs/*/res
+/test-bochs/test.log
