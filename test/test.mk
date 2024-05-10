@@ -20,6 +20,8 @@ SAMPLE_TXT := $(NAME).txt
 VM8086_TXT := $(patsubst %.txt,$(RESDIR)/%.vm8086.txt,$(SAMPLE_TXT))
 BOCHS_TXT := $(patsubst %.txt,$(RESDIR)/%.bochs.txt,$(SAMPLE_TXT))
 
+LIBCPU = $(VMDIR)/bin/libcpu.a
+
 HAVE_COLOR := $(or $(FORCE_COLOR), $(shell [ -n $$(tput colors) ] && [ $$(tput colors) -ge 8 ] && echo 1))
 ifeq ($(HAVE_COLOR),1)
 	COLOR_NORMAL := "$$(tput sgr0)"
@@ -77,8 +79,6 @@ test-prep:
 	mkdir -p $(RESDIR) $(OBJDIR) $(COMMON_OBJDIR) $(COMMON_BINDIR)
 
 # Test the vm8086 binary
-TEST_OBJS = $(VMDIR)/obj/vm8086.o $(VMDIR)/bin/libcpu.a $(LIBXIB) $(VMDIR)/obj/test_header.o
-
 $(RESDIR)/%.vm8086.txt: $(OBJDIR)/%.input FORCE
 	printf '$(NAME): [vm8086] executing ' >> $(TESTLOG)
 	rm -f $@
@@ -86,7 +86,7 @@ $(RESDIR)/%.vm8086.txt: $(OBJDIR)/%.input FORCE
 	diff $(SAMPLE_TXT) $@ || $(failed-diff)
 	@$(passed)
 
-$(OBJDIR)/%.input: $(TEST_OBJS) $(OBJDIR)/%.o
+$(OBJDIR)/%.input: $(COMMON_OBJDIR)/main.o $(LIBCPU) $(LIBXIB) $(COMMON_OBJDIR)/binary_header.o $(OBJDIR)/%.o
 	printf '$(NAME): [intcode] linking ' >> $(TESTLOG)
 	echo .$$ | cat $^ - | $(ICVM) $(ICLD) > $@ || $(failed)
 	echo .$$ | cat $^ - | $(ICVM) $(ICLDMAP) > $@.map.yaml || $(failed)
@@ -135,12 +135,15 @@ $(OBJDIR)/%.vm8086.bin: %.asm $(wildcard *.inc) $(wildcard $(COMMON_DIR)/*.inc)
 	[ "$$(wc -c < $@)" -eq 221184 ] || ( rm $@ ; $(failed) )
 	@$(passed)
 
-# Build supporting tools
+# Build supporting tools and common sources
 $(COMMON_BINDIR)/%: $(COMMON_OBJDIR)/%.o
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 $(COMMON_OBJDIR)/%.o: $(COMMON_DIR)/%.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $^ -o $@
+
+$(COMMON_OBJDIR)/%.o: $(COMMON_DIR)/%.s
+	$(run-intcode-as)
 
 # Clean
 .PHONY: clean

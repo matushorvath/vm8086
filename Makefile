@@ -12,7 +12,7 @@ export TESTLOG = $(abspath test/test.log)
 
 # Build
 .PHONY: build
-build: build-prep $(BINDIR)/vm8086.input build-test-objects
+build: build-prep $(BINDIR)/libcpu.a
 
 .PHONY: build-prep
 build-prep:
@@ -20,19 +20,16 @@ build-prep:
 
 # Test
 .PHONY: test
-test: build build-test-objects run-test-test
+test: build run-test-test
 
 .PHONY: validate
-validate: build build-test-objects run-test-validate
+validate: build run-test-validate
 
 .PHONY: test-all
-test-all: build build-test-objects run-test-all
+test-all: build run-test-all
 
 .PHONY: test-build
-test-build: build build-test-objects run-test-build
-
-.PHONY: build-test-objects
-build-test-objects: $(OBJDIR)/vm8086.o $(OBJDIR)/test_header.o
+test-build: build run-test-build
 
 define run-each-test
 	rm -rf $(TESTLOG)
@@ -73,11 +70,6 @@ CPU_OBJS = add.o arithmetic.o arg_al_ax_near_ptr.o arg_mod_op_rm.o arg_mod_reg_r
 
 $(BINDIR)/libcpu.a: $(CPU_OBJS:%.o=$(OBJDIR)/%.o)
 	$(run-intcode-ar)
-
-VM8086_OBJS = vm8086.o $(BINDIR)/libcpu.a $(LIBXIB) binary.o
-
-$(BINDIR)/vm8086.input: $(VM8086_OBJS:%.o=$(OBJDIR)/%.o)
-	$(run-intcode-ld)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.s
 	$(run-intcode-as)
