@@ -1,7 +1,7 @@
 ICVM_TYPE ?= c
 
 ICDIR ?= $(abspath ../../../xzintbit)
-VMDIR ?= $(abspath ../..)
+VMDIR = $(abspath ../..)
 
 ifeq ($(shell test -d $(ICDIR) || echo error),error)
 	$(error ICDIR variable is invalid; point it where https://github.com/matushorvath/xzintbit is built)
@@ -13,9 +13,6 @@ ICBIN2OBJ ?= $(abspath $(ICDIR)/bin/bin2obj.input)
 ICLD ?= $(abspath $(ICDIR)/bin/ld.input)
 ICLDMAP ?= $(abspath $(ICDIR)/bin/ldmap.input)
 LIBXIB ?= $(abspath $(ICDIR)/bin/libxib.a)
-
-LIB8086 ?= $(abspath $(VMDIR)/bin/lib8086.a)
-TEST_HEADER ?= $(abspath $(VMDIR)/obj/test_header.o)
 
 RESDIR ?= res
 OBJDIR ?= obj
@@ -91,6 +88,8 @@ test-prep:
 	mkdir -p $(RESDIR) $(OBJDIR) $(COMMON_OBJDIR) $(COMMON_BINDIR)
 
 # Test the vm8086 binary
+TEST_OBJS = $(VMDIR)/obj/vm8086.o $(VMDIR)/bin/libcpu.a $(LIBXIB) $(VMDIR)/obj/test_header.o
+
 $(RESDIR)/%.vm8086.txt: $(OBJDIR)/%.input FORCE
 	printf '$(NAME): [vm8086] executing ' >> $(TESTLOG)
 	rm -f $@
@@ -98,7 +97,7 @@ $(RESDIR)/%.vm8086.txt: $(OBJDIR)/%.input FORCE
 	diff $(SAMPLE_TXT) $@ || $(failed-diff)
 	@$(passed)
 
-$(OBJDIR)/%.input: $(LIB8086) $(LIBXIB) $(TEST_HEADER) $(OBJDIR)/%.o
+$(OBJDIR)/%.input: $(TEST_OBJS) $(OBJDIR)/%.o
 	printf '$(NAME): [intcode] linking ' >> $(TESTLOG)
 	echo .$$ | cat $^ - | $(ICVM) $(ICLD) > $@ || $(failed)
 	echo .$$ | cat $^ - | $(ICVM) $(ICLDMAP) > $@.map.yaml || $(failed)

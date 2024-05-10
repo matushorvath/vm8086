@@ -41,7 +41,7 @@ endef
 
 # Build
 .PHONY: build
-build: build-prep $(BINDIR)/vm8086.input build-test-header
+build: build-prep $(BINDIR)/vm8086.input build-test-objects
 
 .PHONY: build-prep
 build-prep:
@@ -49,19 +49,19 @@ build-prep:
 
 # Test
 .PHONY: test
-test: build build-test-header run-test-test
+test: build build-test-objects run-test-test
 
 .PHONY: validate
-validate: build build-test-header run-test-validate
+validate: build build-test-objects run-test-validate
 
 .PHONY: test-all
-test-all: build build-test-header run-test-all
+test-all: build build-test-objects run-test-all
 
 .PHONY: test-build
-test-build: build build-test-header run-test-build
+test-build: build build-test-objects run-test-build
 
-.PHONY: build-test-header
-build-test-header: $(OBJDIR)/test_header.o
+.PHONY: build-test-objects
+build-test-objects: $(OBJDIR)/vm8086.o $(OBJDIR)/test_header.o
 
 define run-each-test
 	rm -rf $(TESTLOG)
@@ -92,7 +92,7 @@ run-test-build:
 # The order of the object files matters: First include all the code in any order, then binary.o,
 # then the (optional) 8086 image header and data.
 
-BASE_OBJS = vm8086.o add.o arithmetic.o arg_al_ax_near_ptr.o arg_mod_op_rm.o arg_mod_reg_rm.o \
+CPU_OBJS = add.o arithmetic.o arg_al_ax_near_ptr.o arg_mod_op_rm.o arg_mod_reg_rm.o \
 	arg_reg.o arg_reg_immediate_b.o arg_reg_immediate_w.o bcd.o bits.o bitwise.o call.o decode.o \
 	div.o error.o execute.o flags.o group1.o group2.o group_immed.o group_shift.o in_out.o \
 	inc_dec.o instructions.o interrupt.o jump.o jump_flag.o load.o location.o loop.o memory.o \
@@ -100,10 +100,10 @@ BASE_OBJS = vm8086.o add.o arithmetic.o arg_al_ax_near_ptr.o arg_mod_op_rm.o arg
 	shl.o shr.o split233.o stack.o state.o string.o sub_cmp.o test_api.o trace.o trace_data.o \
 	transfer_address.o transfer_value.o util.o
 
-$(BINDIR)/lib8086.a: $(BASE_OBJS:%.o=$(OBJDIR)/%.o)
+$(BINDIR)/libcpu.a: $(CPU_OBJS:%.o=$(OBJDIR)/%.o)
 	$(run-ar)
 
-VM8086_OBJS = $(BINDIR)/lib8086.a $(LIBXIB) binary.o
+VM8086_OBJS = vm8086.o $(BINDIR)/libcpu.a $(LIBXIB) binary.o
 
 $(BINDIR)/vm8086.input: $(VM8086_OBJS:%.o=$(OBJDIR)/%.o)
 	$(run-ld)
