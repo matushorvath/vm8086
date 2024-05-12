@@ -13,7 +13,8 @@ const gunzipAsync = util.promisify(zlib.gunzip);
 const ICVM = process.env.ICVM;
 const PROCESSOR_TESTS_DIR = '../../ProcessorTests';
 
-const testCode = (await fs.readFile(path.join('obj', 'test.input'), 'utf8')).trimEnd();
+const testBinary = path.join('obj', 'test.input');
+const testCode = (await fs.readFile(testBinary, 'utf8')).trimEnd();
 const tmpdir = await fs.mkdtemp(path.join(os.tmpdir(), 'vm8086-'));
 
 const runTest = async (test) => {
@@ -28,6 +29,7 @@ const runTest = async (test) => {
     const testName = path.join(tmpdir, test.test_hash);
     const testData = `${testCode},${input.map(n => n.toString()).join(',')}\n`;
     await fs.appendFile(testName, testData, 'utf8');
+    await fs.copyFile(`${testBinary}.map.yaml`, `${testName}.map.yaml`);
 
     console.log(testName);
 

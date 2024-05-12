@@ -24,6 +24,8 @@ init_binary:
 .FRAME
     call init_binary_state
     call init_binary_memory
+
+    ret 0
 .ENDFRAME
 
 ##########

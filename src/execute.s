@@ -48,6 +48,16 @@ execute_loop:
     call print_trace
 
 execute_tracing_done:
+    # Call the callback if enabled
+    jz  [binary_vm_callback], execute_callback_done
+
+    call [binary_vm_callback]
+    jnz [rb - 2], execute_callback_done
+
+    # Callback returned 0, stop the VM
+    jz  0, execute_done
+
+execute_callback_done:
     # Handle prefixes; first check if they were consumed (prefix_valid == 0)
     jz  [prefix_valid], execute_prefix_done
 
@@ -108,6 +118,7 @@ execute_prefix_done:
     arb 1                               # undo the adjustment explained above, stack is now safe to use
 
     jz  [halt], execute_loop
+    jz  0, execute_done
 
 execute_no_args_fn:
     # No args_fn, just call exec_fn with no parameters
@@ -115,6 +126,7 @@ execute_no_args_fn:
 
     jz  [halt], execute_loop
 
+execute_done:
     arb 2
     ret 0
 
