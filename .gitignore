@@ -4,3 +4,6 @@
 /test-bochs/*/obj
 /test-bochs/*/res
 /test-bochs/test.log
+/test-cpu/obj
+/test-cpu/res
+/test-cpu/node_modules

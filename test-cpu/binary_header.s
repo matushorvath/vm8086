@@ -1,5 +1,5 @@
 ##########
-# start of the binary to execute
+# Start of the binary to execute
 #
 # This needs to be the last object file linked into the VM, except for the 8086 binary to be executed.
 # It exports the "binary" symbol that will either be followed by the linked-in binary, or by the
@@ -25,10 +25,6 @@
 .EXPORT binary_header
 .EXPORT binary_data
 
-# Reference the main function, to make sure it is pulled into the build image.
-.IMPORT main
-db  main
-
 # Initial cs value split into two 8-bit numbers (default for real hardware is 0xff, 0xff)
 +0 = binary_start_address_cs:
 
@@ -52,5 +48,7 @@ db  main
 
 # Binary image data
 +11 = binary_data:
+
+# 'ax', 'bx', 'cx', 'dx', 'cs', 'ss', 'ds', 'es', 'sp', 'bp', 'si', 'di', 'ip', 'flags', mem_length
 
 .EOF

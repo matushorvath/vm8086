@@ -7,10 +7,6 @@
 .EXPORT binary_enable_tracing
 .EXPORT binary_vm_callback
 
-# Reference the main function, to make sure it is pulled into the build image.
-.IMPORT main
-db  main
-
 # Initial cs value, use the default
 binary_start_address_cs:
     db  0xff, 0xff
@@ -31,6 +27,6 @@ binary_enable_tracing:
 binary_vm_callback:
     db  0
 
-# Symbols binary_count, binary_size and binary_data are provided by simple_test_data.o
+# Symbols binary_count, binary_size and binary_data are provided by the test binary
 
 .EOF

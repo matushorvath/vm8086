@@ -1,0 +1,14 @@
+{
+    "name": "test-cpu",
+    "version": "1.0.0",
+    "main": "test.js",
+    "type": "module",
+    "scripts": {
+        "test": "npm run lint",
+        "lint": "npm run eslint",
+        "eslint": "eslint ."
+    },
+    "devDependencies": {
+        "eslint": "^9.2.0"
+    }
+}
