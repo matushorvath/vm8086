@@ -1,6 +1,8 @@
-.EXPORT init_memory
+.EXPORT init_binary
 
 # From the linked 8086 binary
+.IMPORT binary_start_address_cs
+.IMPORT binary_start_address_ip
 .IMPORT binary_load_address
 .IMPORT binary_count
 .IMPORT binary_header
@@ -10,13 +12,50 @@
 .IMPORT report_error
 
 # From state.s
+.IMPORT reg_cs
+.IMPORT reg_ip
 .IMPORT mem
 
 # From util.s
 .IMPORT check_range
 
 ##########
-init_memory:
+init_binary:
+.FRAME
+    call init_binary_state
+    call init_binary_memory
+.ENDFRAME
+
+##########
+init_binary_state:
+.FRAME tmp
+    arb -1
+
+    # Load the start address to cs:ip
+    add [binary_start_address_cs + 0], 0, [reg_cs + 0]
+    add [binary_start_address_cs + 1], 0, [reg_cs + 1]
+    add [binary_start_address_ip + 0], 0, [reg_ip + 0]
+    add [binary_start_address_ip + 1], 0, [reg_ip + 1]
+
+    # Check if cs:ip is a sane value
+    mul [reg_cs + 1], 0x100, [rb - 1]
+    add [reg_cs + 0], [rb - 1], [rb - 1]
+    add 0xffff, 0, [rb - 2]
+    arb -2
+    call check_range
+
+    mul [reg_ip + 1], 0x100, [rb - 1]
+    add [reg_ip + 0], [rb - 1], [rb - 1]
+    add 0xffff, 0, [rb - 2]
+    arb -2
+    call check_range
+
+    arb 1
+    ret 0
+.ENDFRAME
+
+##########
+init_binary_memory:
 .FRAME section_index
     arb -1
 
@@ -40,7 +79,7 @@ init_memory_loop:
 
     add [rb + section_index], 0, [rb - 1]
     arb -1
-    call init_section
+    call init_binary_section
 
     jz  0, init_memory_loop
 
@@ -50,7 +89,7 @@ init_memory_done:
 .ENDFRAME
 
 ##########
-init_section:
+init_binary_section:
 .FRAME section_index; section_address, section_start, section_size, tmp
     arb -4
 

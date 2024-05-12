@@ -3,11 +3,8 @@
 # From exec.s
 .IMPORT execute
 
-# From load.s
-.IMPORT init_memory
-
-# From state.s
-.IMPORT init_state
+# From init_binary.s
+.IMPORT init_binary
 
 ##########
 # Entry point
@@ -30,9 +27,7 @@ main:
     out 'o'
     out 10
 
-#    call init_memory
-#    call init_state
-
+#    call init_binary
 #    call execute
 
     ret 0

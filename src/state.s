@@ -36,19 +36,10 @@
 .EXPORT flag_direction
 .EXPORT flag_trap
 
-.EXPORT init_state
-
 .EXPORT inc_ip_b
 .EXPORT inc_ip_w
 
 .EXPORT mem
-
-# From the linked 8086 binary
-.IMPORT binary_start_address_cs
-.IMPORT binary_start_address_ip
-
-# From util.s
-.IMPORT check_range
 
 ##########
 # vm state
@@ -134,34 +125,6 @@ flag_direction:                         # DF
     db  0
 flag_trap:                              # TF
     db  0
-
-##########
-init_state:
-.FRAME tmp
-    arb -1
-
-    # Load the start address to cs:ip
-    add [binary_start_address_cs + 0], 0, [reg_cs + 0]
-    add [binary_start_address_cs + 1], 0, [reg_cs + 1]
-    add [binary_start_address_ip + 0], 0, [reg_ip + 0]
-    add [binary_start_address_ip + 1], 0, [reg_ip + 1]
-
-    # Check if cs:ip is a sane value
-    mul [reg_cs + 1], 0x100, [rb - 1]
-    add [reg_cs + 0], [rb - 1], [rb - 1]
-    add 0xffff, 0, [rb - 2]
-    arb -2
-    call check_range
-
-    mul [reg_ip + 1], 0x100, [rb - 1]
-    add [reg_ip + 0], [rb - 1], [rb - 1]
-    add 0xffff, 0, [rb - 2]
-    arb -2
-    call check_range
-
-    arb 1
-    ret 0
-.ENDFRAME
 
 ##########
 # Increment ip by 1 with wrap around

@@ -39,6 +39,11 @@ const runTest = async (test) => {
 };
 
 const main = async () => {
+    if (ICVM === undefined) {
+        console.error('Missing path to intcode VM; make sure the ICVM environment variable is correct');
+        return 1;
+    }
+
     const dir = path.join(PROCESSOR_TESTS_DIR, '8088', 'v1');
     for (const file of await fs.readdir(dir)) {
         if (!file.match(/.*\.gz/)) {
