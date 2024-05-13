@@ -7,4 +7,4 @@
 /test-cpu/obj
 /test-cpu/res
 /test-cpu/node_modules
-/test-cpu/test.log
+/test-cpu/test*.log

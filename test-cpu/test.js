@@ -8,6 +8,8 @@ import path from 'node:path';
 import util from 'node:util';
 import zlib from 'node:zlib';
 import chalk from 'chalk';
+import Gauge from 'gauge';
+import gaugeThemes from 'gauge/lib/themes.js';
 
 const execFileAsync = util.promisify(child_process.execFile);
 const gunzipAsync = util.promisify(zlib.gunzip);
@@ -24,7 +26,7 @@ const compareResult = (test, result) => {
         assert.deepStrictEqual(test.final.regs, result.regs);
         assert.deepStrictEqual(test.final.ram, result.ram);
 
-        //process.stdout.write(`${test.name}: ${chalk.green('PASSED')}\n`);
+        // process.stdout.write(`${test.name}: ${chalk.green('PASSED')}\n`);
 
         return true;
     } catch (error) {
@@ -32,10 +34,10 @@ const compareResult = (test, result) => {
             throw error;
         }
 
-        process.stdout.write(`${test.name}: ${chalk.red('FAILED')}\n`);
-        process.stdout.write(`test_hash: ${chalk.gray(test.test_hash)}\n\n`);
-        process.stdout.write(error.toString());
-        process.stdout.write('\n\n');
+        // process.stdout.write(`${test.name}: ${chalk.red('FAILED')}\n`);
+        // process.stdout.write(`test_hash: ${chalk.gray(test.test_hash)}\n\n`);
+        // process.stdout.write(error.toString());
+        // process.stdout.write('\n\n');
 
         return false;
     }
@@ -72,6 +74,15 @@ const main = async () => {
         return 1;
     }
 
+    const template = [
+        { type: 'progressbar', length: 20 },
+        { type: 'activityIndicator', kerning: 1, length: 1 },
+        { type: 'section', kerning: 1, default: '' },
+        { type: 'subsection', kerning: 1, default: '' }
+    ];
+
+    const theme = gaugeThemes.getDefault({ hasUnicode: true, hasColor: true });
+
     let totalPassed = 0, totalFailed = 0;
 
     const dir = path.join(PROCESSOR_TESTS_DIR, '8088', 'v1');
@@ -79,6 +90,8 @@ const main = async () => {
         if (!file.match(/.*\.gz/)) {
             continue;
         }
+
+        const gauge = new Gauge(undefined, { template, theme });
 
         let passed = 0, failed = 0;
 
@@ -88,7 +101,14 @@ const main = async () => {
         const json = buffer.toString('utf8');
         const data = JSON.parse(json);
 
-        for (const test of data) {
+        for (let index = 0; index < data.length; index++) {
+            const test = data[index];
+
+            if (index % 10 === 0) {
+                gauge.pulse();
+            }
+            gauge.show({ section: file, subsection: `test ${index + 1}/${data.length}`, completed: index/data.length });
+
             const res = await runTest(test);
             if (res) {
                 passed++;
@@ -99,8 +119,9 @@ const main = async () => {
             }
         }
 
-        console.log(`File ${file}: ${chalk.green(`${passed} PASSED`)}, ${chalk.red(`${failed} FAILED`)}`);
-        console.log(`Total: ${chalk.green(`${totalPassed} PASSED`)}, ${chalk.red(`${totalFailed} FAILED`)}`);
+        gauge.hide();
+        console.log(`${file} > ${chalk.green(`passed ${String(passed).padStart(5)}`)}, ${chalk.red(`failed ${String(failed).padStart(5)}`)}`);
+        //console.log(`Total: ${chalk.green(`${totalPassed} PASSED`)}, ${chalk.red(`${totalFailed} FAILED`)}`);
     }
 };
 
