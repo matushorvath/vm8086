@@ -18,7 +18,8 @@
 .EXPORT init_flags
 
 .EXPORT init_mem_length
-.EXPORT init_mem_data
+.EXPORT result_mem_length
+.EXPORT mem_data
 
 # Initial register values, they point into the data immediate after this object
 +00 = init_ax:
@@ -39,10 +40,13 @@
 # Number of memory initialization records
 +14 = init_mem_length:
 
-# End of fixed test header (not counting init_mem_data)
-+14 = test_header_end:
+# Number of memory output records
++15 = result_mem_length:
 
-# Initialization record data; each record is two bytes long
-+15 = init_mem_data:
+# End of fixed test header (not counting init_mem_data)
++15 = test_header_end:
+
+# Initialization and result record data
++16 = mem_data:
 
 .EOF

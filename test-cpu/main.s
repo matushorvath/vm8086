@@ -13,6 +13,9 @@
 # From memory.s
 .IMPORT read_cs_ip_b
 
+# From print_output.s
+.IMPORT print_output
+
 # TODO if we check 3 NOPs, IP is 2 larger than expected
 # TODO flags are differnt, because we don't set top 4 bytes to 1 (ignore top half-byte of flags)
 
@@ -32,19 +35,7 @@ main:
 .FRAME
     call init_processor_test
     call execute
-
-    # TODO remove
-    .IMPORT dump_state
-    call dump_state
-    .IMPORT print_num_radix
-    .IMPORT mem
-    add [mem], 138673, [ip + 1]
-    add [0], 0, [rb - 1]
-    add 16, 0, [rb - 2]
-    add 4, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-    out 10
+    call print_output
 
     ret 0
 .ENDFRAME

@@ -41,7 +41,8 @@
 .IMPORT init_flags
 
 .IMPORT init_mem_length
-.IMPORT init_mem_data
+.IMPORT result_mem_length
+.IMPORT mem_data
 
 # From util.s
 .IMPORT split_16_8_8
@@ -164,6 +165,7 @@ init_memory:
 
     # The 8086 memory space will start immediately after the test data
     mul [init_mem_length], 2, [mem]
+    add [mem], [result_mem_length], [mem]
     add [mem], test_header_end, [mem]
 
     # Iterate through memory initialization records and process them
@@ -176,9 +178,9 @@ init_memory_loop:
 
     # Read address and value for this location
     mul [rb + index], 2, [rb + tmp]
-    add init_mem_data + 0, [rb + tmp], [ip + 1]
+    add mem_data + 0, [rb + tmp], [ip + 1]
     add [0], 0, [rb + address]
-    add init_mem_data + 1, [rb + tmp], [ip + 1]
+    add mem_data + 1, [rb + tmp], [ip + 1]
     add [0], 0, [rb + value]
 
     # Store value at that location

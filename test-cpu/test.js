@@ -1,4 +1,4 @@
-// ICVM=~/intcode/xzintbit/vms/c/ic node test.js 
+// make -C .. && make build-intcode && ICVM=~/intcode/xzintbit/vms/c/ic node test.js
 
 import child_process from 'node:child_process';
 import fs from 'node:fs/promises';
@@ -23,7 +23,9 @@ const runTest = async (test) => {
     const input = regs.map(r => test.initial.regs[r]);
 
     input.push(test.initial.ram.length);
-    input.push(...test.initial.ram.flatMap(loc => loc));
+    input.push(test.final.ram.length);
+    input.push(...test.initial.ram.flatMap(rec => rec));
+    input.push(...test.final.ram.map(([addr]) => addr));
 
     // Append input data to the intcode program
     const testName = path.join(tmpdir, test.test_hash);
