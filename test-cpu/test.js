@@ -53,18 +53,27 @@ const runTest = async (test) => {
     input.push(...test.initial.ram.flatMap(rec => rec));
     input.push(...test.final.ram.map(([addr]) => addr));
 
-    // Append input data to the intcode program
-    const testName = path.join(tmpdir, test.hash);
     const testData = `${testCode},${input.map(n => n.toString()).join(',')}\n`;
-    await fs.appendFile(testName, testData, 'utf8');
-    await fs.copyFile(`${testBinary}.map.yaml`, `${testName}.map.yaml`);
+    const testName = path.join(tmpdir, test.hash);
+    const mapName = `${testName}.map.yaml`;
 
-    // Execute the test
-    const { stdout } = await execFileAsync(ICVM, [testName]);
+    let child;
+    try {
+        // Append input data to the intcode program
+        await fs.appendFile(testName, testData, 'utf8');
+        await fs.copyFile(`${testBinary}.map.yaml`, mapName);
+
+        // Execute the test
+        child = await execFileAsync(ICVM, [testName]);
+    } finally {
+        // Clean up
+        await fs.unlink(testName);
+        await fs.unlink(mapName);
+    }
 
     let result;
     try {
-        result = JSON.parse(stdout);
+        result = JSON.parse(child.stdout);
     } catch (error) {
         if (!(error instanceof SyntaxError)) {
             throw error;
@@ -105,7 +114,7 @@ const main = async () => {
 
     const theme = gaugeThemes.getDefault({ hasUnicode: true, hasColor: true });
 
-    let totalPassed = 0, totalFailed = 0;
+    //let totalPassed = 0, totalFailed = 0;
 
     for (const file of await fs.readdir(TESTS_DIR)) {
         if (!file.match(/.*\.gz/)) {
@@ -134,10 +143,10 @@ const main = async () => {
             const res = await runTest(test);
             if (res) {
                 passed++;
-                totalPassed++;
+                //totalPassed++;
             } else {
                 failed++;
-                totalFailed++
+                //totalFailed++;
             }
         }
 
