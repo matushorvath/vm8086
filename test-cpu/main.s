@@ -84,7 +84,7 @@ vm_callback_nop_count:
 ##########
 # Tracing (0 - disable tracing, -1 - trace always, >0 - tracing past given address)
 binary_enable_tracing:
-    db  -1
+    db  0
 
 # Optional callback function to call before each instruction, zero if not used
 binary_vm_callback:
