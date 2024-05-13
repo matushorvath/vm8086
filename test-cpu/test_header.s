@@ -1,4 +1,4 @@
-# VM state information derived from the ProcessorTests JSON format
+# VM state information derived from the SingleStepTests JSON format
 
 .EXPORT test_header_end
 

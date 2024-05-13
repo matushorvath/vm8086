@@ -15,7 +15,7 @@ const execFileAsync = util.promisify(child_process.execFile);
 const gunzipAsync = util.promisify(zlib.gunzip);
 
 const ICVM = process.env.ICVM;
-const PROCESSOR_TESTS_DIR = '../../ProcessorTests';
+const TESTS_DIR = path.join('..', '..', '8088', 'v1');
 
 const testBinary = path.join('obj', 'test.input');
 const testCode = (await fs.readFile(testBinary, 'utf8')).trimEnd();
@@ -35,7 +35,7 @@ const compareResult = (test, result) => {
         }
 
         // process.stdout.write(`${test.name}: ${chalk.red('FAILED')}\n`);
-        // process.stdout.write(`test_hash: ${chalk.gray(test.test_hash)}\n\n`);
+        // process.stdout.write(`hash: ${chalk.gray(test.hash)}\n\n`);
         // process.stdout.write(error.toString());
         // process.stdout.write('\n\n');
 
@@ -54,18 +54,40 @@ const runTest = async (test) => {
     input.push(...test.final.ram.map(([addr]) => addr));
 
     // Append input data to the intcode program
-    const testName = path.join(tmpdir, test.test_hash);
+    const testName = path.join(tmpdir, test.hash);
     const testData = `${testCode},${input.map(n => n.toString()).join(',')}\n`;
     await fs.appendFile(testName, testData, 'utf8');
     await fs.copyFile(`${testBinary}.map.yaml`, `${testName}.map.yaml`);
 
     // Execute the test
     const { stdout } = await execFileAsync(ICVM, [testName]);
-    const result = JSON.parse(stdout);
 
-    // Adjust the result and compare it
+    let result;
+    try {
+        result = JSON.parse(stdout);
+    } catch (error) {
+        if (!(error instanceof SyntaxError)) {
+            throw error;
+        }
+        return false;
+    }
+
+    // Adjust the result
     result.regs.flags |= 0xF000;        // top half-byte of 8086 flags should be all 1s, but bochs has 0s
+
+    // Keep only result registers we are supposed to check
+    for (const key in result.regs) {
+        if (!Object.hasOwn(test.final.regs, key)) {
+            delete result.regs[key];
+        }
+    }
+
+    // Compare the result
     return compareResult(test, result);
+};
+
+const formatPassedFailed = (passed, failed) => {
+    return `${chalk.green(`passed ${String(passed).padStart(5)}`)}, ${chalk.red(`failed ${String(failed).padStart(5)}`)}`;
 };
 
 const main = async () => {
@@ -85,17 +107,17 @@ const main = async () => {
 
     let totalPassed = 0, totalFailed = 0;
 
-    const dir = path.join(PROCESSOR_TESTS_DIR, '8088', 'v1');
-    for (const file of await fs.readdir(dir)) {
+    for (const file of await fs.readdir(TESTS_DIR)) {
         if (!file.match(/.*\.gz/)) {
             continue;
         }
+        // if (file !== '0F.json.gz') continue;
 
         const gauge = new Gauge(undefined, { template, theme });
 
         let passed = 0, failed = 0;
 
-        const zbuffer = await fs.readFile(path.join(dir, file));
+        const zbuffer = await fs.readFile(path.join(TESTS_DIR, file));
         const buffer = await gunzipAsync(zbuffer);
 
         const json = buffer.toString('utf8');
@@ -107,7 +129,7 @@ const main = async () => {
             if (index % 10 === 0) {
                 gauge.pulse();
             }
-            gauge.show({ section: file, subsection: `test ${index + 1}/${data.length}`, completed: index/data.length });
+            gauge.show({ section: file, subsection: `${index + 1}/${data.length} [${formatPassedFailed(passed, failed)}]`, completed: index/data.length });
 
             const res = await runTest(test);
             if (res) {
@@ -120,7 +142,7 @@ const main = async () => {
         }
 
         gauge.hide();
-        console.log(`${file} > ${chalk.green(`passed ${String(passed).padStart(5)}`)}, ${chalk.red(`failed ${String(failed).padStart(5)}`)}`);
+        console.log(`${file} > ${formatPassedFailed(passed, failed)}`);
         //console.log(`Total: ${chalk.green(`${totalPassed} PASSED`)}, ${chalk.red(`${totalFailed} FAILED`)}`);
     }
 };
