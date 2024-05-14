@@ -2,7 +2,7 @@
 
 import assert from 'node:assert/strict';
 import child_process from 'node:child_process';
-import fs from 'node:fs/promises';
+import fsp from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import util from 'node:util';
@@ -15,8 +15,8 @@ const execFileAsync = util.promisify(child_process.execFile);
 const ICVM = process.env.ICVM;
 
 const testBinary = path.join('obj', 'test.input');
-const testCode = (await fs.readFile(testBinary, 'utf8')).trimEnd();
-const tmpdir = await fs.mkdtemp(path.join(os.tmpdir(), 'vm8086-'));
+const testCode = (await fsp.readFile(testBinary, 'utf8')).trimEnd();
+const tmpdir = await fsp.mkdtemp(path.join(os.tmpdir(), 'vm8086-'));
 
 const compareResult = (test, result) => {
     try {
@@ -57,15 +57,15 @@ const runTest = async (test) => {
     let child;
     try {
         // Append input data to the intcode program
-        await fs.appendFile(testName, testData, 'utf8');
-        await fs.copyFile(`${testBinary}.map.yaml`, mapName);
+        await fsp.appendFile(testName, testData, 'utf8');
+        await fsp.copyFile(`${testBinary}.map.yaml`, mapName);
 
         // Execute the test
         child = await execFileAsync(ICVM, [testName]);
     } finally {
         // Clean up
-        await fs.unlink(testName);
-        await fs.unlink(mapName);
+        await fsp.unlink(testName);
+        await fsp.unlink(mapName);
     }
 
     let result;
@@ -93,13 +93,11 @@ const runTest = async (test) => {
 };
 
 export default async ({ dir, file }) => {
-    const zbuffer = await fs.readFile(path.join(dir, file));
+    const zbuffer = await fsp.readFile(path.join(dir, file));
     const buffer = await gunzipAsync(zbuffer);
 
     const json = buffer.toString('utf8');
     const data = JSON.parse(json);
-
-    data.length = 20;
 
     let passed = 0, failed = 0;
 
