@@ -77,3 +77,13 @@ https://github.com/SingleStepTests/8088
 https://github.com/barotto/test386.asm  
 https://github.com/xoreaxeaxeax/sandsifter  
 https://www.pcjs.org/software/pcx86/test/cpu/  
+
+
+Results
+=======
+
+- Freeze: 3A, 53
+- OOM: 5B
+- few failed: 40-4F, 50, 5A, 57, 17
+- no passed: 54, 0F, 
+- slow: ?
