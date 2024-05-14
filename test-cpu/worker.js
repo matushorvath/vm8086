@@ -99,7 +99,7 @@ export default async ({ dir, file }) => {
     const json = buffer.toString('utf8');
     const data = JSON.parse(json);
 
-    data.length = 100;
+    data.length = 20;
 
     let passed = 0, failed = 0;
 

@@ -12,24 +12,31 @@ const mpb = new MultiProgressBars({ initMessage: 'CPU Test', anchor: 'top', pers
 const TESTS_DIR = path.join('..', '..', '8088', 'v1');
 
 const formatPassedFailed = (passed, failed) => {
-    return `${chalk.green(`passed ${String(passed).padStart(5)}`)}, ${chalk.red(`failed ${String(failed).padStart(5)}`)}`;
+    let output = '';
+
+    const passedMessage = `passed ${String(passed).padStart(5)}`;
+    output += chalk.green(passed > 0 ? passedMessage : ' '.repeat(passedMessage.length));
+
+    output += passed > 0 && failed > 0 ? ', ' : '  ';
+
+    const failedMessage = `failed ${String(failed).padStart(5)}`;
+    output += chalk.red(failed > 0 ? failedMessage : ' '.repeat(failedMessage.length));
+
+    return output;
 };
 
-const runTest = async (fileCount, dir, file) => {
+const runTest = async (dir, file) => {
     const { passed, failed } = await piscina.run({ dir, file });
 
     const message = formatPassedFailed(passed, failed);
     mpb.done(file, { message });
-    //console.log(`${file} > ${message}`);
 
-    mpb.incrementTask('all tests', { percentage: 1 / fileCount });
+    //console.log(`${file} > ${message}`);
 };
 
 const onWorkerMessage = (data) => {
     if (!mpb.getIndex(data.file)) {
-        const match = data.file.match(/([0-9a-fA-F]{2})\.json.gz/);
-        const index = match ? Number.parseInt(match[1] , 16) + 1 : undefined;
-        mpb.addTask(data.file, { type: 'percentage', index });
+        mpb.addTask(data.file, { type: 'percentage' });
     }
 
     const percentage = data.index / data.total;
@@ -43,15 +50,13 @@ const main = async () => {
         return 1;
     }
 
-    mpb.addTask('all tests', { type: 'percentage' });
     piscina.on('message', onWorkerMessage);
 
     const files = (await fs.readdir(TESTS_DIR)).filter(file => file.match(/.*\.gz/));
-    const promises = files.map(file => runTest(files.length, TESTS_DIR, file));
+    const promises = files.map(file => runTest(TESTS_DIR, file));
 
     await Promise.allSettled(promises);
 
-    mpb.done('all tests');
     mpb.close();
 };
 
