@@ -22,7 +22,8 @@ const parseCommandLine = () => {
                 opcode: { type: 'string', short: 'o' },
                 index: { type: 'string', short: 'i' },
                 hash: { type: 'string', short: 'h' },
-                details: { type: 'boolean', short: 'd' }
+                'print-errors': { type: 'boolean', short: 'e' },
+                trace: { type: 'boolean', short: 't' }
             }
         });
 
@@ -47,7 +48,8 @@ const parseCommandLine = () => {
         return values;
     } catch (error) {
         console.error(error.message);
-        console.log('Usage: node test.js [--opcode|-o <opcode>] [--index|-i <index>] [--hash|-h <hash>] [--details|-d]');
+        console.log('Usage: node test.js [--opcode|-o <opcode>] [--index|-i <index>]');
+        console.log('         [--hash|-h <hash>] [--print-errors|-e] [--trace|-t]');
         process.exit(1);
     }
 };
@@ -68,8 +70,8 @@ const formatPassedFailed = (passed, failed) => {
     return output;
 };
 
-const runTest = async (dir, file, idx, hash) => {
-    const { passed, failed } = await piscina.run({ dir, file, idx, hash });
+const runTest = async (dir, file, idx, hash, trace) => {
+    const { passed, failed } = await piscina.run({ dir, file, idx, hash, trace });
 
     if (mpb.getIndex(file) !== undefined) {
         const message = formatPassedFailed(passed, failed);
@@ -79,7 +81,14 @@ const runTest = async (dir, file, idx, hash) => {
     log.write(`file: "${file}", passed: ${passed}, failed: ${failed}\n`);
 };
 
-const onWorkerMessage = ({ file, test, passed, failed, error, percentage }) => {
+const onWorkerMessage = (data) => {
+    switch (data.type) {
+    case 'test-finished': return onTestFinished(data);
+    case 'log': return onLog(data);
+    }
+};
+
+const onTestFinished = ({ file, test, passed, failed, error, percentage }) => {
     if (mpb.getIndex(file) === undefined) {
         mpb.addTask(file, { type: 'percentage' });
     }
@@ -99,6 +108,10 @@ const onWorkerMessage = ({ file, test, passed, failed, error, percentage }) => {
     mpb.updateTask(file, { percentage, message });
 };
 
+const onLog = ({ message }) => {
+    console.log(message);
+};
+
 const main = async () => {
     if (process.env.ICVM === undefined) {
         console.error('Missing path to intcode VM; make sure the ICVM environment variable is correct');
@@ -112,7 +125,7 @@ const main = async () => {
     const promises = (await fsp.readdir(TESTS_DIR))
         .filter(file => file.match(/.*\.gz/))
         .filter(file => options.opcode === undefined || file.toLowerCase().startsWith(options.opcode))
-        .map(file => runTest(TESTS_DIR, file, options.index, options.hash));
+        .map(file => runTest(TESTS_DIR, file, options.index, options.hash, options.trace));
 
     await Promise.allSettled(promises);
 

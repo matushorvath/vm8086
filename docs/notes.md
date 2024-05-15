@@ -82,7 +82,10 @@ https://www.pcjs.org/software/pcx86/test/cpu/
 Results
 =======
 
-- Freeze: 3A, 53
+- Freeze:
+  - 3A
+    - 3093506565e4803bf150e0e36d3e846edb6f1c3a
+  - 53
 - OOM: 5B
 - few failed: 40-4F, 50, 5A, 57, 17
 - no passed: 54, 0F, 

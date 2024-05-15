@@ -31,7 +31,7 @@ const compareResult = (test, result) => {
     }
 };
 
-const runTest = async (test) => {
+const runTest = async (test, trace) => {
     // Prepare input data for the test
     const regs = ['ax', 'bx', 'cx', 'dx', 'cs', 'ss', 'ds', 'es', 'sp', 'bp', 'si', 'di', 'ip', 'flags'];
     const input = regs.map(r => test.initial.regs[r]);
@@ -52,7 +52,15 @@ const runTest = async (test) => {
         await fsp.copyFile(`${testBinary}.map.yaml`, mapName);
 
         // Execute the test
+        if (trace) {
+            wt.parentPort.postMessage({ type: 'log', message: `starting: ${test.hash}` });
+        }
+
         child = await execFileAsync(ICVM, [testName]);
+
+        if (trace) {
+            wt.parentPort.postMessage({ type: 'log', message: `finished: ${test.hash}` });
+        }
     } finally {
         // Clean up
         await fsp.unlink(testName);
@@ -83,7 +91,7 @@ const runTest = async (test) => {
     return compareResult(test, result);
 };
 
-export default async ({ dir, file, idx, hash }) => {
+export default async ({ dir, file, idx, hash, trace }) => {
     const zbuffer = await fsp.readFile(path.join(dir, file));
     const buffer = await gunzipAsync(zbuffer);
 
@@ -100,7 +108,7 @@ export default async ({ dir, file, idx, hash }) => {
     for (let i = 0; i < selected.length; i++) {
         const test = selected[i];
 
-        const error = await runTest(test);
+        const error = await runTest(test, trace);
         if (error === undefined) {
             passed++;
         } else {
@@ -108,6 +116,7 @@ export default async ({ dir, file, idx, hash }) => {
         }
 
         wt.parentPort.postMessage({
+            type: 'test-finished',
             file,
             test: { name: test.name, idx: test.idx, hash: test.hash },
             passed, failed, error,
