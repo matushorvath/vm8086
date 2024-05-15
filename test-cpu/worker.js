@@ -1,5 +1,3 @@
-// make -C .. && make build-intcode && time ICVM=~/intcode/xzintbit/vms/c/ic FORCE_COLOR=3 node test.js | tee test.log
-
 import assert from 'node:assert/strict';
 import child_process from 'node:child_process';
 import fsp from 'node:fs/promises';
@@ -7,9 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import util from 'node:util';
 import wt from 'node:worker_threads';
-import zlib from 'node:zlib';
 
-const gunzipAsync = util.promisify(zlib.gunzip);
 const execFileAsync = util.promisify(child_process.execFile);
 
 const ICVM = process.env.ICVM;
@@ -18,31 +14,9 @@ const testBinary = path.join('obj', 'test.input');
 const testCode = (await fsp.readFile(testBinary, 'utf8')).trimEnd();
 const tmpdir = await fsp.mkdtemp(path.join(os.tmpdir(), 'vm8086-'));
 
-const compareResult = (test, result) => {
-    try {
-        assert.deepStrictEqual(test.final.regs, result.regs);
-        assert.deepStrictEqual(test.final.ram, result.ram);
-    } catch (error) {
-        if (!(error instanceof assert.AssertionError)) {
-            throw error;
-        }
-
-        return error;
-    }
-};
-
-const runTest = async (test, trace) => {
-    // Prepare input data for the test
-    const regs = ['ax', 'bx', 'cx', 'dx', 'cs', 'ss', 'ds', 'es', 'sp', 'bp', 'si', 'di', 'ip', 'flags'];
-    const input = regs.map(r => test.initial.regs[r]);
-
-    input.push(test.initial.ram.length);
-    input.push(test.final.ram.length);
-    input.push(...test.initial.ram.flatMap(rec => rec));
-    input.push(...test.final.ram.map(([addr]) => addr));
-
+const runIntcode = async (hash, input, trace) => {
     const testData = `${testCode},${input.map(n => n.toString()).join(',')}\n`;
-    const testName = path.join(tmpdir, test.hash);
+    const testName = path.join(tmpdir, hash);
     const mapName = `${testName}.map.yaml`;
 
     let child;
@@ -53,13 +27,13 @@ const runTest = async (test, trace) => {
 
         // Execute the test
         if (trace) {
-            wt.parentPort.postMessage({ type: 'log', message: `starting: ${test.hash}` });
+            wt.parentPort.postMessage({ type: 'log', message: `starting: ${hash}` });
         }
 
         child = await execFileAsync(ICVM, [testName]);
 
         if (trace) {
-            wt.parentPort.postMessage({ type: 'log', message: `finished: ${test.hash}` });
+            wt.parentPort.postMessage({ type: 'log', message: `finished: ${hash}` });
         }
     } finally {
         // Clean up
@@ -67,9 +41,13 @@ const runTest = async (test, trace) => {
         await fsp.unlink(mapName);
     }
 
+    return child.stdout;
+};
+
+const processOutput = (test, stdout) => {
     let result;
     try {
-        result = JSON.parse(child.stdout);
+        result = JSON.parse(stdout);
     } catch (error) {
         if (!(error instanceof SyntaxError)) {
             throw error;
@@ -87,42 +65,27 @@ const runTest = async (test, trace) => {
         }
     }
 
-    // Compare the result
-    return compareResult(test, result);
+    try {
+        assert.deepStrictEqual(test.final.regs, result.regs);
+        assert.deepStrictEqual(test.final.ram, result.ram);
+    } catch (error) {
+        if (!(error instanceof assert.AssertionError)) {
+            throw error;
+        }
+        return error;
+    }
 };
 
-export default async ({ dir, file, idx, hash, trace }) => {
-    const zbuffer = await fsp.readFile(path.join(dir, file));
-    const buffer = await gunzipAsync(zbuffer);
+export default async ({ test, trace }) => {
+    // Prepare input data for the test
+    const regs = ['ax', 'bx', 'cx', 'dx', 'cs', 'ss', 'ds', 'es', 'sp', 'bp', 'si', 'di', 'ip', 'flags'];
+    const input = regs.map(r => test.initial.regs[r]);
 
-    const json = buffer.toString('utf8');
-    const data = JSON.parse(json);
+    input.push(test.initial.ram.length);
+    input.push(test.final.ram.length);
+    input.push(...test.initial.ram.flatMap(rec => rec));
+    input.push(...test.final.ram.map(([addr]) => addr));
 
-    let passed = 0, failed = 0;
-
-    const selected = data.filter((test) => {
-        return (idx === undefined || idx === test.idx)
-            && (hash === undefined || test.hash.startsWith(hash));
-    });
-
-    for (let i = 0; i < selected.length; i++) {
-        const test = selected[i];
-
-        const error = await runTest(test, trace);
-        if (error === undefined) {
-            passed++;
-        } else {
-            failed++;
-        }
-
-        wt.parentPort.postMessage({
-            type: 'test-finished',
-            file,
-            test: { name: test.name, idx: test.idx, hash: test.hash },
-            passed, failed, error,
-            percentage: i / selected.length
-        });
-    }
-
-    return { passed, failed };
+    const output = await runIntcode(test.hash, input, trace);
+    return processOutput(test, output);
 };

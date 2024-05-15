@@ -4,9 +4,12 @@ import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import util from 'node:util';
+import zlib from 'node:zlib';
 import chalk from 'chalk';
 import { MultiProgressBars } from 'multi-progress-bars';
 import Piscina from 'piscina';
+
+const gunzipAsync = util.promisify(zlib.gunzip);
 
 const piscina = new Piscina({ filename: path.resolve(import.meta.dirname, 'worker.js') });
 const mpb = new MultiProgressBars({ initMessage: 'CPU Test', anchor: 'top', persist: true });
@@ -19,19 +22,19 @@ const parseCommandLine = () => {
     try {
         const { values } = util.parseArgs({
             options: {
-                opcode: { type: 'string', short: 'o' },
-                index: { type: 'string', short: 'i' },
-                hash: { type: 'string', short: 'h' },
-                'print-errors': { type: 'boolean', short: 'e' },
+                opcode: { type: 'string', short: 'o', multiple: true },
+                index: { type: 'string', short: 'i', multiple: true },
+                hash: { type: 'string', short: 'h', multiple: true },
+                details: { type: 'boolean', short: 'd' },
                 trace: { type: 'boolean', short: 't' }
             }
         });
 
         if (values.opcode !== undefined) {
-            if (!/^[0-9a-zA-Z]{1,2}$/.test(values.opcode)) {
+            if (values.opcode.some(oc => !/^[0-9a-zA-Z]{1,2}$/.test(oc))) {
                 throw new Error('Opcode must be an 8-bit hexadecimal value');
             }
-            values.opcode = values.opcode.toLowerCase().padStart(2, '0');
+            values.opcode = values.opcode.map(oc => oc.toLowerCase().padStart(2, '0'));
         }
 
         if (values.index !== undefined && values.hash !== undefined) {
@@ -39,17 +42,17 @@ const parseCommandLine = () => {
         }
 
         if (values.index !== undefined) {
-            if (!/^\d+$/.test(values.index)) {
+            if (values.index.some(i => !/^\d+$/.test(i))) {
                 throw new Error('Index must be a positive integer');
             }
-            values.index = Number.parseInt(values.index);
+            values.index = values.index.map(i => Number.parseInt(i));
         }
 
         return values;
     } catch (error) {
         console.error(error.message);
         console.log('Usage: node test.js [--opcode|-o <opcode>] [--index|-i <index>]');
-        console.log('         [--hash|-h <hash>] [--print-errors|-e] [--trace|-t]');
+        console.log('         [--hash|-h <hash>] [--details|-d] [--trace|-t]');
         process.exit(1);
     }
 };
@@ -70,46 +73,59 @@ const formatPassedFailed = (passed, failed) => {
     return output;
 };
 
-const runTest = async (dir, file, idx, hash, trace) => {
-    const { passed, failed } = await piscina.run({ dir, file, idx, hash, trace });
+const loadTests = async (dir, file, idx, hash) => {
+    const zbuffer = await fsp.readFile(path.join(dir, file));
+    const buffer = await gunzipAsync(zbuffer);
 
-    if (mpb.getIndex(file) !== undefined) {
+    const json = buffer.toString('utf8');
+    const data = JSON.parse(json);
+
+    return data.filter((test) => {
+        return (idx === undefined || idx.some(i => test.idx === i))
+            && (hash === undefined || hash.some(h => test.hash.startsWith(h)));
+    });
+};
+
+const runTests = async (file, tests, trace) => {
+    mpb.addTask(file, { type: 'percentage' });
+
+    let passed = 0, failed = 0;
+
+    const promises = tests.map(async (test, i) => {
+        const error = await piscina.run({ test, trace });
+        if (error === undefined) {
+            passed++;
+        } else {
+            failed++;
+        }
+
+        if (options.details && error !== undefined) {
+            console.log(`${test.name}: ${chalk.red('FAILED')}`);
+            console.log(chalk.gray(`idx: ${test.idx} hash: ${test.hash}`));
+            console.log('');
+            console.log(error.toString());
+            console.log('');
+
+            log.write(`file: "${file}", name: ${test.name}, idx: ${test.idx}, hash: ${test.hash}`);
+            log.write(error.toString());
+        }
+
         const message = formatPassedFailed(passed, failed);
-        mpb.done(file, { message });
-    }
+        mpb.updateTask(file, { percentage: i / tests.length, message });
+    });
+
+    await Promise.allSettled(promises);
 
     log.write(`file: "${file}", passed: ${passed}, failed: ${failed}\n`);
+
+    const message = formatPassedFailed(passed, failed);
+    mpb.done(file, { message });
 };
 
 const onWorkerMessage = (data) => {
     switch (data.type) {
-    case 'test-finished': return onTestFinished(data);
-    case 'log': return onLog(data);
+    case 'log': console.log(data.message); return;
     }
-};
-
-const onTestFinished = ({ file, test, passed, failed, error, percentage }) => {
-    if (mpb.getIndex(file) === undefined) {
-        mpb.addTask(file, { type: 'percentage' });
-    }
-
-    if (options.details && error !== undefined) {
-        console.log(`${test.name}: ${chalk.red('FAILED')}`);
-        console.log(chalk.gray(`idx: ${test.idx} hash: ${test.hash}`));
-        console.log('');
-        console.log(error.toString());
-        console.log('');
-
-        log.write(`file: "${file}", name: ${test.name}, idx: ${test.idx}, hash: ${test.hash}`);
-        log.write(error.toString());
-    }
-
-    const message = formatPassedFailed(passed, failed);
-    mpb.updateTask(file, { percentage, message });
-};
-
-const onLog = ({ message }) => {
-    console.log(message);
 };
 
 const main = async () => {
@@ -122,12 +138,14 @@ const main = async () => {
 
     piscina.on('message', onWorkerMessage);
 
-    const promises = (await fsp.readdir(TESTS_DIR))
+    const files = (await fsp.readdir(TESTS_DIR))
         .filter(file => file.match(/.*\.gz/))
-        .filter(file => options.opcode === undefined || file.toLowerCase().startsWith(options.opcode))
-        .map(file => runTest(TESTS_DIR, file, options.index, options.hash, options.trace));
+        .filter(file => options.opcode === undefined || options.opcode.some(oc => file.toLowerCase().startsWith(oc)));
 
-    await Promise.allSettled(promises);
+    for (const file of files) {
+        const tests = await loadTests(TESTS_DIR, file, options.index, options.hash);
+        await runTests(file, tests, options.trace);
+    }
 
     mpb.close();
     log.end();
