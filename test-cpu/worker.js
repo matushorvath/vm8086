@@ -22,21 +22,12 @@ const compareResult = (test, result) => {
     try {
         assert.deepStrictEqual(test.final.regs, result.regs);
         assert.deepStrictEqual(test.final.ram, result.ram);
-
-        // process.stdout.write(`${test.name}: ${chalk.green('PASSED')}\n`);
-
-        return true;
     } catch (error) {
         if (!(error instanceof assert.AssertionError)) {
             throw error;
         }
 
-        // process.stdout.write(`${test.name}: ${chalk.red('FAILED')}\n`);
-        // process.stdout.write(`hash: ${chalk.gray(test.hash)}\n\n`);
-        // process.stdout.write(error.toString());
-        // process.stdout.write('\n\n');
-
-        return false;
+        return error;
     }
 };
 
@@ -75,7 +66,7 @@ const runTest = async (test) => {
         if (!(error instanceof SyntaxError)) {
             throw error;
         }
-        return false;
+        return error;
     }
 
     // Adjust the result
@@ -92,7 +83,7 @@ const runTest = async (test) => {
     return compareResult(test, result);
 };
 
-export default async ({ dir, file }) => {
+export default async ({ dir, file, idx, hash }) => {
     const zbuffer = await fsp.readFile(path.join(dir, file));
     const buffer = await gunzipAsync(zbuffer);
 
@@ -101,17 +92,27 @@ export default async ({ dir, file }) => {
 
     let passed = 0, failed = 0;
 
-    for (let index = 0; index < data.length; index++) {
-        const test = data[index];
+    const selected = data.filter((test) => {
+        return (idx === undefined || idx === test.idx)
+            && (hash === undefined || test.hash.startsWith(hash));
+    });
 
-        const res = await runTest(test);
-        if (res) {
+    for (let i = 0; i < selected.length; i++) {
+        const test = selected[i];
+
+        const error = await runTest(test);
+        if (error === undefined) {
             passed++;
         } else {
             failed++;
         }
 
-        wt.parentPort.postMessage({ file, index, total: data.length, passed, failed });
+        wt.parentPort.postMessage({
+            file,
+            test: { name: test.name, idx: test.idx, hash: test.hash },
+            passed, failed, error,
+            percentage: i / selected.length
+        });
     }
 
     return { passed, failed };
