@@ -8,6 +8,7 @@ import zlib from 'node:zlib';
 import chalk from 'chalk';
 import { MultiProgressBars } from 'multi-progress-bars';
 import Piscina from 'piscina';
+import worker from './worker.js';
 
 const gunzipAsync = util.promisify(zlib.gunzip);
 
@@ -25,8 +26,9 @@ const parseCommandLine = () => {
                 opcode: { type: 'string', short: 'o', multiple: true },
                 index: { type: 'string', short: 'i', multiple: true },
                 hash: { type: 'string', short: 'h', multiple: true },
-                details: { type: 'boolean', short: 'd' },
-                trace: { type: 'boolean', short: 't' }
+                'dump-errors': { type: 'boolean', short: 'd' },
+                trace: { type: 'boolean', short: 't' },
+                'single-thread': { type: 'boolean', short: '1' }
             }
         });
 
@@ -51,8 +53,8 @@ const parseCommandLine = () => {
         return values;
     } catch (error) {
         console.error(error.message);
-        console.log('Usage: node test.js [--opcode|-o <opcode>] [--index|-i <index>]');
-        console.log('         [--hash|-h <hash>] [--details|-d] [--trace|-t]');
+        console.log('Usage: node test.js [--opcode|-o <opcode>] [--index|-i <index>] [--hash|-h <hash>]');
+        console.log('          [--dump-errors|-d] [--trace|-t] [--single-thread|-1]');
         process.exit(1);
     }
 };
@@ -90,16 +92,21 @@ const runTests = async (file, tests, trace) => {
     mpb.addTask(file, { type: 'percentage' });
 
     let passed = 0, failed = 0;
+    const runOneTest = async (test, i) => {
+        let error;
+        if (options['single-thread']) {
+            error = await worker({ test, trace });
+        } else {
+            error = await piscina.run({ test, trace });
+        }
 
-    const promises = tests.map(async (test, i) => {
-        const error = await piscina.run({ test, trace });
         if (error === undefined) {
             passed++;
         } else {
             failed++;
         }
 
-        if (options.details && error !== undefined) {
+        if (options['dump-errors'] && error !== undefined) {
             console.log(`${test.name}: ${chalk.red('FAILED')}`);
             console.log(chalk.gray(`idx: ${test.idx} hash: ${test.hash}`));
             console.log('');
@@ -112,9 +119,16 @@ const runTests = async (file, tests, trace) => {
 
         const message = formatPassedFailed(passed, failed);
         mpb.updateTask(file, { percentage: i / tests.length, message });
-    });
+    };
 
-    await Promise.allSettled(promises);
+    if (options['single-thread']) {
+        for (let i = 0; i < tests.length; i++) {
+            await runOneTest(tests[i], i);
+        }
+    } else {
+        const promises = tests.map(async (test, i) => runOneTest(test, i));
+        await Promise.allSettled(promises);
+    }
 
     log.write(`file: "${file}", passed: ${passed}, failed: ${failed}\n`);
 
