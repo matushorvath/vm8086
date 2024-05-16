@@ -31,7 +31,8 @@ const parseCommandLine = () => {
                 'dump-errors': { type: 'boolean', short: 'e' },
                 'dump-stdout': { type: 'boolean', short: 's' },
                 trace: { type: 'boolean', short: 't' },
-                'single-thread': { type: 'boolean', short: '1' }
+                'single-thread': { type: 'boolean', short: '1' },
+                keep: { type: 'boolean', short: 'k' }
             }
         });
 
@@ -57,7 +58,7 @@ const parseCommandLine = () => {
     } catch (error) {
         console.error(error.message);
         console.log('Usage: node test.js [--opcode|-o <opcode>] [--index|-i <index>] [--hash|-h <hash>]');
-        console.log('          [--dump-errors|-e] [--dump-stdout|-s] [--trace|-t] [--single-thread|-1]');
+        console.log('         [--keep|-k] [--dump-errors|-e] [--dump-stdout|-s] [--trace|-t] [--single-thread|-1]');
         process.exit(1);
     }
 };
@@ -141,7 +142,7 @@ const runTests = async (file, tests) => {
 
 const onWorkerMessage = (data) => {
     switch (data.type) {
-    case 'log': console.log(data.message); return;
+    case 'log': console.log(data.message); log.write(`${data.message}\n`); return;
     }
 };
 

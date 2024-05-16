@@ -26,12 +26,11 @@ const consoleLog = (message) => {
     }
 };
 
-const runIntcode = async (hash, input) => {
+const executeTest = async (hash, input) => {
     const testData = `${testCode},${input.map(n => n.toString()).join(',')}\n`;
     const testName = path.join(tmpdir, hash);
     const mapName = `${testName}.map.yaml`;
 
-    let child;
     try {
         // Append input data to the intcode program
         await fsp.appendFile(testName, testData, 'utf8');
@@ -39,21 +38,23 @@ const runIntcode = async (hash, input) => {
 
         // Execute the test
         if (options.trace) {
-            consoleLog(`starting: ${hash}`);
+            consoleLog(`starting: ${hash} ${testName}`);
         }
 
-        child = await execFileAsync(ICVM, [testName]);
+        const child = await execFileAsync(ICVM, [testName]);
 
         if (options.trace) {
             consoleLog(`finished: ${hash}`);
         }
+
+        return { stdout: child.stdout, stderr: child.stderr };
     } finally {
         // Clean up
-        await fsp.unlink(testName);
-        await fsp.unlink(mapName);
+        if (!options.keep) {
+            await fsp.unlink(testName);
+            await fsp.unlink(mapName);
+        }
     }
-
-    return child.stdout;
 };
 
 const processOutput = (test, stdout) => {
@@ -100,15 +101,19 @@ export default async ({ test, options: parentOptions }) => {
     input.push(...test.initial.ram.flatMap(rec => rec));
     input.push(...test.final.ram.map(([addr]) => addr));
 
-    const output = await runIntcode(test.hash, input);
+    const { stdout, stderr } = await executeTest(test.hash, input);
 
     if (options['dump-stdout']) {
-        consoleLog(`${test.name} (stdout)`);
+        consoleLog(`${test.name}`);
         consoleLog(chalk.gray(`idx: ${test.idx} hash: ${test.hash}`));
         consoleLog('');
-        consoleLog(output);
+        consoleLog('stdout>');
+        consoleLog(stdout);
+        consoleLog('');
+        consoleLog('stderr>');
+        consoleLog(stderr);
         consoleLog('');
     }
 
-    return processOutput(test, output);
+    return processOutput(test, stdout);
 };
