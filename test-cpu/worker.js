@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import util from 'node:util';
 import wt from 'node:worker_threads';
+import chalk from 'chalk';
 
 const execFileAsync = util.promisify(child_process.execFile);
 
@@ -14,7 +15,18 @@ const testBinary = path.join('obj', 'test.input');
 const testCode = (await fsp.readFile(testBinary, 'utf8')).trimEnd();
 const tmpdir = await fsp.mkdtemp(path.join(os.tmpdir(), 'vm8086-'));
 
-const runIntcode = async (hash, input, trace) => {
+let options;
+
+const consoleLog = (message) => {
+    // Avoid accessing the console from multiple threads, if we're running as a worker thread
+    if (wt.isMainThread) {
+        console.log(message);
+    } else {
+        wt.parentPort.postMessage({ type: 'log', message });
+    }
+};
+
+const runIntcode = async (hash, input) => {
     const testData = `${testCode},${input.map(n => n.toString()).join(',')}\n`;
     const testName = path.join(tmpdir, hash);
     const mapName = `${testName}.map.yaml`;
@@ -26,14 +38,14 @@ const runIntcode = async (hash, input, trace) => {
         await fsp.copyFile(`${testBinary}.map.yaml`, mapName);
 
         // Execute the test
-        if (trace) {
-            wt.parentPort.postMessage({ type: 'log', message: `starting: ${hash}` });
+        if (options.trace) {
+            consoleLog(`starting: ${hash}`);
         }
 
         child = await execFileAsync(ICVM, [testName]);
 
-        if (trace) {
-            wt.parentPort.postMessage({ type: 'log', message: `finished: ${hash}` });
+        if (options.trace) {
+            consoleLog(`finished: ${hash}`);
         }
     } finally {
         // Clean up
@@ -76,7 +88,9 @@ const processOutput = (test, stdout) => {
     }
 };
 
-export default async ({ test, trace }) => {
+export default async ({ test, options: parentOptions }) => {
+    options = parentOptions;
+
     // Prepare input data for the test
     const regs = ['ax', 'bx', 'cx', 'dx', 'cs', 'ss', 'ds', 'es', 'sp', 'bp', 'si', 'di', 'ip', 'flags'];
     const input = regs.map(r => test.initial.regs[r]);
@@ -86,6 +100,15 @@ export default async ({ test, trace }) => {
     input.push(...test.initial.ram.flatMap(rec => rec));
     input.push(...test.final.ram.map(([addr]) => addr));
 
-    const output = await runIntcode(test.hash, input, trace);
+    const output = await runIntcode(test.hash, input);
+
+    if (options['dump-stdout']) {
+        consoleLog(`${test.name} (stdout)`);
+        consoleLog(chalk.gray(`idx: ${test.idx} hash: ${test.hash}`));
+        consoleLog('');
+        consoleLog(output);
+        consoleLog('');
+    }
+
     return processOutput(test, output);
 };

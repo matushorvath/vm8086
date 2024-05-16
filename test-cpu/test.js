@@ -1,5 +1,7 @@
 // make -C .. && make build-intcode && ICVM=~/intcode/xzintbit/vms/c/ic node test.js
 
+// TODO metadata.json
+
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
@@ -26,7 +28,8 @@ const parseCommandLine = () => {
                 opcode: { type: 'string', short: 'o', multiple: true },
                 index: { type: 'string', short: 'i', multiple: true },
                 hash: { type: 'string', short: 'h', multiple: true },
-                'dump-errors': { type: 'boolean', short: 'd' },
+                'dump-errors': { type: 'boolean', short: 'e' },
+                'dump-stdout': { type: 'boolean', short: 's' },
                 trace: { type: 'boolean', short: 't' },
                 'single-thread': { type: 'boolean', short: '1' }
             }
@@ -54,7 +57,7 @@ const parseCommandLine = () => {
     } catch (error) {
         console.error(error.message);
         console.log('Usage: node test.js [--opcode|-o <opcode>] [--index|-i <index>] [--hash|-h <hash>]');
-        console.log('          [--dump-errors|-d] [--trace|-t] [--single-thread|-1]');
+        console.log('          [--dump-errors|-e] [--dump-stdout|-s] [--trace|-t] [--single-thread|-1]');
         process.exit(1);
     }
 };
@@ -88,16 +91,16 @@ const loadTests = async (dir, file, idx, hash) => {
     });
 };
 
-const runTests = async (file, tests, trace) => {
+const runTests = async (file, tests) => {
     mpb.addTask(file, { type: 'percentage' });
 
     let passed = 0, failed = 0;
     const runOneTest = async (test, i) => {
         let error;
         if (options['single-thread']) {
-            error = await worker({ test, trace });
+            error = await worker({ test, options });
         } else {
-            error = await piscina.run({ test, trace });
+            error = await piscina.run({ test, options });
         }
 
         if (error === undefined) {
@@ -158,7 +161,7 @@ const main = async () => {
 
     for (const file of files) {
         const tests = await loadTests(TESTS_DIR, file, options.index, options.hash);
-        await runTests(file, tests, options.trace);
+        await runTests(file, tests);
     }
 
     mpb.close();
