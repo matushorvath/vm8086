@@ -90,3 +90,9 @@ Results
 - few failed: 40-4F, 50, 5A, 57, 17
 - no passed: 54, 0F, 
 - slow: ?
+
+
+Filtering
+=========
+C7 is filtered by "reg"
+C8 is filtered completely

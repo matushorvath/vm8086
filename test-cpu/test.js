@@ -15,33 +15,53 @@ import worker from './worker.js';
 const gunzipAsync = util.promisify(zlib.gunzip);
 
 const piscina = new Piscina({ filename: path.resolve(import.meta.dirname, 'worker.js') });
-const mpb = new MultiProgressBars({ initMessage: 'CPU Test', anchor: 'top', persist: true });
-
 const log = fs.createWriteStream('test.log', { flags: 'a', encoding: 'utf8' });
 
 const TESTS_DIR = path.join('..', '..', '8088', 'v1');
+
+let mpb, options;
+
+const printUsage = () => {
+// eslint-disable indent
+// 100:   012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
+    console.log(`\
+Usage: node test.js [options]
+
+Options:
+    [--file|-o <file-prefix>]   Only run test cases starting with <file-prefix>
+    [--index|-i <index>]        Only run tests with idx field equal to <index>
+    [--hash|-h <hash-prefix>]   Only run tests with hash field starting with <hash-prefix>s
+
+    [--undefined-behavior|u]    Run all tests, including those that test undefined behavior
+
+    [--keep|-k]                 Don't delete temporary files after the tests finish
+    [--single-thread|-1]        Run all tests in the main thread, without using worker threads
+
+    [--dump-errors|-e]          Print differences between expected and actual values
+    [--dump-stdout|-s]          Print standard output of the intcode binary
+    [--trace|-t]                Trace execution of individual test cases
+
+Environment:
+    ICVM                        Path to the intcode virtual machine
+`);
+// eslint-enable indent
+};
 
 const parseCommandLine = () => {
     try {
         const { values } = util.parseArgs({
             options: {
-                opcode: { type: 'string', short: 'o', multiple: true },
+                file: { type: 'string', short: 'f', multiple: true },
                 index: { type: 'string', short: 'i', multiple: true },
                 hash: { type: 'string', short: 'h', multiple: true },
                 'dump-errors': { type: 'boolean', short: 'e' },
                 'dump-stdout': { type: 'boolean', short: 's' },
                 trace: { type: 'boolean', short: 't' },
                 'single-thread': { type: 'boolean', short: '1' },
-                keep: { type: 'boolean', short: 'k' }
+                keep: { type: 'boolean', short: 'k' },
+                'undefined-behavior': { type: 'boolean', short: 'u' }
             }
         });
-
-        if (values.opcode !== undefined) {
-            if (values.opcode.some(oc => !/^[0-9a-zA-Z]{1,2}$/.test(oc))) {
-                throw new Error('Opcode must be an 8-bit hexadecimal value');
-            }
-            values.opcode = values.opcode.map(oc => oc.toLowerCase().padStart(2, '0'));
-        }
 
         if (values.index !== undefined && values.hash !== undefined) {
             throw new Error('Both index and hash must not be specified at the same time');
@@ -57,15 +77,12 @@ const parseCommandLine = () => {
         return values;
     } catch (error) {
         console.error(error.message);
-        console.log('Usage: node test.js [--opcode|-o <opcode>] [--index|-i <index>] [--hash|-h <hash>]');
-        console.log('         [--keep|-k] [--dump-errors|-e] [--dump-stdout|-s] [--trace|-t] [--single-thread|-1]');
+        printUsage();
         process.exit(1);
     }
 };
 
-const options = parseCommandLine();
-
-const formatPassedFailed = (passed, failed) => {
+const formatPassedFailed = (passed, failed, filtered) => {
     let output = '';
 
     const passedMessage = `passed ${String(passed).padStart(5)}`;
@@ -76,11 +93,16 @@ const formatPassedFailed = (passed, failed) => {
     const failedMessage = `failed ${String(failed).padStart(5)}`;
     output += chalk.red(failed > 0 ? failedMessage : ' '.repeat(failedMessage.length));
 
+    output += failed > 0 && filtered > 0 ? ', ' : '  ';
+
+    const filteredMessage = `filtered ${String(filtered).padStart(5)}`;
+    output += chalk.gray(filtered > 0 ? filteredMessage : ' '.repeat(filteredMessage.length));
+
     return output;
 };
 
-const loadTests = async (dir, file, idx, hash) => {
-    const zbuffer = await fsp.readFile(path.join(dir, file));
+const loadTests = async (file, idx, hash) => {
+    const zbuffer = await fsp.readFile(path.join(TESTS_DIR, file));
     const buffer = await gunzipAsync(zbuffer);
 
     const json = buffer.toString('utf8');
@@ -92,7 +114,7 @@ const loadTests = async (dir, file, idx, hash) => {
     });
 };
 
-const runTests = async (file, tests) => {
+const runTests = async (file, tests, filtered) => {
     mpb.addTask(file, { type: 'percentage' });
 
     let passed = 0, failed = 0;
@@ -121,7 +143,7 @@ const runTests = async (file, tests) => {
             log.write(error.toString());
         }
 
-        const message = formatPassedFailed(passed, failed);
+        const message = formatPassedFailed(passed, failed, filtered);
         mpb.updateTask(file, { percentage: i / tests.length, message });
     };
 
@@ -134,9 +156,9 @@ const runTests = async (file, tests) => {
         await Promise.allSettled(promises);
     }
 
-    log.write(`file: "${file}", passed: ${passed}, failed: ${failed}\n`);
+    log.write(`file: "${file}", passed: ${passed}, failed: ${failed}, filtered ${filtered}\n`);
 
-    const message = formatPassedFailed(passed, failed);
+    const message = formatPassedFailed(passed, failed, filtered);
     mpb.done(file, { message });
 };
 
@@ -146,7 +168,53 @@ const onWorkerMessage = (data) => {
     }
 };
 
+const loadMetadata = async () => {
+    if (options['undefined-behavior']) {
+        return undefined;
+    }
+
+    return JSON.parse(await fsp.readFile(path.join(TESTS_DIR, 'metadata.json'), 'utf8'));
+};
+
+const byteToOpcodesKey = (byte) => byte.toString(16).toUpperCase().padStart(2, '0');
+
+const applyMetadata = (test, metadata) => {
+    if (metadata === undefined) {
+        // No filtering, no masking, just use the test data directly
+        return test;
+    }
+
+    // Skip all prefixes and find the opcode
+    const ocIndex = test.bytes.findIndex(b => metadata.opcodes[byteToOpcodesKey(b)].status !== 'prefix');
+    if (ocIndex === -1) {
+        return [];
+    }
+
+    const opcodeKey = byteToOpcodesKey(test.bytes[ocIndex]);
+    let info = metadata.opcodes[opcodeKey];
+
+    // If there is a reg field, the actual information is one level deeper
+    if (info.reg) {
+        const reg = (test.bytes[ocIndex + 1] & 0b00111000) >> 3;
+        info = info.reg[reg.toString()];
+    }
+
+    // Only test opcodes with 'normal' status
+    if (info.status !== 'normal') {
+        return [];
+    }
+
+    // Add flags mask, if any, to the test
+    if (info['flags-mask'] !== undefined) {
+        test.flagsMask = info['flags-mask'];
+    }
+
+    return test;
+};
+
 const main = async () => {
+    options = parseCommandLine();
+
     if (process.env.ICVM === undefined) {
         console.error('Missing path to intcode VM; make sure the ICVM environment variable is correct');
         return 1;
@@ -155,14 +223,22 @@ const main = async () => {
     log.write('CPU tests started\n');
 
     piscina.on('message', onWorkerMessage);
+    mpb = new MultiProgressBars({ initMessage: 'CPU Test', anchor: 'top', persist: true });
+
+    const metadata = await loadMetadata();
 
     const files = (await fsp.readdir(TESTS_DIR))
         .filter(file => file.match(/.*\.gz/))
-        .filter(file => options.opcode === undefined || options.opcode.some(oc => file.toLowerCase().startsWith(oc)));
+        .filter(file => options.file === undefined || options.file.some(f => file.startsWith(f)));
 
     for (const file of files) {
-        const tests = await loadTests(TESTS_DIR, file, options.index, options.hash);
-        await runTests(file, tests);
+        const allTests = await loadTests(file, options.index, options.hash);
+        const validTests = allTests.flatMap(test => applyMetadata(test, metadata));
+        const filtered = allTests.length - validTests.length;
+
+        if (validTests.length > 0) {
+            await runTests(file, validTests, filtered);
+        }
     }
 
     mpb.close();

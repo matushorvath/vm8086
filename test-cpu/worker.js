@@ -68,8 +68,11 @@ const processOutput = (test, stdout) => {
         return error;
     }
 
-    // Adjust the result
+    // Adjust the flags
     result.regs.flags |= 0xF000;        // top half-byte of 8086 flags should be all 1s, but bochs has 0s
+
+    const flagMask = test.flagMask ?? 0xffff;
+    result.regs.flags &= flagMask;
 
     // Keep only result registers we are supposed to check
     for (const key in result.regs) {
