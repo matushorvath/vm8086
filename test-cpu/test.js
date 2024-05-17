@@ -82,21 +82,27 @@ const parseCommandLine = () => {
     }
 };
 
-const formatPassedFailed = (passed, failed, filtered) => {
+const formatPassedFailed = (passed, failed, total, filtered) => {
     let output = '';
 
     const passedMessage = `passed ${String(passed).padStart(5)}`;
     output += chalk.green(passed > 0 ? passedMessage : ' '.repeat(passedMessage.length));
 
-    output += passed > 0 && failed > 0 ? ', ' : '  ';
+    output += '  ';
 
     const failedMessage = `failed ${String(failed).padStart(5)}`;
     output += chalk.red(failed > 0 ? failedMessage : ' '.repeat(failedMessage.length));
 
-    output += failed > 0 && filtered > 0 ? ', ' : '  ';
+    output += '  ';
 
     const filteredMessage = `filtered ${String(filtered).padStart(5)}`;
     output += chalk.gray(filtered > 0 ? filteredMessage : ' '.repeat(filteredMessage.length));
+
+    output += '  ';
+
+    const pending = total - passed - failed;
+    const pendingMessage = `pending ${String(pending).padStart(5)}`;
+    output += chalk.blue(pending > 0 ? pendingMessage : ' '.repeat(pendingMessage.length));
 
     return output;
 };
@@ -143,7 +149,7 @@ const runTests = async (file, tests, filtered) => {
             log.write(error.toString());
         }
 
-        const message = formatPassedFailed(passed, failed, filtered);
+        const message = formatPassedFailed(passed, failed, tests.length, filtered);
         mpb.updateTask(file, { percentage: i / tests.length, message });
     };
 
@@ -158,7 +164,7 @@ const runTests = async (file, tests, filtered) => {
 
     log.write(`file: "${file}", passed: ${passed}, failed: ${failed}, filtered ${filtered}\n`);
 
-    const message = formatPassedFailed(passed, failed, filtered);
+    const message = formatPassedFailed(passed, failed, tests.length, filtered);
     mpb.done(file, { message });
 };
 
