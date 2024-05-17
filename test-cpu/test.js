@@ -2,6 +2,7 @@
 
 // TODO metadata.json
 
+import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
@@ -118,6 +119,19 @@ const loadTests = async (file, idx, hash) => {
         return (idx === undefined || idx.some(i => test.idx === i))
             && (hash === undefined || hash.some(h => test.hash.startsWith(h)));
     });
+};
+
+const adjustTests = (file, tests) => {
+    // Test adjustments to fix issues I found, either in the test or in the VM
+
+    // 3A test 3093506565e4803bf150e0e36d3e846edb6f1c3a
+    // initial memory does not have a NOP immediately after the first instruction
+    if (file.startsWith('3A.json')) {
+        const test = tests.find(t => t.hash === '3093506565e4803bf150e0e36d3e846edb6f1c3a');
+        assert.notEqual(test, undefined);
+        assert.deepEqual(test.initial.ram[3], [278859, 10]);
+        test.initial.ram[3][1] = 0x90;
+    }
 };
 
 const runTests = async (file, tests, filtered) => {
@@ -239,6 +253,7 @@ const main = async () => {
 
     for (const file of files) {
         const allTests = await loadTests(file, options.index, options.hash);
+        adjustTests(file, allTests);
         const validTests = allTests.flatMap(test => applyMetadata(test, metadata));
         const filtered = allTests.length - validTests.length;
 
