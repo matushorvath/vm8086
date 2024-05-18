@@ -142,7 +142,7 @@ const logTestSummary = (file, passed, failed, filtered) => {
 
     // TODO print list of failed hashes once there's fewer of them
 
-    log.write(JSON.stringify(data, undefined, 2) + '\n');
+    log.write(JSON.stringify(data) + '\n');
 };
 
 const runTests = async (file, tests, filtered) => {
