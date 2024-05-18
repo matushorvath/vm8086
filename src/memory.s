@@ -4,9 +4,7 @@
 .EXPORT read_b
 .EXPORT write_b
 
-.EXPORT read_seg_off_b
 .EXPORT read_seg_off_w
-.EXPORT write_seg_off_b
 .EXPORT write_seg_off_w
 
 .EXPORT read_cs_ip_b
@@ -99,26 +97,6 @@ calc_cs_ip_addr_done:
 .ENDFRAME
 
 ##########
-read_seg_off_b:
-.FRAME seg, off; value, addr                                # returns value
-    arb -2
-
-    add [rb + seg], 0, [rb - 1]
-    add [rb + off], 0, [rb - 2]
-    arb -2
-    call calc_addr
-    add [rb - 4], 0, [rb + addr]
-
-    add [rb + addr], 0, [rb - 1]
-    arb -1
-    call read_b
-    add [rb - 3], 0, [rb + value]
-
-    arb 2
-    ret 2
-.ENDFRAME
-
-##########
 read_seg_off_w:
 .FRAME seg, off; value_lo, value_hi, addr                   # returns value_lo, value_hi
     arb -3
@@ -141,26 +119,6 @@ read_seg_off_w:
 
     arb 3
     ret 2
-.ENDFRAME
-
-##########
-write_seg_off_b:
-.FRAME seg, off, value; addr
-    arb -1
-
-    add [rb + seg], 0, [rb - 1]
-    add [rb + off], 0, [rb - 2]
-    arb -2
-    call calc_addr
-    add [rb - 4], 0, [rb + addr]
-
-    add [rb + addr], 0, [rb - 1]
-    add [rb + value], 0, [rb - 2]
-    arb -2
-    call write_b
-
-    arb 1
-    ret 3
 .ENDFRAME
 
 ##########

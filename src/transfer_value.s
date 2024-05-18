@@ -17,7 +17,8 @@
 .IMPORT write_location_w
 
 # From memory.s
-.IMPORT read_seg_off_b
+.IMPORT calc_addr
+.IMPORT read_b
 
 # From prefix.s
 .IMPORT ds_segment_prefix
@@ -202,8 +203,12 @@ execute_xlat_no_overflow:
     add [0], [rb - 1], [rb - 1]
     add [rb + value_offset], 0, [rb - 2]
     arb -2
-    call read_seg_off_b
-    add [rb - 4], 0, [reg_al]
+    call calc_addr
+
+    add [rb - 4], 0, [rb - 1]
+    arb -1
+    call read_b
+    add [rb - 3], 0, [reg_al]
 
     arb 2
     ret 0
