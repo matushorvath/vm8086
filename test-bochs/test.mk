@@ -86,7 +86,10 @@ $(RESDIR)/%.vm8086.txt: $(OBJDIR)/%.input FORCE
 	diff $(SAMPLE_TXT) $@ || $(failed-diff)
 	@$(passed)
 
-$(OBJDIR)/%.input: $(COMMON_OBJDIR)/main.o $(LIBCPU) $(LIBXIB) $(COMMON_OBJDIR)/binary_header.o $(OBJDIR)/%.o
+TEST_OBJS = $(COMMON_OBJDIR)/main.o $(COMMON_OBJDIR)/config.o $(LIBCPU) $(LIBXIB) \
+	$(COMMON_OBJDIR)/binary_header.o
+
+$(OBJDIR)/%.input: $(TEST_OBJS) $(OBJDIR)/%.o
 	printf '$(NAME): [intcode] linking ' >> $(TESTLOG)
 	echo .$$ | cat $^ - | $(ICVM) $(ICLD) > $@ || $(failed)
 	echo .$$ | cat $^ - | $(ICVM) $(ICLDMAP) > $@.map.yaml || $(failed)
