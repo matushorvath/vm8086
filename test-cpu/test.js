@@ -37,7 +37,7 @@ Options:
     [--single-thread|-1]        Run all tests in the main thread, without using worker threads
 
     [--dump-errors|-e]          Print differences between expected and actual values
-    [--dump-stdout|-s]          Print standard output of the intcode binary
+    [--dump-stdout|-o]          Print standard output of the intcode binary
     [--trace|-t]                Trace execution of individual test cases
 
 Environment:
@@ -54,7 +54,7 @@ const parseCommandLine = () => {
                 index: { type: 'string', short: 'i', multiple: true },
                 hash: { type: 'string', short: 'h', multiple: true },
                 'dump-errors': { type: 'boolean', short: 'e' },
-                'dump-stdout': { type: 'boolean', short: 's' },
+                'dump-stdout': { type: 'boolean', short: 'o' },
                 trace: { type: 'boolean', short: 't' },
                 'single-thread': { type: 'boolean', short: '1' },
                 keep: { type: 'boolean', short: 'k' },

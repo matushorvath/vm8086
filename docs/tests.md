@@ -3,6 +3,15 @@ Filtering
 C7 is filtered by "reg"
 C8 is filtered completely
 
+Notes
+=====
+
+27, many failed (DAA)
+2F, many failed (DAS)
+
+17, one failed (49e1bb2fdf1cedfcf36c13de46ff9691318ee728)
+POP SS
+
 3E 3093506565e4803bf150e0e36d3e846edb6f1c3a
 ===========================================
 
