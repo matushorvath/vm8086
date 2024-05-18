@@ -85,7 +85,7 @@ const parseCommandLine = () => {
     }
 };
 
-const formatPassedFailed = (passed, failed, total, filtered) => {
+const formatPassedFailed = (passed, failed, total, disabled, filtered) => {
     let output = '';
 
     const passedMessage = `passed ${String(passed).padStart(5)}`;
@@ -95,6 +95,11 @@ const formatPassedFailed = (passed, failed, total, filtered) => {
 
     const failedMessage = `failed ${String(failed).padStart(5)}`;
     output += chalk.red(failed > 0 ? failedMessage : ' '.repeat(failedMessage.length));
+
+    output += '  ';
+
+    const disabledMessage = `disabled ${String(disabled).padStart(5)}`;
+    output += chalk.gray(disabled > 0 ? disabledMessage : ' '.repeat(disabledMessage.length));
 
     output += '  ';
 
@@ -154,7 +159,7 @@ const adjustTests = (file, tests) => {
     }
 };
 
-const runTests = async (file, tests, filtered) => {
+const runTests = async (file, tests, disabled, filtered) => {
     mpb.addTask(file, { type: 'percentage' });
 
     let passed = 0, failed = 0;
@@ -187,7 +192,7 @@ const runTests = async (file, tests, filtered) => {
             log.write(error.toString());
         }
 
-        const message = formatPassedFailed(passed, failed, tests.length, filtered);
+        const message = formatPassedFailed(passed, failed, tests.length, disabled, filtered);
         mpb.updateTask(file, { percentage: i / tests.length, message });
     };
 
@@ -205,9 +210,9 @@ const runTests = async (file, tests, filtered) => {
         }
     }
 
-    log.write(`file: "${file}", passed: ${passed}, failed: ${failed}, filtered ${filtered}\n`);
+    log.write(`file: "${file}", passed: ${passed}, failed: ${failed}, disabled: ${disabled}, filtered ${filtered}\n`);
 
-    const message = formatPassedFailed(passed, failed, tests.length, filtered);
+    const message = formatPassedFailed(passed, failed, tests.length, disabled, filtered);
     mpb.done(file, { message });
 };
 
@@ -304,12 +309,16 @@ const main = async () => {
 
     for (const file of files) {
         const allTests = await loadTests(file, options.index, options.hash);
+        const loadedTestCount = allTests.length;
+
         adjustTests(file, allTests);
+        const disabled = loadedTestCount - allTests.length;
+
         const validTests = allTests.flatMap(test => applyMetadata(test, metadata));
         const filtered = allTests.length - validTests.length;
 
         if (validTests.length > 0) {
-            await runTests(file, validTests, filtered);
+            await runTests(file, validTests, disabled, filtered);
         }
     }
 
