@@ -90,6 +90,8 @@ const processOutput = (test, stdout) => {
         }
         return [error, result];
     }
+
+    return [];
 };
 
 export default async ({ test, options: parentOptions }) => {

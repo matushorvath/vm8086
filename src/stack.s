@@ -33,17 +33,28 @@ execute_push_w:
 .FRAME loc_type, loc_addr; value_lo, value_hi
     arb -2
 
+    # Can't call push_w, in case we are pushing SP the value pushed would be read before decrementing
+
+    # Decrement sp by 2
+    call dec_sp_w
+
     # Read the value from location
     add [rb + loc_type], 0, [rb - 1]
     add [rb + loc_addr], 0, [rb - 2]
     arb -2
     call read_location_w
+    add [rb - 4], 0, [rb + value_lo]
+    add [rb - 5], 0, [rb + value_hi]
 
-    # Push it to stack
-    add [rb - 4], 0, [rb - 1]
-    add [rb - 5], 0, [rb - 2]
-    arb -2
-    call push_w
+    # Store the value
+    mul [reg_ss + 1], 0x100, [rb - 1]
+    add [reg_ss + 0], [rb - 1], [rb - 1]
+    mul [reg_sp + 1], 0x100, [rb - 2]
+    add [reg_sp + 0], [rb - 2], [rb - 2]
+    add [rb + value_lo], 0, [rb - 3]
+    add [rb + value_hi], 0, [rb - 4]
+    arb -4
+    call write_seg_off_w
 
     arb 2
     ret 2
