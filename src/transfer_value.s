@@ -17,7 +17,7 @@
 .IMPORT write_location_w
 
 # From memory.s
-.IMPORT calc_addr
+.IMPORT calc_addr_b
 .IMPORT read_b
 
 # From prefix.s
@@ -203,7 +203,7 @@ execute_xlat_no_overflow:
     add [0], [rb - 1], [rb - 1]
     add [rb + value_offset], 0, [rb - 2]
     arb -2
-    call calc_addr
+    call calc_addr_b
 
     add [rb - 4], 0, [rb - 1]
     arb -1

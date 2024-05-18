@@ -2,7 +2,7 @@
 .EXPORT arg_al_ax_near_ptr_dst
 
 # From memory.s
-.IMPORT calc_addr
+.IMPORT calc_addr_b
 .IMPORT read_cs_ip_w
 
 # From prefix.s
@@ -72,7 +72,7 @@ arg_al_ax_near_ptr_generic:
     add [0], [rb - 1], [rb - 1]
     add [rb + off], 0, [rb - 2]
     arb -2
-    call calc_addr
+    call calc_addr_b
 
     # Memory location
     add 1, 0, [rb + loc_type_mem]

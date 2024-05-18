@@ -1,4 +1,4 @@
-.EXPORT calc_addr
+.EXPORT calc_addr_b
 .EXPORT calc_cs_ip_addr
 
 .EXPORT read_b
@@ -47,7 +47,7 @@ write_b:
 .ENDFRAME
 
 ##########
-calc_addr:
+calc_addr_b:
 .FRAME seg, off; addr, tmp                                  # returns addr
     arb -2
 
@@ -57,11 +57,11 @@ calc_addr:
 
     # Wrap around to 20 bits
     lt  [rb + addr], 0x100000, [rb + tmp]
-    jnz [rb + tmp], calc_addr_done
+    jnz [rb + tmp], calc_addr_b_done
 
     add [rb + addr], -0x100000, [rb + addr]
 
-calc_addr_done:
+calc_addr_b_done:
     arb 2
     ret 2
 .ENDFRAME
@@ -104,7 +104,7 @@ read_seg_off_w:
     add [rb + seg], 0, [rb - 1]
     add [rb + off], 0, [rb - 2]
     arb -2
-    call calc_addr
+    call calc_addr_b
     add [rb - 4], 0, [rb + addr]
 
     add [rb + addr], 0, [rb - 1]
@@ -129,7 +129,7 @@ write_seg_off_w:
     add [rb + seg], 0, [rb - 1]
     add [rb + off], 0, [rb - 2]
     arb -2
-    call calc_addr
+    call calc_addr_b
     add [rb - 4], 0, [rb + addr]
 
     add [rb + addr], 0, [rb - 1]
