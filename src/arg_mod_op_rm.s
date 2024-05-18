@@ -82,8 +82,8 @@ arg_mod_000_rm_immediate_b_nonzero_reg:
 
 ##########
 arg_mod_000_rm_immediate_w:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
-    arb -4
+.FRAME loc_type_src, loc_addr_lo_src, loc_addr_hi_src, loc_type_dst, loc_addr_lo_dst, loc_addr_hi_dst                   # returns loc_type_*, loc_addr_*
+    arb -6
 
     # R/M is dst, 16-bit immediate is src
 
@@ -98,12 +98,14 @@ arg_mod_000_rm_immediate_w:
     jnz [rb - 5], arg_mod_000_rm_immediate_w_nonzero_reg
 
     # Return pointer to 16-bit immediate
-    call calc_cs_ip_addr_b # TODO calc_cs_ip_addr_w
+    call calc_cs_ip_addr_w
     add 1, 0, [rb + loc_type_src]
-    add [rb - 2], 0, [rb + loc_addr_src]
+    add [rb - 2], 0, [rb + loc_addr_lo_src]
+    add [rb - 3], 0, [rb + loc_addr_hi_src]
+
     call inc_ip_w
 
-    arb 4
+    arb 6
     ret 0
 
 arg_mod_000_rm_immediate_w_nonzero_reg:
@@ -209,8 +211,8 @@ arg_mod_op_rm_w_immediate_sxb:
 
 ##########
 arg_mod_op_rm_w_immediate_w:
-.FRAME op, loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst               # returns op, loc_type_*, loc_addr_*
-    arb -5
+.FRAME op, loc_type_src, loc_addr_lo_src, loc_addr_hi_src, loc_type_dst, loc_addr_lo_dst, loc_addr_hi_dst               # returns op, loc_type_*, loc_addr_*
+    arb -7
 
     # 16-bit R/M is dst, 16-bit immediate is src
 
@@ -223,12 +225,14 @@ arg_mod_op_rm_w_immediate_w:
     add [rb - 5], 0, [rb + op]
 
     # Return pointer to 16-bit immediate
-    call calc_cs_ip_addr_b # TODO calc_cs_ip_addr_w
+    call calc_cs_ip_addr_w
     add 1, 0, [rb + loc_type_src]
-    add [rb - 2], 0, [rb + loc_addr_src]
+    add [rb - 2], 0, [rb + loc_addr_lo_src]
+    add [rb - 3], 0, [rb + loc_addr_hi_src]
+
     call inc_ip_w
 
-    arb 5
+    arb 7
     ret 0
 .ENDFRAME
 
