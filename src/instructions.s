@@ -13,8 +13,10 @@
 .IMPORT execute_cmp_w
 
 # From arg_al_ax_near_ptr.s
-.IMPORT arg_al_ax_near_ptr_src
-.IMPORT arg_al_ax_near_ptr_dst
+.IMPORT arg_al_near_ptr_src
+.IMPORT arg_ax_near_ptr_src
+.IMPORT arg_al_near_ptr_dst
+.IMPORT arg_ax_near_ptr_dst
 
 # From arg_mod_op_rm.s
 .IMPORT arg_mod_000_rm_w
@@ -420,10 +422,10 @@ instructions:
     db  execute_sahf, 0, 0                                  # 0x9e SAHF
     db  execute_lahf, 0, 0                                  # 0x9f LAHF
 
-    db  execute_mov_b, arg_al_ax_near_ptr_dst, 4            # 0xa0 MOV AL, MEM8
-    db  execute_mov_w, arg_al_ax_near_ptr_dst, 4            # 0xa1 MOV AX, MEM16
-    db  execute_mov_b, arg_al_ax_near_ptr_src, 4            # 0xa2 MOV MEM8, AL
-    db  execute_mov_w, arg_al_ax_near_ptr_src, 4            # 0xa3 MOV MEM16, AX
+    db  execute_mov_b, arg_al_near_ptr_dst, 4               # 0xa0 MOV AL, MEM8
+    db  execute_mov_w, arg_ax_near_ptr_dst, 6               # 0xa1 MOV AX, MEM16
+    db  execute_mov_b, arg_al_near_ptr_src, 4               # 0xa2 MOV MEM8, AL
+    db  execute_mov_w, arg_ax_near_ptr_src, 6               # 0xa3 MOV MEM16, AX
 
     db  execute_movs_b, 0, 0                                # 0xa4 MOVS DEST-STR8, SRC-STR8
     db  execute_movs_w, 0, 0                                # 0xa5 MOVS DEST-STR16, SRC-STR16

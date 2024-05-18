@@ -1,8 +1,12 @@
-.EXPORT arg_al_ax_near_ptr_src
-.EXPORT arg_al_ax_near_ptr_dst
+.EXPORT arg_al_near_ptr_src
+.EXPORT arg_ax_near_ptr_src
+
+.EXPORT arg_al_near_ptr_dst
+.EXPORT arg_ax_near_ptr_dst
 
 # From memory.s
 .IMPORT calc_addr_b
+.IMPORT calc_addr_w
 .IMPORT read_cs_ip_w
 
 # From prefix.s
@@ -17,13 +21,13 @@
 # The second argument is either AL or AX.
 
 ##########
-arg_al_ax_near_ptr_src:
+arg_al_near_ptr_src:
 .FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
     arb -4
 
-    # AL/AX is src, memory is dst
+    # AL is src, memory is dst
 
-    call arg_al_ax_near_ptr_generic
+    call arg_al_near_ptr_generic
     add [rb - 2], 0, [rb + loc_type_src]
     add [rb - 3], 0, [rb + loc_addr_src]
     add [rb - 4], 0, [rb + loc_type_dst]
@@ -34,13 +38,32 @@ arg_al_ax_near_ptr_src:
 .ENDFRAME
 
 ##########
-arg_al_ax_near_ptr_dst:
+arg_ax_near_ptr_src:
+.FRAME loc_type_src, loc_addr_lo_src, loc_addr_hi_src, loc_type_dst, loc_addr_lo_dst, loc_addr_hi_dst                   # returns loc_type_*, loc_addr_*
+    arb -6
+
+    # AX is src, memory is dst
+
+    call arg_ax_near_ptr_generic
+    add [rb - 2], 0, [rb + loc_type_src]
+    add [rb - 3], 0, [rb + loc_addr_lo_src]
+    add [rb - 4], 0, [rb + loc_addr_hi_src]
+    add [rb - 5], 0, [rb + loc_type_dst]
+    add [rb - 6], 0, [rb + loc_addr_lo_dst]
+    add [rb - 7], 0, [rb + loc_addr_hi_dst]
+
+    arb 6
+    ret 0
+.ENDFRAME
+
+##########
+arg_al_near_ptr_dst:
 .FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
     arb -4
 
-    # AL/AX is dst, memory is src
+    # AL is dst, memory is src
 
-    call arg_al_ax_near_ptr_generic
+    call arg_al_near_ptr_generic
     add [rb - 2], 0, [rb + loc_type_dst]
     add [rb - 3], 0, [rb + loc_addr_dst]
     add [rb - 4], 0, [rb + loc_type_src]
@@ -51,7 +74,26 @@ arg_al_ax_near_ptr_dst:
 .ENDFRAME
 
 ##########
-arg_al_ax_near_ptr_generic:
+arg_ax_near_ptr_dst:
+.FRAME loc_type_src, loc_addr_lo_src, loc_addr_hi_src, loc_type_dst, loc_addr_lo_dst, loc_addr_hi_dst                   # returns loc_type_*, loc_addr_*
+    arb -6
+
+    # AX is dst, memory is src
+
+    call arg_ax_near_ptr_generic
+    add [rb - 2], 0, [rb + loc_type_dst]
+    add [rb - 3], 0, [rb + loc_addr_lo_dst]
+    add [rb - 4], 0, [rb + loc_addr_hi_dst]
+    add [rb - 5], 0, [rb + loc_type_src]
+    add [rb - 6], 0, [rb + loc_addr_lo_src]
+    add [rb - 7], 0, [rb + loc_addr_hi_src]
+
+    arb 6
+    ret 0
+.ENDFRAME
+
+##########
+arg_al_near_ptr_generic:
 .FRAME loc_type_reg, loc_addr_reg, loc_type_mem, loc_addr_mem, off              # returns loc_type_*, loc_addr_*
     arb -5
 
@@ -79,6 +121,40 @@ arg_al_ax_near_ptr_generic:
     add [rb - 4], 0, [rb + loc_addr_mem]
 
     arb 5
+    ret 0
+.ENDFRAME
+
+##########
+arg_ax_near_ptr_generic:
+.FRAME loc_type_reg, loc_addr_lo_reg, loc_addr_hi_reg, loc_type_mem, loc_addr_lo_mem, loc_addr_hi_mem, off              # returns loc_type_*, loc_addr_*
+    arb -7
+
+    # Register location
+    add 0, 0, [rb + loc_type_reg]
+    add reg_ax + 0, 0, [rb + loc_addr_lo_reg]
+    add reg_ax + 1, 0, [rb + loc_addr_hi_reg]
+
+    # Read the immediate value, which is the offset part of a memory pointer to second location
+    call read_cs_ip_w
+    mul [rb - 3], 0x100, [rb + off]
+    add [rb - 2], [rb + off], [rb + off]
+    call inc_ip_w
+
+    # Calculate physical address from DS:off
+    add [ds_segment_prefix], 1, [ip + 1]
+    mul [0], 0x100, [rb - 1]
+    add [ds_segment_prefix], 0, [ip + 1]
+    add [0], [rb - 1], [rb - 1]
+    add [rb + off], 0, [rb - 2]
+    arb -2
+    call calc_addr_w
+
+    # Memory location
+    add 1, 0, [rb + loc_type_mem]
+    add [rb - 4], 0, [rb + loc_addr_lo_mem]
+    add [rb - 5], 0, [rb + loc_addr_hi_mem]
+
+    arb 7
     ret 0
 .ENDFRAME
 
