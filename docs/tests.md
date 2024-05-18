@@ -18,6 +18,7 @@ cmp dl, byte [cs:bx+di]
 3A MOD REG R/M (DISP-LO) (DISP-HI)
 CMP REG8 REG8/MEM8
 
+bug:
 I believe in file 3A.json the test case 3093506565e4803bf150e0e36d3e846edb6f1c3a has a bug:
 The initial RAM for this test case is:
         "ram": [
@@ -58,4 +59,31 @@ Thank you very much for your test cases! They're extremely useful, and it is a m
 5B
 ==
 
-freezes, TBD
+bug (TBD):
+baf64ec03e2a347afebd39642fb5ee4a32574da0
+/tmp/vm8086-XXXXXXht2uu9/baf64ec03e2a347afebd39642fb5ee4a32574da0
+
+        "ram": [
+            [586898, 91],
+            [586899, 126],
+            [586900, 250]
+        ],
+
+misses the NOP
+
+ 91=0x5B -> POP BX
+126=0x7E -> JNG SHORT-LABEL
+250=0xFA -> IP-INC8
+
+they are trying to pop FA7E into BX, clearly
+
+should be
+        "ram": [
+            [586898, 91],
+            [586898, 144],
+            [586901, 250]
+        ],
+        + adjust bx by 144-126, since we will be poping a different number (low byte is taken from the NOP)
+
+? but strange that the data is so close to instruction, perhaps it's intentional
+they might not consider it a bug, but: "All bytes after the initial instruction bytes are set to 0x90 (144) (NOP)."

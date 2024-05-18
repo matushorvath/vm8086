@@ -29,9 +29,10 @@ const printUsage = () => {
 Usage: node test.js [options]
 
 Options:
-    [--file|-o <file-prefix>]   Only run test cases starting with <file-prefix>
+    [--file|-f <file-prefix>]   Only run test cases starting with <file-prefix>
     [--index|-i <index>]        Only run tests with idx field equal to <index>
-    [--hash|-h <hash-prefix>]   Only run tests with hash field starting with <hash-prefix>s
+    [--hash|-h <hash-prefix>]   Only run tests with hash field starting with <hash-prefix>
+    [--continue|-c]             Start at specified file, then continue running following files
 
     [--undefined-behavior|u]    Run all tests, including those that test undefined behavior
 
@@ -60,7 +61,8 @@ const parseCommandLine = () => {
                 trace: { type: 'boolean', short: 't' },
                 'single-thread': { type: 'boolean', short: '1' },
                 keep: { type: 'boolean', short: 'k' },
-                'undefined-behavior': { type: 'boolean', short: 'u' }
+                'undefined-behavior': { type: 'boolean', short: 'u' },
+                continue: { type: 'boolean', short: 'c' }
             }
         });
 
@@ -124,13 +126,22 @@ const loadTests = async (file, idx, hash) => {
 const adjustTests = (file, tests) => {
     // Test adjustments to fix issues I found, either in the test or in the VM
 
-    // 3A test 3093506565e4803bf150e0e36d3e846edb6f1c3a
-    // initial memory does not have a NOP immediately after the first instruction
     if (file.startsWith('3A.json')) {
+        // 3A test 3093506565e4803bf150e0e36d3e846edb6f1c3a
+        // initial memory does not have a NOP immediately after the first instruction
         const test = tests.find(t => t.hash === '3093506565e4803bf150e0e36d3e846edb6f1c3a');
         assert.notEqual(test, undefined);
         assert.deepEqual(test.initial.ram[3], [278859, 10]);
         test.initial.ram[3][1] = 0x90;
+    } else if (file.startsWith('5B')) {
+        // 5B test baf64ec03e2a347afebd39642fb5ee4a32574da0
+        // missing NOP completely, data follows the instruction immediately
+        const test = tests.find(t => t.hash === 'baf64ec03e2a347afebd39642fb5ee4a32574da0');
+        assert.notEqual(test, undefined);
+        assert.equal(test.initial.ram.length, 3);
+        assert.deepEqual(test.initial.ram[1], [586899, 126]);
+        test.initial.ram[1] = [586899, 144];
+        test.final.regs.bx += 144 - 126;
     }
 };
 
@@ -241,6 +252,31 @@ const applyMetadata = (test, metadata) => {
     return test;
 };
 
+const listFiles = async () => {
+    let haveStartingFile = false;
+
+    return (await fsp.readdir(TESTS_DIR)).filter((file) => {
+        if (!file.match(/.*\.gz/)) {
+            return false;
+        }
+
+        if (options.file === undefined) {
+            return true;
+        }
+
+        if (options.file.some(f => file.startsWith(f))) {
+            haveStartingFile = true;
+            return true;
+        }
+
+        if (options.continue && haveStartingFile) {
+            return true;
+        }
+
+        return false;
+    });
+};
+
 const main = async () => {
     options = parseCommandLine();
 
@@ -255,10 +291,7 @@ const main = async () => {
     mpb = new MultiProgressBars({ initMessage: 'CPU Test', anchor: 'top', persist: true });
 
     const metadata = await loadMetadata();
-
-    const files = (await fsp.readdir(TESTS_DIR))
-        .filter(file => file.match(/.*\.gz/))
-        .filter(file => options.file === undefined || options.file.some(f => file.startsWith(f)));
+    const files = await listFiles();
 
     for (const file of files) {
         const allTests = await loadTests(file, options.index, options.hash);
