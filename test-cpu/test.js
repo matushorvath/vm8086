@@ -129,24 +129,29 @@ const adjustTests = (file, tests) => {
     const fileNum = Number.parseInt(file.substring(0, 2), 16);
 
     if (fileNum === 0x3a) {
-        // 3A test 3093506565e4803bf150e0e36d3e846edb6f1c3a
         // initial memory does not have a NOP immediately after the first instruction
         const test = tests.find(t => t.hash === '3093506565e4803bf150e0e36d3e846edb6f1c3a');
         assert.notEqual(test, undefined);
         assert.deepEqual(test.initial.ram[3], [278859, 10]);
-        test.initial.ram[3][1] = 0x90;
+        test.initial.ram[3][1] = 144;
     } else if (fileNum === 0x5b) {
-        // 5B test baf64ec03e2a347afebd39642fb5ee4a32574da0
         // missing NOP completely, data follows the instruction immediately
         const test = tests.find(t => t.hash === 'baf64ec03e2a347afebd39642fb5ee4a32574da0');
         assert.notEqual(test, undefined);
         assert.equal(test.initial.ram.length, 3);
         assert.deepEqual(test.initial.ram[1], [586899, 126]);
-        test.initial.ram[1] = [586899, 144];
+        test.initial.ram[1][1] = 144;
         test.final.regs.bx += 144 - 126;
     } else if (fileNum >= 0x70 && fileNum < 0x80) {
         // 70-7F disable all Jxx tests for now, since they contain many endless loops
         tests.length = 0;
+    } else if (fileNum === 0x8e) {
+        // complicated jump to an address that does not contain a NOP
+        const test = tests.find(t => t.hash === 'e85bdbc0b719a815caff37ac8ac02711fb56aeb7');
+        assert.notEqual(test, undefined);
+        assert.equal(test.initial.ram.length, 7);
+        assert.deepEqual(test.initial.ram[0], [138673, 100]);
+        test.initial.ram.push([592121, 144]);
     }
 };
 
