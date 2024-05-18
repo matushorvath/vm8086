@@ -124,3 +124,86 @@ same as above, also jo 0000h
 
 bug:
 50e1fb3e0778912b4efe4b7dbff2800978499c36 jo 0001h
+
+8E
+==
+
+e85bdbc0b719a815caff37ac8ac02711fb56aeb7 /tmp/vm8086-XXXXXXhx3RiR/e85bdbc0b719a815caff37ac8ac02711fb56aeb7
+
+"mov cs, word [ss:bp+di+50h]"
+"bytes": [142, 75, 80],
+
+        "regs": {
+            "ax": 21153,
+            "bx": 59172,
+            "cx": 33224,
+            "dx": 61687,
+            "cs": 12781,
+            "ss": 7427,
+            "ds": 600,
+            "es": 52419,
+            "sp": 49014,
+            "bp": 9736,
+            "si": 52001,
+            "di": 10025,
+            "ip": 694,
+            "flags": 62546
+        },
+
+        "ram": [
+            [138673, 100],
+            [138674, 144],
+            [205190, 142],
+            [205191, 75],
+            [205192, 80],
+            [205193, 144],
+            [205194, 144]
+        ],
+
+100=0x64
+144=0x90
+
+142=0x8e MOV SEGREG,REG16/MEM16
+ 75=0x4b MOD 0SR R/M 01 001 011     MOD=memory mode, 8-bit displacement; SR=CS; R/M=BP+DI
+ 80=0x50 (DISP-LO)                  DISP=0x50
+144=0x90 NOP
+144=0x90 NOP
+
+mov cs, word [ss:bp+di+50h]
+            "ss": 7427,         0x1d03
+            "bp": 9736,         0x2608
+            "di": 10025,        0x2729
+
+mov cs, word [0x1d03:0x2608+0x2729+0x0050]
+mov cs, word [0x1d03:0x4d81]
+mov cs, word [0x1d03 * 0x10 + 0x4d81]
+mov cs, word [0x21db1]
+
+0x21db1 = 138673
+
+mov cs, 0x9064
+
+0x9064 = 36964
+
+next instruction is:
+0x9064:ip = 0x9064:697 = 0x9064:0x0296 = 0x9064 * 0x10 + 0x02b9 = 0x908F9 = 592121
+
+It jumps (using mov cs) to address 0x9064:ip = 592118, which does not contain a NOP.
+
+fix: Change 0x21db1 to contain a NOP
+
+        "ram": [
+            [138673, 100],
+            [138674, 144],
+            [205190, 142],
+            [205191, 75],
+            [205192, 80],
+            [205193, 144],
+            [205194, 144],
+            [592121, 144]           <--- added
+        ],
+
+
+bug:
+b5463ccac25f40ef9ec4b67d817bbd9014cf2dda /tmp/vm8086-XXXXXXjhcdRw/b5463ccac25f40ef9ec4b67d817bbd9014cf2dda
+

@@ -146,12 +146,11 @@ const adjustTests = (file, tests) => {
         // 70-7F disable all Jxx tests for now, since they contain many endless loops
         tests.length = 0;
     } else if (fileNum === 0x8e) {
-        // complicated jump to an address that does not contain a NOP
-        const test = tests.find(t => t.hash === 'e85bdbc0b719a815caff37ac8ac02711fb56aeb7');
-        assert.notEqual(test, undefined);
-        assert.equal(test.initial.ram.length, 7);
-        assert.deepEqual(test.initial.ram[0], [138673, 100]);
-        test.initial.ram.push([592121, 144]);
+        // the 'mov cs' cases don't seem to have a NOP at the target location, skip them
+        const indexesDelete = tests.filter(t => t.name.startsWith('mov cs')).map(t => t.idx).sort((a, b) => b - a);
+        for (const index of indexesDelete) {
+            tests.splice(index, 1);
+        }
     }
 };
 
