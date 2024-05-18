@@ -59,9 +59,11 @@ Thank you very much for your test cases! They're extremely useful, and it is a m
 5B
 ==
 
-bug (TBD):
+bug:
 baf64ec03e2a347afebd39642fb5ee4a32574da0
 /tmp/vm8086-XXXXXXht2uu9/baf64ec03e2a347afebd39642fb5ee4a32574da0
+
+"pop bx"
 
         "ram": [
             [586898, 91],
@@ -87,3 +89,38 @@ should be
 
 ? but strange that the data is so close to instruction, perhaps it's intentional
 they might not consider it a bug, but: "All bytes after the initial instruction bytes are set to 0x90 (144) (NOP)."
+
+70
+==
+
+bug:
+fdd4d9a8227ea4b1edc23c8ba00a87b488aab656 /tmp/vm8086-XXXXXXMlQ0jt/fdd4d9a8227ea4b1edc23c8ba00a87b488aab656
+
+"jo 0000h"
+
+"flags": 64707=0xFCC3=0b_1111_1100_1100_0011
+OF=1
+
+        "ram": [
+            [635861, 46],
+            [635862, 112],
+            [635863, 253],
+            [635864, 144]
+        ],
+
+ 46=0x2e CS: (prefix)
+112=0x70 JO SHORT-LABEL
+253=0xfd IP-INC8
+144=0x90 NOP
+
+Description says JO 0000h, and it is encoding JO 0xfd, which is jump backwards by -3. This creates and endless loop, the NOP never gets executed.
+
+(I verified the my VM is actually looping on JO).
+
+bug:
+
+3214d182b8baae08fcfb75642416725e22abd357 /tmp/vm8086-XXXXXXyoVUpe/3214d182b8baae08fcfb75642416725e22abd357
+same as above, also jo 0000h
+
+bug:
+50e1fb3e0778912b4efe4b7dbff2800978499c36 jo 0001h
