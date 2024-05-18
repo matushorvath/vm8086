@@ -21,8 +21,9 @@
 .IMPORT write_location_w
 
 # From memory.s
-.IMPORT read_seg_off_w
-.IMPORT write_seg_off_w
+.IMPORT calc_addr_w
+.IMPORT read_b
+.IMPORT write_b
 
 # From state.s
 .IMPORT reg_ss
@@ -30,22 +31,43 @@
 
 ##########
 execute_push_w:
-.FRAME loc_type, loc_addr; value_lo, value_hi
-    arb -2
+.FRAME loc_type, loc_addr; addr_lo, addr_hi, value_lo, value_hi
+    arb -4
+
+    # Can't call push_w, in case we are pushing SP the value pushed would be read before decrementing
+
+    # Decrement sp by 2
+    call dec_sp_w
 
     # Read the value from location
     add [rb + loc_type], 0, [rb - 1]
     add [rb + loc_addr], 0, [rb - 2]
     arb -2
     call read_location_w
+    add [rb - 4], 0, [rb + value_lo]
+    add [rb - 5], 0, [rb + value_hi]
 
-    # Push it to stack
-    add [rb - 4], 0, [rb - 1]
-    add [rb - 5], 0, [rb - 2]
+    # Store the value
+    mul [reg_ss + 1], 0x100, [rb - 1]
+    add [reg_ss + 0], [rb - 1], [rb - 1]
+    mul [reg_sp + 1], 0x100, [rb - 2]
+    add [reg_sp + 0], [rb - 2], [rb - 2]
     arb -2
-    call push_w
+    call calc_addr_w
+    add [rb - 4], 0, [rb + addr_lo]
+    add [rb - 5], 0, [rb + addr_hi]
 
-    arb 2
+    add [rb + addr_lo], 0, [rb - 1]
+    add [rb + value_lo], 0, [rb - 2]
+    arb -2
+    call write_b
+
+    add [rb + addr_hi], 0, [rb - 1]
+    add [rb + value_hi], 0, [rb - 2]
+    arb -2
+    call write_b
+
+    arb 4
     ret 2
 .ENDFRAME
 
@@ -73,7 +95,9 @@ execute_pop_w:
 
 ##########
 push_w:
-.FRAME value_lo, value_hi;
+.FRAME value_lo, value_hi; addr_lo, addr_hi
+    arb -2
+
     # Decrement sp by 2
     call dec_sp_w
 
@@ -82,18 +106,29 @@ push_w:
     add [reg_ss + 0], [rb - 1], [rb - 1]
     mul [reg_sp + 1], 0x100, [rb - 2]
     add [reg_sp + 0], [rb - 2], [rb - 2]
-    add [rb + value_lo], 0, [rb - 3]
-    add [rb + value_hi], 0, [rb - 4]
-    arb -4
-    call write_seg_off_w
+    arb -2
+    call calc_addr_w
+    add [rb - 4], 0, [rb + addr_lo]
+    add [rb - 5], 0, [rb + addr_hi]
 
+    add [rb + addr_lo], 0, [rb - 1]
+    add [rb + value_lo], 0, [rb - 2]
+    arb -2
+    call write_b
+
+    add [rb + addr_hi], 0, [rb - 1]
+    add [rb + value_hi], 0, [rb - 2]
+    arb -2
+    call write_b
+
+    arb 2
     ret 2
 .ENDFRAME
 
 ##########
 pop_w:
-.FRAME value_lo, value_hi                                   # returns value_lo, value_hi
-    arb -2
+.FRAME value_lo, value_hi, addr_lo, addr_hi                 # returns value_lo, value_hi
+    arb -4
 
     # Read the value
     mul [reg_ss + 1], 0x100, [rb - 1]
@@ -101,22 +136,32 @@ pop_w:
     mul [reg_sp + 1], 0x100, [rb - 2]
     add [reg_sp + 0], [rb - 2], [rb - 2]
     arb -2
-    call read_seg_off_w
-    add [rb - 4], 0, [rb + value_lo]
-    add [rb - 5], 0, [rb + value_hi]
+    call calc_addr_w
+    add [rb - 4], 0, [rb + addr_lo]
+    add [rb - 5], 0, [rb + addr_hi]
+
+    add [rb + addr_lo], 0, [rb - 1]
+    arb -1
+    call read_b
+    add [rb - 3], 0, [rb + value_lo]
+
+    add [rb + addr_hi], 0, [rb - 1]
+    arb -1
+    call read_b
+    add [rb - 3], 0, [rb + value_hi]
 
     # Increment sp by 2
     call inc_sp_w
 
-    arb 2
+    arb 4
     ret 0
 .ENDFRAME
 
 ##########
 execute_pushf:
 pushf:
-.FRAME flags_lo, flags_hi
-    arb -2
+.FRAME flags_lo, flags_hi, addr_lo, addr_hi
+    arb -4
 
     # Decrement sp by 2
     call dec_sp_w
@@ -133,20 +178,30 @@ pushf:
     add [reg_ss + 0], [rb - 1], [rb - 1]
     mul [reg_sp + 1], 0x100, [rb - 2]
     add [reg_sp + 0], [rb - 2], [rb - 2]
-    add [rb + flags_lo], 0, [rb - 3]
-    add [rb + flags_hi], 0, [rb - 4]
-    arb -4
-    call write_seg_off_w
+    arb -2
+    call calc_addr_w
+    add [rb - 4], 0, [rb + addr_lo]
+    add [rb - 5], 0, [rb + addr_hi]
 
-    arb 2
+    add [rb + addr_lo], 0, [rb - 1]
+    add [rb + flags_lo], 0, [rb - 2]
+    arb -2
+    call write_b
+
+    add [rb + addr_hi], 0, [rb - 1]
+    add [rb + flags_hi], 0, [rb - 2]
+    arb -2
+    call write_b
+
+    arb 4
     ret 0
 .ENDFRAME
 
 ##########
 execute_popf:
 popf:
-.FRAME flags_lo, flags_hi
-    arb -2
+.FRAME flags_lo, flags_hi, addr_lo, addr_hi
+    arb -4
 
     # Read the value
     mul [reg_ss + 1], 0x100, [rb - 1]
@@ -154,9 +209,19 @@ popf:
     mul [reg_sp + 1], 0x100, [rb - 2]
     add [reg_sp + 0], [rb - 2], [rb - 2]
     arb -2
-    call read_seg_off_w
-    add [rb - 4], 0, [rb + flags_lo]
-    add [rb - 5], 0, [rb + flags_hi]
+    call calc_addr_w
+    add [rb - 4], 0, [rb + addr_lo]
+    add [rb - 5], 0, [rb + addr_hi]
+
+    add [rb + addr_lo], 0, [rb - 1]
+    arb -1
+    call read_b
+    add [rb - 3], 0, [rb + flags_lo]
+
+    add [rb + addr_hi], 0, [rb - 1]
+    arb -1
+    call read_b
+    add [rb - 3], 0, [rb + flags_hi]
 
     # Increment sp by 2
     call inc_sp_w
@@ -170,7 +235,7 @@ popf:
     arb -1
     call unpack_flags_hi
 
-    arb 2
+    arb 4
     ret 0
 .ENDFRAME
 

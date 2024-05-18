@@ -1,8 +1,5 @@
 // make -C .. && make build-intcode && ICVM=~/intcode/xzintbit/vms/c/ic node test.js
 
-// TODO metadata.json
-
-import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
@@ -29,9 +26,10 @@ const printUsage = () => {
 Usage: node test.js [options]
 
 Options:
-    [--file|-o <file-prefix>]   Only run test cases starting with <file-prefix>
+    [--file|-f <file-prefix>]   Only run test cases starting with <file-prefix>
     [--index|-i <index>]        Only run tests with idx field equal to <index>
-    [--hash|-h <hash-prefix>]   Only run tests with hash field starting with <hash-prefix>s
+    [--hash|-h <hash-prefix>]   Only run tests with hash field starting with <hash-prefix>
+    [--continue|-c]             Start at specified file, then continue running following files
 
     [--undefined-behavior|u]    Run all tests, including those that test undefined behavior
 
@@ -39,7 +37,7 @@ Options:
     [--single-thread|-1]        Run all tests in the main thread, without using worker threads
 
     [--dump-errors|-e]          Print differences between expected and actual values
-    [--dump-stdout|-s]          Print standard output of the intcode binary
+    [--dump-output|-o]          Print stdout and stderr of the intcode binary
     [--trace|-t]                Trace execution of individual test cases
 
 Environment:
@@ -56,11 +54,12 @@ const parseCommandLine = () => {
                 index: { type: 'string', short: 'i', multiple: true },
                 hash: { type: 'string', short: 'h', multiple: true },
                 'dump-errors': { type: 'boolean', short: 'e' },
-                'dump-stdout': { type: 'boolean', short: 's' },
+                'dump-output': { type: 'boolean', short: 'o' },
                 trace: { type: 'boolean', short: 't' },
                 'single-thread': { type: 'boolean', short: '1' },
                 keep: { type: 'boolean', short: 'k' },
-                'undefined-behavior': { type: 'boolean', short: 'u' }
+                'undefined-behavior': { type: 'boolean', short: 'u' },
+                continue: { type: 'boolean', short: 'c' }
             }
         });
 
@@ -121,53 +120,60 @@ const loadTests = async (file, idx, hash) => {
     });
 };
 
-const adjustTests = (file, tests) => {
-    // Test adjustments to fix issues I found, either in the test or in the VM
+const dumpError = (test, result) => {
+    console.log(`${test.name}`);
+    console.log(chalk.gray(`idx: ${test.idx} hash: ${test.hash}`));
+    console.log('');
+    console.log('error:', result.error);
+    console.log('');
+    console.log('actual:', result.actual);
+    console.log('expected:', result.expected);
+    console.log('');
 
-    // 3A test 3093506565e4803bf150e0e36d3e846edb6f1c3a
-    // initial memory does not have a NOP immediately after the first instruction
-    if (file.startsWith('3A.json')) {
-        const test = tests.find(t => t.hash === '3093506565e4803bf150e0e36d3e846edb6f1c3a');
-        assert.notEqual(test, undefined);
-        assert.deepEqual(test.initial.ram[3], [278859, 10]);
-        test.initial.ram[3][1] = 0x90;
-    }
+    log.write(JSON.stringify(result, undefined, 2) + '\n');
+};
+
+const logTestSummary = (file, passed, failed, filtered) => {
+    const data = {
+        file, filtered,
+        passed: passed.length,
+        failed: failed.length
+    };
+
+    // TODO print list of failed hashes once there's fewer of them
+
+    log.write(JSON.stringify(data, undefined, 2) + '\n');
 };
 
 const runTests = async (file, tests, filtered) => {
     mpb.addTask(file, { type: 'percentage' });
 
-    let passed = 0, failed = 0;
+    let passed = [], failed = [];
     const runOneTest = async (test, i) => {
-        let error, result;
+        let error, actual;
         if (options['single-thread']) {
-            [error, result] = await worker({ test, options });
+            [error, actual] = await worker({ test, options });
         } else {
-            [error, result] = await piscina.run({ test, options });
+            [error, actual] = await piscina.run({ test, options });
         }
 
+        const result = { file, hash: test.hash };
         if (error === undefined) {
-            passed++;
+            passed.push(result);
         } else {
-            failed++;
+            result.hash = test.hash;
+            result.error = error.toString();
+            result.actual = actual;
+            result.expected = { regs: test.final.regs, ram: test.final.ram };
+
+            failed.push(result);
+
+            if (options['dump-errors']) {
+                dumpError(test, result);
+            }
         }
 
-        if (options['dump-errors'] && error !== undefined) {
-            console.log(`${test.name}: ${chalk.red('FAILED')}`);
-            console.log(chalk.gray(`idx: ${test.idx} hash: ${test.hash}`));
-            console.log('');
-            console.log(error.toString());
-            console.log('');
-            console.log('actual', result);
-            console.log('');
-            console.log('expected', { regs: test.final.regs, ram: test.final.ram });
-            console.log('');
-
-            log.write(`file: "${file}", name: ${test.name}, idx: ${test.idx}, hash: ${test.hash}`);
-            log.write(error.toString());
-        }
-
-        const message = formatPassedFailed(passed, failed, tests.length, filtered);
+        const message = formatPassedFailed(passed.length, failed.length, tests.length, filtered);
         mpb.updateTask(file, { percentage: i / tests.length, message });
     };
 
@@ -185,15 +191,18 @@ const runTests = async (file, tests, filtered) => {
         }
     }
 
-    log.write(`file: "${file}", passed: ${passed}, failed: ${failed}, filtered ${filtered}\n`);
+    logTestSummary(file, passed, failed, filtered);
 
-    const message = formatPassedFailed(passed, failed, tests.length, filtered);
+    const message = formatPassedFailed(passed.length, failed.length, tests.length, filtered);
     mpb.done(file, { message });
 };
 
 const onWorkerMessage = (data) => {
     switch (data.type) {
-    case 'log': console.log(data.message); log.write(`${data.message}\n`); return;
+    case 'log':
+        console.log(data.message);
+        log.write(JSON.stringify({ message: data.message }) + '\n');
+        return;
     }
 };
 
@@ -241,6 +250,31 @@ const applyMetadata = (test, metadata) => {
     return test;
 };
 
+const listFiles = async () => {
+    let haveStartingFile = false;
+
+    return (await fsp.readdir(TESTS_DIR)).filter((file) => {
+        if (!file.match(/.*\.gz/)) {
+            return false;
+        }
+
+        if (options.file === undefined) {
+            return true;
+        }
+
+        if (options.file.some(f => file.startsWith(f))) {
+            haveStartingFile = true;
+            return true;
+        }
+
+        if (options.continue && haveStartingFile) {
+            return true;
+        }
+
+        return false;
+    });
+};
+
 const main = async () => {
     options = parseCommandLine();
 
@@ -249,20 +283,16 @@ const main = async () => {
         return 1;
     }
 
-    log.write('CPU tests started\n');
+    log.write(JSON.stringify({ started: true }) + '\n');
 
     piscina.on('message', onWorkerMessage);
     mpb = new MultiProgressBars({ initMessage: 'CPU Test', anchor: 'top', persist: true });
 
     const metadata = await loadMetadata();
-
-    const files = (await fsp.readdir(TESTS_DIR))
-        .filter(file => file.match(/.*\.gz/))
-        .filter(file => options.file === undefined || options.file.some(f => file.startsWith(f)));
+    const files = await listFiles();
 
     for (const file of files) {
         const allTests = await loadTests(file, options.index, options.hash);
-        adjustTests(file, allTests);
         const validTests = allTests.flatMap(test => applyMetadata(test, metadata));
         const filtered = allTests.length - validTests.length;
 

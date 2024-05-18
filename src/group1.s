@@ -21,7 +21,7 @@
 .IMPORT report_error
 
 # From memory.s
-.IMPORT calc_cs_ip_addr
+.IMPORT calc_cs_ip_addr_b
 
 # From mul.s
 .IMPORT execute_mul_b
@@ -70,7 +70,7 @@ execute_group1_b_invalid_op:
 
 execute_group1_b_test:
     # TEST has an additional IMMED8 parameter
-    call calc_cs_ip_addr
+    call calc_cs_ip_addr_b
     add [rb - 2], 0, [rb + loc_addr_immed]
     call inc_ip_b
 
@@ -162,7 +162,7 @@ execute_group1_w_invalid_op:
 
 execute_group1_w_test:
     # TEST has an additional IMMED16 parameter
-    call calc_cs_ip_addr
+    call calc_cs_ip_addr_b # TODO calc_cs_ip_addr_w
     add [rb - 2], 0, [rb + loc_addr_immed]
     call inc_ip_w
 

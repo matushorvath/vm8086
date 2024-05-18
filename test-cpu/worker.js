@@ -82,14 +82,16 @@ const processOutput = (test, stdout) => {
     }
 
     try {
-        assert.deepStrictEqual(test.final.regs, result.regs);
-        assert.deepStrictEqual(test.final.ram, result.ram);
+        assert.deepStrictEqual(result.regs, test.final.regs);
+        assert.deepStrictEqual(result.ram, test.final.ram);
     } catch (error) {
         if (!(error instanceof assert.AssertionError)) {
             throw error;
         }
         return [error, result];
     }
+
+    return [];
 };
 
 export default async ({ test, options: parentOptions }) => {
@@ -106,7 +108,7 @@ export default async ({ test, options: parentOptions }) => {
 
     const { stdout, stderr } = await executeTest(test.hash, input);
 
-    if (options['dump-stdout']) {
+    if (options['dump-output']) {
         consoleLog(`${test.name}`);
         consoleLog(chalk.gray(`idx: ${test.idx} hash: ${test.hash}`));
         consoleLog('');

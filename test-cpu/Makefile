@@ -31,8 +31,8 @@ test: build
 # The order of the object files matters: First include all the code in any order, then binary.o,
 # then the (optional) 8086 image header and data.
 
-TEST_OBJS = $(OBJDIR)/main.o $(OBJDIR)/init_test.o $(OBJDIR)/print_output.o $(LIBCPU) $(LIBXIB) \
-	$(OBJDIR)/test_header.o
+TEST_OBJS = $(OBJDIR)/main.o $(OBJDIR)/callback.o $(OBJDIR)/config.o $(OBJDIR)/init_test.o \
+	$(OBJDIR)/print_output.o $(LIBCPU) $(LIBXIB) $(OBJDIR)/test_header.o
 
 $(OBJDIR)/test.input: $(TEST_OBJS)
 	$(run-intcode-ld)

@@ -245,7 +245,7 @@ instructions:
     db  execute_or_w, arg_ax_immediate_w, 4                 # 0x0d OR AX, IMMED16
 
     db  execute_push_w, arg_cs, 2                           # 0x0e PUSH CS
-    db  invalid_opcode, 0, 0                                # 0x0f
+    db  execute_pop_w, arg_cs, 2                            # 0x0f (undocumented) POP CS
 
     db  execute_adc_b, arg_mod_reg_rm_src_b, 4              # 0x10 ADC REG8/MEM8, REG8
     db  execute_adc_w, arg_mod_reg_rm_src_w, 4              # 0x11 ADC REG16/MEM16, REG16

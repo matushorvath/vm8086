@@ -6,9 +6,9 @@
 .EXPORT halt
 .EXPORT exec_ip
 
-# From the linked 8086 binary
-.IMPORT binary_enable_tracing
-.IMPORT binary_vm_callback
+# From the config file
+.IMPORT config_enable_tracing
+.IMPORT config_vm_callback
 
 # From error.s
 .IMPORT report_error
@@ -44,20 +44,10 @@ execute:
 
 execute_loop:
     # Skip tracing if disabled
-    jz  [binary_enable_tracing], execute_tracing_done
+    jz  [config_enable_tracing], execute_tracing_done
     call print_trace
 
 execute_tracing_done:
-    # Call the callback if enabled
-    jz  [binary_vm_callback], execute_callback_done
-
-    call [binary_vm_callback]
-    jnz [rb - 2], execute_callback_done
-
-    # Callback returned 0, stop the VM
-    jz  0, execute_done
-
-execute_callback_done:
     # Handle prefixes; first check if they were consumed (prefix_valid == 0)
     jz  [prefix_valid], execute_prefix_done
 
@@ -72,6 +62,16 @@ execute_callback_done:
     add 0, 0, [rep_prefix]
 
 execute_prefix_done:
+    # Call the callback if enabled
+    jz  [config_vm_callback], execute_callback_done
+
+    call [config_vm_callback]
+    jnz [rb - 2], execute_callback_done
+
+    # Callback returned 0, stop the VM
+    jz  0, execute_done
+
+execute_callback_done:
     add [reg_ip + 0], 0, [exec_ip + 0]
     add [reg_ip + 1], 0, [exec_ip + 1]
 

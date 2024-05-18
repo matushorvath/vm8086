@@ -16,6 +16,9 @@
 .EXPORT unpack_flags_lo
 .EXPORT unpack_flags_hi
 
+# From the config file
+.IMPORT config_flags_as_286
+
 # From state.s
 .IMPORT flag_carry
 .IMPORT flag_parity
@@ -112,6 +115,7 @@ pack_flags_lo:
 pack_flags_lo_after_carry:
 
     # set bit 1 to match bochs (which emulates the 32-bit eflags)
+    # TODO 8086 does this break test-cpu? if yes, use config_flags_as_286
     add [rb + flags_lo], 0b00000010, [rb + flags_lo]
 
     jz  [flag_parity], pack_flags_lo_after_parity
@@ -159,9 +163,12 @@ pack_flags_hi_after_direction:
     add [rb + flags_hi], 0b00001000, [rb + flags_hi]
 pack_flags_hi_after_overflow:
 
-    # TODO 8086 set bits 12-15, which wikipedia says should always be 1 on an 8086 or modify tests to ignore the difference
-    #add [rb + flags_hi], 0b11110000, [rb + flags_hi]
+    jnz  [config_flags_as_286], pack_flags_hi_flags_as_286
 
+    # Set bits 12-15 like a real 8086. This does not match bochs, so it's configurable.
+    add [rb + flags_hi], 0b11110000, [rb + flags_hi]
+
+pack_flags_hi_flags_as_286:
     arb 1
     ret 0
 .ENDFRAME

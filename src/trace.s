@@ -1,7 +1,7 @@
 .EXPORT print_trace
 
 # From memory.s
-.IMPORT calc_cs_ip_addr
+.IMPORT calc_cs_ip_addr_b
 .IMPORT read_b
 
 # From trace_data.s
@@ -21,7 +21,7 @@ print_trace:
     arb -5
 
     # Calculate physical address from CS:IP
-    call calc_cs_ip_addr
+    call calc_cs_ip_addr_b
     add [rb - 2], 0, [rb + cs_ip]
 
     # Read opcode
@@ -81,6 +81,7 @@ print_trace_params_loop:
     out ' '
 
     # Read the parameter value
+    # TODO wrap-around, don't just increment the address
     add [rb + cs_ip], [rb + index], [rb - 1]
     arb -1
     call read_b

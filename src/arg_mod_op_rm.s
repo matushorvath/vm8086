@@ -15,7 +15,7 @@
 .IMPORT report_error
 
 # From memory.s
-.IMPORT calc_cs_ip_addr
+.IMPORT calc_cs_ip_addr_b
 .IMPORT read_cs_ip_b
 
 # From state.s
@@ -66,7 +66,7 @@ arg_mod_000_rm_immediate_b:
     jnz [rb - 5], arg_mod_000_rm_immediate_b_nonzero_reg
 
     # Return pointer to 8-bit immediate
-    call calc_cs_ip_addr
+    call calc_cs_ip_addr_b
     add 1, 0, [rb + loc_type_src]
     add [rb - 2], 0, [rb + loc_addr_src]
     call inc_ip_b
@@ -98,7 +98,7 @@ arg_mod_000_rm_immediate_w:
     jnz [rb - 5], arg_mod_000_rm_immediate_w_nonzero_reg
 
     # Return pointer to 16-bit immediate
-    call calc_cs_ip_addr
+    call calc_cs_ip_addr_b # TODO calc_cs_ip_addr_w
     add 1, 0, [rb + loc_type_src]
     add [rb - 2], 0, [rb + loc_addr_src]
     call inc_ip_w
@@ -166,7 +166,7 @@ arg_mod_op_rm_b_immediate_b:
     add [rb - 5], 0, [rb + op]
 
     # Return pointer to 8-bit immediate
-    call calc_cs_ip_addr
+    call calc_cs_ip_addr_b
     add 1, 0, [rb + loc_type_src]
     add [rb - 2], 0, [rb + loc_addr_src]
     call inc_ip_b
@@ -223,7 +223,7 @@ arg_mod_op_rm_w_immediate_w:
     add [rb - 5], 0, [rb + op]
 
     # Return pointer to 16-bit immediate
-    call calc_cs_ip_addr
+    call calc_cs_ip_addr_b # TODO calc_cs_ip_addr_w
     add 1, 0, [rb + loc_type_src]
     add [rb - 2], 0, [rb + loc_addr_src]
     call inc_ip_w
