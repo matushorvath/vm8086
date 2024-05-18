@@ -225,9 +225,11 @@ dump_flags:
 
     # Binary value
     call pack_flags_hi
+    add [rb - 2], 0, [rb + flags_hi]
+    call pack_flags_lo
     add [rb - 2], 0, [rb + flags_lo]
 
-    add [rb + flags_lo], 0, [rb - 1]
+    add [rb + flags_hi], 0, [rb - 1]
     add 2, 0, [rb - 2]
     add 8, 0, [rb - 3]
     arb -3
@@ -235,10 +237,7 @@ dump_flags:
 
     out ' '
 
-    call pack_flags_lo
-    add [rb - 2], 0, [rb + flags_hi]
-
-    add [rb + flags_hi], 0, [rb - 1]
+    add [rb + flags_lo], 0, [rb - 1]
     add 2, 0, [rb - 2]
     add 8, 0, [rb - 3]
     arb -3
@@ -248,19 +247,13 @@ dump_flags:
     out '('
 
     # Hexadecimal value
-    call pack_flags_hi
-    add [rb - 2], 0, [rb + flags_lo]
-
-    add [rb + flags_lo], 0, [rb - 1]
+    add [rb + flags_hi], 0, [rb - 1]
     add 16, 0, [rb - 2]
     add 2, 0, [rb - 3]
     arb -3
     call print_num_radix
 
-    call pack_flags_lo
-    add [rb - 2], 0, [rb + flags_hi]
-
-    add [rb + flags_hi], 0, [rb - 1]
+    add [rb + flags_lo], 0, [rb - 1]
     add 16, 0, [rb - 2]
     add 2, 0, [rb - 3]
     arb -3
