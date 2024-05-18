@@ -10,14 +10,11 @@
 # From init_test.s
 .IMPORT init_processor_test
 
-# From memory.s
-.IMPORT read_cs_ip_b
+# From prefix.s
+.IMPORT prefix_valid
 
 # From print_output.s
 .IMPORT print_output
-
-# TODO if we check 3 NOPs, IP is 2 larger than expected
-# TODO flags are differnt, because we don't set top 4 bytes to 1 (ignore top half-byte of flags)
 
 ##########
 # Entry point
@@ -42,42 +39,35 @@ main:
 
 ##########
 vm_callback:
-.FRAME tmp                              # returns tmp
+.FRAME continue                         # returns continue
     arb -1
 
-    # Stop the VM if we encounter three NOP instructions in sequence
+    # Stop the VM after executing one instruction (not counting any prefixes)
 
-    # Is next instruction a NOP?
-    call read_cs_ip_b
-    eq  [rb - 2], 0x90, [rb + tmp]
-    jz  [rb + tmp], vm_callback_continue
+    # Default is to continue
+    add 1, 0, [rb + continue]
 
-    # Yes, this is a NOP, increase NOP count
-    add [vm_callback_nop_count], 1, [vm_callback_nop_count]
+    # Is this the first time this callback is called?
+    jz  [vm_callback_was_called], vm_callback_first_call
 
-    # Did we see enough NOPs in row?
-    # TODO should be 3 NOPs in a row, but them IP is wrong (too large by 2)
-    lt  [vm_callback_nop_count], 1, [rb + tmp]
-    jnz [rb + tmp], vm_callback_continue
+    # No, do we have an active prefix? If a prefix was the last thing executed,
+    # we are still waiting for the first instruction.
+    jnz [prefix_valid], vm_callback_done
 
-    add 0, 0, [rb + tmp]
+    # We already executed something and it wasn't a prefix,
+    # we must have already executed an instruction
+    add 0, 0, [rb + continue]
     jz  0, vm_callback_done
 
-vm_callback_not_nop:
-    # Next instruction is not a NOP, reset NOP counts
-    add 0, 0, [vm_callback_nop_count]
-
-    # fall through
-
-vm_callback_continue:
-    # We want to continue, return 1
-    add 1, 0, [rb + tmp]
+vm_callback_first_call:
+    # This is the first time we are called, before executing anything
+    add 1, 0, [vm_callback_was_called]
 
 vm_callback_done:
     arb 1
     ret 0
 
-vm_callback_nop_count:
+vm_callback_was_called:
     db  0
 .ENDFRAME
 

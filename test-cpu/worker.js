@@ -82,8 +82,8 @@ const processOutput = (test, stdout) => {
     }
 
     try {
-        assert.deepStrictEqual(test.final.regs, result.regs);
-        assert.deepStrictEqual(test.final.ram, result.ram);
+        assert.deepStrictEqual(result.regs, test.final.regs);
+        assert.deepStrictEqual(result.ram, test.final.ram);
     } catch (error) {
         if (!(error instanceof assert.AssertionError)) {
             throw error;
