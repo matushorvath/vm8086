@@ -54,3 +54,8 @@ I believe the correct initial RAM should be:
         ],
 
 Thank you very much for your test cases! They're extremely useful, and it is a miracle that something like this is freely available.
+
+5B
+==
+
+freezes, TBD

@@ -65,7 +65,7 @@ const processOutput = (test, stdout) => {
         if (!(error instanceof SyntaxError)) {
             throw error;
         }
-        return error;
+        return [error, {}];
     }
 
     // Adjust the flags
@@ -88,7 +88,7 @@ const processOutput = (test, stdout) => {
         if (!(error instanceof assert.AssertionError)) {
             throw error;
         }
-        return error;
+        return [error, result];
     }
 };
 

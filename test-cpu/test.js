@@ -139,11 +139,11 @@ const runTests = async (file, tests, filtered) => {
 
     let passed = 0, failed = 0;
     const runOneTest = async (test, i) => {
-        let error;
+        let error, result;
         if (options['single-thread']) {
-            error = await worker({ test, options });
+            [error, result] = await worker({ test, options });
         } else {
-            error = await piscina.run({ test, options });
+            [error, result] = await piscina.run({ test, options });
         }
 
         if (error === undefined) {
@@ -157,6 +157,10 @@ const runTests = async (file, tests, filtered) => {
             console.log(chalk.gray(`idx: ${test.idx} hash: ${test.hash}`));
             console.log('');
             console.log(error.toString());
+            console.log('');
+            console.log('actual', result);
+            console.log('');
+            console.log('expected', { regs: test.final.regs, ram: test.final.ram });
             console.log('');
 
             log.write(`file: "${file}", name: ${test.name}, idx: ${test.idx}, hash: ${test.hash}`);
@@ -173,7 +177,12 @@ const runTests = async (file, tests, filtered) => {
         }
     } else {
         const promises = tests.map(async (test, i) => runOneTest(test, i));
-        await Promise.allSettled(promises);
+        const results = await Promise.allSettled(promises);
+
+        const errors = results.filter(r => r.status === 'rejected').map(r => r.reason);
+        if (errors.length > 0) {
+            throw errors;
+        }
     }
 
     log.write(`file: "${file}", passed: ${passed}, failed: ${failed}, filtered ${filtered}\n`);
