@@ -108,7 +108,7 @@ export default async ({ test, options: parentOptions }) => {
 
     const { stdout, stderr } = await executeTest(test.hash, input);
 
-    if (options['dump-stdout']) {
+    if (options['dump-output']) {
         consoleLog(`${test.name}`);
         consoleLog(chalk.gray(`idx: ${test.idx} hash: ${test.hash}`));
         consoleLog('');

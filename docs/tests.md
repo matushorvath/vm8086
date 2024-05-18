@@ -6,11 +6,64 @@ C8 is filtered completely
 Notes
 =====
 
-27, many failed (DAA)
-2F, many failed (DAS)
+27 many failed (DAA)
+2F many failed (DAS)
+37, 3F as well
 
-17, one failed (49e1bb2fdf1cedfcf36c13de46ff9691318ee728)
-POP SS
+17 one failed (49e1bb2fdf1cedfcf36c13de46ff9691318ee728)
+pop ss
+
+one failed: 50, 57, 5A, 5D
+
+17 49e1bb2fdf1cedfcf36c13de46ff9691318ee728
+===========================================
+
+"pop ss"
+
++ actual - expected
+
+  {
+    ip: 33738,
+    sp: 1,
++   ss: 37
+-   ss: 42021
+  }
+
+actual: { regs: { ss: 37, sp: 1, ip: 33738 }, ram: [] }
+expected: { regs: { ss: 42021, sp: 1, ip: 33738 }, ram: [] }
+
+initial:
+        "regs": {
+            "ss": 57814,
+            "sp": 65535,
+        },
+
+        "ram": [
+            [253864, 38],
+            [253865, 23],
+            [253866, 144],
+            [925024, 164],
+            [990559, 37]
+        ],
+
+final:
+        "regs": {
+            "ss": 42021,
+            "sp": 1,
+        },
+
+ 38=0x26 ES:
+ 23=0x17 POP SS
+144=0x90 NOP
+
+164=0xa4 
+
+ 37=0x25 
+
+42021=0xa425
+
+pop where the value is on segment border, clearly the but is not wrapping SP between the bytes
+
 
 3E 3093506565e4803bf150e0e36d3e846edb6f1c3a
 ===========================================

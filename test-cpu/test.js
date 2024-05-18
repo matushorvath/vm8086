@@ -37,7 +37,7 @@ Options:
     [--single-thread|-1]        Run all tests in the main thread, without using worker threads
 
     [--dump-errors|-e]          Print differences between expected and actual values
-    [--dump-stdout|-o]          Print standard output of the intcode binary
+    [--dump-output|-o]          Print stdout and stderr of the intcode binary
     [--trace|-t]                Trace execution of individual test cases
 
 Environment:
@@ -54,7 +54,7 @@ const parseCommandLine = () => {
                 index: { type: 'string', short: 'i', multiple: true },
                 hash: { type: 'string', short: 'h', multiple: true },
                 'dump-errors': { type: 'boolean', short: 'e' },
-                'dump-stdout': { type: 'boolean', short: 'o' },
+                'dump-output': { type: 'boolean', short: 'o' },
                 trace: { type: 'boolean', short: 't' },
                 'single-thread': { type: 'boolean', short: '1' },
                 keep: { type: 'boolean', short: 'k' },
@@ -121,12 +121,12 @@ const loadTests = async (file, idx, hash) => {
 };
 
 const dumpError = (test, result) => {
-    console.log(`${test.name} ${chalk.gray(`idx: ${test.idx} hash: ${test.hash}`)}`);
+    console.log(`${test.name}`);
+    console.log(chalk.gray(`idx: ${test.idx} hash: ${test.hash}`));
     console.log('');
     console.log('error:', result.error);
     console.log('');
     console.log('actual:', result.actual);
-    console.log('');
     console.log('expected:', result.expected);
     console.log('');
 
