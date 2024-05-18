@@ -137,8 +137,10 @@ const logTestSummary = (file, passed, failed, filtered) => {
     const data = {
         file, filtered,
         passed: passed.length,
-        failed: failed.map(r => r.hash)
+        failed: failed.length
     };
+
+    // TODO print list of failed hashes once there's fewer of them
 
     log.write(JSON.stringify(data, undefined, 2) + '\n');
 };
