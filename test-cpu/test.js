@@ -126,14 +126,16 @@ const loadTests = async (file, idx, hash) => {
 const adjustTests = (file, tests) => {
     // Test adjustments to fix issues I found, either in the test or in the VM
 
-    if (file.startsWith('3A.json')) {
+    const fileNum = Number.parseInt(file.substring(0, 2), 16);
+
+    if (fileNum === 0x3a) {
         // 3A test 3093506565e4803bf150e0e36d3e846edb6f1c3a
         // initial memory does not have a NOP immediately after the first instruction
         const test = tests.find(t => t.hash === '3093506565e4803bf150e0e36d3e846edb6f1c3a');
         assert.notEqual(test, undefined);
         assert.deepEqual(test.initial.ram[3], [278859, 10]);
         test.initial.ram[3][1] = 0x90;
-    } else if (file.startsWith('5B')) {
+    } else if (fileNum === 0x5b) {
         // 5B test baf64ec03e2a347afebd39642fb5ee4a32574da0
         // missing NOP completely, data follows the instruction immediately
         const test = tests.find(t => t.hash === 'baf64ec03e2a347afebd39642fb5ee4a32574da0');
@@ -142,20 +144,9 @@ const adjustTests = (file, tests) => {
         assert.deepEqual(test.initial.ram[1], [586899, 126]);
         test.initial.ram[1] = [586899, 144];
         test.final.regs.bx += 144 - 126;
-    } else if (file.startsWith('70')) {
-        // 70 multiple tests
-        // endless loop, the NOP never gets executed, disable the test for now
-        const disable = [
-            'fdd4d9a8227ea4b1edc23c8ba00a87b488aab656',
-            '3214d182b8baae08fcfb75642416725e22abd357',
-            '50e1fb3e0778912b4efe4b7dbff2800978499c36',
-            'f90fbce3ce18402203ce38ed81e17a167cdb345f',
-            '5af04b87f4aac39ca7bb6d5e41c2139cf5697fda'
-        ];
-        const indexes = disable.map(h => tests.findIndex(t => t.hash === h)).sort((a, b) => b - a);
-        for (const index of indexes) {
-            tests.splice(index, 1);
-        }
+    } else if (fileNum >= 0x70 && fileNum < 0x80) {
+        // 70-7F disable all Jxx tests for now, since they contain many endless loops
+        tests.length = 0;
     }
 };
 
