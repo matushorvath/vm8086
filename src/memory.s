@@ -10,9 +10,6 @@
 .EXPORT read_cs_ip_b
 .EXPORT read_cs_ip_w
 
-#.EXPORT push
-#.EXPORT pop
-
 # From state.s
 .IMPORT mem
 .IMPORT reg_cs
