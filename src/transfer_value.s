@@ -32,16 +32,16 @@
 
 ##########
 execute_mov_b:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
+.FRAME lseg_src, loff_src, lseg_dst, loff_dst;
     # Read the source value
-    add [rb + loc_type_src], 0, [rb - 1]
-    add [rb + loc_addr_src], 0, [rb - 2]
+    add [rb + lseg_src], 0, [rb - 1]
+    add [rb + loff_src], 0, [rb - 2]
     arb -2
     call read_location_b
 
     # Write the destination value
-    add [rb + loc_type_dst], 0, [rb - 1]
-    add [rb + loc_addr_dst], 0, [rb - 2]
+    add [rb + lseg_dst], 0, [rb - 1]
+    add [rb + loff_dst], 0, [rb - 2]
     add [rb - 4], 0, [rb - 3]                               # read_location_b() -> param3
     arb -3
     call write_location_b
@@ -51,16 +51,16 @@ execute_mov_b:
 
 ##########
 execute_mov_w:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
+.FRAME lseg_src, loff_src, lseg_dst, loff_dst;
     # Read the source value
-    add [rb + loc_type_src], 0, [rb - 1]
-    add [rb + loc_addr_src], 0, [rb - 2]
+    add [rb + lseg_src], 0, [rb - 1]
+    add [rb + loff_src], 0, [rb - 2]
     arb -2
     call read_location_w
 
     # Write the destination value
-    add [rb + loc_type_dst], 0, [rb - 1]
-    add [rb + loc_addr_dst], 0, [rb - 2]
+    add [rb + lseg_dst], 0, [rb - 1]
+    add [rb + loff_dst], 0, [rb - 2]
     add [rb - 4], 0, [rb - 3]                               # read_location_w().lo -> param3
     add [rb - 5], 0, [rb - 4]                               # read_location_w().hi -> param4
     arb -4
@@ -71,32 +71,32 @@ execute_mov_w:
 
 ##########
 execute_xchg_b:
-.FRAME loc_type_1, loc_addr_1, loc_type_2, loc_addr_2; value
+.FRAME lseg_1, loff_1, lseg_2, loff_2; value
     arb -1
 
     # Read the first value
-    add [rb + loc_type_1], 0, [rb - 1]
-    add [rb + loc_addr_1], 0, [rb - 2]
+    add [rb + lseg_1], 0, [rb - 1]
+    add [rb + loff_1], 0, [rb - 2]
     arb -2
     call read_location_b
     add [rb - 4], 0, [rb + value]
 
     # Read the second value
-    add [rb + loc_type_2], 0, [rb - 1]
-    add [rb + loc_addr_2], 0, [rb - 2]
+    add [rb + lseg_2], 0, [rb - 1]
+    add [rb + loff_2], 0, [rb - 2]
     arb -2
     call read_location_b
 
     # Write the second value to first location
-    add [rb + loc_type_1], 0, [rb - 1]
-    add [rb + loc_addr_1], 0, [rb - 2]
+    add [rb + lseg_1], 0, [rb - 1]
+    add [rb + loff_1], 0, [rb - 2]
     add [rb - 4], 0, [rb - 3]                               # read_location_b() -> param3
     arb -3
     call write_location_b
 
     # Write the first value to second location
-    add [rb + loc_type_2], 0, [rb - 1]
-    add [rb + loc_addr_2], 0, [rb - 2]
+    add [rb + lseg_2], 0, [rb - 1]
+    add [rb + loff_2], 0, [rb - 2]
     add [rb + value], 0, [rb - 3]
     arb -3
     call write_location_b
@@ -107,34 +107,34 @@ execute_xchg_b:
 
 ##########
 execute_xchg_w:
-.FRAME loc_type_1, loc_addr_1, loc_type_2, loc_addr_2; value_lo, value_hi
+.FRAME lseg_1, loff_1, lseg_2, loff_2; value_lo, value_hi
     arb -2
 
     # Read the first value
-    add [rb + loc_type_1], 0, [rb - 1]
-    add [rb + loc_addr_1], 0, [rb - 2]
+    add [rb + lseg_1], 0, [rb - 1]
+    add [rb + loff_1], 0, [rb - 2]
     arb -2
     call read_location_w
     add [rb - 4], 0, [rb + value_lo]
     add [rb - 5], 0, [rb + value_hi]
 
     # Read the second value
-    add [rb + loc_type_2], 0, [rb - 1]
-    add [rb + loc_addr_2], 0, [rb - 2]
+    add [rb + lseg_2], 0, [rb - 1]
+    add [rb + loff_2], 0, [rb - 2]
     arb -2
     call read_location_w
 
     # Write the second value to first location
-    add [rb + loc_type_1], 0, [rb - 1]
-    add [rb + loc_addr_1], 0, [rb - 2]
+    add [rb + lseg_1], 0, [rb - 1]
+    add [rb + loff_1], 0, [rb - 2]
     add [rb - 4], 0, [rb - 3]                               # read_location_w().lo -> param3
     add [rb - 5], 0, [rb - 4]                               # read_location_w().hi -> param4
     arb -4
     call write_location_w
 
     # Write the first value to second location
-    add [rb + loc_type_2], 0, [rb - 1]
-    add [rb + loc_addr_2], 0, [rb - 2]
+    add [rb + lseg_2], 0, [rb - 1]
+    add [rb + loff_2], 0, [rb - 2]
     add [rb + value_lo], 0, [rb - 3]
     add [rb + value_hi], 0, [rb - 4]
     arb -4
@@ -146,13 +146,13 @@ execute_xchg_w:
 
 ##########
 execute_xchg_ax_w:
-.FRAME loc_type, loc_addr;
+.FRAME lseg, loff;
 
     # Exchange AX with location
     add 0, 0, [rb - 1]
     add reg_ax + 0, 0, [rb - 2]
-    add [rb + loc_type], 0, [rb - 3]
-    add [rb + loc_addr], 0, [rb - 4]
+    add [rb + lseg], 0, [rb - 3]
+    add [rb + loff], 0, [rb - 4]
     arb -4
     call execute_xchg_w
 

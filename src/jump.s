@@ -90,10 +90,10 @@ execute_jmp_near_after_carry_hi:
 
 ##########
 execute_jmp_near_indirect:
-.FRAME loc_type, loc_addr;
+.FRAME lseg, loff;
     # Read the near pointer into reg_ip
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_w
     add [rb - 4], 0, [reg_ip + 0]
@@ -131,10 +131,10 @@ execute_jmp_far:
 
 ##########
 execute_jmp_far_indirect:
-.FRAME loc_type, loc_addr;
+.FRAME lseg, loff;
     # Read the far pointer into reg_cs and reg_ip
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_dw
     add [rb - 4], 0, [reg_ip + 0]

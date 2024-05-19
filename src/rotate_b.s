@@ -32,7 +32,7 @@
 .IMPORT flag_overflow
 
 ##########
-.FRAME loc_type, loc_addr; val, valx8, count, tmp
+.FRAME lseg, loff; val, valx8, count, tmp
     # Function with multiple entry points
 
 execute_rol_1_b:
@@ -54,8 +54,8 @@ execute_rol_b:
     add [0], 0, [rb + count]
 
     # Read the value to rotate
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_b
     add [rb - 4], 0, [rb + val]
@@ -128,8 +128,8 @@ execute_rol_b_flags:
     eq  [flag_overflow], 0, [flag_overflow]
 
     # Write the rotated value
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     add [rb + val], 0, [rb - 3]
     arb -3
     call write_location_b
@@ -140,7 +140,7 @@ execute_rol_b_done:
 .ENDFRAME
 
 ##########
-.FRAME loc_type, loc_addr; val, valx8, count, tmp
+.FRAME lseg, loff; val, valx8, count, tmp
     # Function with multiple entry points
 
 execute_ror_1_b:
@@ -162,8 +162,8 @@ execute_ror_b:
     add [0], 0, [rb + count]
 
     # Read the value to rotate
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_b
     add [rb - 4], 0, [rb + val]
@@ -236,8 +236,8 @@ execute_ror_b_flags:
     eq  [flag_overflow], 0, [flag_overflow]
 
     # Write the rotated value
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     add [rb + val], 0, [rb - 3]
     arb -3
     call write_location_b
@@ -248,7 +248,7 @@ execute_ror_b_done:
 .ENDFRAME
 
 ##########
-.FRAME loc_type, loc_addr; table, overflow_algorithm, val, valx8, count, tmp
+.FRAME lseg, loff; table, overflow_algorithm, val, valx8, count, tmp
     # Function with multiple entry points
 
 execute_rcl_1_b:
@@ -287,8 +287,8 @@ execute_rcl_rcr_b:
     jz  [rb + count], execute_rcl_rcr_b_done
 
     # Read the value to rotate
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_b
     add [rb - 4], 0, [rb + val]
@@ -432,8 +432,8 @@ execute_rcr_b_flags:
 
 execute_rcl_rcr_b_store:
     # Write the rotated value
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     add [rb + val], 0, [rb - 3]
     arb -3
     call write_location_b

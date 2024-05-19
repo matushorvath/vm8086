@@ -31,7 +31,7 @@
 .IMPORT flag_overflow
 
 ##########
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; src, dst, store, res, tmp
+.FRAME lseg_src, loff_src, lseg_dst, loff_dst; src, dst, store, res, tmp
     # Function with multiple entry points
 
 execute_sub_b:
@@ -52,15 +52,15 @@ execute_cmp_b:
 
 execute_subtract_b:
     # Read the source value
-    add [rb + loc_type_src], 0, [rb - 1]
-    add [rb + loc_addr_src], 0, [rb - 2]
+    add [rb + lseg_src], 0, [rb - 1]
+    add [rb + loff_src], 0, [rb - 2]
     arb -2
     call read_location_b
     add [rb - 4], 0, [rb + src]
 
     # Read the destination value
-    add [rb + loc_type_dst], 0, [rb - 1]
-    add [rb + loc_addr_dst], 0, [rb - 2]
+    add [rb + lseg_dst], 0, [rb - 1]
+    add [rb + loff_dst], 0, [rb - 2]
     arb -2
     call read_location_b
     add [rb - 4], 0, [rb + dst]
@@ -101,8 +101,8 @@ execute_subtract_b_after_carry:
     # Write the destination value if requested
     jz  [rb + store], execute_subtract_b_end
 
-    add [rb + loc_type_dst], 0, [rb - 1]
-    add [rb + loc_addr_dst], 0, [rb - 2]
+    add [rb + lseg_dst], 0, [rb - 1]
+    add [rb + loff_dst], 0, [rb - 2]
     add [rb + res], 0, [rb - 3]
     arb -3
     call write_location_b
@@ -113,7 +113,7 @@ execute_subtract_b_end:
 .ENDFRAME
 
 ##########
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; src_lo, src_hi, dst_lo, dst_hi, store, res_lo, res_hi, tmp
+.FRAME lseg_src, loff_src, lseg_dst, loff_dst; src_lo, src_hi, dst_lo, dst_hi, store, res_lo, res_hi, tmp
     # Function with multiple entry points
 
 execute_sub_w:
@@ -134,16 +134,16 @@ execute_cmp_w:
 
 execute_subtract_w:
     # Read the source value
-    add [rb + loc_type_src], 0, [rb - 1]
-    add [rb + loc_addr_src], 0, [rb - 2]
+    add [rb + lseg_src], 0, [rb - 1]
+    add [rb + loff_src], 0, [rb - 2]
     arb -2
     call read_location_w
     add [rb - 4], 0, [rb + src_lo]
     add [rb - 5], 0, [rb + src_hi]
 
     # Read the destination value
-    add [rb + loc_type_dst], 0, [rb - 1]
-    add [rb + loc_addr_dst], 0, [rb - 2]
+    add [rb + lseg_dst], 0, [rb - 1]
+    add [rb + loff_dst], 0, [rb - 2]
     arb -2
     call read_location_w
     add [rb - 4], 0, [rb + dst_lo]
@@ -197,8 +197,8 @@ execute_subtract_w_after_carry_hi:
     # Write the destination value if requested
     jz  [rb + store], execute_subtract_w_end
 
-    add [rb + loc_type_dst], 0, [rb - 1]
-    add [rb + loc_addr_dst], 0, [rb - 2]
+    add [rb + lseg_dst], 0, [rb - 1]
+    add [rb + loff_dst], 0, [rb - 2]
     add [rb + res_lo], 0, [rb - 3]
     add [rb + res_hi], 0, [rb - 4]
     arb -4

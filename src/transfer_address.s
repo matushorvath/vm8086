@@ -82,12 +82,12 @@ execute_lea_register_message:
 
 ##########
 execute_lds:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; seg_lo, seg_hi, off_lo, off_hi
+.FRAME lseg_src, loff_src, lseg_dst, loff_dst; seg_lo, seg_hi, off_lo, off_hi
     arb -4
 
     # Read the far pointer from source
-    add [rb + loc_type_src], 0, [rb - 1]
-    add [rb + loc_addr_src], 0, [rb - 2]
+    add [rb + lseg_src], 0, [rb - 1]
+    add [rb + loff_src], 0, [rb - 2]
     arb -2
     call read_location_dw
     add [rb - 4], 0, [rb + off_lo]
@@ -96,8 +96,8 @@ execute_lds:
     add [rb - 7], 0, [rb + seg_hi]
 
     # Save the offset into the destination
-    add [rb + loc_type_dst], 0, [rb - 1]
-    add [rb + loc_addr_dst], 0, [rb - 2]
+    add [rb + lseg_dst], 0, [rb - 1]
+    add [rb + loff_dst], 0, [rb - 2]
     add [rb + off_lo], 0, [rb - 3]
     add [rb + off_hi], 0, [rb - 4]
     arb -4
@@ -113,12 +113,12 @@ execute_lds:
 
 ##########
 execute_les:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; seg_lo, seg_hi, off_lo, off_hi
+.FRAME lseg_src, loff_src, lseg_dst, loff_dst; seg_lo, seg_hi, off_lo, off_hi
     arb -4
 
     # Read the far pointer from source
-    add [rb + loc_type_src], 0, [rb - 1]
-    add [rb + loc_addr_src], 0, [rb - 2]
+    add [rb + lseg_src], 0, [rb - 1]
+    add [rb + loff_src], 0, [rb - 2]
     arb -2
     call read_location_dw
     add [rb - 4], 0, [rb + off_lo]
@@ -127,8 +127,8 @@ execute_les:
     add [rb - 7], 0, [rb + seg_hi]
 
     # Save the offset into the destination
-    add [rb + loc_type_dst], 0, [rb - 1]
-    add [rb + loc_addr_dst], 0, [rb - 2]
+    add [rb + lseg_dst], 0, [rb - 1]
+    add [rb + loff_dst], 0, [rb - 2]
     add [rb + off_lo], 0, [rb - 3]
     add [rb + off_hi], 0, [rb - 4]
     arb -4
