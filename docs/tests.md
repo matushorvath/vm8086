@@ -64,7 +64,6 @@ final:
 
 pop where the value is on segment border, clearly the but is not wrapping SP between the bytes
 
-
 3E 3093506565e4803bf150e0e36d3e846edb6f1c3a
 ===========================================
 
@@ -269,3 +268,40 @@ fix: Change 0x21db1 to contain a NOP
 bug:
 b5463ccac25f40ef9ec4b67d817bbd9014cf2dda /tmp/vm8086-XXXXXXjhcdRw/b5463ccac25f40ef9ec4b67d817bbd9014cf2dda
 
+00 dc1341932faabf1e04f5aef1ffd78ccf2894eb51
+===========================================
+
+"add byte [ds:si-20FCh], al"
+
+    "initial": {
+        "regs": {
+            "ax": 58491,
+            "ds": 64513,
+            "si": 4789,
+            "flags": 64662
+        },
+        "ram": [
+            [45513, 3],
+            [1022667, 0],
+            [1022668, 132],
+            [1022669, 4],
+            [1022670, 223],
+            [1022671, 144],
+            [1022672, 144],
+            [1022673, 144]
+        ],
+
+bug: does not update address 45513 (likely updates a different address)
+
+  0=0x00  ADD REG8 MEM8, REG8
+132=0x84  MOD REG R/M 10 000 100     MOD=mem16, REG=AL, R/M=SI
+  4=0x04  DISP=0xDF04
+223=0xdf
+
+seg = DS = 64513 = 0xfc01
+off = 4789 + 0xDF04 = 0x12B5 + 0xDF04 = 0xF1B9 = 61881
+
+addr = 0xfc01 * 0x10 + 0xF1B9 = 0x10b1c9 = 1094089
+mod 2^20 = 0x0b1c9 = 45513
+
+Possibly caused by missing wrapping in 8-bit locations.
