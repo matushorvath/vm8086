@@ -8,9 +8,6 @@
 .EXPORT arg_ch_immediate_b
 .EXPORT arg_dh_immediate_b
 
-# From memory.s
-.IMPORT calc_cs_ip_addr_b
-
 # From state.s
 .IMPORT reg_al
 .IMPORT reg_bl
@@ -20,6 +17,8 @@
 .IMPORT reg_bh
 .IMPORT reg_ch
 .IMPORT reg_dh
+.IMPORT reg_cs
+.IMPORT reg_ip
 .IMPORT inc_ip_b
 
 # The first argument is an immediate 8-bit value, stored at cs:ip.
@@ -27,12 +26,14 @@
 
 ##########
 arg_immediate_b:
-.FRAME loc_type, loc_addr                                                       # returns loc_type, loc_addr
+.FRAME lseg, loff                                           # returns lseg, loff
     arb -2
 
-    call calc_cs_ip_addr_b
-    add 1, 0, [rb + loc_type]
-    add [rb - 2], 0, [rb + loc_addr]
+    mul [reg_cs + 1], 0x100, [rb + lseg]
+    add [reg_cs + 0], [rb + lseg], [rb + lseg]
+    mul [reg_ip + 1], 0x100, [rb + loff]
+    add [reg_ip + 0], [rb + loff], [rb + loff]
+
     call inc_ip_b
 
     arb 2
@@ -41,16 +42,18 @@ arg_immediate_b:
 
 ##########
 arg_al_immediate_b:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
+.FRAME lseg_src, loff_src, lseg_dst, loff_dst               # returns lseg_*, loff_*
     arb -4
 
-    call calc_cs_ip_addr_b
-    add 1, 0, [rb + loc_type_src]
-    add [rb - 2], 0, [rb + loc_addr_src]
+    mul [reg_cs + 1], 0x100, [rb + lseg_src]
+    add [reg_cs + 0], [rb + lseg_src], [rb + lseg_src]
+    mul [reg_ip + 1], 0x100, [rb + loff_src]
+    add [reg_ip + 0], [rb + loff_src], [rb + loff_src]
+
     call inc_ip_b
 
-    add 0, 0, [rb + loc_type_dst]
-    add reg_al, 0, [rb + loc_addr_dst]
+    add 0x10000, 0, [rb + lseg_dst]
+    add reg_al, 0, [rb + loff_dst]
 
     arb 4
     ret 0
@@ -58,16 +61,18 @@ arg_al_immediate_b:
 
 ##########
 arg_bl_immediate_b:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
+.FRAME lseg_src, loff_src, lseg_dst, loff_dst               # returns lseg_*, loff_*
     arb -4
 
-    call calc_cs_ip_addr_b
-    add 1, 0, [rb + loc_type_src]
-    add [rb - 2], 0, [rb + loc_addr_src]
+    mul [reg_cs + 1], 0x100, [rb + lseg_src]
+    add [reg_cs + 0], [rb + lseg_src], [rb + lseg_src]
+    mul [reg_ip + 1], 0x100, [rb + loff_src]
+    add [reg_ip + 0], [rb + loff_src], [rb + loff_src]
+
     call inc_ip_b
 
-    add 0, 0, [rb + loc_type_dst]
-    add reg_bl, 0, [rb + loc_addr_dst]
+    add 0x10000, 0, [rb + lseg_dst]
+    add reg_bl, 0, [rb + loff_dst]
 
     arb 4
     ret 0
@@ -75,16 +80,18 @@ arg_bl_immediate_b:
 
 ##########
 arg_cl_immediate_b:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
+.FRAME lseg_src, loff_src, lseg_dst, loff_dst               # returns lseg_*, loff_*
     arb -4
 
-    call calc_cs_ip_addr_b
-    add 1, 0, [rb + loc_type_src]
-    add [rb - 2], 0, [rb + loc_addr_src]
+    mul [reg_cs + 1], 0x100, [rb + lseg_src]
+    add [reg_cs + 0], [rb + lseg_src], [rb + lseg_src]
+    mul [reg_ip + 1], 0x100, [rb + loff_src]
+    add [reg_ip + 0], [rb + loff_src], [rb + loff_src]
+
     call inc_ip_b
 
-    add 0, 0, [rb + loc_type_dst]
-    add reg_cl, 0, [rb + loc_addr_dst]
+    add 0x10000, 0, [rb + lseg_dst]
+    add reg_cl, 0, [rb + loff_dst]
 
     arb 4
     ret 0
@@ -92,16 +99,18 @@ arg_cl_immediate_b:
 
 ##########
 arg_dl_immediate_b:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
+.FRAME lseg_src, loff_src, lseg_dst, loff_dst               # returns lseg_*, loff_*
     arb -4
 
-    call calc_cs_ip_addr_b
-    add 1, 0, [rb + loc_type_src]
-    add [rb - 2], 0, [rb + loc_addr_src]
+    mul [reg_cs + 1], 0x100, [rb + lseg_src]
+    add [reg_cs + 0], [rb + lseg_src], [rb + lseg_src]
+    mul [reg_ip + 1], 0x100, [rb + loff_src]
+    add [reg_ip + 0], [rb + loff_src], [rb + loff_src]
+
     call inc_ip_b
 
-    add 0, 0, [rb + loc_type_dst]
-    add reg_dl, 0, [rb + loc_addr_dst]
+    add 0x10000, 0, [rb + lseg_dst]
+    add reg_dl, 0, [rb + loff_dst]
 
     arb 4
     ret 0
@@ -109,16 +118,18 @@ arg_dl_immediate_b:
 
 ##########
 arg_ah_immediate_b:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
+.FRAME lseg_src, loff_src, lseg_dst, loff_dst               # returns lseg_*, loff_*
     arb -4
 
-    call calc_cs_ip_addr_b
-    add 1, 0, [rb + loc_type_src]
-    add [rb - 2], 0, [rb + loc_addr_src]
+    mul [reg_cs + 1], 0x100, [rb + lseg_src]
+    add [reg_cs + 0], [rb + lseg_src], [rb + lseg_src]
+    mul [reg_ip + 1], 0x100, [rb + loff_src]
+    add [reg_ip + 0], [rb + loff_src], [rb + loff_src]
+
     call inc_ip_b
 
-    add 0, 0, [rb + loc_type_dst]
-    add reg_ah, 0, [rb + loc_addr_dst]
+    add 0x10000, 0, [rb + lseg_dst]
+    add reg_ah, 0, [rb + loff_dst]
 
     arb 4
     ret 0
@@ -126,16 +137,18 @@ arg_ah_immediate_b:
 
 ##########
 arg_bh_immediate_b:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
+.FRAME lseg_src, loff_src, lseg_dst, loff_dst               # returns lseg_*, loff_*
     arb -4
 
-    call calc_cs_ip_addr_b
-    add 1, 0, [rb + loc_type_src]
-    add [rb - 2], 0, [rb + loc_addr_src]
+    mul [reg_cs + 1], 0x100, [rb + lseg_src]
+    add [reg_cs + 0], [rb + lseg_src], [rb + lseg_src]
+    mul [reg_ip + 1], 0x100, [rb + loff_src]
+    add [reg_ip + 0], [rb + loff_src], [rb + loff_src]
+
     call inc_ip_b
 
-    add 0, 0, [rb + loc_type_dst]
-    add reg_bh, 0, [rb + loc_addr_dst]
+    add 0x10000, 0, [rb + lseg_dst]
+    add reg_bh, 0, [rb + loff_dst]
 
     arb 4
     ret 0
@@ -143,16 +156,18 @@ arg_bh_immediate_b:
 
 ##########
 arg_ch_immediate_b:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
+.FRAME lseg_src, loff_src, lseg_dst, loff_dst               # returns lseg_*, loff_*
     arb -4
 
-    call calc_cs_ip_addr_b
-    add 1, 0, [rb + loc_type_src]
-    add [rb - 2], 0, [rb + loc_addr_src]
+    mul [reg_cs + 1], 0x100, [rb + lseg_src]
+    add [reg_cs + 0], [rb + lseg_src], [rb + lseg_src]
+    mul [reg_ip + 1], 0x100, [rb + loff_src]
+    add [reg_ip + 0], [rb + loff_src], [rb + loff_src]
+
     call inc_ip_b
 
-    add 0, 0, [rb + loc_type_dst]
-    add reg_ch, 0, [rb + loc_addr_dst]
+    add 0x10000, 0, [rb + lseg_dst]
+    add reg_ch, 0, [rb + loff_dst]
 
     arb 4
     ret 0
@@ -160,16 +175,18 @@ arg_ch_immediate_b:
 
 ##########
 arg_dh_immediate_b:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
+.FRAME lseg_src, loff_src, lseg_dst, loff_dst               # returns lseg_*, loff_*
     arb -4
 
-    call calc_cs_ip_addr_b
-    add 1, 0, [rb + loc_type_src]
-    add [rb - 2], 0, [rb + loc_addr_src]
+    mul [reg_cs + 1], 0x100, [rb + lseg_src]
+    add [reg_cs + 0], [rb + lseg_src], [rb + lseg_src]
+    mul [reg_ip + 1], 0x100, [rb + loff_src]
+    add [reg_ip + 0], [rb + loff_src], [rb + loff_src]
+
     call inc_ip_b
 
-    add 0, 0, [rb + loc_type_dst]
-    add reg_dh, 0, [rb + loc_addr_dst]
+    add 0x10000, 0, [rb + lseg_dst]
+    add reg_dh, 0, [rb + loff_dst]
 
     arb 4
     ret 0
