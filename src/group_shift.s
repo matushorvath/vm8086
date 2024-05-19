@@ -53,14 +53,14 @@
 
 ##########
 execute_shift_1_b:
-.FRAME op, loc_type, loc_addr;
+.FRAME op, lseg, loff;
     # Determine which function to call
     add execute_shift_1_b_table, [rb + op], [ip + 1]
     add [0], 0, [shift_function]
 
     # Call the function
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call [shift_function]
 
@@ -79,14 +79,14 @@ execute_shift_1_b_table:
 
 ##########
 execute_shift_1_w:
-.FRAME op, loc_type, loc_addr;
+.FRAME op, lseg, loff;
     # Determine which function to call
     add execute_shift_1_w_table, [rb + op], [ip + 1]
     add [0], 0, [shift_function]
 
     # Call the function
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call [shift_function]
 
@@ -105,14 +105,14 @@ execute_shift_1_w_table:
 
 ##########
 execute_shift_cl_b:
-.FRAME op, loc_type, loc_addr;
+.FRAME op, lseg, loff;
     # Determine which function to call
     add execute_shift_cl_b_table, [rb + op], [ip + 1]
     add [0], 0, [shift_function]
 
     # Call the function
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call [shift_function]
 
@@ -131,14 +131,14 @@ execute_shift_cl_b_table:
 
 ##########
 execute_shift_cl_w:
-.FRAME op, loc_type, loc_addr;
+.FRAME op, lseg, loff;
     # Determine which function to call
     add execute_shift_cl_w_table, [rb + op], [ip + 1]
     add [0], 0, [shift_function]
 
     # Call the function
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call [shift_function]
 
@@ -157,7 +157,7 @@ execute_shift_cl_w_table:
 
 ##########
 invalid_shift_op:
-.FRAME loc_type, loc_addr;
+.FRAME lseg, loff;
     add invalid_shift_op_message, 0, [rb - 1]
     arb -1
     call report_error

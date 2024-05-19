@@ -27,10 +27,10 @@
 
 ##########
 execute_group2_b:
-.FRAME op, loc_type, loc_addr;
+.FRAME op, lseg, loff;
     # Prepare the arguments on stack
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
 
     # Execute the operation
     add execute_group2_b_table, [rb + op], [ip + 2]
@@ -77,10 +77,10 @@ execute_group2_b_end:
 
 ##########
 execute_group2_w:
-.FRAME op, loc_type, loc_addr;
+.FRAME op, lseg, loff;
     # Prepare the arguments on stack
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
 
     # Execute the operation
     add execute_group2_w_table, [rb + op], [ip + 2]

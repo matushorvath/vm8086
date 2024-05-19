@@ -28,7 +28,7 @@
 .IMPORT flag_overflow
 
 ##########
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; src, dst, res, tmp
+.FRAME lseg_src, loff_src, lseg_dst, loff_dst; src, dst, res, tmp
     # Function with multiple entry points
 
 execute_add_b:
@@ -39,15 +39,15 @@ execute_adc_b:
     arb -4
 
     # Read the source value
-    add [rb + loc_type_src], 0, [rb - 1]
-    add [rb + loc_addr_src], 0, [rb - 2]
+    add [rb + lseg_src], 0, [rb - 1]
+    add [rb + loff_src], 0, [rb - 2]
     arb -2
     call read_location_b
     add [rb - 4], 0, [rb + src]
 
     # Read the destination value
-    add [rb + loc_type_dst], 0, [rb - 1]
-    add [rb + loc_addr_dst], 0, [rb - 2]
+    add [rb + lseg_dst], 0, [rb - 1]
+    add [rb + loff_dst], 0, [rb - 2]
     arb -2
     call read_location_b
     add [rb - 4], 0, [rb + dst]
@@ -84,8 +84,8 @@ execute_adc_b_after_carry:
     call update_overflow
 
     # Write the destination value
-    add [rb + loc_type_dst], 0, [rb - 1]
-    add [rb + loc_addr_dst], 0, [rb - 2]
+    add [rb + lseg_dst], 0, [rb - 1]
+    add [rb + loff_dst], 0, [rb - 2]
     add [rb + res], 0, [rb - 3]
     arb -3
     call write_location_b
@@ -95,7 +95,7 @@ execute_adc_b_after_carry:
 .ENDFRAME
 
 ##########
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; src_lo, src_hi, dst_lo, dst_hi, res_lo, res_hi, tmp
+.FRAME lseg_src, loff_src, lseg_dst, loff_dst; src_lo, src_hi, dst_lo, dst_hi, res_lo, res_hi, tmp
     # Function with multiple entry points
 
 execute_add_w:
@@ -106,16 +106,16 @@ execute_adc_w:
     arb -7
 
     # Read the source value
-    add [rb + loc_type_src], 0, [rb - 1]
-    add [rb + loc_addr_src], 0, [rb - 2]
+    add [rb + lseg_src], 0, [rb - 1]
+    add [rb + loff_src], 0, [rb - 2]
     arb -2
     call read_location_w
     add [rb - 4], 0, [rb + src_lo]
     add [rb - 5], 0, [rb + src_hi]
 
     # Read the destination value
-    add [rb + loc_type_dst], 0, [rb - 1]
-    add [rb + loc_addr_dst], 0, [rb - 2]
+    add [rb + lseg_dst], 0, [rb - 1]
+    add [rb + loff_dst], 0, [rb - 2]
     arb -2
     call read_location_w
     add [rb - 4], 0, [rb + dst_lo]
@@ -164,8 +164,8 @@ execute_adc_w_after_carry_hi:
     call update_overflow
 
     # Write the destination value
-    add [rb + loc_type_dst], 0, [rb - 1]
-    add [rb + loc_addr_dst], 0, [rb - 2]
+    add [rb + lseg_dst], 0, [rb - 1]
+    add [rb + loff_dst], 0, [rb - 2]
     add [rb + res_lo], 0, [rb - 3]
     add [rb + res_hi], 0, [rb - 4]
     arb -4
