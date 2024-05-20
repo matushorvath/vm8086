@@ -363,3 +363,66 @@ it's trying to write 9 to memory location 0, but it seems it writes it to memory
 actually, probably we set up the memory wrong, it starts at the last byte of input
 
 confirmed that moving [mem] one address up solves the problem
+
+FF.3 e05f59d79804b51a8a9fa738597bc7528712b1e5
+=============================================
+
+    "name": "callf word [ss:bp+si-64h]",
+    "bytes": [255, 90, 156],
+    "initial": {
+        "regs": {
+            "cs": 8178,
+            "ss": 27703,
+            "bp": 27342,
+            "si": 52052,
+            "ip": 9753,
+        },
+        "ram": [
+            [140601, 255],
+            [140602, 90],
+            [140603, 156],
+            [140604, 144],
+            [140605, 144],
+            [140606, 144],
+            [140607, 144],
+            [182502, 144],
+            [457006, 134],
+            [457007, 35],
+            [457008, 86],
+            [457009, 42]
+        ],
+    },
+    "final": {
+        "regs": {
+            "cs": 10838,
+            "ip": 9094
+        },
+        "ram": [
+            [457003, 28],
+            [457004, 38],
+            [457005, 242],
+            [457006, 31]
+        ],
+        "queue": []
+    },
+
+FF 255              group
+5A  90 01 011 010   CALLF MEM16, MOD=mem 8-bit disp, R/M=BP+SI+DISP8
+9C 156              DISP8
+
+0x9C = -100
+BP+SI+DISP8 = 27342 + 52052 - 100 = 79294 = 0x135BE
+mod 2^16 = 0x35BE = 13758
+
+SS<<4+^^ = 27703 * 16 + 13758 = 457006 = 0x6F92E
+
+IP = 134+35*256 = 9094 = 0x2386
+CS = 86+42*256 = 10838 = 0x2A56
+
+actual:     ip: 8991 = 0x231f
+expected:   ip: 9094 = 0x2386
+
+hypothesis: stack overlaps with the CS:IP parameter of CALLF, so pushing current CS:IP overwrites the parameter
+
+cs     = 8178 = 0x1FF2 = 242 31
+ip + 3 = 9756 = 0x261C = 28 38
