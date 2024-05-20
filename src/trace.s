@@ -1,8 +1,7 @@
 .EXPORT print_trace
 
 # From memory.s
-.IMPORT calc_cs_ip_addr_b
-.IMPORT read_b
+.IMPORT read_seg_off_b
 
 # From trace_data.s
 .IMPORT trace_data
@@ -17,22 +16,23 @@
 
 ##########
 print_trace:
-.FRAME cs_ip, opcode, param_type, index, tmp
-    arb -5
+.FRAME seg, off, opcode, param_type, index, tmp
+    arb -6
 
-    # Calculate physical address from CS:IP
-    call calc_cs_ip_addr_b
-    add [rb - 2], 0, [rb + cs_ip]
+    # Calculate segment and offset
+    mul [reg_cs + 1], 0x100, [rb + seg]
+    add [reg_cs + 0], [rb + seg], [rb + seg]
+    mul [reg_ip + 1], 0x100, [rb + off]
+    add [reg_ip + 0], [rb + off], [rb + off]
 
-    # Read opcode
-    add [rb + cs_ip], 0, [rb - 1]
-    arb -1
-    call read_b
-    add [rb - 3], 0, [rb + opcode]
+    add [rb + seg], 0, [rb - 1]
+    add [rb + off], 0, [rb - 2]
+    arb -2
+    call read_seg_off_b
+    add [rb - 4], 0, [rb + opcode]
 
     # Print address
-    mul [reg_cs + 1], 0x100, [rb - 1]
-    add [reg_cs + 0], [rb - 1], [rb - 1]
+    add [rb + seg], 0, [rb - 1]
     add 16, 0, [rb - 2]
     add 4, 0, [rb - 3]
     arb -3
@@ -40,8 +40,7 @@ print_trace:
 
     out ':'
 
-    mul [reg_ip + 1], 0x100, [rb - 1]
-    add [reg_ip + 0], [rb - 1], [rb - 1]
+    add [rb + off], 0, [rb - 1]
     add 16, 0, [rb - 2]
     add 4, 0, [rb - 3]
     arb -3
@@ -81,14 +80,15 @@ print_trace_params_loop:
     out ' '
 
     # Read the parameter value
-    # TODO wrap-around, don't just increment the address
-    add [rb + cs_ip], [rb + index], [rb - 1]
-    arb -1
-    call read_b
+    # TODO wrap-around, don't just increase [rb + off]
+    add [rb + seg], 0, [rb - 1]
+    add [rb + off], [rb + index], [rb - 2]
+    arb -2
+    call read_seg_off_b
 
     # Print parameter value
     # TODO decode the parameters
-    add [rb - 3], 0, [rb - 1]
+    add [rb - 4], 0, [rb - 1]
     add 16, 0, [rb - 2]
     add 2, 0, [rb - 3]
     arb -3
@@ -100,7 +100,7 @@ print_trace_params_loop:
 print_trace_params_done:
     out 10
 
-    arb 5
+    arb 6
     ret 0
 .ENDFRAME
 

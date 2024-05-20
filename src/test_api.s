@@ -12,8 +12,7 @@
 .IMPORT pack_flags_hi
 
 # From memory.s
-.IMPORT calc_addr_w
-.IMPORT read_b
+.IMPORT read_seg_off_w
 
 # From state.s
 .IMPORT reg_ip
@@ -270,8 +269,8 @@ dump_flags:
 
 ##########
 dump_stack:
-.FRAME index, segment, offset, tmp, addr_lo, addr_hi, value_lo, value_hi
-    arb -8
+.FRAME index, segment, offset, tmp
+    arb -4
 
     add dump_state_stack, 0, [rb - 1]
     arb -1
@@ -302,22 +301,10 @@ dump_stack_after_overflow:
     add [rb + segment], 0, [rb - 1]
     add [rb + offset], 0, [rb - 2]
     arb -2
-    call calc_addr_w
-    add [rb - 4], 0, [rb + addr_lo]
-    add [rb - 5], 0, [rb + addr_hi]
+    call read_seg_off_w
 
-    add [rb + addr_lo], 0, [rb - 1]
-    arb -1
-    call read_b
-    add [rb - 3], 0, [rb + value_lo]
-
-    add [rb + addr_hi], 0, [rb - 1]
-    arb -1
-    call read_b
-    add [rb - 3], 0, [rb + value_hi]
-
-    mul [rb + value_hi], 0x100, [rb + tmp]
-    add [rb + value_lo], [rb + tmp], [rb - 1]
+    mul [rb - 5], 0x100, [rb + tmp]
+    add [rb - 4], [rb + tmp], [rb - 1]
     add 16, 0, [rb - 2]
     add 4, 0, [rb - 3]
     arb -3
@@ -327,7 +314,7 @@ dump_stack_after_overflow:
     jz  0, dump_stack_loop
 
 dump_stack_end:
-    arb 8
+    arb 4
     ret 0
 .ENDFRAME
 

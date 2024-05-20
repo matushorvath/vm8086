@@ -8,8 +8,11 @@
 .IMPORT report_error
 
 # From memory.s
-.IMPORT read_b
-.IMPORT write_b
+.IMPORT read_seg_off_b
+.IMPORT read_seg_off_w
+.IMPORT read_seg_off_dw
+.IMPORT write_seg_off_b
+.IMPORT write_seg_off_w
 
 # Location is a generalized data item:
 #
@@ -28,16 +31,11 @@ read_location_b:
     jnz [rb + tmp], read_location_b_register
 
     # Read from an 8086 address
-    # TODO convert seg+off to physical address, read
-
-    ####################
-    hlt # TODO for now
-    ####################
-
     add [rb + lseg], 0, [rb - 1]
-    arb -1
-    call read_b
-    add [rb - 3], 0, [rb + value]
+    add [rb + loff], 0, [rb - 2]
+    arb -2
+    call read_seg_off_b
+    add [rb - 4], 0, [rb + value]
 
     jz  0, read_location_b_done
 
@@ -60,21 +58,12 @@ read_location_w:
     jnz [rb + tmp], read_location_w_register
 
     # Read from an 8086 address
-    # TODO convert seg+off to physical address, read
-
-    ####################
-    hlt # TODO for now
-    ####################
-
     add [rb + lseg], 0, [rb - 1]
-    arb -1
-    call read_b
-    add [rb - 3], 0, [rb + value_lo]
-
-    add [rb + lseg], 1, [rb - 1]
-    arb -1
-    call read_b
-    add [rb - 3], 0, [rb + value_hi]
+    add [rb + loff], 0, [rb - 2]
+    arb -2
+    call read_seg_off_w
+    add [rb - 4], 0, [rb + value_lo]
+    add [rb - 5], 0, [rb + value_hi]
 
     jz  0, read_location_w_done
 
@@ -100,31 +89,14 @@ read_location_dw:
     jnz [rb + tmp], read_location_dw_register
 
     # Read from an 8086 address
-    # TODO convert seg+off to physical address, read
-
-    ####################
-    hlt # TODO for now
-    ####################
-
     add [rb + lseg], 0, [rb - 1]
-    arb -1
-    call read_b
-    add [rb - 3], 0, [rb + value_ll]
-
-    add [rb + lseg], 1, [rb - 1]
-    arb -1
-    call read_b
-    add [rb - 3], 0, [rb + value_lh]
-
-    add [rb + lseg], 2, [rb - 1]
-    arb -1
-    call read_b
-    add [rb - 3], 0, [rb + value_hl]
-
-    add [rb + lseg], 3, [rb - 1]
-    arb -1
-    call read_b
-    add [rb - 3], 0, [rb + value_hh]
+    add [rb + loff], 0, [rb - 2]
+    arb -2
+    call read_seg_off_dw
+    add [rb - 4], 0, [rb + value_ll]
+    add [rb - 5], 0, [rb + value_lh]
+    add [rb - 6], 0, [rb + value_hl]
+    add [rb - 7], 0, [rb + value_hh]
 
     jz  0, read_location_dw_done
 
@@ -151,16 +123,11 @@ write_location_b:
     jnz [rb + tmp], write_location_b_register
 
     # Write to an 8086 address
-    # TODO convert seg+off to physical address, write
-
-    ####################
-    hlt # TODO for now
-    ####################
-
     add [rb + lseg], 0, [rb - 1]
-    add [rb + value], 0, [rb - 2]
-    arb -2
-    call write_b
+    add [rb + loff], 0, [rb - 2]
+    add [rb + value], 0, [rb - 3]
+    arb -3
+    call write_seg_off_b
 
     jz  0, write_location_b_done
 
@@ -183,21 +150,12 @@ write_location_w:
     jnz [rb + tmp], write_location_w_register
 
     # Write to an 8086 address
-    # TODO convert seg+off to physical address, write
-
-    ####################
-    hlt # TODO for now
-    ####################
-
     add [rb + lseg], 0, [rb - 1]
-    add [rb + value_lo], 0, [rb - 2]
-    arb -2
-    call write_b
-
-    add [rb + lseg], 1, [rb - 1]
-    add [rb + value_hi], 0, [rb - 2]
-    arb -2
-    call write_b
+    add [rb + loff], 0, [rb - 2]
+    add [rb + value_lo], 0, [rb - 3]
+    add [rb + value_hi], 0, [rb - 4]
+    arb -4
+    call write_seg_off_w
 
     jz  0, write_location_w_done
 

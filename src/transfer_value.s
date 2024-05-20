@@ -17,8 +17,7 @@
 .IMPORT write_location_w
 
 # From memory.s
-.IMPORT calc_addr_b
-.IMPORT read_b
+.IMPORT read_seg_off_b
 
 # From prefix.s
 .IMPORT ds_segment_prefix
@@ -149,7 +148,7 @@ execute_xchg_ax_w:
 .FRAME lseg, loff;
 
     # Exchange AX with location
-    add 0, 0, [rb - 1]
+    add 0x10000, 0, [rb - 1]
     add reg_ax + 0, 0, [rb - 2]
     add [rb + lseg], 0, [rb - 3]
     add [rb + loff], 0, [rb - 4]
@@ -203,12 +202,8 @@ execute_xlat_no_overflow:
     add [0], [rb - 1], [rb - 1]
     add [rb + value_offset], 0, [rb - 2]
     arb -2
-    call calc_addr_b
-
-    add [rb - 4], 0, [rb - 1]
-    arb -1
-    call read_b
-    add [rb - 3], 0, [reg_al]
+    call read_seg_off_b
+    add [rb - 4], 0, [reg_al]
 
     arb 2
     ret 0
