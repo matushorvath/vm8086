@@ -120,14 +120,53 @@ const loadTests = async (file, idx, hash) => {
     });
 };
 
+const formatFlags = (flags) => {
+    const o = (flags & 0b0000100000000000) ? 'O' : 'o';
+    const d = (flags & 0b0000010000000000) ? 'D' : 'd';
+    const i = (flags & 0b0000001000000000) ? 'I' : 'i';
+    const t = (flags & 0b0000000100000000) ? 'T' : 't';
+    const s = (flags & 0b0000000010000000) ? 'S' : 's';
+    const z = (flags & 0b0000000001000000) ? 'Z' : 'z';
+    const a = (flags & 0b0000000000010000) ? 'A' : 'a';
+    const p = (flags & 0b0000000000000100) ? 'P' : 'p';
+    const c = (flags & 0b0000000000000001) ? 'C' : 'c';
+
+    return `----${o}${d}${i}${t} ${s}${z}-${a}-${p}-${c}`;
+};
+
+const formatResult = (input) => {
+    const output = {};
+
+    if (input.regs) {
+        output.regs = {};
+        for (const key in input.regs) {
+            output.regs[key] = `${input.regs[key].toString(16).padStart(4, '0')}`;
+        }
+        if (input.regs.flags) {
+            output.regs.flags += ` ${formatFlags(input.regs.flags)}`;
+        }
+    }
+
+    if (input.mem) {
+        output.mem = [];
+        for (const [addr, val] of input.mem) {
+            output.mem.push([addr.toString(16).padStart(4, '0'), val.toString(16).padStart(2, '0')]);
+        }
+    }
+
+    return output;
+};
+
 const dumpError = (test, result) => {
     console.log(`${test.name}`);
     console.log(chalk.gray(`idx: ${test.idx} hash: ${test.hash}`));
     console.log('');
     console.log('error:', result.error);
     console.log('');
-    console.log('actual:', result.actual);
+    console.log('actual:  ', result.actual);
+    console.log('         ', formatResult(result.actual));
     console.log('expected:', result.expected);
+    console.log('         ', formatResult(result.expected));
     console.log('');
 
     log.write(JSON.stringify(result, undefined, 2) + '\n');
