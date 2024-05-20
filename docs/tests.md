@@ -492,3 +492,16 @@ hypothesis: the documented algorithm is wrong, should not compare with 0x99, but
 (still does not work, fixes some cases and breaks others)
 
 hypothesis: the documented algorithm is wrong, it breaks when 0a <= AL <= 9f, the result calculated differs in top nibble of AL (expected 9x, actual 0x)
+
+8C 3fa82cae1779fd13594b785fe8402218616b81c9
+===========================================
+
+    "name": "mov word [ss:bp+di+7Ch], cs",
+    "bytes": [54, 140, 107, 124],
+
+ 54 = 0x36                      SS
+140 = 0x8c                      MOV REG16/MEM16,SEGREG
+107 = 0x6b = 01 101 011         (not used) MOD=mem 8-bit disp; SR=CS; R/M=BP+DI+DISP8
+124 = 0x7c                      DISP8
+
+caused by specifying MOD 1SR R/M, only 0SR is documented as valid but 1SR also works on real hardware

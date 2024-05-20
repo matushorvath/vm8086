@@ -339,10 +339,6 @@ decode_sr:
     # Return the intcode address of an 8086 register
     # Expect reg to be 0-7, w to be 0-1
 
-    # Only reg 0-3 are valid values
-    lt  [rb + reg], 4, [rb + tmp]
-    jz  [rb + tmp], decode_sr_invalid_instruction
-
     # Map the REG value to an intcode address of the corresponding 8086 segment register
     add decode_sr_table, [rb + reg], [ip + 1]
     add [0], 0, [rb + regptr]
@@ -350,16 +346,15 @@ decode_sr:
     arb 2
     ret 1
 
-decode_sr_invalid_instruction:
-    add decode_sr_invalid_instruction_message, 0, [rb - 1]
-    arb -1
-    call report_error
-
-decode_sr_invalid_instruction_message:
-    db  "invalid segment register", 0
-
 decode_sr_table:
     # Map each reg value to the intcode address of corresponding segment register
+    db  reg_es
+    db  reg_cs
+    db  reg_ss
+    db  reg_ds
+
+    # Only reg 0-3 are documented as valid values, but the physical processor ignores
+    # the top bit of reg and decodes all values as valid segment registers
     db  reg_es
     db  reg_cs
     db  reg_ss
