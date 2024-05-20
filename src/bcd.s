@@ -59,21 +59,21 @@ execute_aaa:
 
 execute_aaa_decimal_carry:
     add [reg_al], 0x06, [reg_al]
+
+    # There could be carry from AL
+    lt  0xff, [reg_al], [rb + tmp]
+    jz  [rb + tmp], execute_aaa_after_al
+    add [reg_al], -0x100, [reg_al]
+
+execute_aaa_after_al:
     add [reg_ah], 0x01, [reg_ah]
 
-    # There could be carry from AL to AH
-    lt  0xff, [reg_al], [rb + tmp]
-    jz  [rb + tmp], execute_aaa_after_al_carry
-    add [reg_al], -0x100, [reg_al]
-    add [reg_ah], 1, [reg_ah]
-
-execute_aaa_after_al_carry:
     # There could be carry from AH
     lt  0xff, [reg_ah], [rb + tmp]
-    jz  [rb + tmp], execute_aaa_after_ah_carry
+    jz  [rb + tmp], execute_aaa_after_ah
     add [reg_ah], -0x100, [reg_ah]
 
-execute_aaa_after_ah_carry:
+execute_aaa_after_ah:
     add 1, 0, [flag_auxiliary_carry]
     add 1, 0, [flag_carry]
 
@@ -109,21 +109,21 @@ execute_aas:
 
 execute_aas_decimal_carry:
     add [reg_al], -0x06, [reg_al]
+
+    # There could be borrow from AL
+    lt  [reg_al], 0x00, [rb + tmp]
+    jz  [rb + tmp], execute_aas_after_al
+    add [reg_al], 0x100, [reg_al]
+
+execute_aas_after_al:
     add [reg_ah], -0x01, [reg_ah]
 
-    # There could be borrow from AL to AH
-    lt  [reg_al], 0x00, [rb + tmp]
-    jz  [rb + tmp], execute_aas_after_al_carry
-    add [reg_al], 0x100, [reg_al]
-    add [reg_ah], -1, [reg_ah]
-
-execute_aas_after_al_carry:
     # There could be borrow from AH
     lt  [reg_ah], 0x00, [rb + tmp]
-    jz  [rb + tmp], execute_aas_after_ah_carry
+    jz  [rb + tmp], execute_aas_after_ah
     add [reg_ah], 0x100, [reg_ah]
 
-execute_aas_after_ah_carry:
+execute_aas_after_ah:
     add 1, 0, [flag_auxiliary_carry]
     add 1, 0, [flag_carry]
 

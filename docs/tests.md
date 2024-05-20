@@ -426,3 +426,43 @@ hypothesis: stack overlaps with the CS:IP parameter of CALLF, so pushing current
 
 cs     = 8178 = 0x1FF2 = 242 31
 ip + 3 = 9756 = 0x261C = 28 38
+
+3F 8f6cb1eaaeaae5cbb1a8ab0a6cc2ddb4b3096d5e
+===========================================
+
+    "name": "aas",
+    "bytes": [46, 63],
+    "initial": {
+        "regs": {
+            "ax": 19200,
+            "ip": 57474,
+            "flags": 61650
+        },
+    },
+    "final": {
+        "regs": {
+            "ax": 18954,
+            "ip": 57476,
+            "flags": 61591
+        },
+    },
+
+ 46 0x2e CS:
+ 63 0x3f AAS
+
+19200 = 0x4B00
+18954 = 0x4A0A expected
+18698 = 0x490A actual
+
+61650 = 11110000 11010010                       AF=1
+61591 = 11110000 10010111 expected/actual
+
+AL = 00
+
+AX = AX - 6             0x4AFA
+AH = AH - 1             0x49FA
+AL = AL AND 0FH         0x490A
+
+AL = AL - 6             0x4BFA
+AH = AH - 1             0x4AFA
+AL = AL AND 0FH         0x4A0A
