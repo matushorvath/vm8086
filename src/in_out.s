@@ -8,6 +8,9 @@
 .EXPORT execute_out_al_dx
 .EXPORT execute_out_ax_dx
 
+# From the config file
+.IMPORT config_io_port_debugging
+
 # From memory.s
 .IMPORT read_cs_ip_b
 
@@ -24,7 +27,7 @@
 .IMPORT mark
 .IMPORT print_char
 
-# TODO remove temporary I/O code
+# From libxib.a
 .IMPORT print_num_radix
 .IMPORT print_str
 
@@ -256,8 +259,10 @@ port_in:
     # Input a constant for unmapped ports
     add 0xff, 0, [rb + value]
 
-    # Output the port number stdout
-    # TODO remove temporary I/O code
+    # Is I/O port debugging on?
+    jz  [config_io_port_debugging], port_in_done
+
+    # Output port number to stdout
     add port_in_message_start, 0, [rb - 1]
     arb -1
     call print_str
@@ -270,6 +275,7 @@ port_in:
 
     out 10
 
+port_in_done:
     arb 1
     ret 1
 .ENDFRAME
@@ -278,6 +284,9 @@ port_in:
 port_out:
 .FRAME port, value; tmp
     arb -1
+
+    # Is I/O port debugging on?
+    jz  [config_io_port_debugging], port_out_done
 
     # Port 0x42 is used to dump VM state to stdout, for tests
     eq  [rb + port], 0x42, [rb + tmp]
@@ -300,8 +309,6 @@ port_out:
     jnz [rb + tmp], port_out_shutdown
 
     # Output the port and value to stdout
-    # TODO remove temporary I/O code
-
     add port_out_message_start, 0, [rb - 1]
     arb -1
     call print_str
