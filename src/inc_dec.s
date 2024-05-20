@@ -118,8 +118,11 @@ execute_inc_w_after_carry:
     add nibbles, [rb + tmp], [ip + 1]
     eq  [0], 0, [flag_auxiliary_carry]
 
-    # If the high byte of result is 0x80, it must have been 0x7f before
+    # If the result is 0x8000, it must have been 0x7fff before
     eq  [rb + value_hi], 0x80, [flag_overflow]
+    eq  [rb + value_lo], 0x00, [rb + tmp]
+    add [flag_overflow], [rb + tmp], [rb + tmp]
+    eq  [rb + tmp], 2, [flag_overflow]
 
     # Write the result
     add [rb + lseg], 0, [rb - 1]
@@ -229,8 +232,11 @@ execute_dec_w_after_borrow:
     add nibbles, [rb + tmp], [ip + 1]
     eq  [0], 0xf, [flag_auxiliary_carry]
 
-    # If the high byte of result is 0x7f, it must have been 0x80 before
+    # If the result is 0x8000, it must have been 0x7fff before
     eq  [rb + value_hi], 0x7f, [flag_overflow]
+    eq  [rb + value_lo], 0xff, [rb + tmp]
+    add [flag_overflow], [rb + tmp], [rb + tmp]
+    eq  [rb + tmp], 2, [flag_overflow]
 
     # Write the result
     add [rb + lseg], 0, [rb - 1]
