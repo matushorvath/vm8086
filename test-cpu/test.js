@@ -341,7 +341,7 @@ const main = async () => {
     piscina.on('message', onWorkerMessage);
 
     if (!options.plain) {
-        mpb = new MultiProgressBars({ initMessage: 'CPU Test', anchor: 'top', persist: true });
+        mpb = new MultiProgressBars({ initMessage: 'CPU Test', anchor: 'bottom', persist: true });
     }
 
     let fileCount = 0, totalPassed = 0, totalFailed = 0, totalFiltered = 0;
