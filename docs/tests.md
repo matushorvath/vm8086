@@ -466,3 +466,30 @@ AL = AL AND 0FH         0x490A
 AL = AL - 6             0x4BFA
 AH = AH - 1             0x4AFA
 AL = AL AND 0FH         0x4A0A
+
+27 8baa9594db1ba7a53ff4f4eaeb3141f7a27538be
+===========================================
+
+AX:
+0xa39e input
+0xa304 actual
+0xa3a4 expected
+AF=1
+CF=0
+
+AL AND 0Fh > 9 or AF=1 true
+
+AL = AL + 06h = 9eh + 6h = a4h
+CF=0 (old_CF=0, carry from ^=0)
+
+old_AL > 99h false
+old_Al = 9eh
+
+AL = AL + 60h = a4h + 60h = 104h = 04h
+CF=1
+
+hypothesis: the documented algorithm is wrong, should not compare with 0x99, but 0x9f
+(still does not work, fixes some cases and breaks others)
+
+hypothesis: the documented algorithm is wrong, it breaks when 0a <= AL <= 9f, the result calculated differs in top nibble of AL (expected 9x, actual 0x)
+

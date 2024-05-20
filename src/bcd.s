@@ -192,6 +192,13 @@ execute_daa_decimal_carry_hi:
     add [reg_al], -0x100, [reg_al]
 
 execute_daa_after_carry_hi:
+    # Update flags
+    lt  0x7f, [reg_al], [flag_sign]
+    eq  [reg_al], 0, [flag_zero]
+
+    add parity, [reg_al], [ip + 1]
+    add [0], 0, [flag_parity]
+
     arb 4
     ret 0
 .ENDFRAME
@@ -250,6 +257,13 @@ execute_das_decimal_carry_hi:
     add [reg_al], 0x100, [reg_al]
 
 execute_das_after_carry_hi:
+    # Update flags
+    lt  0x7f, [reg_al], [flag_sign]
+    eq  [reg_al], 0, [flag_zero]
+
+    add parity, [reg_al], [ip + 1]
+    add [0], 0, [flag_parity]
+
     arb 4
     ret 0
 .ENDFRAME

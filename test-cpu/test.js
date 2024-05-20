@@ -152,10 +152,16 @@ const formatResult = (input, flagsMask) => {
     if (input.regs) {
         output.regs = {};
         for (const key in input.regs) {
-            output.regs[key] = `${input.regs[key].toString(16).padStart(4, '0')}`;
+            if (key !== 'flags') {
+                output.regs[key] = `${input.regs[key].toString(16).padStart(4, '0')}`;
+            }
         }
         if (input.regs.flags) {
-            output.regs.flags += ` ${formatFlags(input.regs.flags, flagsMask)}`;
+            const maskedFlags = input.regs.flags & (flagsMask ?? 0xffff);
+            const hexFlags = `${maskedFlags.toString(16).padStart(4, '0')}`;
+            const binFlags = formatFlags(maskedFlags, flagsMask);
+
+            output.regs.flags = `${hexFlags} ${binFlags}`;
         }
     }
 
@@ -175,6 +181,8 @@ const dumpError = (test, result) => {
     console.log('');
     console.log('error:', result.error);
     console.log('');
+    console.log('input:   ', test.initial);
+    console.log('         ', formatResult(test.initial, test.flagsMask));
     console.log('actual:  ', result.actual);
     console.log('         ', formatResult(result.actual, test.flagsMask));
     console.log('expected:', result.expected);
