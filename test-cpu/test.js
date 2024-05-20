@@ -122,21 +122,31 @@ const loadTests = async (file, idx, hash) => {
     });
 };
 
-const formatFlags = (flags) => {
-    const o = (flags & 0b0000100000000000) ? 'O' : 'o';
-    const d = (flags & 0b0000010000000000) ? 'D' : 'd';
-    const i = (flags & 0b0000001000000000) ? 'I' : 'i';
-    const t = (flags & 0b0000000100000000) ? 'T' : 't';
-    const s = (flags & 0b0000000010000000) ? 'S' : 's';
-    const z = (flags & 0b0000000001000000) ? 'Z' : 'z';
-    const a = (flags & 0b0000000000010000) ? 'A' : 'a';
-    const p = (flags & 0b0000000000000100) ? 'P' : 'p';
-    const c = (flags & 0b0000000000000001) ? 'C' : 'c';
+const formatFlag = (flags, flagsMask, bit, char) => {
+    if ((flagsMask & bit) === 0) {
+        return '░';
+    } else if (flags & bit) {
+        return char.toUpperCase();
+    } else {
+        return char.toLowerCase();
+    }
+};
+
+const formatFlags = (flags, flagsMask) => {
+    const o = formatFlag(flags, flagsMask, 0b0000100000000000, 'o');
+    const d = formatFlag(flags, flagsMask, 0b0000010000000000, 'd');
+    const i = formatFlag(flags, flagsMask, 0b0000001000000000, 'i');
+    const t = formatFlag(flags, flagsMask, 0b0000000100000000, 't');
+    const s = formatFlag(flags, flagsMask, 0b0000000010000000, 's');
+    const z = formatFlag(flags, flagsMask, 0b0000000001000000, 'z');
+    const a = formatFlag(flags, flagsMask, 0b0000000000010000, 'a');
+    const p = formatFlag(flags, flagsMask, 0b0000000000000100, 'p');
+    const c = formatFlag(flags, flagsMask, 0b0000000000000001, 'c');
 
     return `----${o}${d}${i}${t} ${s}${z}-${a}-${p}-${c}`;
 };
 
-const formatResult = (input) => {
+const formatResult = (input, flagsMask) => {
     const output = {};
 
     if (input.regs) {
@@ -145,7 +155,7 @@ const formatResult = (input) => {
             output.regs[key] = `${input.regs[key].toString(16).padStart(4, '0')}`;
         }
         if (input.regs.flags) {
-            output.regs.flags += ` ${formatFlags(input.regs.flags)}`;
+            output.regs.flags += ` ${formatFlags(input.regs.flags, flagsMask)}`;
         }
     }
 
@@ -166,9 +176,9 @@ const dumpError = (test, result) => {
     console.log('error:', result.error);
     console.log('');
     console.log('actual:  ', result.actual);
-    console.log('         ', formatResult(result.actual));
+    console.log('         ', formatResult(result.actual, test.flagsMask));
     console.log('expected:', result.expected);
-    console.log('         ', formatResult(result.expected));
+    console.log('         ', formatResult(result.expected, test.flagsMask));
     console.log('');
 
     log.write(JSON.stringify(result, undefined, 2) + '\n');
