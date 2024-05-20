@@ -305,3 +305,61 @@ addr = 0xfc01 * 0x10 + 0xF1B9 = 0x10b1c9 = 1094089
 mod 2^20 = 0x0b1c9 = 45513
 
 Possibly caused by missing wrapping in 8-bit locations.
+
+A4 429
+======
+
+node test.js -f A4 -i 429 -e
+be7487fbf0e1032110946e85dc69f435c05623eb
+
+actual      [ 9, 190 ]          [ '0009', 'be' ]
+expected    [ 1048575, 55 ]     [ 'fffff', '37' ]
+
+    "name": "cs rep movsb",
+    "bytes": [46, 243, 164],
+    "initial": {
+        "regs": {
+            "ax": 19174,
+            "bx": 56636,
+            "cx": 34,
+            "dx": 50904,
+            "cs": 58344,
+            "ss": 55729,
+            "ds": 50256,
+            "es": 61802,
+            "sp": 49330,
+            "bp": 24336,
+            "si": 28260,
+            "di": 59731,
+            "ip": 50921,
+            "flags": 61522
+        },
+
+prints ram like this:
+
+    ram: [
+      [ 0, 9 ],         [ 1, 149 ],       [ 2, 112 ],
+      [ 3, 152 ],       [ 4, 86 ],        [ 5, 3 ],
+      [ 6, 174 ],       [ 7, 67 ],        [ 8, 202 ],
+      [ 9, 190 ],       [ 10, 188 ],      [ 11, 251 ],
+      [ 12, 20 ],       [ 13, 5 ],        [ 14, 165 ],
+      [ 15, 37 ],       [ 16, 85 ],       [ 17, 178 ],
+      [ 18, 241 ],      [ 19, 45 ],       [ 20, 79 ],
+      [ 1048563, 246 ], [ 1048564, 100 ], [ 1048565, 25 ],
+      [ 1048566, 39 ],  [ 1048567, 104 ], [ 1048568, 115 ],
+      [ 1048569, 250 ], [ 1048570, 157 ], [ 1048571, 13 ],
+      [ 1048572, 248 ], [ 1048573, 220 ], [ 1048574, 201 ],
+      [ 9, 190 ]
+    ]
+
+address 9 is printed twice, the last item should be [ 1048575, 55 ]
+X hypothesis: the instruction works, the test output code has a bug when printing address 0xfffff
+
+re-run after fix: A4, A5, AA, AB, C4
+
+hypothesis: the instruction overwrites last byte of the input, which is 1048575
+it's trying to write 9 to memory location 0, but it seems it writes it to memory location -1
+
+actually, probably we set up the memory wrong, it starts at the last byte of input
+
+confirmed that moving [mem] one address up solves the problem

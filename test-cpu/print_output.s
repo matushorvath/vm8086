@@ -188,13 +188,14 @@ print_memory_loop:
     add [mem], [rb + address], [ip + 1]
     add [0], 0, [rb + value]
 
-    # Print the address and value
+    # Print a comma unless it's the first item
     jz  [rb + index], print_memory_skip_comma
     out ','
 
 print_memory_skip_comma:
     out '['
 
+    # Print the address and value
     add [rb + address], 0, [rb - 1]
     add 10, 0, [rb - 2]
     add 0, 0, [rb - 3]
