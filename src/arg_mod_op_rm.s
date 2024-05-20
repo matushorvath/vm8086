@@ -15,16 +15,17 @@
 .IMPORT report_error
 
 # From memory.s
-.IMPORT calc_cs_ip_addr_b
 .IMPORT read_cs_ip_b
 
 # From state.s
 .IMPORT inc_ip_b
 .IMPORT inc_ip_w
+.IMPORT reg_cs
+.IMPORT reg_ip
 
 ##########
 arg_mod_000_rm_w:
-.FRAME loc_type, loc_addr                                                       # returns loc_type_*, loc_addr_*
+.FRAME lseg, loff                                           # returns lseg, loff
     arb -2
 
     # R/M is the parameter
@@ -33,8 +34,8 @@ arg_mod_000_rm_w:
     add 1, 0, [rb - 1]
     arb -1
     call arg_mod_rm_generic
-    add [rb - 3], 0, [rb + loc_type]
-    add [rb - 4], 0, [rb + loc_addr]
+    add [rb - 3], 0, [rb + lseg]
+    add [rb - 4], 0, [rb + loff]
 
     # The REG field must be 0
     jnz [rb - 5], arg_mod_000_rm_nonzero_reg
@@ -50,7 +51,7 @@ arg_mod_000_rm_nonzero_reg:
 
 ##########
 arg_mod_000_rm_immediate_b:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
+.FRAME lseg_src, loff_src, lseg_dst, loff_dst               # returns lseg_*, loff_*
     arb -4
 
     # R/M is dst, 8-bit immediate is src
@@ -59,16 +60,18 @@ arg_mod_000_rm_immediate_b:
     add 0, 0, [rb - 1]
     arb -1
     call arg_mod_rm_generic
-    add [rb - 3], 0, [rb + loc_type_dst]
-    add [rb - 4], 0, [rb + loc_addr_dst]
+    add [rb - 3], 0, [rb + lseg_dst]
+    add [rb - 4], 0, [rb + loff_dst]
 
     # The REG field must be 0
     jnz [rb - 5], arg_mod_000_rm_immediate_b_nonzero_reg
 
     # Return pointer to 8-bit immediate
-    call calc_cs_ip_addr_b
-    add 1, 0, [rb + loc_type_src]
-    add [rb - 2], 0, [rb + loc_addr_src]
+    mul [reg_cs + 1], 0x100, [rb + lseg_src]
+    add [reg_cs + 0], [rb + lseg_src], [rb + lseg_src]
+    mul [reg_ip + 1], 0x100, [rb + loff_src]
+    add [reg_ip + 0], [rb + loff_src], [rb + loff_src]
+
     call inc_ip_b
 
     arb 4
@@ -82,7 +85,7 @@ arg_mod_000_rm_immediate_b_nonzero_reg:
 
 ##########
 arg_mod_000_rm_immediate_w:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
+.FRAME lseg_src, loff_src, lseg_dst, loff_dst               # returns lseg_*, loff_*
     arb -4
 
     # R/M is dst, 16-bit immediate is src
@@ -91,16 +94,18 @@ arg_mod_000_rm_immediate_w:
     add 1, 0, [rb - 1]
     arb -1
     call arg_mod_rm_generic
-    add [rb - 3], 0, [rb + loc_type_dst]
-    add [rb - 4], 0, [rb + loc_addr_dst]
+    add [rb - 3], 0, [rb + lseg_dst]
+    add [rb - 4], 0, [rb + loff_dst]
 
     # The REG field must be 0
     jnz [rb - 5], arg_mod_000_rm_immediate_w_nonzero_reg
 
     # Return pointer to 16-bit immediate
-    call calc_cs_ip_addr_b # TODO calc_cs_ip_addr_w
-    add 1, 0, [rb + loc_type_src]
-    add [rb - 2], 0, [rb + loc_addr_src]
+    mul [reg_cs + 1], 0x100, [rb + lseg_src]
+    add [reg_cs + 0], [rb + lseg_src], [rb + lseg_src]
+    mul [reg_ip + 1], 0x100, [rb + loff_src]
+    add [reg_ip + 0], [rb + loff_src], [rb + loff_src]
+
     call inc_ip_w
 
     arb 4
@@ -114,7 +119,7 @@ arg_mod_000_rm_immediate_w_nonzero_reg:
 
 ##########
 arg_mod_op_rm_b:
-.FRAME op, loc_type, loc_addr                                                   # returns op, returns loc_type_*, loc_addr_*
+.FRAME op, lseg, loff                                       # returns op, lseg, loff
     arb -3
 
     # R/M is the parameter
@@ -123,8 +128,8 @@ arg_mod_op_rm_b:
     add 0, 0, [rb - 1]
     arb -1
     call arg_mod_rm_generic
-    add [rb - 3], 0, [rb + loc_type]
-    add [rb - 4], 0, [rb + loc_addr]
+    add [rb - 3], 0, [rb + lseg]
+    add [rb - 4], 0, [rb + loff]
     add [rb - 5], 0, [rb + op]
 
     arb 3
@@ -133,7 +138,7 @@ arg_mod_op_rm_b:
 
 ##########
 arg_mod_op_rm_w:
-.FRAME op, loc_type, loc_addr                                                   # returns op, returns loc_type_*, loc_addr_*
+.FRAME op, lseg, loff                                       # returns op, lseg, loff
     arb -3
 
     # R/M is the parameter
@@ -142,8 +147,8 @@ arg_mod_op_rm_w:
     add 1, 0, [rb - 1]
     arb -1
     call arg_mod_rm_generic
-    add [rb - 3], 0, [rb + loc_type]
-    add [rb - 4], 0, [rb + loc_addr]
+    add [rb - 3], 0, [rb + lseg]
+    add [rb - 4], 0, [rb + loff]
     add [rb - 5], 0, [rb + op]
 
     arb 3
@@ -152,7 +157,7 @@ arg_mod_op_rm_w:
 
 ##########
 arg_mod_op_rm_b_immediate_b:
-.FRAME op, loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst               # returns op, loc_type_*, loc_addr_*
+.FRAME op, lseg_src, loff_src, lseg_dst, loff_dst           # returns op, lseg_*, loff_*
     arb -5
 
     # 8-bit R/M is dst, 8-bit immediate is src
@@ -161,14 +166,16 @@ arg_mod_op_rm_b_immediate_b:
     add 0, 0, [rb - 1]
     arb -1
     call arg_mod_rm_generic
-    add [rb - 3], 0, [rb + loc_type_dst]
-    add [rb - 4], 0, [rb + loc_addr_dst]
+    add [rb - 3], 0, [rb + lseg_dst]
+    add [rb - 4], 0, [rb + loff_dst]
     add [rb - 5], 0, [rb + op]
 
     # Return pointer to 8-bit immediate
-    call calc_cs_ip_addr_b
-    add 1, 0, [rb + loc_type_src]
-    add [rb - 2], 0, [rb + loc_addr_src]
+    mul [reg_cs + 1], 0x100, [rb + lseg_src]
+    add [reg_cs + 0], [rb + lseg_src], [rb + lseg_src]
+    mul [reg_ip + 1], 0x100, [rb + loff_src]
+    add [reg_ip + 0], [rb + loff_src], [rb + loff_src]
+
     call inc_ip_b
 
     arb 5
@@ -177,7 +184,7 @@ arg_mod_op_rm_b_immediate_b:
 
 ##########
 arg_mod_op_rm_w_immediate_sxb:
-.FRAME op, loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst, tmp          # returns op, loc_type_*, loc_addr_*
+.FRAME op, lseg_src, loff_src, lseg_dst, loff_dst, tmp      # returns op, lseg_*, loff_*
     arb -6
 
     # 16-bit R/M is dst, sign-extended 8-bit immediate is src
@@ -186,8 +193,8 @@ arg_mod_op_rm_w_immediate_sxb:
     add 1, 0, [rb - 1]
     arb -1
     call arg_mod_rm_generic
-    add [rb - 3], 0, [rb + loc_type_dst]
-    add [rb - 4], 0, [rb + loc_addr_dst]
+    add [rb - 3], 0, [rb + lseg_dst]
+    add [rb - 4], 0, [rb + loff_dst]
     add [rb - 5], 0, [rb + op]
 
     # Retrieve the 8-bit immediate into the sign-extend buffer
@@ -200,8 +207,8 @@ arg_mod_op_rm_w_immediate_sxb:
     mul [rb + tmp], 0xff, [sign_extend_buffer_hi]
 
     # Return pointer to the sign-extended 8-bit immediate in an intcode buffer
-    add 0, 0, [rb + loc_type_src]
-    add sign_extend_buffer_lo, 0, [rb + loc_addr_src]
+    add 0x10000, 0, [rb + lseg_src]
+    add sign_extend_buffer_lo, 0, [rb + loff_src]
 
     arb 6
     ret 0
@@ -209,7 +216,7 @@ arg_mod_op_rm_w_immediate_sxb:
 
 ##########
 arg_mod_op_rm_w_immediate_w:
-.FRAME op, loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst               # returns op, loc_type_*, loc_addr_*
+.FRAME op, lseg_src, loff_src, lseg_dst, loff_dst           # returns op, lseg_*, loff_*
     arb -5
 
     # 16-bit R/M is dst, 16-bit immediate is src
@@ -218,14 +225,16 @@ arg_mod_op_rm_w_immediate_w:
     add 1, 0, [rb - 1]
     arb -1
     call arg_mod_rm_generic
-    add [rb - 3], 0, [rb + loc_type_dst]
-    add [rb - 4], 0, [rb + loc_addr_dst]
+    add [rb - 3], 0, [rb + lseg_dst]
+    add [rb - 4], 0, [rb + loff_dst]
     add [rb - 5], 0, [rb + op]
 
     # Return pointer to 16-bit immediate
-    call calc_cs_ip_addr_b # TODO calc_cs_ip_addr_w
-    add 1, 0, [rb + loc_type_src]
-    add [rb - 2], 0, [rb + loc_addr_src]
+    mul [reg_cs + 1], 0x100, [rb + lseg_src]
+    add [reg_cs + 0], [rb + lseg_src], [rb + lseg_src]
+    mul [reg_ip + 1], 0x100, [rb + loff_src]
+    add [reg_ip + 0], [rb + loff_src], [rb + loff_src]
+
     call inc_ip_w
 
     arb 5

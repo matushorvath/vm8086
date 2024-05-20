@@ -30,7 +30,7 @@
 .IMPORT flag_overflow
 
 ##########
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a, b, function, store, res, tmp
+.FRAME lseg_src, loff_src, lseg_dst, loff_dst; a, b, function, store, res, tmp
     # Function with multiple entry points
 
 execute_and_b:
@@ -58,15 +58,15 @@ execute_test_b:
 
 execute_bitwise_b:
     # Read the source value
-    add [rb + loc_type_src], 0, [rb - 1]
-    add [rb + loc_addr_src], 0, [rb - 2]
+    add [rb + lseg_src], 0, [rb - 1]
+    add [rb + loff_src], 0, [rb - 2]
     arb -2
     call read_location_b
     add [rb - 4], 0, [rb + a]
 
     # Read the destination value
-    add [rb + loc_type_dst], 0, [rb - 1]
-    add [rb + loc_addr_dst], 0, [rb - 2]
+    add [rb + lseg_dst], 0, [rb - 1]
+    add [rb + loff_dst], 0, [rb - 2]
     arb -2
     call read_location_b
     add [rb - 4], 0, [rb + b]
@@ -92,8 +92,8 @@ execute_bitwise_b:
     # Write the destination value if requested
     jz  [rb + store], execute_bitwise_b_end
 
-    add [rb + loc_type_dst], 0, [rb - 1]
-    add [rb + loc_addr_dst], 0, [rb - 2]
+    add [rb + lseg_dst], 0, [rb - 1]
+    add [rb + loff_dst], 0, [rb - 2]
     add [rb + res], 0, [rb - 3]
     arb -3
     call write_location_b
@@ -104,7 +104,7 @@ execute_bitwise_b_end:
 .ENDFRAME
 
 ##########
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst; a_lo, a_hi, b_lo, b_hi, function, store, res_lo, res_hi, tmp
+.FRAME lseg_src, loff_src, lseg_dst, loff_dst; a_lo, a_hi, b_lo, b_hi, function, store, res_lo, res_hi, tmp
     # Function with multiple entry points
 
 execute_and_w:
@@ -132,16 +132,16 @@ execute_test_w:
 
 execute_bitwise_w:
     # Read the source value
-    add [rb + loc_type_src], 0, [rb - 1]
-    add [rb + loc_addr_src], 0, [rb - 2]
+    add [rb + lseg_src], 0, [rb - 1]
+    add [rb + loff_src], 0, [rb - 2]
     arb -2
     call read_location_w
     add [rb - 4], 0, [rb + a_lo]
     add [rb - 5], 0, [rb + a_hi]
 
     # Read the destination value
-    add [rb + loc_type_dst], 0, [rb - 1]
-    add [rb + loc_addr_dst], 0, [rb - 2]
+    add [rb + lseg_dst], 0, [rb - 1]
+    add [rb + loff_dst], 0, [rb - 2]
     arb -2
     call read_location_w
     add [rb - 4], 0, [rb + b_lo]
@@ -176,8 +176,8 @@ execute_bitwise_w:
     # Write the destination value if requested
     jz  [rb + store], execute_bitwise_w_end
 
-    add [rb + loc_type_dst], 0, [rb - 1]
-    add [rb + loc_addr_dst], 0, [rb - 2]
+    add [rb + lseg_dst], 0, [rb - 1]
+    add [rb + loff_dst], 0, [rb - 2]
     add [rb + res_lo], 0, [rb - 3]
     add [rb + res_hi], 0, [rb - 4]
     arb -4
@@ -288,10 +288,10 @@ xor_b_loop:
 
 ##########
 execute_not_b:
-.FRAME loc_type, loc_addr;
+.FRAME lseg, loff;
     # Read the value
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_b
 
@@ -300,8 +300,8 @@ execute_not_b:
     add 0xff, [rb - 4], [rb - 3]        # ~read_location_b() -> param 3
 
     # Write the value
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -3
     call write_location_b
 
@@ -310,10 +310,10 @@ execute_not_b:
 
 ##########
 execute_not_w:
-.FRAME loc_type, loc_addr;
+.FRAME lseg, loff;
     # Read the value
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_w
 
@@ -324,8 +324,8 @@ execute_not_w:
     add 0xff, [rb - 5], [rb - 4]        # ~read_location_w().lo -> param 4
 
     # Write the value
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -4
     call write_location_w
 

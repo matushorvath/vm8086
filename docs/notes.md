@@ -35,29 +35,9 @@ Possible Optimizations
 
 - Avoid args_fn as much as possible, I think the whole locations concept is eating too much performance.
   Wait for performance measurements first.
-- read_cs_ip_b is quite heavy (because of calc_cs_ip_addr_b/calc_cs_ip_addr_w mostly) and seems to be used a lot, try to optimize
+- read_cs_ip_b/read_cs_ip_w are quite heavy (because of physical address calculation) and seems to be used a lot, try to optimize
+- think about optimizing the wraparounds and calculations in read_seg_off_*, write_seg_off_*
 
-To analyze:
-add.s
-bitwise.s
-decode.s
-group1.s
-group2.s
-group_immed.s
-inc_dec.s
-location.s
-sub_cmp.s
-
-Times:
-baseline:
-real    0m30.908s
-user    0m30.710s
-sys     0m0.205s
-
-after removing modulo:
-real    0m27.808s
-user    0m27.585s
-sys     0m0.234s
 
 Emulators
 =========

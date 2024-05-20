@@ -25,12 +25,12 @@
 
 ##########
 execute_mul_b:
-.FRAME loc_type, loc_addr; op1
+.FRAME lseg, loff; op1
     arb -1
 
     # Read the value
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_b
     add [rb - 4], 0, [rb + op1]
@@ -58,12 +58,12 @@ execute_mul_b:
 
 ##########
 execute_imul_b:
-.FRAME loc_type, loc_addr; op1, op2, res, tmp
+.FRAME lseg, loff; op1, op2, res, tmp
     arb -4
 
     # Read the operands
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_b
 
@@ -117,12 +117,12 @@ execute_imul_b_res_tc:
 
 ##########
 execute_mul_w:
-.FRAME loc_type, loc_addr; op1_lo, op1_hi, op2_lo, op2_hi, tmp
+.FRAME lseg, loff; op1_lo, op1_hi, op2_lo, op2_hi, tmp
     arb -5
 
     # Read the value
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_w
     add [rb - 4], 0, [rb + op1_lo]
@@ -193,12 +193,12 @@ execute_mul_w_after_dl_carry:
 
 ##########
 execute_imul_w:
-.FRAME loc_type, loc_addr; op1_lo, op1_hi, op2_lo, op2_hi, sign, tmp
+.FRAME lseg, loff; op1_lo, op1_hi, op2_lo, op2_hi, sign, tmp
     arb -6
 
     # Read the operands
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_w
 

@@ -32,7 +32,7 @@
 .IMPORT flag_overflow
 
 ##########
-.FRAME loc_type, loc_addr; val_lo, val_hi, valx8_lo, valx8_hi, count, tmp
+.FRAME lseg, loff; val_lo, val_hi, valx8_lo, valx8_hi, count, tmp
     # Function with multiple entry points
 
 execute_rol_1_w:
@@ -54,8 +54,8 @@ execute_rol_w:
     add [0], 0, [rb + count]
 
     # Read the value to rotate
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_w
     add [rb - 4], 0, [rb + val_lo]
@@ -257,8 +257,8 @@ execute_rol_w_flags:
     eq  [flag_overflow], 0, [flag_overflow]
 
     # Write the rotated value
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     add [rb + val_lo], 0, [rb - 3]
     add [rb + val_hi], 0, [rb - 4]
     arb -4
@@ -270,7 +270,7 @@ execute_rol_w_done:
 .ENDFRAME
 
 ##########
-.FRAME loc_type, loc_addr; val_lo, val_hi, valx8_lo, valx8_hi, count, tmp
+.FRAME lseg, loff; val_lo, val_hi, valx8_lo, valx8_hi, count, tmp
     # Function with multiple entry points
 
 execute_ror_1_w:
@@ -292,8 +292,8 @@ execute_ror_w:
     add [0], 0, [rb + count]
 
     # Read the value to rotate
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_w
     add [rb - 4], 0, [rb + val_lo]
@@ -494,8 +494,8 @@ execute_ror_w_flags:
     eq  [flag_overflow], 0, [flag_overflow]
 
     # Write the rotated value
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     add [rb + val_lo], 0, [rb - 3]
     add [rb + val_hi], 0, [rb - 4]
     arb -4
@@ -507,7 +507,7 @@ execute_ror_w_done:
 .ENDFRAME
 
 ##########
-.FRAME loc_type, loc_addr; table, overflow_algorithm, val_lo, val_hi, valx8_lo, valx8_hi, count, tmp
+.FRAME lseg, loff; table, overflow_algorithm, val_lo, val_hi, valx8_lo, valx8_hi, count, tmp
     # Function with multiple entry points
 
 execute_rcl_1_w:
@@ -546,8 +546,8 @@ execute_rcl_rcr_w:
     jz  [rb + count], execute_rcl_rcr_w_done
 
     # Read the value to rotate
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_w
     add [rb - 4], 0, [rb + val_lo]
@@ -872,8 +872,8 @@ execute_rcr_w_flags:
 
 execute_rcl_rcr_w_store:
     # Write the rotated value
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     add [rb + val_lo], 0, [rb - 3]
     add [rb + val_hi], 0, [rb - 4]
     arb -4

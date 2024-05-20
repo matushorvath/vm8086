@@ -39,12 +39,12 @@
 
 ##########
 execute_immed_b:
-.FRAME op, loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
+.FRAME op, lseg_src, loff_src, lseg_dst, loff_dst;
     # Prepare the arguments on stack
-    add [rb + loc_type_src], 0, [rb - 1]
-    add [rb + loc_addr_src], 0, [rb - 2]
-    add [rb + loc_type_dst], 0, [rb - 3]
-    add [rb + loc_addr_dst], 0, [rb - 4]
+    add [rb + lseg_src], 0, [rb - 1]
+    add [rb + loff_src], 0, [rb - 2]
+    add [rb + lseg_dst], 0, [rb - 3]
+    add [rb + loff_dst], 0, [rb - 4]
 
     # Execute the operation
     add execute_immed_b_table, [rb + op], [ip + 2]
@@ -106,12 +106,12 @@ execute_immed_b_end:
 
 ##########
 execute_immed_w:
-.FRAME op, loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst;
+.FRAME op, lseg_src, loff_src, lseg_dst, loff_dst;
     # Prepare the arguments on stack
-    add [rb + loc_type_src], 0, [rb - 1]
-    add [rb + loc_addr_src], 0, [rb - 2]
-    add [rb + loc_type_dst], 0, [rb - 3]
-    add [rb + loc_addr_dst], 0, [rb - 4]
+    add [rb + lseg_src], 0, [rb - 1]
+    add [rb + loff_src], 0, [rb - 2]
+    add [rb + lseg_dst], 0, [rb - 3]
+    add [rb + loff_dst], 0, [rb - 4]
 
     # Execute the operation
     add execute_immed_w_table, [rb + op], [ip + 2]

@@ -31,7 +31,7 @@
 .IMPORT flag_overflow
 
 ##########
-.FRAME loc_type, loc_addr; val, val_bits, count, tmp
+.FRAME lseg, loff; val, val_bits, count, tmp
     # Function with multiple entry points
 
 execute_shl_1_b:
@@ -51,8 +51,8 @@ execute_shl_b:
     jz  [rb + tmp], execute_shl_b_many
 
     # Read the value to shift
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_b
     add [rb - 4], 0, [rb + val]
@@ -126,8 +126,8 @@ execute_shl_b_many:
 
 execute_shl_b_store:
     # Write the shifted value
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     add [rb + val], 0, [rb - 3]
     arb -3
     call write_location_b
@@ -138,7 +138,7 @@ execute_shl_b_done:
 .ENDFRAME
 
 ##########
-.FRAME loc_type, loc_addr; val, val_bits, count, tmp
+.FRAME lseg, loff; val, val_bits, count, tmp
     # Function with multiple entry points
 
 execute_shr_1_b:
@@ -158,8 +158,8 @@ execute_shr_b:
     jz  [rb + tmp], execute_shr_b_many
 
     # Read the value to shift
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_b
     add [rb - 4], 0, [rb + val]
@@ -232,8 +232,8 @@ execute_shr_b_many:
 
 execute_shr_b_store:
     # Write the shifted value
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     add [rb + val], 0, [rb - 3]
     arb -3
     call write_location_b
@@ -244,7 +244,7 @@ execute_shr_b_done:
 .ENDFRAME
 
 ##########
-.FRAME loc_type, loc_addr; val, val_bits, count, tmp
+.FRAME lseg, loff; val, val_bits, count, tmp
     # Function with multiple entry points
 
 execute_sar_1_b:
@@ -260,8 +260,8 @@ execute_sar_b:
     add 0, 0, [flag_auxiliary_carry]
 
     # Read the value to shift
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_b
     add [rb - 4], 0, [rb + val]
@@ -342,8 +342,8 @@ execute_sar_b_many:
 
 execute_sar_b_store:
     # Write the shifted value
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     add [rb + val], 0, [rb - 3]
     arb -3
     call write_location_b

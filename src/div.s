@@ -31,12 +31,12 @@
 
 ##########
 execute_div_b:
-.FRAME loc_type, loc_addr; dvr, tmp
+.FRAME lseg, loff; dvr, tmp
     arb -2
 
     # Read the divisor
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_b
     add [rb - 4], 0, [rb + dvr]
@@ -87,12 +87,12 @@ execute_div_b_done:
 
 ##########
 execute_idiv_b:
-.FRAME loc_type, loc_addr; dvd_lo, dvd_hi, dvr, res_sign, mod_sign, res, mod, tmp
+.FRAME lseg, loff; dvd_lo, dvd_hi, dvr, res_sign, mod_sign, res, mod, tmp
     arb -8
 
     # Read the divisor
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_b
     add [rb - 4], 0, [rb + dvr]
@@ -191,12 +191,12 @@ execute_idiv_b_done:
 
 ##########
 execute_div_w:
-.FRAME loc_type, loc_addr; dvr, res, mod, tmp
+.FRAME lseg, loff; dvr, res, mod, tmp
     arb -4
 
     # Read the divisor
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_w
     mul [rb - 5], 0x100, [rb + dvr]
@@ -262,12 +262,12 @@ execute_div_w_done:
 
 ##########
 execute_idiv_w:
-.FRAME loc_type, loc_addr; dvd_0, dvd_1, dvd_2, dvd_3, dvr, res_sign, mod_sign, res, mod, tmp
+.FRAME lseg, loff; dvd_0, dvd_1, dvd_2, dvd_3, dvr, res_sign, mod_sign, res, mod, tmp
     arb -10
 
     # Read the divisor
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_w
     mul [rb - 5], 0x100, [rb + dvr]

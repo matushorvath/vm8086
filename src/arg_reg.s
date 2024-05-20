@@ -30,11 +30,11 @@
 
 ##########
 arg_ax:
-.FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
+.FRAME lseg, loff                                           # returns lseg, loff
     arb -2
 
-    add 0, 0, [rb + loc_type]
-    add reg_ax + 0, 0, [rb + loc_addr]
+    add 0x10000, 0, [rb + lseg]
+    add reg_ax + 0, 0, [rb + loff]
 
     arb 2
     ret 0
@@ -42,11 +42,11 @@ arg_ax:
 
 ##########
 arg_bx:
-.FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
+.FRAME lseg, loff                                           # returns lseg, loff
     arb -2
 
-    add 0, 0, [rb + loc_type]
-    add reg_bx + 0, 0, [rb + loc_addr]
+    add 0x10000, 0, [rb + lseg]
+    add reg_bx + 0, 0, [rb + loff]
 
     arb 2
     ret 0
@@ -54,11 +54,11 @@ arg_bx:
 
 ##########
 arg_cx:
-.FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
+.FRAME lseg, loff                                           # returns lseg, loff
     arb -2
 
-    add 0, 0, [rb + loc_type]
-    add reg_cx + 0, 0, [rb + loc_addr]
+    add 0x10000, 0, [rb + lseg]
+    add reg_cx + 0, 0, [rb + loff]
 
     arb 2
     ret 0
@@ -66,11 +66,11 @@ arg_cx:
 
 ##########
 arg_dx:
-.FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
+.FRAME lseg, loff                                           # returns lseg, loff
     arb -2
 
-    add 0, 0, [rb + loc_type]
-    add reg_dx + 0, 0, [rb + loc_addr]
+    add 0x10000, 0, [rb + lseg]
+    add reg_dx + 0, 0, [rb + loff]
 
     arb 2
     ret 0
@@ -78,11 +78,11 @@ arg_dx:
 
 ##########
 arg_sp:
-.FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
+.FRAME lseg, loff                                           # returns lseg, loff
     arb -2
 
-    add 0, 0, [rb + loc_type]
-    add reg_sp + 0, 0, [rb + loc_addr]
+    add 0x10000, 0, [rb + lseg]
+    add reg_sp + 0, 0, [rb + loff]
 
     arb 2
     ret 0
@@ -90,11 +90,11 @@ arg_sp:
 
 ##########
 arg_bp:
-.FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
+.FRAME lseg, loff                                           # returns lseg, loff
     arb -2
 
-    add 0, 0, [rb + loc_type]
-    add reg_bp + 0, 0, [rb + loc_addr]
+    add 0x10000, 0, [rb + lseg]
+    add reg_bp + 0, 0, [rb + loff]
 
     arb 2
     ret 0
@@ -102,11 +102,11 @@ arg_bp:
 
 ##########
 arg_si:
-.FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
+.FRAME lseg, loff                                           # returns lseg, loff
     arb -2
 
-    add 0, 0, [rb + loc_type]
-    add reg_si + 0, 0, [rb + loc_addr]
+    add 0x10000, 0, [rb + lseg]
+    add reg_si + 0, 0, [rb + loff]
 
     arb 2
     ret 0
@@ -114,11 +114,11 @@ arg_si:
 
 ##########
 arg_di:
-.FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
+.FRAME lseg, loff                                           # returns lseg, loff
     arb -2
 
-    add 0, 0, [rb + loc_type]
-    add reg_di + 0, 0, [rb + loc_addr]
+    add 0x10000, 0, [rb + lseg]
+    add reg_di + 0, 0, [rb + loff]
 
     arb 2
     ret 0
@@ -126,11 +126,11 @@ arg_di:
 
 ##########
 arg_cs:
-.FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
+.FRAME lseg, loff                                           # returns lseg, loff
     arb -2
 
-    add 0, 0, [rb + loc_type]
-    add reg_cs + 0, 0, [rb + loc_addr]
+    add 0x10000, 0, [rb + lseg]
+    add reg_cs + 0, 0, [rb + loff]
 
     arb 2
     ret 0
@@ -138,11 +138,11 @@ arg_cs:
 
 ##########
 arg_ds:
-.FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
+.FRAME lseg, loff                                           # returns lseg, loff
     arb -2
 
-    add 0, 0, [rb + loc_type]
-    add reg_ds + 0, 0, [rb + loc_addr]
+    add 0x10000, 0, [rb + lseg]
+    add reg_ds + 0, 0, [rb + loff]
 
     arb 2
     ret 0
@@ -150,11 +150,11 @@ arg_ds:
 
 ##########
 arg_ss:
-.FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
+.FRAME lseg, loff                                           # returns lseg, loff
     arb -2
 
-    add 0, 0, [rb + loc_type]
-    add reg_ss + 0, 0, [rb + loc_addr]
+    add 0x10000, 0, [rb + lseg]
+    add reg_ss + 0, 0, [rb + loff]
 
     arb 2
     ret 0
@@ -162,11 +162,11 @@ arg_ss:
 
 ##########
 arg_es:
-.FRAME loc_type, loc_addr                                   # returns loc_type, loc_addr
+.FRAME lseg, loff                                           # returns lseg, loff
     arb -2
 
-    add 0, 0, [rb + loc_type]
-    add reg_es + 0, 0, [rb + loc_addr]
+    add 0x10000, 0, [rb + lseg]
+    add reg_es + 0, 0, [rb + loff]
 
     arb 2
     ret 0

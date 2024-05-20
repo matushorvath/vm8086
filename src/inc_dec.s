@@ -24,12 +24,12 @@
 
 ##########
 execute_inc_b:
-.FRAME loc_type, loc_addr; value, tmp
+.FRAME lseg, loff; value, tmp
     arb -2
 
     # Read the value
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_b
     add [rb - 4], 0, [rb + value]
@@ -62,8 +62,8 @@ execute_inc_b_after_carry:
     eq  [rb + value], 0x80, [flag_overflow]
 
     # Write the result
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     add [rb + value], 0, [rb - 3]
     arb -3
     call write_location_b
@@ -74,12 +74,12 @@ execute_inc_b_after_carry:
 
 ##########
 execute_inc_w:
-.FRAME loc_type, loc_addr; value_lo, value_hi, tmp
+.FRAME lseg, loff; value_lo, value_hi, tmp
     arb -3
 
     # Read the value
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_w
     add [rb - 4], 0, [rb + value_lo]
@@ -122,8 +122,8 @@ execute_inc_w_after_carry:
     eq  [rb + value_hi], 0x80, [flag_overflow]
 
     # Write the result
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     add [rb + value_lo], 0, [rb - 3]
     add [rb + value_hi], 0, [rb - 4]
     arb -4
@@ -135,12 +135,12 @@ execute_inc_w_after_carry:
 
 ##########
 execute_dec_b:
-.FRAME loc_type, loc_addr; value, tmp
+.FRAME lseg, loff; value, tmp
     arb -2
 
     # Read the value
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_b
     add [rb - 4], 0, [rb + value]
@@ -173,8 +173,8 @@ execute_dec_b_after_borrow:
     eq  [rb + value], 0x7f, [flag_overflow]
 
     # Write the result
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     add [rb + value], 0, [rb - 3]
     arb -3
     call write_location_b
@@ -185,12 +185,12 @@ execute_dec_b_after_borrow:
 
 ##########
 execute_dec_w:
-.FRAME loc_type, loc_addr; value_lo, value_hi, tmp
+.FRAME lseg, loff; value_lo, value_hi, tmp
     arb -3
 
     # Read the value
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_w
     add [rb - 4], 0, [rb + value_lo]
@@ -233,8 +233,8 @@ execute_dec_w_after_borrow:
     eq  [rb + value_hi], 0x7f, [flag_overflow]
 
     # Write the result
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     add [rb + value_lo], 0, [rb - 3]
     add [rb + value_hi], 0, [rb - 4]
     arb -4

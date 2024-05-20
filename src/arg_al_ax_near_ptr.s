@@ -2,7 +2,6 @@
 .EXPORT arg_al_ax_near_ptr_dst
 
 # From memory.s
-.IMPORT calc_addr_b
 .IMPORT read_cs_ip_w
 
 # From prefix.s
@@ -10,7 +9,6 @@
 
 # From state.s
 .IMPORT reg_al
-.IMPORT reg_ax
 .IMPORT inc_ip_w
 
 # The first argument is an immediate 8-bit/16-bit value, stored at cs:ip.
@@ -18,16 +16,16 @@
 
 ##########
 arg_al_ax_near_ptr_src:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
+.FRAME lseg_src, loff_src, lseg_dst, loff_dst               # returns lseg_*, loff_*
     arb -4
 
     # AL/AX is src, memory is dst
 
     call arg_al_ax_near_ptr_generic
-    add [rb - 2], 0, [rb + loc_type_src]
-    add [rb - 3], 0, [rb + loc_addr_src]
-    add [rb - 4], 0, [rb + loc_type_dst]
-    add [rb - 5], 0, [rb + loc_addr_dst]
+    add [rb - 2], 0, [rb + lseg_src]
+    add [rb - 3], 0, [rb + loff_src]
+    add [rb - 4], 0, [rb + lseg_dst]
+    add [rb - 5], 0, [rb + loff_dst]
 
     arb 4
     ret 0
@@ -35,16 +33,16 @@ arg_al_ax_near_ptr_src:
 
 ##########
 arg_al_ax_near_ptr_dst:
-.FRAME loc_type_src, loc_addr_src, loc_type_dst, loc_addr_dst                   # returns loc_type_*, loc_addr_*
+.FRAME lseg_src, loff_src, lseg_dst, loff_dst               # returns lseg_*, loff_*
     arb -4
 
     # AL/AX is dst, memory is src
 
     call arg_al_ax_near_ptr_generic
-    add [rb - 2], 0, [rb + loc_type_dst]
-    add [rb - 3], 0, [rb + loc_addr_dst]
-    add [rb - 4], 0, [rb + loc_type_src]
-    add [rb - 5], 0, [rb + loc_addr_src]
+    add [rb - 2], 0, [rb + lseg_dst]
+    add [rb - 3], 0, [rb + loff_dst]
+    add [rb - 4], 0, [rb + lseg_src]
+    add [rb - 5], 0, [rb + loff_src]
 
     arb 4
     ret 0
@@ -52,33 +50,26 @@ arg_al_ax_near_ptr_dst:
 
 ##########
 arg_al_ax_near_ptr_generic:
-.FRAME loc_type_reg, loc_addr_reg, loc_type_mem, loc_addr_mem, off              # returns loc_type_*, loc_addr_*
-    arb -5
+.FRAME lseg_reg, loff_reg, lseg_mem, loff_mem               # returns lseg_*, loff_*
+    arb -4
 
     # Register location
-    add 0, 0, [rb + loc_type_reg]
-    add reg_al, 0, [rb + loc_addr_reg]
+    add 0x10000, 0, [rb + lseg_reg]
+    add reg_al, 0, [rb + loff_reg]
 
-    # Read the immediate value, which is the offset part of a memory pointer to second location
+    # Memory location, segment is DS
+    add [ds_segment_prefix], 1, [ip + 1]
+    mul [0], 0x100, [rb + lseg_mem]
+    add [ds_segment_prefix], 0, [ip + 1]
+    add [0], [rb + lseg_mem], [rb + lseg_mem]
+
+    # Memory location, offset is the immediate value
     call read_cs_ip_w
-    mul [rb - 3], 0x100, [rb + off]
-    add [rb - 2], [rb + off], [rb + off]
+    mul [rb - 3], 0x100, [rb + loff_mem]
+    add [rb - 2], [rb + loff_mem], [rb + loff_mem]
     call inc_ip_w
 
-    # Calculate physical address from DS:off
-    add [ds_segment_prefix], 1, [ip + 1]
-    mul [0], 0x100, [rb - 1]
-    add [ds_segment_prefix], 0, [ip + 1]
-    add [0], [rb - 1], [rb - 1]
-    add [rb + off], 0, [rb - 2]
-    arb -2
-    call calc_addr_b
-
-    # Memory location
-    add 1, 0, [rb + loc_type_mem]
-    add [rb - 4], 0, [rb + loc_addr_mem]
-
-    arb 5
+    arb 4
     ret 0
 .ENDFRAME
 

@@ -25,12 +25,12 @@
 
 ##########
 execute_neg_b:
-.FRAME loc_type, loc_addr; val, tmp
+.FRAME lseg, loff; val, tmp
     arb -2
 
     # Read the value
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_b
     add [rb - 4], 0, [rb + val]
@@ -59,8 +59,8 @@ execute_neg_b_zero:
     eq  [flag_auxiliary_carry], 0, [flag_auxiliary_carry]
 
     # Write the value
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     add [rb + val], 0, [rb - 3]
     arb -3
     call write_location_b
@@ -71,12 +71,12 @@ execute_neg_b_zero:
 
 ##########
 execute_neg_w:
-.FRAME loc_type, loc_addr; val_lo, val_hi, tmp
+.FRAME lseg, loff; val_lo, val_hi, tmp
     arb -3
 
     # Read the value
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_w
     add [rb - 4], 0, [rb + val_lo]
@@ -118,8 +118,8 @@ execute_neg_b_zero_hi:
     eq  [flag_auxiliary_carry], 0, [flag_auxiliary_carry]
 
     # Write the value
-    add [rb + loc_type], 0, [rb - 1]
-    add [rb + loc_addr], 0, [rb - 2]
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
     add [rb + val_lo], 0, [rb - 3]
     add [rb + val_hi], 0, [rb - 4]
     arb -4
