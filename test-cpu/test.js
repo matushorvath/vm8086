@@ -153,7 +153,8 @@ const formatResult = (input, flagsMask) => {
         output.regs = {};
         for (const key in input.regs) {
             if (key !== 'flags') {
-                output.regs[key] = `${input.regs[key].toString(16).padStart(4, '0')}`;
+                const hexValue = input.regs[key].toString(16).padStart(4, '0');
+                output.regs[key] = `${hexValue} (${input.regs[key]})`;
             }
         }
         if (input.regs.flags) {
@@ -161,14 +162,16 @@ const formatResult = (input, flagsMask) => {
             const hexFlags = `${maskedFlags.toString(16).padStart(4, '0')}`;
             const binFlags = formatFlags(maskedFlags, flagsMask);
 
-            output.regs.flags = `${hexFlags} ${binFlags}`;
+            output.regs.flags = `${hexFlags} ${binFlags} (${maskedFlags})`;
         }
     }
 
     if (input.ram) {
         output.ram = [];
         for (const [addr, val] of input.ram) {
-            output.ram.push([addr.toString(16).padStart(4, '0'), val.toString(16).padStart(2, '0')]);
+            const hexAddr = addr.toString(16).padStart(4, '0');
+            const hexVal = val.toString(16).padStart(2, '0')
+            output.ram.push([`${hexAddr} (${addr})`, `${hexVal} (${val})`]);
         }
     }
 
@@ -179,14 +182,11 @@ const dumpError = (test, result) => {
     console.log(`${test.name}`);
     console.log(chalk.gray(`idx: ${test.idx} hash: ${test.hash}`));
     console.log('');
-    console.log('error:', result.error);
+    console.log(chalk.blue('error:'), result.error);
     console.log('');
-    console.log('input:   ', test.initial);
-    console.log('         ', formatResult(test.initial, test.flagsMask));
-    console.log('actual:  ', result.actual);
-    console.log('         ', formatResult(result.actual, test.flagsMask));
-    console.log('expected:', result.expected);
-    console.log('         ', formatResult(result.expected, test.flagsMask));
+    console.log(chalk.blue('input:   '), formatResult(test.initial, test.flagsMask));
+    console.log(chalk.blue('actual:  '), formatResult(result.actual, test.flagsMask));
+    console.log(chalk.blue('expected:'), formatResult(result.expected, test.flagsMask));
     console.log('');
 
     log.write(JSON.stringify(result, undefined, 2) + '\n');

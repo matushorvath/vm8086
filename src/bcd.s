@@ -33,9 +33,12 @@
 .IMPORT flag_zero
 .IMPORT flag_parity
 .IMPORT flag_auxiliary_carry
+.IMPORT flag_overflow
 
 # From util.s
 .IMPORT split_16_8_8
+
+# TODO make the bcd bochs test work again
 
 ##########
 execute_aaa:
@@ -281,8 +284,16 @@ execute_aam:
     # Raise #DE on division by zero
     jnz [rb + base], execute_aam_non_zero
 
-    add [exec_ip + 0], 0, [reg_ip + 0]
-    add [exec_ip + 1], 0, [reg_ip + 1]
+    # TODO validate this division by zero handling with bochs
+    #add [exec_ip + 0], 0, [reg_ip + 0]
+    #add [exec_ip + 1], 0, [reg_ip + 1]
+
+    add 0, 0, [flag_overflow]
+    add 0, 0, [flag_sign]
+    add 1, 0, [flag_zero]
+    add 0, 0, [flag_auxiliary_carry]
+    add 1, 0, [flag_parity]
+    add 0, 0, [flag_carry]
 
     add 0, 0, [rb - 1]
     arb -1

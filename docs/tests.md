@@ -492,4 +492,3 @@ hypothesis: the documented algorithm is wrong, should not compare with 0x99, but
 (still does not work, fixes some cases and breaks others)
 
 hypothesis: the documented algorithm is wrong, it breaks when 0a <= AL <= 9f, the result calculated differs in top nibble of AL (expected 9x, actual 0x)
-
