@@ -36,6 +36,7 @@ Options:
     [--keep|-k]                 Don't delete temporary files after the tests finish
     [--single-thread|-1]        Run all tests in the main thread, without using worker threads
 
+    [--plain|-p]                Plain output, no progress bars
     [--dump-errors|-e]          Print differences between expected and actual values
     [--dump-output|-o]          Print stdout and stderr of the intcode binary
     [--trace|-t]                Trace execution of individual test cases
@@ -59,7 +60,8 @@ const parseCommandLine = () => {
                 'single-thread': { type: 'boolean', short: '1' },
                 keep: { type: 'boolean', short: 'k' },
                 'undefined-behavior': { type: 'boolean', short: 'u' },
-                continue: { type: 'boolean', short: 'c' }
+                continue: { type: 'boolean', short: 'c' },
+                plain: { type: 'boolean', short: 'p' }
             }
         });
 
@@ -147,10 +149,10 @@ const formatResult = (input) => {
         }
     }
 
-    if (input.mem) {
-        output.mem = [];
-        for (const [addr, val] of input.mem) {
-            output.mem.push([addr.toString(16).padStart(4, '0'), val.toString(16).padStart(2, '0')]);
+    if (input.ram) {
+        output.ram = [];
+        for (const [addr, val] of input.ram) {
+            output.ram.push([addr.toString(16).padStart(4, '0'), val.toString(16).padStart(2, '0')]);
         }
     }
 
@@ -185,7 +187,7 @@ const logTestSummary = (file, passed, failed, filtered) => {
 };
 
 const runTests = async (file, tests, filtered) => {
-    mpb.addTask(file, { type: 'percentage' });
+    mpb?.addTask(file, { type: 'percentage' });
 
     let passed = [], failed = [];
     const runOneTest = async (test, i) => {
@@ -213,7 +215,7 @@ const runTests = async (file, tests, filtered) => {
         }
 
         const message = formatPassedFailed(passed.length, failed.length, tests.length, filtered);
-        mpb.updateTask(file, { percentage: i / tests.length, message });
+        mpb?.updateTask(file, { percentage: i / tests.length, message });
     };
 
     if (options['single-thread']) {
@@ -233,7 +235,7 @@ const runTests = async (file, tests, filtered) => {
     logTestSummary(file, passed, failed, filtered);
 
     const message = formatPassedFailed(passed.length, failed.length, tests.length, filtered);
-    mpb.done(file, { message });
+    mpb?.done(file, { message });
 
     return { passed: passed.length, failed: failed.length };
 };
@@ -327,7 +329,10 @@ const main = async () => {
     log.write(JSON.stringify({ started: true }) + '\n');
 
     piscina.on('message', onWorkerMessage);
-    mpb = new MultiProgressBars({ initMessage: 'CPU Test', anchor: 'top', persist: true });
+
+    if (!options.plain) {
+        mpb = new MultiProgressBars({ initMessage: 'CPU Test', anchor: 'top', persist: true });
+    }
 
     let fileCount = 0, totalPassed = 0, totalFailed = 0, totalFiltered = 0;
 
@@ -358,7 +363,7 @@ const main = async () => {
         console.log(`Summary: ${passedMessage}  ${failedMessage}  ${filteredMessage}`);
     }
 
-    mpb.close();
+    mpb?.close();
     log.end();
 };
 
