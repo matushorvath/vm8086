@@ -234,6 +234,8 @@ const runTests = async (file, tests, filtered) => {
 
     const message = formatPassedFailed(passed.length, failed.length, tests.length, filtered);
     mpb.done(file, { message });
+
+    return { passed: passed.length, failed: failed.length };
 };
 
 const onWorkerMessage = (data) => {
@@ -327,6 +329,8 @@ const main = async () => {
     piscina.on('message', onWorkerMessage);
     mpb = new MultiProgressBars({ initMessage: 'CPU Test', anchor: 'top', persist: true });
 
+    let fileCount = 0, totalPassed = 0, totalFailed = 0, totalFiltered = 0;
+
     const metadata = await loadMetadata();
     const files = await listFiles();
 
@@ -336,8 +340,22 @@ const main = async () => {
         const filtered = allTests.length - validTests.length;
 
         if (validTests.length > 0) {
-            await runTests(file, validTests, filtered);
+            const { passed, failed } = await runTests(file, validTests, filtered);
+
+            fileCount++;
+            totalPassed += passed;
+            totalFailed += failed;
+            totalFiltered += filtered;
         }
+    }
+
+    if (fileCount > 1) {
+        const passedMessage = chalk.green(`passed ${totalPassed}`);
+        const failedMessage = chalk.red(`failed ${totalFailed}`);
+        const filteredMessage = chalk.gray(`filtered ${totalFiltered}`);
+
+        console.log('');
+        console.log(`Summary: ${passedMessage}  ${failedMessage}  ${filteredMessage}`);
     }
 
     mpb.close();
