@@ -505,3 +505,17 @@ hypothesis: the documented algorithm is wrong, it breaks when 0a <= AL <= 9f, th
 124 = 0x7c                      DISP8
 
 caused by specifying MOD 1SR R/M, only 0SR is documented as valid but 1SR also works on real hardware
+
+F6.7 idx: 1132 hash: b790653530d6a41cc6593b37876848e828a3015b
+
++ actual - expected
+
+  {
++   ax: 7320,
++   ip: 40161
+-   ax: 7272,
+-   ip: -1008415
+  }
+
+The IP values need to be increased by 0x100000
+https://github.com/SingleStepTests/8088/issues/1

@@ -128,6 +128,27 @@ const loadTests = async (file, idx, hash) => {
     });
 };
 
+const adjustTests = (file, tests) => {
+    if (['F6.6.json.gz', 'F6.7.json.gz', 'F7.6.json.gz', 'F7.7.json.gz'].includes(file)) {
+        for (const test of tests) {
+            // For DIV and IDIV tests that cause a #DE, the flags are pushed to stack and checked.
+            // However some of the flags are undefined and should not cause the tests to fail.
+            // Fix this by removing the final ram records for the flags pushed to stack.
+
+            if (test.final.regs.cs === 0x0000 && test.final.regs.ip === 0x0400 && test.final.ram.length === 6) {
+                // The test expects to end in the #DE interrupt handler. The six memory records are the flags,
+                // CS and IP pushed to stack. Delete the check for the two bytes that contain flags
+                test.final.ram.length = 4;
+            }
+
+            // There are also some negative IP values in these tests, that should actually be their two's complement.
+            if (test.final.regs.ip < 0) {
+                test.final.regs.ip += 0x100000;
+            }
+        }
+    }
+};
+
 const formatFlag = (flags, flagsMask, bit, char) => {
     if ((flagsMask & bit) === 0) {
         return '░';
@@ -372,6 +393,7 @@ const main = async () => {
     for (const file of files) {
         const allTests = await loadTests(file, options.index, options.hash);
         const validTests = allTests.flatMap(test => applyMetadata(test, metadata));
+        adjustTests(file, validTests);
         const filtered = allTests.length - validTests.length;
 
         if (validTests.length > 0) {
