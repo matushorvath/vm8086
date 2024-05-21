@@ -30,6 +30,7 @@ Options:
     [--index|-i <index>]        Only run tests with idx field equal to <index>
     [--hash|-h <hash-prefix>]   Only run tests with hash field starting with <hash-prefix>
     [--continue|-c]             Start at specified file, then continue running following files
+    [--break|-b]                Break after first failed test (implies --single-thread)
 
     [--undefined-behavior|u]    Run all tests, including those that test undefined behavior
 
@@ -61,7 +62,8 @@ const parseCommandLine = () => {
                 keep: { type: 'boolean', short: 'k' },
                 'undefined-behavior': { type: 'boolean', short: 'u' },
                 continue: { type: 'boolean', short: 'c' },
-                plain: { type: 'boolean', short: 'p' }
+                plain: { type: 'boolean', short: 'p' },
+                break: { type: 'boolean', short: 'b' }
             }
         });
 
@@ -74,6 +76,10 @@ const parseCommandLine = () => {
                 throw new Error('Index must be a positive integer');
             }
             values.index = values.index.map(i => Number.parseInt(i));
+        }
+
+        if (values.break) {
+            values['single-thread'] = true;
         }
 
         return values;
@@ -147,6 +153,7 @@ const formatFlags = (flags, flagsMask) => {
 };
 
 const formatResult = (input, flagsMask) => {
+    flagsMask = flagsMask ?? 0xffff;
     const output = {};
 
     if (input.regs) {
@@ -158,7 +165,7 @@ const formatResult = (input, flagsMask) => {
             }
         }
         if (input.regs.flags) {
-            const maskedFlags = input.regs.flags & (flagsMask ?? 0xffff);
+            const maskedFlags = input.regs.flags & flagsMask;
             const hexFlags = `${maskedFlags.toString(16).padStart(4, '0')}`;
             const binFlags = formatFlags(maskedFlags, flagsMask);
 
@@ -170,7 +177,7 @@ const formatResult = (input, flagsMask) => {
         output.ram = [];
         for (const [addr, val] of input.ram) {
             const hexAddr = addr.toString(16).padStart(4, '0');
-            const hexVal = val.toString(16).padStart(2, '0')
+            const hexVal = val.toString(16).padStart(2, '0');
             output.ram.push([`${hexAddr} (${addr})`, `${hexVal} (${val})`]);
         }
     }
@@ -184,7 +191,7 @@ const dumpError = (test, result) => {
     console.log('');
     console.log(chalk.blue('error:'), result.error);
     console.log('');
-    console.log(chalk.blue('input:   '), formatResult(test.initial, test.flagsMask));
+    console.log(chalk.blue('input:   '), formatResult(test.initial));
     console.log(chalk.blue('actual:  '), formatResult(result.actual, test.flagsMask));
     console.log(chalk.blue('expected:'), formatResult(result.expected, test.flagsMask));
     console.log('');
@@ -234,11 +241,16 @@ const runTests = async (file, tests, filtered) => {
 
         const message = formatPassedFailed(passed.length, failed.length, tests.length, filtered);
         mpb?.updateTask(file, { percentage: i / tests.length, message });
+
+        return error === undefined;
     };
 
     if (options['single-thread']) {
         for (let i = 0; i < tests.length; i++) {
-            await runOneTest(tests[i], i);
+            const success = await runOneTest(tests[i], i);
+            if (options.break && !success) {
+                break;
+            }
         }
     } else {
         const promises = tests.map(async (test, i) => runOneTest(test, i));
@@ -364,6 +376,10 @@ const main = async () => {
 
         if (validTests.length > 0) {
             const { passed, failed } = await runTests(file, validTests, filtered);
+
+            if (failed !== 0 && options.break) {
+                break;
+            }
 
             fileCount++;
             totalPassed += passed;
