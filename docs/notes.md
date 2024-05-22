@@ -53,3 +53,7 @@ https://github.com/TomHarte/ProcessorTests
 https://github.com/barotto/test386.asm  
 https://github.com/xoreaxeaxeax/sandsifter  
 https://www.pcjs.org/software/pcx86/test/cpu/  
+
+DAA behavior with AF=1
+https://draft.blogger.com/comment.g?blogID=6264947694886887540&postID=1529067761550380331&bpli=1&pli=1
+https://github.com/shirriff/DAA

@@ -142,8 +142,13 @@ execute_aas_done:
 
 ##########
 execute_daa:
-.FRAME al_lo, al, cf, tmp
-    arb -4
+.FRAME al_lo, al, cf, hi_cmp_val, tmp
+    arb -5
+
+    # The real processor behavior does not match Intel documentation.
+    # If AF=1, the processor compares high nibble of AL with 0x9f, not 0x99.
+    mul [flag_auxiliary_carry], 0x06, [rb + hi_cmp_val]
+    add [rb + hi_cmp_val], 0x99, [rb + hi_cmp_val]
 
     # Get the lower nibble of AL
     mul [reg_al], 2, [rb + tmp]
@@ -178,7 +183,7 @@ execute_daa_decimal_carry_lo:
 execute_daa_after_carry_lo:
     # Handle decimal carry for higher digit if CF was set, or if saved AL > 0x99
     jnz [rb + cf], execute_daa_decimal_carry_hi
-    lt  0x99, [rb + al], [rb + tmp]
+    lt  [rb + hi_cmp_val], [rb + al], [rb + tmp]
     jnz [rb + tmp], execute_daa_decimal_carry_hi
 
     add 0, 0, [flag_carry]
@@ -202,7 +207,7 @@ execute_daa_after_carry_hi:
     add parity, [reg_al], [ip + 1]
     add [0], 0, [flag_parity]
 
-    arb 4
+    arb 5
     ret 0
 .ENDFRAME
 

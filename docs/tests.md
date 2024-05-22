@@ -491,7 +491,20 @@ CF=1
 hypothesis: the documented algorithm is wrong, should not compare with 0x99, but 0x9f
 (still does not work, fixes some cases and breaks others)
 
-hypothesis: the documented algorithm is wrong, it breaks when 0a <= AL <= 9f, the result calculated differs in top nibble of AL (expected 9x, actual 0x)
+hypothesis: the documented algorithm is wrong, it breaks when 9a <= AL <= 9f, the result calculated differs in top nibble of AL (expected 9x, actual 0x)
+
+all broken cases have AF=1 CF=0
+
+9e -> a4 (not 04)
+
+9 14 -> 10 4
+
+-
+AMD algorithm:
+0xa39e,AF=1,CF=0
+
+AL.l > 9h -> AL += 06h; AL = a4
+ALorig > 99h -> AL += 60H; AL = 104 = 04
 
 8C 3fa82cae1779fd13594b785fe8402218616b81c9
 ===========================================
@@ -519,3 +532,4 @@ F6.7 idx: 1132 hash: b790653530d6a41cc6593b37876848e828a3015b
 
 The IP values need to be increased by 0x100000
 https://github.com/SingleStepTests/8088/issues/1
+
