@@ -142,64 +142,53 @@ execute_aas_done:
 
 ##########
 execute_daa:
-.FRAME al_lo, al, cf, hi_cmp_val, tmp
-    arb -5
+.FRAME al_lo, old_al, hi_cmp_val, tmp
+    arb -4
 
     # The real processor behavior does not match Intel documentation.
     # If AF=1, the processor compares high nibble of AL with 0x9f, not 0x99.
     mul [flag_auxiliary_carry], 0x06, [rb + hi_cmp_val]
     add [rb + hi_cmp_val], 0x99, [rb + hi_cmp_val]
 
+    # Save AL
+    add [reg_al], 0, [rb + old_al]
+
     # Get the lower nibble of AL
     mul [reg_al], 2, [rb + tmp]
     add nibbles, [rb + tmp], [ip + 1]
     add [0], 0, [rb + al_lo]
 
-    # Save AL and carry
-    add [reg_al], 0, [rb + al]
-    add [flag_carry], 0, [rb + cf]
-    add 0, 0, [flag_carry]
-
     # Handle decimal carry for lower digit if AF is set, or if AL_lo > 9
-    jnz [flag_auxiliary_carry], execute_daa_decimal_carry_lo
+    jnz [flag_auxiliary_carry], execute_daa_lo
     lt  0x9, [rb + al_lo], [rb + tmp]
-    jnz [rb + tmp], execute_daa_decimal_carry_lo
-
-    add 0, 0, [flag_auxiliary_carry]
-    jz  0, execute_daa_after_carry_lo
-
-execute_daa_decimal_carry_lo:
+    jz  [rb + tmp], execute_daa_after_lo
+execute_daa_lo:
     add [reg_al], 0x06, [reg_al]
-    add [rb + cf], 0, [flag_carry]
     add 1, 0, [flag_auxiliary_carry]
 
     # Handle carry from AL
     lt  0xff, [reg_al], [rb + tmp]
-    jz  [rb + tmp], execute_daa_after_carry_lo
+    jz  [rb + tmp], execute_daa_after_lo
 
     add [reg_al], -0x100, [reg_al]
-    add 1, 0, [flag_carry]
 
-execute_daa_after_carry_lo:
-    # Handle decimal carry for higher digit if CF was set, or if saved AL > 0x99
-    jnz [rb + cf], execute_daa_decimal_carry_hi
-    lt  [rb + hi_cmp_val], [rb + al], [rb + tmp]
-    jnz [rb + tmp], execute_daa_decimal_carry_hi
+execute_daa_after_lo:
+    # Handle decimal carry for higher digit if CF is set, or if saved AL > 0x99 (0x9f)
+    jnz [flag_carry], execute_daa_hi
+    lt  [rb + hi_cmp_val], [rb + old_al], [rb + tmp]
+    jz  [rb + tmp], execute_daa_after_hi
 
-    add 0, 0, [flag_carry]
-    jz  0, execute_daa_after_carry_hi
-
-execute_daa_decimal_carry_hi:
+execute_daa_hi:
     add [reg_al], 0x60, [reg_al]
     add 1, 0, [flag_carry]
 
     # Handle carry from AL
     lt  0xff, [reg_al], [rb + tmp]
-    jz  [rb + tmp], execute_daa_after_carry_hi
+    jz  [rb + tmp], execute_daa_after_hi
 
     add [reg_al], -0x100, [reg_al]
 
-execute_daa_after_carry_hi:
+execute_daa_after_hi:
     # Update flags
     lt  0x7f, [reg_al], [flag_sign]
     eq  [reg_al], 0, [flag_zero]
@@ -207,7 +196,7 @@ execute_daa_after_carry_hi:
     add parity, [reg_al], [ip + 1]
     add [0], 0, [flag_parity]
 
-    arb 5
+    arb 4
     ret 0
 .ENDFRAME
 
