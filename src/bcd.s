@@ -238,7 +238,6 @@ execute_das_decimal_carry_lo:
     jz  [rb + tmp], execute_das_after_carry_lo
 
     add [reg_al], 0x100, [reg_al]
-    add 1, 0, [flag_carry]
 
 execute_das_after_carry_lo:
     # Handle decimal carry for higher digit if CF was set, or if saved AL > 0x99
