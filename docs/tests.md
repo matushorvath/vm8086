@@ -547,3 +547,114 @@ idx:
 REP IDIV/IMUL negates the result:
 http://www.righto.com/2023/07/undocumented-8086-instructions.html
 https://www.reenigne.org/blog/8086-microcode-disassembled/
+
+IDIV 16-bit
+===========
+
+F7.7: 1126, 8502
+
+1126
+
+actual:   {
+  regs: {
+    cs: '0000 (0)',
+    sp: 'ffff (65535)',
+    ip: '0400 (1024)',
+    flags: 'f002 ----░dit ░░-░-░-░ (61442)'
+  },
+  ram: [
+    [ 'ea300 (959232)', '22 (34)' ],
+    [ 'ea301 (959233)', 'fd (253)' ],
+    [ 'ea302 (959234)', 'a9 (169)' ],
+    [ 'ea303 (959235)', '82 (130)' ] x
+  ]
+}
+expected: {
+  regs: {
+    cs: '0000 (0)',
+    sp: 'ffff (65535)',
+    ip: '0400 (1024)',
+    flags: 'f002 ----░dit ░░-░-░-░ (61442)'
+  },
+  ram: [
+    [ 'ea300 (959232)', '22 (34)' ],
+    [ 'ea301 (959233)', 'fd (253)' ],
+    [ 'ea302 (959234)', 'a9 (169)' ],
+    [ 'ea303 (959235)', '02 (2)' ] x
+  ]
+}
+
+file:
+    "final": {
+        "regs": {
+            "cs": 0,
+            "sp": 65535,
+            "ip": 1024,
+            "flags": 61442
+        },
+        "ram": [
+            [959232, 34],
+            [959233, 253],
+            [959234, 169],
+            [959235, 2],
+            [959236, 240],
+            [1024767, 229]
+        ],
+        "queue": []
+    },
+
+-> adjustment in test.js deletes wrong records when trying to remove flags from stack
+
+8502
+
+actual:   {
+  regs: {
+    cs: '0000 (0)',
+    sp: 'fffc (65532)',
+    ip: '0400 (1024)',
+    flags: 'f002 ----░dit ░░-░-░-░ (61442)'
+  },
+  ram: [
+    [ 'b78a0 (751776)', '16 (22)' ], x
+    [ 'b78a1 (751777)', 'f8 (248)' ], x
+    [ 'c789c (817308)', 'c3 (195)' ],
+    [ 'c789d (817309)', 'ab (171)' ]
+  ]
+}
+expected: {
+  regs: {
+    cs: '0000 (0)',
+    sp: 'fffc (65532)',
+    ip: '0400 (1024)',
+    flags: 'f002 ----░dit ░░-░-░-░ (61442)'
+  },
+  ram: [
+    [ 'b78a0 (751776)', '86 (134)' ], x
+    [ 'b78a1 (751777)', 'f0 (240)' ], x
+    [ 'c789c (817308)', 'c3 (195)' ],
+    [ 'c789d (817309)', 'ab (171)' ]
+  ]
+}
+
+file:
+        "ram": [
+            [751776, 134],
+            [751777, 240],
+            [817308, 195],
+            [817309, 171],
+            [817310, 123],
+            [817311, 158]
+        ],
+        "queue": []
+
+IDIV 8-bit
+==========
+
+missed #DE
+
+788: idiv byte [es:bp+si+6Ah]
+
+ax: 1f24
+op: c2 ?
+
+-> docs say quotient 0x80 (and 0x8000) is not valid, even if the result is supposed to be negative

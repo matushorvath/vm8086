@@ -162,9 +162,8 @@ execute_idiv_b_dvr_positive:
     add [rb - 8], 0, [rb + res]
     add [rb - 9], 0, [rb + mod]
 
-    # Check if the quotient fits into a single byte
-    add 0x7f, [rb + res_sign], [rb + tmp]
-    lt  [rb + tmp], [rb + res], [rb + tmp]
+    # Check if the quotient is less than 0x7f
+    lt  0x7f, [rb + res], [rb + tmp]
     jz  [rb + tmp], execute_idiv_b_quotient_ok
 
     # Raise #DE
@@ -364,9 +363,8 @@ execute_idiv_w_dvr_positive:
     add [rb - 8], 0, [rb + res]
     add [rb - 9], 0, [rb + mod]
 
-    # Check if the quotient fits into two bytes
-    add 0x7fff, [rb + res_sign], [rb + tmp]
-    lt  [rb + tmp], [rb + res], [rb + tmp]
+    # Check if the quotient is less than 0x7fff
+    lt  0x7fff, [rb + res], [rb + tmp]
     jz  [rb + tmp], execute_idiv_w_quotient_ok
 
     # Raise #DE
