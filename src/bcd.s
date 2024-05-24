@@ -5,6 +5,9 @@
 .EXPORT execute_aam
 .EXPORT execute_aad
 
+# From the config file
+.IMPORT config_bcd_as_bochs
+
 # From div.s
 .IMPORT divide
 
@@ -33,9 +36,12 @@
 .IMPORT flag_zero
 .IMPORT flag_parity
 .IMPORT flag_auxiliary_carry
+.IMPORT flag_overflow
 
 # From util.s
 .IMPORT split_16_8_8
+
+# TODO make the bcd bochs test work again
 
 ##########
 execute_aaa:
@@ -59,21 +65,25 @@ execute_aaa:
 
 execute_aaa_decimal_carry:
     add [reg_al], 0x06, [reg_al]
-    add [reg_ah], 0x01, [reg_ah]
 
-    # There could be carry from AL to AH
+    # There could be carry from AL
     lt  0xff, [reg_al], [rb + tmp]
-    jz  [rb + tmp], execute_aaa_after_al_carry
+    jz  [rb + tmp], execute_aaa_after_al
     add [reg_al], -0x100, [reg_al]
+
+    # Bochs-specific behavior
+    jz  [config_bcd_as_bochs], execute_aaa_after_al
     add [reg_ah], 1, [reg_ah]
 
-execute_aaa_after_al_carry:
+execute_aaa_after_al:
+    add [reg_ah], 0x01, [reg_ah]
+
     # There could be carry from AH
     lt  0xff, [reg_ah], [rb + tmp]
-    jz  [rb + tmp], execute_aaa_after_ah_carry
+    jz  [rb + tmp], execute_aaa_after_ah
     add [reg_ah], -0x100, [reg_ah]
 
-execute_aaa_after_ah_carry:
+execute_aaa_after_ah:
     add 1, 0, [flag_auxiliary_carry]
     add 1, 0, [flag_carry]
 
@@ -109,21 +119,25 @@ execute_aas:
 
 execute_aas_decimal_carry:
     add [reg_al], -0x06, [reg_al]
-    add [reg_ah], -0x01, [reg_ah]
 
-    # There could be borrow from AL to AH
+    # There could be borrow from AL
     lt  [reg_al], 0x00, [rb + tmp]
-    jz  [rb + tmp], execute_aas_after_al_carry
+    jz  [rb + tmp], execute_aas_after_al
     add [reg_al], 0x100, [reg_al]
+
+    # Bochs-specific behavior
+    jz  [config_bcd_as_bochs], execute_aas_after_al
     add [reg_ah], -1, [reg_ah]
 
-execute_aas_after_al_carry:
+execute_aas_after_al:
+    add [reg_ah], -0x01, [reg_ah]
+
     # There could be borrow from AH
     lt  [reg_ah], 0x00, [rb + tmp]
-    jz  [rb + tmp], execute_aas_after_ah_carry
+    jz  [rb + tmp], execute_aas_after_ah
     add [reg_ah], 0x100, [reg_ah]
 
-execute_aas_after_ah_carry:
+execute_aas_after_ah:
     add 1, 0, [flag_auxiliary_carry]
     add 1, 0, [flag_carry]
 
@@ -139,68 +153,86 @@ execute_aas_done:
 
 ##########
 execute_daa:
-.FRAME al_lo, al, cf, tmp
+.FRAME al_lo, old_al, hi_cmp_val, tmp
     arb -4
+
+    add 0x99, 0, [rb + hi_cmp_val]
+
+    # Bochs-specific behavior
+    jnz [config_bcd_as_bochs], execute_daa_after_cmp_val
+
+    # The behavior of a real processor does not match Intel documentation.
+    # If AF=1, the processor compares high nibble of AL with 0x9f, not 0x99.
+    mul [flag_auxiliary_carry], 0x06, [rb + tmp]
+    add [rb + hi_cmp_val], [rb + tmp], [rb + hi_cmp_val]
+
+execute_daa_after_cmp_val:
+    # Save AL
+    add [reg_al], 0, [rb + old_al]
 
     # Get the lower nibble of AL
     mul [reg_al], 2, [rb + tmp]
     add nibbles, [rb + tmp], [ip + 1]
     add [0], 0, [rb + al_lo]
 
-    # Save AL and carry
-    add [reg_al], 0, [rb + al]
-    add [flag_carry], 0, [rb + cf]
-    add 0, 0, [flag_carry]
-
     # Handle decimal carry for lower digit if AF is set, or if AL_lo > 9
-    jnz [flag_auxiliary_carry], execute_daa_decimal_carry_lo
+    jnz [flag_auxiliary_carry], execute_daa_lo
     lt  0x9, [rb + al_lo], [rb + tmp]
-    jnz [rb + tmp], execute_daa_decimal_carry_lo
-
-    add 0, 0, [flag_auxiliary_carry]
-    jz  0, execute_daa_after_carry_lo
-
-execute_daa_decimal_carry_lo:
+    jz  [rb + tmp], execute_daa_after_lo
+execute_daa_lo:
     add [reg_al], 0x06, [reg_al]
-    add [rb + cf], 0, [flag_carry]
     add 1, 0, [flag_auxiliary_carry]
 
     # Handle carry from AL
     lt  0xff, [reg_al], [rb + tmp]
-    jz  [rb + tmp], execute_daa_after_carry_lo
+    jz  [rb + tmp], execute_daa_after_lo
 
     add [reg_al], -0x100, [reg_al]
-    add 1, 0, [flag_carry]
 
-execute_daa_after_carry_lo:
-    # Handle decimal carry for higher digit if CF was set, or if saved AL > 0x99
-    jnz [rb + cf], execute_daa_decimal_carry_hi
-    lt  0x99, [rb + al], [rb + tmp]
-    jnz [rb + tmp], execute_daa_decimal_carry_hi
+execute_daa_after_lo:
+    # Handle decimal carry for higher digit if CF is set, or if saved AL > 0x99 (0x9f)
+    jnz [flag_carry], execute_daa_hi
+    lt  [rb + hi_cmp_val], [rb + old_al], [rb + tmp]
+    jz  [rb + tmp], execute_daa_after_hi
 
-    add 0, 0, [flag_carry]
-    jz  0, execute_daa_after_carry_hi
-
-execute_daa_decimal_carry_hi:
+execute_daa_hi:
     add [reg_al], 0x60, [reg_al]
     add 1, 0, [flag_carry]
 
     # Handle carry from AL
     lt  0xff, [reg_al], [rb + tmp]
-    jz  [rb + tmp], execute_daa_after_carry_hi
+    jz  [rb + tmp], execute_daa_after_hi
 
     add [reg_al], -0x100, [reg_al]
 
-execute_daa_after_carry_hi:
+execute_daa_after_hi:
+    # Update flags
+    lt  0x7f, [reg_al], [flag_sign]
+    eq  [reg_al], 0, [flag_zero]
+
+    add parity, [reg_al], [ip + 1]
+    add [0], 0, [flag_parity]
+
     arb 4
     ret 0
 .ENDFRAME
 
 ##########
 execute_das:
-.FRAME al_lo, al, cf, tmp
-    arb -4
+.FRAME al_lo, al, cf, hi_cmp_val, tmp
+    arb -5
 
+    add 0x99, 0, [rb + hi_cmp_val]
+
+    # Bochs-specific behavior
+    jnz [config_bcd_as_bochs], execute_das_after_cmp_val
+
+    # The behavior of a real processor does not match Intel documentation.
+    # If AF=1, the processor compares high nibble of AL with 0x9f, not 0x99.
+    mul [flag_auxiliary_carry], 0x06, [rb + tmp]
+    add [rb + hi_cmp_val], [rb + tmp], [rb + hi_cmp_val]
+
+execute_das_after_cmp_val:
     # Get the lower nibble of AL
     mul [reg_al], 2, [rb + tmp]
     add nibbles, [rb + tmp], [ip + 1]
@@ -229,12 +261,15 @@ execute_das_decimal_carry_lo:
     jz  [rb + tmp], execute_das_after_carry_lo
 
     add [reg_al], 0x100, [reg_al]
+
+    # Bochs-specific behavior
+    jz  [config_bcd_as_bochs], execute_das_after_carry_lo
     add 1, 0, [flag_carry]
 
 execute_das_after_carry_lo:
     # Handle decimal carry for higher digit if CF was set, or if saved AL > 0x99
     jnz [rb + cf], execute_das_decimal_carry_hi
-    lt  0x99, [rb + al], [rb + tmp]
+    lt  [rb + hi_cmp_val], [rb + al], [rb + tmp]
     jnz [rb + tmp], execute_das_decimal_carry_hi
 
     jz  0, execute_das_after_carry_hi
@@ -250,7 +285,14 @@ execute_das_decimal_carry_hi:
     add [reg_al], 0x100, [reg_al]
 
 execute_das_after_carry_hi:
-    arb 4
+    # Update flags
+    lt  0x7f, [reg_al], [flag_sign]
+    eq  [reg_al], 0, [flag_zero]
+
+    add parity, [reg_al], [ip + 1]
+    add [0], 0, [flag_parity]
+
+    arb 5
     ret 0
 .ENDFRAME
 
@@ -267,8 +309,16 @@ execute_aam:
     # Raise #DE on division by zero
     jnz [rb + base], execute_aam_non_zero
 
-    add [exec_ip + 0], 0, [reg_ip + 0]
-    add [exec_ip + 1], 0, [reg_ip + 1]
+    # TODO validate this division by zero handling with bochs
+    #add [exec_ip + 0], 0, [reg_ip + 0]
+    #add [exec_ip + 1], 0, [reg_ip + 1]
+
+    add 0, 0, [flag_overflow]
+    add 0, 0, [flag_sign]
+    add 1, 0, [flag_zero]
+    add 0, 0, [flag_auxiliary_carry]
+    add 1, 0, [flag_parity]
+    add 0, 0, [flag_carry]
 
     add 0, 0, [rb - 1]
     arb -1

@@ -30,12 +30,14 @@ Options:
     [--index|-i <index>]        Only run tests with idx field equal to <index>
     [--hash|-h <hash-prefix>]   Only run tests with hash field starting with <hash-prefix>
     [--continue|-c]             Start at specified file, then continue running following files
+    [--break|-b]                Break after first failed test (implies --single-thread)
 
     [--undefined-behavior|u]    Run all tests, including those that test undefined behavior
 
     [--keep|-k]                 Don't delete temporary files after the tests finish
     [--single-thread|-1]        Run all tests in the main thread, without using worker threads
 
+    [--plain|-p]                Plain output, no progress bars
     [--dump-errors|-e]          Print differences between expected and actual values
     [--dump-output|-o]          Print stdout and stderr of the intcode binary
     [--trace|-t]                Trace execution of individual test cases
@@ -59,7 +61,9 @@ const parseCommandLine = () => {
                 'single-thread': { type: 'boolean', short: '1' },
                 keep: { type: 'boolean', short: 'k' },
                 'undefined-behavior': { type: 'boolean', short: 'u' },
-                continue: { type: 'boolean', short: 'c' }
+                continue: { type: 'boolean', short: 'c' },
+                plain: { type: 'boolean', short: 'p' },
+                break: { type: 'boolean', short: 'b' }
             }
         });
 
@@ -72,6 +76,10 @@ const parseCommandLine = () => {
                 throw new Error('Index must be a positive integer');
             }
             values.index = values.index.map(i => Number.parseInt(i));
+        }
+
+        if (values.break) {
+            values['single-thread'] = true;
         }
 
         return values;
@@ -120,14 +128,103 @@ const loadTests = async (file, idx, hash) => {
     });
 };
 
+const calcPhysicalAddress = (seg, off) => {
+    while (off < 0x0000) off += 0x10000;
+    while (off > 0xffff) off -= 0x10000;
+    return (seg * 0x10 + off) % 0x100000;
+};
+
+const adjustTests = (file, tests) => {
+    if (['F6.6.json.gz', 'F6.7.json.gz', 'F7.6.json.gz', 'F7.7.json.gz'].includes(file)) {
+        for (const test of tests) {
+            // For DIV and IDIV tests that cause a #DE, the flags are pushed to stack and checked.
+            // However some of the flags are undefined and should not cause the tests to fail.
+            // Fix this by removing the final ram records for the flags pushed to stack.
+
+            if (test.final.regs.cs === 0x0000 && test.final.regs.ip === 0x0400 && test.final.ram.length === 6) {
+                // The test expects to end in the #DE interrupt handler. The six memory records are the flags,
+                // CS and IP pushed to stack. There are some test cases where stack goes through a segment boundary,
+                // so flags are not the last two records. We will calculate the initial stack position and delete
+                // specifically the two records that got pushed at that position.
+                const fal = calcPhysicalAddress(test.initial.regs.ss, test.initial.regs.sp - 2);
+                const fah = calcPhysicalAddress(test.initial.regs.ss, test.initial.regs.sp - 1);
+                test.final.ram = test.final.ram.filter(([addr]) => addr !== fal && addr !== fah);
+            }
+
+            // There are also some negative IP values in these tests, that should actually be their two's complement.
+            if (test.final.regs.ip < 0) {
+                test.final.regs.ip += 0x100000;
+            }
+        }
+    }
+};
+
+const formatFlag = (flags, flagsMask, bit, char) => {
+    if ((flagsMask & bit) === 0) {
+        return '░';
+    } else if (flags & bit) {
+        return char.toUpperCase();
+    } else {
+        return char.toLowerCase();
+    }
+};
+
+const formatFlags = (flags, flagsMask) => {
+    const o = formatFlag(flags, flagsMask, 0b0000100000000000, 'o');
+    const d = formatFlag(flags, flagsMask, 0b0000010000000000, 'd');
+    const i = formatFlag(flags, flagsMask, 0b0000001000000000, 'i');
+    const t = formatFlag(flags, flagsMask, 0b0000000100000000, 't');
+    const s = formatFlag(flags, flagsMask, 0b0000000010000000, 's');
+    const z = formatFlag(flags, flagsMask, 0b0000000001000000, 'z');
+    const a = formatFlag(flags, flagsMask, 0b0000000000010000, 'a');
+    const p = formatFlag(flags, flagsMask, 0b0000000000000100, 'p');
+    const c = formatFlag(flags, flagsMask, 0b0000000000000001, 'c');
+
+    return `----${o}${d}${i}${t} ${s}${z}-${a}-${p}-${c}`;
+};
+
+const formatResult = (input, flagsMask) => {
+    flagsMask = flagsMask ?? 0xffff;
+    const output = {};
+
+    if (input.regs) {
+        output.regs = {};
+        for (const key in input.regs) {
+            if (key !== 'flags') {
+                const hexValue = input.regs[key].toString(16).padStart(4, '0');
+                output.regs[key] = `${hexValue} (${input.regs[key]})`;
+            }
+        }
+        if (input.regs.flags) {
+            const maskedFlags = input.regs.flags & flagsMask;
+            const hexFlags = `${maskedFlags.toString(16).padStart(4, '0')}`;
+            const binFlags = formatFlags(maskedFlags, flagsMask);
+
+            output.regs.flags = `${hexFlags} ${binFlags} (${maskedFlags})`;
+        }
+    }
+
+    if (input.ram) {
+        output.ram = [];
+        for (const [addr, val] of input.ram) {
+            const hexAddr = addr.toString(16).padStart(4, '0');
+            const hexVal = val.toString(16).padStart(2, '0');
+            output.ram.push([`${hexAddr} (${addr})`, `${hexVal} (${val})`]);
+        }
+    }
+
+    return output;
+};
+
 const dumpError = (test, result) => {
     console.log(`${test.name}`);
     console.log(chalk.gray(`idx: ${test.idx} hash: ${test.hash}`));
     console.log('');
-    console.log('error:', result.error);
+    console.log(chalk.blue('error:'), result.error);
     console.log('');
-    console.log('actual:', result.actual);
-    console.log('expected:', result.expected);
+    console.log(chalk.blue('input:   '), formatResult(test.initial));
+    console.log(chalk.blue('actual:  '), formatResult(result.actual, test.flagsMask));
+    console.log(chalk.blue('expected:'), formatResult(result.expected, test.flagsMask));
     console.log('');
 
     log.write(JSON.stringify(result, undefined, 2) + '\n');
@@ -146,7 +243,7 @@ const logTestSummary = (file, passed, failed, filtered) => {
 };
 
 const runTests = async (file, tests, filtered) => {
-    mpb.addTask(file, { type: 'percentage' });
+    mpb?.addTask(file, { type: 'percentage' });
 
     let passed = [], failed = [];
     const runOneTest = async (test, i) => {
@@ -174,12 +271,17 @@ const runTests = async (file, tests, filtered) => {
         }
 
         const message = formatPassedFailed(passed.length, failed.length, tests.length, filtered);
-        mpb.updateTask(file, { percentage: i / tests.length, message });
+        mpb?.updateTask(file, { percentage: i / tests.length, message });
+
+        return error === undefined;
     };
 
     if (options['single-thread']) {
         for (let i = 0; i < tests.length; i++) {
-            await runOneTest(tests[i], i);
+            const success = await runOneTest(tests[i], i);
+            if (options.break && !success) {
+                break;
+            }
         }
     } else {
         const promises = tests.map(async (test, i) => runOneTest(test, i));
@@ -194,7 +296,9 @@ const runTests = async (file, tests, filtered) => {
     logTestSummary(file, passed, failed, filtered);
 
     const message = formatPassedFailed(passed.length, failed.length, tests.length, filtered);
-    mpb.done(file, { message });
+    mpb?.done(file, { message });
+
+    return { passed: passed.length, failed: failed.length };
 };
 
 const onWorkerMessage = (data) => {
@@ -286,7 +390,12 @@ const main = async () => {
     log.write(JSON.stringify({ started: true }) + '\n');
 
     piscina.on('message', onWorkerMessage);
-    mpb = new MultiProgressBars({ initMessage: 'CPU Test', anchor: 'top', persist: true });
+
+    if (!options.plain) {
+        mpb = new MultiProgressBars({ initMessage: 'CPU Test', anchor: 'bottom', persist: true });
+    }
+
+    let fileCount = 0, totalPassed = 0, totalFailed = 0, totalFiltered = 0;
 
     const metadata = await loadMetadata();
     const files = await listFiles();
@@ -294,14 +403,33 @@ const main = async () => {
     for (const file of files) {
         const allTests = await loadTests(file, options.index, options.hash);
         const validTests = allTests.flatMap(test => applyMetadata(test, metadata));
+        adjustTests(file, validTests);
         const filtered = allTests.length - validTests.length;
 
         if (validTests.length > 0) {
-            await runTests(file, validTests, filtered);
+            const { passed, failed } = await runTests(file, validTests, filtered);
+
+            if (failed !== 0 && options.break) {
+                break;
+            }
+
+            fileCount++;
+            totalPassed += passed;
+            totalFailed += failed;
+            totalFiltered += filtered;
         }
     }
 
-    mpb.close();
+    if (fileCount > 1) {
+        const passedMessage = chalk.green(`passed ${totalPassed}`);
+        const failedMessage = chalk.red(`failed ${totalFailed}`);
+        const filteredMessage = chalk.gray(`filtered ${totalFiltered}`);
+
+        console.log('');
+        console.log(`Summary: ${passedMessage}  ${failedMessage}  ${filteredMessage}`);
+    }
+
+    mpb?.close();
     log.end();
 };
 

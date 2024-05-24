@@ -2,7 +2,7 @@ Decoding
 ========
 
 Instruction set 2-51 p70  
-Instruction encoding 4-22 p259
+Instruction encoding 4-22 p259  
 
 Memory
 ======
@@ -25,7 +25,6 @@ Possible Optimizations
 
 - Use macros for inc_ip_b, inc_ip_w, inc_sp_w, dec_sp_w, execute_inc, execute_dec, read_b, write_b. The same algorithm is in many places.
 - Use macros for all the arg_* functions, there's a lot of copy pasta there.
-- Optimize read_cs_ip_* to call read_b directly, to avoid multiple function calls.
 - Look at the most used path in decode_mod_rm, make sure it is fast.
 
 - Use a second level table for decoding the group instructions
@@ -33,10 +32,7 @@ Possible Optimizations
        second_level_table, -1, -1   means split away the MOD, go through a second level table
   The second level table would allow its own args_fn to handle instructions with strange parameter count
 
-- Avoid args_fn as much as possible, I think the whole locations concept is eating too much performance.
-  Wait for performance measurements first.
-- read_cs_ip_b/read_cs_ip_w are quite heavy (because of physical address calculation) and seems to be used a lot, try to optimize
-- think about optimizing the wraparounds and calculations in read_seg_off_*, write_seg_off_*
+- Optimize physical address calculation (calc_seg_off_addr_*), it's very heavy and used a lot.
 
 
 Emulators
@@ -52,8 +48,12 @@ https://github.com/86Box/86Box
 Tests for 8086
 ==============
 
-https://github.com/TomHarte/ProcessorTests  
 https://github.com/SingleStepTests/8088  
+https://github.com/TomHarte/ProcessorTests  
 https://github.com/barotto/test386.asm  
 https://github.com/xoreaxeaxeax/sandsifter  
 https://www.pcjs.org/software/pcx86/test/cpu/  
+
+DAA behavior with AF=1
+https://draft.blogger.com/comment.g?blogID=6264947694886887540&postID=1529067761550380331&bpli=1&pli=1
+https://github.com/shirriff/DAA

@@ -166,7 +166,7 @@ init_memory:
     # The 8086 memory space will start immediately after the test data
     mul [init_mem_length], 2, [mem]
     add [mem], [result_mem_length], [mem]
-    add [mem], test_header_end, [mem]
+    add [mem], mem_data, [mem]
 
     # Iterate through memory initialization records and process them
     add 0, 0, [rb + index]

@@ -1,7 +1,5 @@
 # VM state information derived from the SingleStepTests JSON format
 
-.EXPORT test_header_end
-
 .EXPORT init_ax
 .EXPORT init_bx
 .EXPORT init_cx
@@ -42,9 +40,6 @@
 
 # Number of memory output records
 +15 = result_mem_length:
-
-# End of fixed test header (not counting init_mem_data)
-+15 = test_header_end:
 
 # Initialization and result record data
 +16 = mem_data:

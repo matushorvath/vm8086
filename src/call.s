@@ -67,21 +67,29 @@ execute_call_near_after_carry_hi:
 
 ##########
 execute_call_near_indirect:
-.FRAME lseg, loff;
+.FRAME lseg, loff; ip_lo, ip_hi
+    arb -2
+
+    # Read the far pointer; this needs to happen before we modify the stack,
+    # in case stack overlaps the same lseg:loff location
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
+    arb -2
+    call read_location_w
+    add [rb - 4], 0, [rb + ip_lo]
+    add [rb - 5], 0, [rb + ip_hi]
+
     # Push IP
     add [reg_ip + 0], 0, [rb - 1]
     add [reg_ip + 1], 0, [rb - 2]
     arb -2
     call push_w
 
-    # Read the near pointer into reg_ip
-    add [rb + lseg], 0, [rb - 1]
-    add [rb + loff], 0, [rb - 2]
-    arb -2
-    call read_location_w
-    add [rb - 4], 0, [reg_ip + 0]
-    add [rb - 5], 0, [reg_ip + 1]
+    # Update reg_ip
+    add [rb + ip_lo], 0, [reg_ip + 0]
+    add [rb + ip_hi], 0, [reg_ip + 1]
 
+    arb 2
     ret 2
 .ENDFRAME
 
@@ -126,7 +134,21 @@ execute_call_far:
 
 ##########
 execute_call_far_indirect:
-.FRAME lseg, loff;
+.FRAME lseg, loff; cs_lo, cs_hi, ip_lo, ip_hi
+    arb -4
+
+    # Read the far pointer; this needs to happen before we modify the stack,
+    # in case stack overlaps the same lseg:loff location
+    # FF.3 e05f59d79804b51a8a9fa738597bc7528712b1e5
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
+    arb -2
+    call read_location_dw
+    add [rb - 4], 0, [rb + ip_lo]
+    add [rb - 5], 0, [rb + ip_hi]
+    add [rb - 6], 0, [rb + cs_lo]
+    add [rb - 7], 0, [rb + cs_hi]
+
     # Push CS
     add [reg_cs + 0], 0, [rb - 1]
     add [reg_cs + 1], 0, [rb - 2]
@@ -139,16 +161,13 @@ execute_call_far_indirect:
     arb -2
     call push_w
 
-    # Read the far pointer into reg_cs and reg_ip
-    add [rb + lseg], 0, [rb - 1]
-    add [rb + loff], 0, [rb - 2]
-    arb -2
-    call read_location_dw
-    add [rb - 4], 0, [reg_ip + 0]
-    add [rb - 5], 0, [reg_ip + 1]
-    add [rb - 6], 0, [reg_cs + 0]
-    add [rb - 7], 0, [reg_cs + 1]
+    # Update reg_cs and reg_ip
+    add [rb + ip_lo], 0, [reg_ip + 0]
+    add [rb + ip_hi], 0, [reg_ip + 1]
+    add [rb + cs_lo], 0, [reg_cs + 0]
+    add [rb + cs_hi], 0, [reg_cs + 1]
 
+    arb 4
     ret 2
 .ENDFRAME
 

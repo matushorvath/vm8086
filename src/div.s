@@ -6,6 +6,9 @@
 
 .EXPORT divide
 
+# From the config file
+.IMPORT config_de_fault_as_bochs
+
 # From execute.s
 .IMPORT exec_ip
 
@@ -18,6 +21,9 @@
 
 # From obj/bits.s
 .IMPORT bits
+
+# From prefix.s
+.IMPORT rep_prefix
 
 # From state.s
 .IMPORT reg_ip
@@ -44,9 +50,11 @@ execute_div_b:
     # Raise #DE on division by zero
     jnz [rb + dvr], execute_div_b_non_zero
 
+    jz  [config_de_fault_as_bochs], execute_div_b_after_ip_adjust_zero
     add [exec_ip + 0], 0, [reg_ip + 0]
     add [exec_ip + 1], 0, [reg_ip + 1]
 
+execute_div_b_after_ip_adjust_zero:
     add 0, 0, [rb - 1]
     arb -1
     call interrupt
@@ -67,9 +75,11 @@ execute_div_b_non_zero:
     jz  [rb + tmp], execute_div_b_quotient_ok
 
     # Raise #DE
+    jz  [config_de_fault_as_bochs], execute_div_b_after_ip_adjust_of
     add [exec_ip + 0], 0, [reg_ip + 0]
     add [exec_ip + 1], 0, [reg_ip + 1]
 
+execute_div_b_after_ip_adjust_of:
     add 0, 0, [rb - 1]
     arb -1
     call interrupt
@@ -100,9 +110,11 @@ execute_idiv_b:
     # Raise #DE on division by zero
     jnz [rb + dvr], execute_idiv_b_non_zero
 
+    jz  [config_de_fault_as_bochs], execute_idiv_b_after_ip_adjust_zero
     add [exec_ip + 0], 0, [reg_ip + 0]
     add [exec_ip + 1], 0, [reg_ip + 1]
 
+execute_idiv_b_after_ip_adjust_zero:
     add 0, 0, [rb - 1]
     arb -1
     call interrupt
@@ -116,6 +128,11 @@ execute_idiv_b_non_zero:
     add 0, 0, [rb + res_sign]
     add 0, 0, [rb + mod_sign]
 
+    # Check for REPZ/REPNZ
+    jz  [rep_prefix], execute_idiv_b_after_rep
+    eq  [rb + res_sign], 0, [rb + res_sign]
+
+execute_idiv_b_after_rep:
     # Convert both operands to positive numbers, remembering how many signs we flip
     lt  [rb + dvd_hi], 0x80, [rb + tmp]
     jnz [rb + tmp], execute_idiv_b_dvd_positive_hi
@@ -151,15 +168,16 @@ execute_idiv_b_dvr_positive:
     add [rb - 8], 0, [rb + res]
     add [rb - 9], 0, [rb + mod]
 
-    # Check if the quotient fits into a single byte
-    add 0x7f, [rb + res_sign], [rb + tmp]
-    lt  [rb + tmp], [rb + res], [rb + tmp]
+    # Check if the quotient is less than 0x7f
+    lt  0x7f, [rb + res], [rb + tmp]
     jz  [rb + tmp], execute_idiv_b_quotient_ok
 
     # Raise #DE
+    jz  [config_de_fault_as_bochs], execute_idiv_b_after_ip_adjust_of
     add [exec_ip + 0], 0, [reg_ip + 0]
     add [exec_ip + 1], 0, [reg_ip + 1]
 
+execute_idiv_b_after_ip_adjust_of:
     add 0, 0, [rb - 1]
     arb -1
     call interrupt
@@ -205,9 +223,11 @@ execute_div_w:
     # Raise #DE on division by zero
     jnz [rb + dvr], execute_div_w_non_zero
 
+    jz  [config_de_fault_as_bochs], execute_div_w_after_ip_adjust_zero
     add [exec_ip + 0], 0, [reg_ip + 0]
     add [exec_ip + 1], 0, [reg_ip + 1]
 
+execute_div_w_after_ip_adjust_zero:
     add 0, 0, [rb - 1]
     arb -1
     call interrupt
@@ -232,9 +252,11 @@ execute_div_w_non_zero:
     jz  [rb + tmp], execute_div_w_quotient_ok
 
     # Raise #DE
+    jz  [config_de_fault_as_bochs], execute_div_w_after_ip_adjust_of
     add [exec_ip + 0], 0, [reg_ip + 0]
     add [exec_ip + 1], 0, [reg_ip + 1]
 
+execute_div_w_after_ip_adjust_of:
     add 0, 0, [rb - 1]
     arb -1
     call interrupt
@@ -276,9 +298,11 @@ execute_idiv_w:
     # Raise #DE on division by zero
     jnz [rb + dvr], execute_idiv_w_non_zero
 
+    jz  [config_de_fault_as_bochs], execute_idiv_w_after_ip_adjust_zero
     add [exec_ip + 0], 0, [reg_ip + 0]
     add [exec_ip + 1], 0, [reg_ip + 1]
 
+execute_idiv_w_after_ip_adjust_zero:
     add 0, 0, [rb - 1]
     arb -1
     call interrupt
@@ -293,6 +317,12 @@ execute_idiv_w_non_zero:
 
     add 0, 0, [rb + res_sign]
     add 0, 0, [rb + mod_sign]
+
+    # Check for REPZ/REPNZ
+    jz  [rep_prefix], execute_idiv_w_after_rep
+    eq  [rb + res_sign], 0, [rb + res_sign]
+
+execute_idiv_w_after_rep:
 
     # Convert both operands to positive numbers, remembering how many signs we flip
     lt  [rb + dvd_3], 0x80, [rb + tmp]
@@ -343,15 +373,16 @@ execute_idiv_w_dvr_positive:
     add [rb - 8], 0, [rb + res]
     add [rb - 9], 0, [rb + mod]
 
-    # Check if the quotient fits into two bytes
-    add 0x7fff, [rb + res_sign], [rb + tmp]
-    lt  [rb + tmp], [rb + res], [rb + tmp]
+    # Check if the quotient is less than 0x7fff
+    lt  0x7fff, [rb + res], [rb + tmp]
     jz  [rb + tmp], execute_idiv_w_quotient_ok
 
     # Raise #DE
+    jz  [config_de_fault_as_bochs], execute_idiv_w_after_ip_adjust_of
     add [exec_ip + 0], 0, [reg_ip + 0]
     add [exec_ip + 1], 0, [reg_ip + 1]
 
+execute_idiv_w_after_ip_adjust_of:
     add 0, 0, [rb - 1]
     arb -1
     call interrupt
