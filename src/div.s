@@ -19,6 +19,9 @@
 # From obj/bits.s
 .IMPORT bits
 
+# From prefix.s
+.IMPORT rep_prefix
+
 # From state.s
 .IMPORT reg_ip
 .IMPORT reg_al
@@ -119,6 +122,11 @@ execute_idiv_b_non_zero:
     add 0, 0, [rb + res_sign]
     add 0, 0, [rb + mod_sign]
 
+    # Check for REPZ/REPNZ
+    jz  [rep_prefix], execute_idiv_b_after_rep
+    eq  [rb + res_sign], 0, [rb + res_sign]
+
+execute_idiv_b_after_rep:
     # Convert both operands to positive numbers, remembering how many signs we flip
     lt  [rb + dvd_hi], 0x80, [rb + tmp]
     jnz [rb + tmp], execute_idiv_b_dvd_positive_hi
@@ -300,6 +308,12 @@ execute_idiv_w_non_zero:
 
     add 0, 0, [rb + res_sign]
     add 0, 0, [rb + mod_sign]
+
+    # Check for REPZ/REPNZ
+    jz  [rep_prefix], execute_idiv_w_after_rep
+    eq  [rb + res_sign], 0, [rb + res_sign]
+
+execute_idiv_w_after_rep:
 
     # Convert both operands to positive numbers, remembering how many signs we flip
     lt  [rb + dvd_3], 0x80, [rb + tmp]
