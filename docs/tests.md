@@ -658,3 +658,58 @@ ax: 1f24
 op: c2 ?
 
 -> docs say quotient 0x80 (and 0x8000) is not valid, even if the result is supposed to be negative
+
+CS:IP in #DE
+============
+
+> Storytime: the original test set for DIV had bad IP values when exceptions occurred due to a bug in my Arduino code. I probably should have fixed the code and re-generated the tests, but they took a long time to run so I thought it would be faster to fix the ending IP of the offending tests with a python script.
+
+Oh, in that case, is it possible that the IP pushed on stack is still wrong by 2 in your data, when #DE happens inside a DIV/IDIV?
+
+I first tested my VM against bochs, just writing some test cases by hand and booting that code using both bochs and my VM. When #DE happens inside a DIV/IDIV, bochs pushes the CS:IP of the DIV/IDIV instruction on stack, which I think is consistent with the documentation. But the stack in your test data contains CS:IP *after* the DIV/IDIV. I decided bochs is probably wrong since you are using the real CPU, but if you're saying you modified the IP by a script these cases...
+
+For example, 25daeaea3b6b238081aa8235a77cee77bb9cd065 in F6.6:
+
+initial RAM:
+```json
+        "ram": [
+            [0, 0],
+            [1, 4],
+            [2, 0],
+            [3, 0],
+            [1024, 144],
+            [59678, 246],
+            [59679, 53],
+            [59680, 144],
+            [59681, 144],
+            [59682, 144],
+            [59683, 144],
+            [658804, 28]
+        ],
+```
+
+final RAM:
+```json
+        "ram": [
+            [405927, 16],   // IP lo
+            [405928, 193],  // IP hi
+            [405929, 129],  // CS lo
+            [405930, 2],    // CS hi
+            [405931, 6],    // flags lo
+            [405932, 240]   // flags hi
+        ],
+```
+
+The CS:IP where #DE happens is 59678
+
+After the exception happens, the stack contains:
+  CS = 2 * 256 + 129 = 641
+  IP = 193 * 256 + 16 = 49424
+  => physical address = CS * 16 + IP = 641 * 16 + 49424 = 59680, address of the instruction after the DIV
+
+Looking at https://cdrdv2.intel.com/v1/dl/getContent/671447, page 6-34:
+> Saved contents of CS and EIP registers point to the instruction that generated the exception.
+
+Is it possible this is still something that needs to be changed in your data, or am I making a mistake somewhere?
+
+Thank you!
