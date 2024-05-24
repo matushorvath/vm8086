@@ -128,6 +128,12 @@ const loadTests = async (file, idx, hash) => {
     });
 };
 
+const calcPhysicalAddress = (seg, off) => {
+    while (off < 0x0000) off += 0x10000;
+    while (off > 0xffff) off -= 0x10000;
+    return (seg * 0x10 + off) % 0x100000;
+};
+
 const adjustTests = (file, tests) => {
     if (['F6.6.json.gz', 'F6.7.json.gz', 'F7.6.json.gz', 'F7.7.json.gz'].includes(file)) {
         for (const test of tests) {
@@ -137,8 +143,12 @@ const adjustTests = (file, tests) => {
 
             if (test.final.regs.cs === 0x0000 && test.final.regs.ip === 0x0400 && test.final.ram.length === 6) {
                 // The test expects to end in the #DE interrupt handler. The six memory records are the flags,
-                // CS and IP pushed to stack. Delete the check for the two bytes that contain flags
-                test.final.ram.length = 4;
+                // CS and IP pushed to stack. There are some test cases where stack goes through a segment boundary,
+                // so flags are not the last two records. We will calculate the initial stack position and delete
+                // specifically the two records that got pushed at that position.
+                const fal = calcPhysicalAddress(test.initial.regs.ss, test.initial.regs.sp - 2);
+                const fah = calcPhysicalAddress(test.initial.regs.ss, test.initial.regs.sp - 1);
+                test.final.ram = test.final.ram.filter(([addr]) => addr !== fal && addr !== fah);
             }
 
             // There are also some negative IP values in these tests, that should actually be their two's complement.
