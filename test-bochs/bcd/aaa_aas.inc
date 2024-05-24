@@ -1,4 +1,4 @@
-; test given instruction and carry flag state against given test set
+; test given instruction and AF state against given test set
 %macro test_aaa_aas 3                   ; aaa_aas_instruction, af_value, test_set
     mov cx, word [cs:%3]
     mov bp, 2

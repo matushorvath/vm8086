@@ -5,6 +5,9 @@
 .EXPORT execute_aam
 .EXPORT execute_aad
 
+# From the config file
+.IMPORT config_bcd_as_bochs
+
 # From div.s
 .IMPORT divide
 
@@ -68,6 +71,10 @@ execute_aaa_decimal_carry:
     jz  [rb + tmp], execute_aaa_after_al
     add [reg_al], -0x100, [reg_al]
 
+    # Bochs-specific behavior
+    jz  [config_bcd_as_bochs], execute_aaa_after_al
+    add [reg_ah], 1, [reg_ah]
+
 execute_aaa_after_al:
     add [reg_ah], 0x01, [reg_ah]
 
@@ -118,6 +125,10 @@ execute_aas_decimal_carry:
     jz  [rb + tmp], execute_aas_after_al
     add [reg_al], 0x100, [reg_al]
 
+    # Bochs-specific behavior
+    jz  [config_bcd_as_bochs], execute_aas_after_al
+    add [reg_ah], -1, [reg_ah]
+
 execute_aas_after_al:
     add [reg_ah], -0x01, [reg_ah]
 
@@ -145,11 +156,17 @@ execute_daa:
 .FRAME al_lo, old_al, hi_cmp_val, tmp
     arb -4
 
-    # The real processor behavior does not match Intel documentation.
-    # If AF=1, the processor compares high nibble of AL with 0x9f, not 0x99.
-    mul [flag_auxiliary_carry], 0x06, [rb + hi_cmp_val]
-    add [rb + hi_cmp_val], 0x99, [rb + hi_cmp_val]
+    add 0x99, 0, [rb + hi_cmp_val]
 
+    # Bochs-specific behavior
+    jnz [config_bcd_as_bochs], execute_daa_after_cmp_val
+
+    # The behavior of a real processor does not match Intel documentation.
+    # If AF=1, the processor compares high nibble of AL with 0x9f, not 0x99.
+    mul [flag_auxiliary_carry], 0x06, [rb + tmp]
+    add [rb + hi_cmp_val], [rb + tmp], [rb + hi_cmp_val]
+
+execute_daa_after_cmp_val:
     # Save AL
     add [reg_al], 0, [rb + old_al]
 
@@ -205,11 +222,17 @@ execute_das:
 .FRAME al_lo, al, cf, hi_cmp_val, tmp
     arb -5
 
-    # The real processor behavior does not match Intel documentation.
-    # If AF=1, the processor compares high nibble of AL with 0x9f, not 0x99.
-    mul [flag_auxiliary_carry], 0x06, [rb + hi_cmp_val]
-    add [rb + hi_cmp_val], 0x99, [rb + hi_cmp_val]
+    add 0x99, 0, [rb + hi_cmp_val]
 
+    # Bochs-specific behavior
+    jnz [config_bcd_as_bochs], execute_das_after_cmp_val
+
+    # The behavior of a real processor does not match Intel documentation.
+    # If AF=1, the processor compares high nibble of AL with 0x9f, not 0x99.
+    mul [flag_auxiliary_carry], 0x06, [rb + tmp]
+    add [rb + hi_cmp_val], [rb + tmp], [rb + hi_cmp_val]
+
+execute_das_after_cmp_val:
     # Get the lower nibble of AL
     mul [reg_al], 2, [rb + tmp]
     add nibbles, [rb + tmp], [ip + 1]
@@ -238,6 +261,10 @@ execute_das_decimal_carry_lo:
     jz  [rb + tmp], execute_das_after_carry_lo
 
     add [reg_al], 0x100, [reg_al]
+
+    # Bochs-specific behavior
+    jz  [config_bcd_as_bochs], execute_das_after_carry_lo
+    add 1, 0, [flag_carry]
 
 execute_das_after_carry_lo:
     # Handle decimal carry for higher digit if CF was set, or if saved AL > 0x99
