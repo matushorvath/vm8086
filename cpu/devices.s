@@ -103,6 +103,9 @@ handle_memory_read:
 .FRAME addr; value, read_through, record, start_addr, stop_addr, callback, tmp                      # returns value, read_through
     arb -7
 
+    # Default is to read the value from main memory
+    add 1, 0, [rb + read_through]
+
     # Is there any table at all?
     jz  [device_regions], handle_memory_read_done
     add [device_regions], 0, [rb + record]
@@ -147,6 +150,9 @@ handle_memory_read_done:
 handle_memory_write:
 .FRAME addr, value; write_through, record, start_addr, stop_addr, callback, tmp                      # returns write_through
     arb -6
+
+    # Default is to write the value to main memory
+    add 1, 0, [rb + write_through]
 
     # Is there any table at all?
     jz  [device_regions], handle_memory_write_done
