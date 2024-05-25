@@ -4,29 +4,31 @@ include intcode.mk
 BINDIR ?= bin
 OBJDIR ?= obj
 
-# Build
+SRCDIRS = cga cpu util vm
+TESTDIRS = test-bochs test-cpu
+
+# Build VM
 .PHONY: build
-build: cpu
+build: $(SRCDIRS)
 
-.PHONY: cpu
-cpu:
-	make -C cpu
+.PHONY: $(SRCDIRS)
+$(SRCDIRS):
+	make -C $@
 
-.PHONY: build-test
-build-test: build-test-bochs build-test-cpu
+# Build tests
+BUILD_TESTS_TARGETS = $(addprefix build-,$(TESTDIRS))
 
-.PHONY: build-test-bochs
-build-test-bochs:
-	make -C test-bochs
+.PHONY: build-tests
+build-tests: $(BUILD_TESTS_TARGETS)
 
-.PHONY: build-test-cpu
-build-test-cpu:
-	make -C test-cpu
+.PHONY: $(BUILD_TESTS_TARGETS)
+$(BUILD_TESTS_TARGETS):
+	make -C $(patsubst build-%,%,$@) build
 
 .PHONY: build-all
-build-all: build build-test
+build-all: build build-tests
 
-# Test
+# Run tests
 .PHONY: test
 test: test-bochs
 
@@ -36,22 +38,21 @@ test-long: test test-cpu
 .PHONY: validate
 validate: validate-bochs
 
-.PHONY: test-bochs
-test-bochs: build
-	make -C test-bochs test
-
 .PHONY: validate-bochs
 validate-bochs: build
 	make -C test-bochs validate
 
-.PHONY: test-cpu
-test-cpu: build
-	make -C test-cpu test
+.PHONY: $(TESTDIRS)
+$(TESTDIRS):
+	make -C $@ test
 
 # Clean
+CLEAN_TARGETS = $(addprefix clean-,$(SRCDIRS) $(TESTDIRS))
+
 .PHONY: clean
-clean:
+clean: $(CLEAN_TARGETS)
 	rm -rf $(BINDIR) $(OBJDIR)
-	make -C cpu clean
-	make -C test-bochs clean
-	make -C test-cpu clean
+
+.PHONY: $(CLEAN_TARGETS)
+$(CLEAN_TARGETS):
+	make -C $(patsubst clean-%,%,$@) clean

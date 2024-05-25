@@ -34,6 +34,10 @@ Possible Optimizations
 
 - Optimize physical address calculation (calc_seg_off_addr_*), it's very heavy and used a lot.
 
+TODO
+====
+
+- Make sure makefiles display nad delete output files when compilation fails.
 
 Emulators
 =========

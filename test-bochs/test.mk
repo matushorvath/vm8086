@@ -20,8 +20,6 @@ SAMPLE_TXT := $(NAME).txt
 VM8086_TXT := $(patsubst %.txt,$(RESDIR)/%.vm8086.txt,$(SAMPLE_TXT))
 BOCHS_TXT := $(patsubst %.txt,$(RESDIR)/%.bochs.txt,$(SAMPLE_TXT))
 
-LIBCPU = $(VMDIR)/bin/libcpu.a
-
 HAVE_COLOR := $(or $(FORCE_COLOR), $(shell [ -n $$(tput colors) ] && [ $$(tput colors) -ge 8 ] && echo 1))
 ifeq ($(HAVE_COLOR),1)
 	COLOR_NORMAL := "$$(tput sgr0)"
@@ -88,7 +86,7 @@ $(RESDIR)/%.vm8086.txt: $(OBJDIR)/%.input FORCE
 
 TEST_OBJS = $(COMMON_OBJDIR)/main.o $(COMMON_OBJDIR)/bochs_api.o $(COMMON_OBJDIR)/config.o \
 	$(COMMON_OBJDIR)/devices.o $(COMMON_OBJDIR)/dump_state.o $(COMMON_OBJDIR)/test_api.o \
-	$(LIBCPU) $(LIBXIB) $(COMMON_OBJDIR)/binary_header.o
+	$(VMDIR)/bin/libcpu.a $(VMDIR)/bin/libutil.a $(LIBXIB) $(COMMON_OBJDIR)/binary_header.o
 
 $(OBJDIR)/%.input: $(TEST_OBJS) $(OBJDIR)/%.o
 	printf '$(NAME): [intcode] linking ' >> $(TESTLOG)

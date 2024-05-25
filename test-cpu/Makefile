@@ -7,8 +7,6 @@ export ICVM
 
 OBJDIR ?= obj
 
-LIBCPU = $(VMDIR)/bin/libcpu.a
-
 .PHONY: build
 build: build-prep build-js build-intcode
 
@@ -32,7 +30,8 @@ test: build
 # then the (optional) 8086 image header and data.
 
 TEST_OBJS = $(OBJDIR)/main.o $(OBJDIR)/callback.o $(OBJDIR)/config.o $(OBJDIR)/init_test.o \
-	$(OBJDIR)/print_output.o $(LIBCPU) $(LIBXIB) $(OBJDIR)/test_header.o
+	$(OBJDIR)/print_output.o $(VMDIR)/bin/libcpu.a $(VMDIR)/bin/libutil.a $(LIBXIB) \
+	$(OBJDIR)/test_header.o
 
 $(OBJDIR)/test.input: $(TEST_OBJS)
 	$(run-intcode-ld)
