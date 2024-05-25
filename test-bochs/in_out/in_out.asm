@@ -1,5 +1,7 @@
 %include "common.inc"
 
+; See also common/devices.s, where all these ports are set up in the VM
+
 
 section .text
     dump_state

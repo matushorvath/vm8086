@@ -46,9 +46,11 @@
 .IMPORT print_num_radix
 .IMPORT print_str
 
+# TODO split dump_state.s, bochs.s
+
 ##########
 dump_state:
-.FRAME tmp
+.FRAME port, value; tmp
     arb -1
 
     add separator, 0, [rb - 1]
@@ -135,7 +137,7 @@ dump_state:
     out 10
 
     arb 1
-    ret 0
+    ret 2
 .ENDFRAME
 
 ##########
@@ -320,7 +322,7 @@ dump_stack_end:
 
 ##########
 mark:
-.FRAME mark; tmp
+.FRAME port, mark; tmp
     arb -1
 
     add separator, 0, [rb - 1]
@@ -342,12 +344,12 @@ mark:
     out 10
 
     arb 1
-    ret 1
+    ret 2
 .ENDFRAME
 
 ##########
 dump_dx:
-.FRAME tmp
+.FRAME port, value; tmp
     arb -1
 
     mul [reg_dx + 1], 0x100, [rb + tmp]
@@ -360,19 +362,19 @@ dump_dx:
     out 10
 
     arb 1
-    ret 0
+    ret 2
 .ENDFRAME
 
 ##########
 print_char:
-.FRAME
+.FRAME port, value;
     out [reg_al]
-    ret 0
+    ret 2
 .ENDFRAME
 
 ##########
 handle_shutdown_api:
-.FRAME value; tmp
+.FRAME port, value; tmp
     arb -1
 
     add handle_shutdown_api_string, [handle_shutdown_api_state], [ip + 1]
@@ -395,7 +397,7 @@ handle_shutdown_api_advance_state:
 
 handle_shutdown_api_done:
     arb 1
-    ret 1
+    ret 2
 
 handle_shutdown_api_state:
     db  0

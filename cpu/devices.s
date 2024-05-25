@@ -4,6 +4,14 @@
 .EXPORT handle_memory_read
 .EXPORT handle_memory_write
 
+# From the config file
+.IMPORT device_interrupts
+.IMPORT device_ports
+.IMPORT device_regions
+
+# From the config file
+.IMPORT config_io_port_debugging
+
 # Data structures that need to be linked in:
 #
 # device_interrupts:
@@ -20,11 +28,6 @@
 #     records must not overlap, and must be sorted by start_addr
 #     last record must be all zeros
 #     device_regions = { start_addr, stop_addr, read_callback, write_callback }[16]
-
-# From the config file
-.IMPORT device_interrupts
-.IMPORT device_ports
-.IMPORT device_regions
 
 # TODO functions to register devices dynamically
 
@@ -54,52 +57,59 @@ handle_interrupt_done:
 
 ##########
 handle_port_read:
-.FRAME port; value, table, callback, tmp                    # returns value
+.FRAME port_lo, port_hi; value, table, callback, tmp        # returns value
     arb -4
 
     # Is there any table at all?
-    jz  [device_ports], handle_port_read_done
+    jz  [device_ports], handle_port_read_unmapped
 
     # Is there a second level table?
-    add [device_ports], [rb + port], [ip + 1]
+    add [device_ports], [rb + port_hi], [ip + 1]
     add [0], 0, [rb + table]
 
-    jz  [rb + table], handle_port_read_done
+    jz  [rb + table], handle_port_read_unmapped
 
     # Is there a read callback?
-    mul [rb + port], 2, [rb + tmp]
+    mul [rb + port_lo], 2, [rb + tmp]
     add [rb + table], [rb + tmp], [ip + 1]
     add [0], 0, [rb + callback]
 
-    jz  [rb + callback], handle_port_read_done
+    jz  [rb + callback], handle_port_read_unmapped
 
     # Call the read callback
-    add [rb + port], 0, [rb - 1]
+    mul [rb + port_hi], 0x100, [rb - 1]
+    add [rb + port_lo], [rb - 1], [rb - 1]
     arb -1
     call [rb + callback + 1]
     add [rb - 3], 0, [rb + value]
 
+    jz  0, handle_port_read_done
+
+handle_port_read_unmapped:
+    # Input a constant for unmapped ports
+    add 0xff, 0, [rb + value]
+
 handle_port_read_done:
     arb 4
-    ret 1
+    ret 2
 .ENDFRAME
 
 ##########
 handle_port_write:
-.FRAME port, value; table, callback, tmp
+.FRAME port_lo, port_hi, value; table, callback, tmp
     arb -3
 
     # Is there any table at all?
     jz  [device_ports], handle_port_write_done
 
     # Is there a second level table?
-    add [device_ports], [rb + port], [ip + 1]
+    add [device_ports], [rb + port_hi], [ip + 1]
     add [0], 0, [rb + table]
 
     jz  [rb + table], handle_port_write_done
 
     # Is there a write callback?
-    mul [rb + port], 2, [rb + tmp]
+    mul [rb + port_lo], 2, [rb + tmp]
     add [rb + table], [rb + tmp], [rb + tmp]
     add 1, [rb + tmp], [ip + 1]
     add [0], 0, [rb + callback]
@@ -107,14 +117,15 @@ handle_port_write:
     jz  [rb + callback], handle_port_write_done
 
     # Call the write callback
-    add [rb + port], 0, [rb - 1]
+    mul [rb + port_hi], 0x100, [rb - 1]
+    add [rb + port_lo], [rb - 1], [rb - 1]
     add [rb + value], 0, [rb - 2]
     arb -2
     call [rb + callback + 2]
 
 handle_port_write_done:
     arb 3
-    ret 2
+    ret 3
 .ENDFRAME
 
 ##########

@@ -86,8 +86,8 @@ $(RESDIR)/%.vm8086.txt: $(OBJDIR)/%.input FORCE
 	diff $(SAMPLE_TXT) $@ || $(failed-diff)
 	@$(passed)
 
-TEST_OBJS = $(COMMON_OBJDIR)/main.o $(COMMON_OBJDIR)/config.o $(LIBCPU) $(LIBXIB) \
-	$(COMMON_OBJDIR)/binary_header.o
+TEST_OBJS = $(COMMON_OBJDIR)/main.o $(COMMON_OBJDIR)/config.o $(COMMON_OBJDIR)/devices.o \
+	$(COMMON_OBJDIR)/test_api.o $(LIBCPU) $(LIBXIB) $(COMMON_OBJDIR)/binary_header.o
 
 $(OBJDIR)/%.input: $(TEST_OBJS) $(OBJDIR)/%.o
 	printf '$(NAME): [intcode] linking ' >> $(TESTLOG)

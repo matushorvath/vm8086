@@ -21,7 +21,7 @@ config_bcd_as_bochs:
     db  0
 
 # Make #DE push address after the failing DIV/IDIV
-config_de_fault_as_bochs:
+config_de_fault_as_bochs: # TODO rename config_de_fault_as_286
     db  0
 
 .EOF
