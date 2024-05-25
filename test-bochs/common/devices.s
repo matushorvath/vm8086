@@ -3,7 +3,6 @@
 .EXPORT device_regions
 
 # From test_api.s
-.IMPORT dump_dx
 .IMPORT dump_state
 .IMPORT handle_shutdown_api
 .IMPORT mark
@@ -40,10 +39,9 @@ device_ports_00:
 
     db  0, dump_state                   # 0x0042 dump VM state to stdout
     db  0, mark                         # 0x0043 output a mark to stdout
-    db  0, dump_dx                      # 0x0044 output the DX register to stdout   # TODO probably unused, remove
 
-    ds  0x88, 0
-    ds  0x88, 0
+    ds  0x89, 0
+    ds  0x89, 0
 
     db  port_in_debug, port_out_debug   # 0x00cd used by tests
 

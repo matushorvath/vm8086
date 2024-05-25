@@ -1,4 +1,3 @@
-.EXPORT dump_dx
 .EXPORT dump_state
 .EXPORT handle_shutdown_api
 .EXPORT mark
@@ -338,24 +337,6 @@ mark:
     add [rb + mark], 0, [rb - 1]
     add 16, 0, [rb - 2]
     add 2, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-
-    out 10
-
-    arb 1
-    ret 2
-.ENDFRAME
-
-##########
-dump_dx:
-.FRAME port, value; tmp
-    arb -1
-
-    mul [reg_dx + 1], 0x100, [rb + tmp]
-    add [reg_dx + 0], [rb + tmp], [rb - 1]
-    add 16, 0, [rb - 2]
-    add 4, 0, [rb - 3]
     arb -3
     call print_num_radix
 
