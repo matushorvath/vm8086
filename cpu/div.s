@@ -7,7 +7,7 @@
 .EXPORT divide
 
 # From the config file
-.IMPORT config_de_fault_as_bochs
+.IMPORT config_de_fault_as_286
 
 # From execute.s
 .IMPORT exec_ip
@@ -50,7 +50,7 @@ execute_div_b:
     # Raise #DE on division by zero
     jnz [rb + dvr], execute_div_b_non_zero
 
-    jz  [config_de_fault_as_bochs], execute_div_b_after_ip_adjust_zero
+    jz  [config_de_fault_as_286], execute_div_b_after_ip_adjust_zero
     add [exec_ip + 0], 0, [reg_ip + 0]
     add [exec_ip + 1], 0, [reg_ip + 1]
 
@@ -75,7 +75,7 @@ execute_div_b_non_zero:
     jz  [rb + tmp], execute_div_b_quotient_ok
 
     # Raise #DE
-    jz  [config_de_fault_as_bochs], execute_div_b_after_ip_adjust_of
+    jz  [config_de_fault_as_286], execute_div_b_after_ip_adjust_of
     add [exec_ip + 0], 0, [reg_ip + 0]
     add [exec_ip + 1], 0, [reg_ip + 1]
 
@@ -110,7 +110,7 @@ execute_idiv_b:
     # Raise #DE on division by zero
     jnz [rb + dvr], execute_idiv_b_non_zero
 
-    jz  [config_de_fault_as_bochs], execute_idiv_b_after_ip_adjust_zero
+    jz  [config_de_fault_as_286], execute_idiv_b_after_ip_adjust_zero
     add [exec_ip + 0], 0, [reg_ip + 0]
     add [exec_ip + 1], 0, [reg_ip + 1]
 
@@ -173,7 +173,7 @@ execute_idiv_b_dvr_positive:
     jz  [rb + tmp], execute_idiv_b_quotient_ok
 
     # Raise #DE
-    jz  [config_de_fault_as_bochs], execute_idiv_b_after_ip_adjust_of
+    jz  [config_de_fault_as_286], execute_idiv_b_after_ip_adjust_of
     add [exec_ip + 0], 0, [reg_ip + 0]
     add [exec_ip + 1], 0, [reg_ip + 1]
 
@@ -223,7 +223,7 @@ execute_div_w:
     # Raise #DE on division by zero
     jnz [rb + dvr], execute_div_w_non_zero
 
-    jz  [config_de_fault_as_bochs], execute_div_w_after_ip_adjust_zero
+    jz  [config_de_fault_as_286], execute_div_w_after_ip_adjust_zero
     add [exec_ip + 0], 0, [reg_ip + 0]
     add [exec_ip + 1], 0, [reg_ip + 1]
 
@@ -252,7 +252,7 @@ execute_div_w_non_zero:
     jz  [rb + tmp], execute_div_w_quotient_ok
 
     # Raise #DE
-    jz  [config_de_fault_as_bochs], execute_div_w_after_ip_adjust_of
+    jz  [config_de_fault_as_286], execute_div_w_after_ip_adjust_of
     add [exec_ip + 0], 0, [reg_ip + 0]
     add [exec_ip + 1], 0, [reg_ip + 1]
 
@@ -298,7 +298,7 @@ execute_idiv_w:
     # Raise #DE on division by zero
     jnz [rb + dvr], execute_idiv_w_non_zero
 
-    jz  [config_de_fault_as_bochs], execute_idiv_w_after_ip_adjust_zero
+    jz  [config_de_fault_as_286], execute_idiv_w_after_ip_adjust_zero
     add [exec_ip + 0], 0, [reg_ip + 0]
     add [exec_ip + 1], 0, [reg_ip + 1]
 
@@ -378,7 +378,7 @@ execute_idiv_w_dvr_positive:
     jz  [rb + tmp], execute_idiv_w_quotient_ok
 
     # Raise #DE
-    jz  [config_de_fault_as_bochs], execute_idiv_w_after_ip_adjust_of
+    jz  [config_de_fault_as_286], execute_idiv_w_after_ip_adjust_of
     add [exec_ip + 0], 0, [reg_ip + 0]
     add [exec_ip + 1], 0, [reg_ip + 1]
 
