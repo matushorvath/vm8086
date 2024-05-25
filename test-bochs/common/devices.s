@@ -1,4 +1,3 @@
-.EXPORT device_interrupts
 .EXPORT device_ports
 .EXPORT device_regions
 
@@ -18,8 +17,6 @@
 .IMPORT print_num_radix
 .IMPORT print_str
 
-device_interrupts:
-    db  0
 device_ports:
     db  device_ports_table
 device_regions:

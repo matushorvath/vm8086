@@ -1,11 +1,9 @@
-.EXPORT handle_interrupt
 .EXPORT handle_port_read
 .EXPORT handle_port_write
 .EXPORT handle_memory_read
 .EXPORT handle_memory_write
 
 # From the config file
-.IMPORT device_interrupts
 .IMPORT device_ports
 .IMPORT device_regions
 
@@ -13,10 +11,6 @@
 .IMPORT config_io_port_debugging
 
 # Data structures that need to be linked in:
-#
-# device_interrupts:
-#     pointer to a table of 256 records, each 1 byte
-#     device_interrupts = { callback }[256]
 #
 # device_ports:
 #     pointer to a two level table of 256 * 256 records, each 2 bytes
@@ -30,30 +24,6 @@
 #     device_regions = { start_addr, stop_addr, read_callback, write_callback }[16]
 
 # TODO functions to register devices dynamically
-
-##########
-handle_interrupt:
-.FRAME interrupt; callback, tmp
-    arb -2
-
-    # Is there any table at all?
-    jz  [device_interrupts], handle_interrupt_done
-
-    # Is there a callback?
-    add [device_interrupts], [rb + interrupt], [ip + 1]
-    add [0], 0, [rb + callback]
-
-    jz  [rb + callback], handle_interrupt_done
-
-    # Call the callback
-    add [rb + interrupt], 0, [rb - 1]
-    arb -1
-    call [rb + callback + 1]
-
-handle_interrupt_done:
-    arb 2
-    ret 1
-.ENDFRAME
 
 ##########
 handle_port_read:

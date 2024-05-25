@@ -4,7 +4,6 @@
 .EXPORT config_bcd_as_bochs
 .EXPORT config_de_fault_as_286
 
-.EXPORT device_interrupts
 .EXPORT device_ports
 .EXPORT device_regions
 
@@ -29,7 +28,6 @@ config_de_fault_as_286:
     db  0
 
 # No devices
-device_interrupts:
 device_ports:
 device_regions:
     db  0
