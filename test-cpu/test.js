@@ -392,10 +392,10 @@ const main = async () => {
     piscina.on('message', onWorkerMessage);
 
     if (!options.plain) {
-        mpb = new MultiProgressBars({ initMessage: 'CPU Test', anchor: 'bottom', persist: true });
+        mpb = new MultiProgressBars({ initMessage: 'CPU Test', anchor: 'top', persist: true });
     }
 
-    let fileCount = 0, totalPassed = 0, totalFailed = 0, totalFiltered = 0;
+    let totalPassed = 0, totalFailed = 0, totalFiltered = 0;
 
     const metadata = await loadMetadata();
     const files = await listFiles();
@@ -413,23 +413,21 @@ const main = async () => {
                 break;
             }
 
-            fileCount++;
             totalPassed += passed;
             totalFailed += failed;
             totalFiltered += filtered;
         }
     }
 
-    if (fileCount > 1) {
-        const passedMessage = chalk.green(`passed ${totalPassed}`);
-        const failedMessage = chalk.red(`failed ${totalFailed}`);
-        const filteredMessage = chalk.gray(`filtered ${totalFiltered}`);
-
-        console.log('');
-        console.log(`Summary: ${passedMessage}  ${failedMessage}  ${filteredMessage}`);
-    }
-
     mpb?.close();
+
+    const passedMessage = chalk.green(`passed ${totalPassed}`);
+    const failedMessage = (totalFailed > 0 ? chalk.red : chalk.gray)(`failed ${totalFailed}`);
+    const filteredMessage = chalk.gray(`filtered ${totalFiltered}`);
+
+    console.log('');
+    console.log(`Summary: ${passedMessage}  ${failedMessage}  ${filteredMessage}`);
+
     log.end();
 };
 
