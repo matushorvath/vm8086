@@ -29,43 +29,62 @@ check_range_invalid_message:
 
 ##########
 split_16_8_8:
-.FRAME vin; vlo, vhi, bit, pow, tmp                   # returns vlo, vhi
-    arb -5
+.FRAME vin; vlo, vhi, tmp                                   # returns vlo, vhi
+    arb -3
 
     add 0, 0, [rb + vhi]
     add [rb + vin], 0, [rb + vlo]
 
-    add 8, 0, [rb + bit]
+    lt  0x7fff, [rb + vlo], [rb + tmp]
+    jz  [rb + tmp], split_16_8_8_bit_15
+    add [rb + vlo], -0x8000, [rb + vlo]
+    add [rb + vhi], 0x80, [rb + vhi]
 
-split_16_8_8_loop:
-    add [rb + bit], -1, [rb + bit]
+split_16_8_8_bit_15:
+    lt  0x3fff, [rb + vlo], [rb + tmp]
+    jz  [rb + tmp], split_16_8_8_bit_14
+    add [rb + vlo], -0x4000, [rb + vlo]
+    add [rb + vhi], 0x40, [rb + vhi]
 
-    # Load power of 2 for this high bit
-    add split_16_8_8_pow_hi, [rb + bit], [ip + 1]
-    add [0], 0, [rb + pow]
+split_16_8_8_bit_14:
+    lt  0x1fff, [rb + vlo], [rb + tmp]
+    jz  [rb + tmp], split_16_8_8_bit_13
+    add [rb + vlo], -0x2000, [rb + vlo]
+    add [rb + vhi], 0x20, [rb + vhi]
 
-    # Is vlo smaller than pow?
-    lt  [rb + vlo], [rb + pow], [rb + tmp]
-    jnz [rb + tmp], split_16_8_8_zero
+split_16_8_8_bit_13:
+    lt  0x0fff, [rb + vlo], [rb + tmp]
+    jz  [rb + tmp], split_16_8_8_bit_12
+    add [rb + vlo], -0x1000, [rb + vlo]
+    add [rb + vhi], 0x10, [rb + vhi]
 
-    # If vlo >= pow: subtract pow_hi from vlo, add pow_lo to vhi
-    mul [rb + pow], -1, [rb + pow]
-    add [rb + vlo], [rb + pow], [rb + vlo]
+split_16_8_8_bit_12:
+    lt  0x07ff, [rb + vlo], [rb + tmp]
+    jz  [rb + tmp], split_16_8_8_bit_11
+    add [rb + vlo], -0x0800, [rb + vlo]
+    add [rb + vhi], 0x08, [rb + vhi]
 
-    add split_16_8_8_pow_lo, [rb + bit], [ip + 1]
-    add [0], [rb + vhi], [rb + vhi]
+split_16_8_8_bit_11:
+    lt  0x03ff, [rb + vlo], [rb + tmp]
+    jz  [rb + tmp], split_16_8_8_bit_10
+    add [rb + vlo], -0x0400, [rb + vlo]
+    add [rb + vhi], 0x04, [rb + vhi]
 
-split_16_8_8_zero:
-    # Next bit
-    jnz [rb + bit], split_16_8_8_loop
+split_16_8_8_bit_10:
+    lt  0x01ff, [rb + vlo], [rb + tmp]
+    jz  [rb + tmp], split_16_8_8_bit_09
+    add [rb + vlo], -0x0200, [rb + vlo]
+    add [rb + vhi], 0x02, [rb + vhi]
 
-    arb 5
+split_16_8_8_bit_09:
+    lt  0x00ff, [rb + vlo], [rb + tmp]
+    jz  [rb + tmp], split_16_8_8_bit_08
+    add [rb + vlo], -0x0100, [rb + vlo]
+    add [rb + vhi], 0x01, [rb + vhi]
+
+split_16_8_8_bit_08:
+    arb 3
     ret 1
-
-split_16_8_8_pow_lo:
-    db  0x00000001, 0x00000002, 0x00000004, 0x00000008, 0x00000010, 0x00000020, 0x00000040, 0x00000080
-split_16_8_8_pow_hi:
-    db  0x00000100, 0x00000200, 0x00000400, 0x00000800, 0x00001000, 0x00002000, 0x00004000, 0x00008000
 .ENDFRAME
 
 .EOF
