@@ -86,8 +86,9 @@ $(RESDIR)/%.vm8086.txt: $(OBJDIR)/%.input FORCE
 	diff $(SAMPLE_TXT) $@ || $(failed-diff)
 	@$(passed)
 
-TEST_OBJS = $(COMMON_OBJDIR)/main.o $(COMMON_OBJDIR)/config.o $(COMMON_OBJDIR)/devices.o \
-	$(COMMON_OBJDIR)/test_api.o $(LIBCPU) $(LIBXIB) $(COMMON_OBJDIR)/binary_header.o
+TEST_OBJS = $(COMMON_OBJDIR)/main.o $(COMMON_OBJDIR)/bochs_api.o $(COMMON_OBJDIR)/config.o \
+	$(COMMON_OBJDIR)/devices.o $(COMMON_OBJDIR)/dump_state.o $(COMMON_OBJDIR)/test_api.o \
+	$(LIBCPU) $(LIBXIB) $(COMMON_OBJDIR)/binary_header.o
 
 $(OBJDIR)/%.input: $(TEST_OBJS) $(OBJDIR)/%.o
 	printf '$(NAME): [intcode] linking ' >> $(TESTLOG)
@@ -107,10 +108,10 @@ $(RESDIR)/%.bochs.txt:
 	echo "bochs test disabled" > $@
 	$(disabled)
 else
-$(RESDIR)/%.bochs.txt: $(RESDIR)/%.bochs.data $(COMMON_BINDIR)/dump_state
+$(RESDIR)/%.bochs.txt: $(RESDIR)/%.bochs.data $(COMMON_BINDIR)/bochs_output
 	printf '$(NAME): [bochs] validating ' >> $(TESTLOG)
 	rm -f $@
-	$(COMMON_BINDIR)/dump_state $< $@ || $(failed)
+	$(COMMON_BINDIR)/bochs_output $< $@ || $(failed)
 	diff $(SAMPLE_TXT) $@ || $(failed-diff)
 	@$(passed)
 endif

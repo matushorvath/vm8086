@@ -2,11 +2,17 @@
 .EXPORT device_ports
 .EXPORT device_regions
 
-# From test_api.s
+# From bochs_api.s
+.IMPORT bochs_shutdown
+.IMPORT bochs_out_char
+
+# From dump_state.s
 .IMPORT dump_state
-.IMPORT handle_shutdown_api
-.IMPORT mark
-.IMPORT print_char
+
+# From test_api.s
+.IMPORT port_in_debug
+.IMPORT port_out_debug
+.IMPORT print_mark
 
 # From libxib.a
 .IMPORT print_num_radix
@@ -38,7 +44,7 @@ device_ports_00:
     ds  0x41, 0
 
     db  0, dump_state                   # 0x0042 dump VM state to stdout
-    db  0, mark                         # 0x0043 output a mark to stdout
+    db  0, print_mark                   # 0x0043 output a mark to stdout
 
     ds  0x89, 0
     ds  0x89, 0
@@ -48,7 +54,7 @@ device_ports_00:
     ds  0x1b, 0
     ds  0x1b, 0
 
-    db  0, print_char                   # 0x00e9 bochs API to output a character to console
+    db  0, bochs_out_char               # 0x00e9 bochs API to output a character to console
 
     ds  0x05, 0
     ds  0x05, 0
@@ -71,7 +77,7 @@ device_ports_12:
     ds 0xcb, 0
 
 device_ports_89:
-    db 0, handle_shutdown_api           # 0x8900 bochs API to shutdown the computer
+    db 0, bochs_shutdown                # 0x8900 bochs API to shutdown the computer
 
     ds 0xff, 0
     ds 0xff, 0
@@ -91,68 +97,5 @@ device_ports_ff:
     ds  0xff, 0
 
     db  port_in_debug, port_out_debug   # 0xffff used by tests
-
-##########
-port_in_debug:
-.FRAME port; value                                          # returns value
-    arb -1
-
-    # Input a constant for unmapped ports
-    add 0xff, 0, [rb + value]
-
-    # Output port number to stdout
-    add port_in_message_start, 0, [rb - 1]
-    arb -1
-    call print_str
-
-    add [rb + port], 0, [rb - 1]
-    add 16, 0, [rb - 2]
-    add 4, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-
-    out 10
-
-port_in_done:
-    arb 1
-    ret 1
-.ENDFRAME
-
-##########
-port_out_debug:
-.FRAME port, value;
-    # Output the port and value to stdout
-    add port_out_message_start, 0, [rb - 1]
-    arb -1
-    call print_str
-
-    add [rb + port], 0, [rb - 1]
-    add 16, 0, [rb - 2]
-    add 4, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-
-    add port_out_message_separator, 0, [rb - 1]
-    arb -1
-    call print_str
-
-    add [rb + value], 0, [rb - 1]
-    add 16, 0, [rb - 2]
-    add 2, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-
-    out 10
-
-    ret 2
-.ENDFRAME
-
-##########
-port_in_message_start:
-    db  "IN port 0x", 0
-port_out_message_start:
-    db  "OUT port 0x", 0
-port_out_message_separator:
-    db  ": 0x", 0
 
 .EOF
