@@ -1,20 +1,20 @@
 VMDIR = $(abspath ..)
 
-ICDIR ?= $(abspath ../../xzintbit)
+ICDIR ?= $(abspath $(VMDIR)/../xzintbit)
 include $(VMDIR)/intcode.mk
 
-RESDIR ?= res
+export ICVM
+
 OBJDIR ?= obj
 
 LIBCPU = $(VMDIR)/bin/libcpu.a
 
-# Build
 .PHONY: build
 build: build-prep build-js build-intcode
 
 .PHONY: build-prep
 build-prep:
-	mkdir -p "$(RESDIR)" "$(OBJDIR)"
+	mkdir -p "$(OBJDIR)"
 
 .PHONY: build-js
 build-js:
@@ -24,9 +24,9 @@ build-js:
 .PHONY: build-intcode
 build-intcode: $(OBJDIR)/test.input
 
-# Test
 .PHONY: test
 test: build
+	node test.js
 
 # The order of the object files matters: First include all the code in any order, then binary.o,
 # then the (optional) 8086 image header and data.
@@ -40,7 +40,8 @@ $(OBJDIR)/test.input: $(TEST_OBJS)
 $(OBJDIR)/%.o: %.s
 	$(run-intcode-as)
 
-# Clean
 .PHONY: clean
 clean:
-	rm -rf $(RESDIR) $(OBJDIR)
+	rm -rf $(OBJDIR)
+	rm -rf node_modules
+	rm -rf test.log
