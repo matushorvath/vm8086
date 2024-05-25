@@ -35,8 +35,6 @@
 # From trace.s
 .IMPORT print_trace
 
-# TODO exception handling, see instruction reference 3.1.1.14, check how it applies to 8086
-
 ##########
 execute:
 .FRAME tmp, op
@@ -149,7 +147,6 @@ execute_esc:
 .FRAME op, lseg, loff;
     # The only thing to do here is to increase IP according to the MOD and R/M
     # fields, which was already done by arg_mod_op_rm_b/arg_mod_op_rm_w.
-    # TODO should this raise #NM (INT 7)?
     ret 3
 .ENDFRAME
 
@@ -163,8 +160,6 @@ execute_hlt:
 ##########
 invalid_opcode:
 .FRAME
-    # TODO raise #UD (INT 6)
-
     add invalid_opcode_message, 0, [rb - 1]
     arb -1
     call report_error
