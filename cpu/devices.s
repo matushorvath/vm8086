@@ -16,17 +16,15 @@
 #     device_ports_level_2 = { read_callback, write_callback }[256]
 #
 # device_regions:
-#     pointer to a table of 256 records, each 2 bytes
-#     each region represents 4kB of memory
-#     device_regions = { read_callback, write_callback }[256]
+#     pointer to a table of records, each 4 bytes
+#     records must not overlap, and must be sorted by start_addr
+#     last record must be all zeros
+#     device_regions = { start_addr, stop_addr, read_callback, write_callback }[16]
 
 # From the config file
 .IMPORT device_interrupts
 .IMPORT device_ports
 .IMPORT device_regions
-
-# From util.s
-.IMPORT split_20_8_12
 
 # TODO functions to register devices dynamically
 
@@ -121,33 +119,92 @@ handle_port_write_done:
 
 ##########
 handle_memory_read:
-.FRAME address; value, callback, tmp                       # returns value
-    arb -X
+.FRAME addr; value, read_through, record, start_addr, stop_addr, callback, tmp                      # returns value, read_through
+    arb -7
 
     # Is there any table at all?
     jz  [device_regions], handle_memory_read_done
+    add [device_regions], 0, [rb + record]
 
-    # Split the address into an 8-bit part and a 12-bit part
-    add [rb + address], 0, [rb - 1]
-    arb -1
-    call split_20_8_12      # [rb - 3] and [rb - 4] are used below
+handle_memory_read_loop:
+    # Read stop address from current record
+    add [rb + record], 1, [ip + 1]
+    add [0], 0, [rb + stop_addr]
 
-    # Is there a callback?
-    mul [rb - 3], 2, [rb + tmp]
-    add [device_regions], [rb + tmp], [ip + 1]
+    # Stop the loop once we reach a record with stop_addr == 0
+    jz  [rb + stop_addr], handle_memory_read_done
+
+    # Is address < stop_addr?
+    lt  [rb + addr], [rb + stop_addr], [rb + tmp]
+    jz  [rb + tmp], handle_memory_read_loop
+
+    # Read start address from current record
+    add [rb + record], 0, [ip + 1]
+    add [0], 0, [rb + start_addr]
+
+    # Is address >= start_addr?
+    lt  [rb + addr], [rb + start_addr], [rb + tmp]
+    jnz [rb + tmp], handle_memory_read_loop
+
+    # Address is in this range, get the read callback
+    add [rb + record], 3, [ip + 1]
     add [0], 0, [rb + callback]
 
-    jz  [rb + callback], handle_memory_read_done
-
     # Call the callback
-    add [rb + interrupt], 0, [rb - 1]
+    add [rb + addr], 0, [rb - 1]
     arb -1
     call [rb + callback + 1]
+    add [rb - 3], 0, [rb + value]
+    add [rb - 4], 0, [rb + read_through]
 
 handle_memory_read_done:
-    arb X
+    arb 7
     ret 1
 .ENDFRAME
 
+##########
+handle_memory_write:
+.FRAME addr, value; write_through, record, start_addr, stop_addr, callback, tmp                      # returns write_through
+    arb -6
+
+    # Is there any table at all?
+    jz  [device_regions], handle_memory_write_done
+    add [device_regions], 0, [rb + record]
+
+handle_memory_write_loop:
+    # Read stop address from current record
+    add [rb + record], 1, [ip + 1]
+    add [0], 0, [rb + stop_addr]
+
+    # Stop the loop once we reach a record with stop_addr == 0
+    jz  [rb + stop_addr], handle_memory_write_done
+
+    # Is address < stop_addr?
+    lt  [rb + addr], [rb + stop_addr], [rb + tmp]
+    jz  [rb + tmp], handle_memory_write_loop
+
+    # Read start address from current record
+    add [rb + record], 0, [ip + 1]
+    add [0], 0, [rb + start_addr]
+
+    # Is address >= start_addr?
+    lt  [rb + addr], [rb + start_addr], [rb + tmp]
+    jnz [rb + tmp], handle_memory_write_loop
+
+    # Address is in this range, get the write callback
+    add [rb + record], 4, [ip + 1]
+    add [0], 0, [rb + callback]
+
+    # Call the callback
+    add [rb + addr], 0, [rb - 1]
+    add [rb + value], 0, [rb - 2]
+    arb -2
+    call [rb + callback + 1]
+    add [rb - 4], 0, [rb + write_through]
+
+handle_memory_write_done:
+    arb 6
+    ret 2
+.ENDFRAME
 
 .EOF
