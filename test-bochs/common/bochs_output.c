@@ -116,10 +116,6 @@ void record0002(FILE *fin, FILE *fout) {
     fprintf(fout, "MARK: %02x\n", read8(fin, false));
 }
 
-void record0003(FILE *fin, FILE *fout) {
-    fprintf(fout, "%04x\n", read16(fin, false));
-}
-
 int main(int argc, char *argv[]) {
     if (argc != 3) error("Usage: dump_state input.stdout output.txt");
 
@@ -146,7 +142,6 @@ int main(int argc, char *argv[]) {
         if (type == 0x0000) break;
         else if (type == 0x0001) record0001(fin, fout);
         else if (type == 0x0002) record0002(fin, fout);
-        else if (type == 0x0003) record0003(fin, fout);
         else error("Unknown record type");
     }
 

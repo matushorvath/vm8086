@@ -7,6 +7,7 @@
 
 # From the config file
 .IMPORT config_bcd_as_bochs
+.IMPORT config_de_fault_as_286
 
 # From div.s
 .IMPORT divide
@@ -40,8 +41,6 @@
 
 # From util.s
 .IMPORT split_16_8_8
-
-# TODO make the bcd bochs test work again
 
 ##########
 execute_aaa:
@@ -309,10 +308,11 @@ execute_aam:
     # Raise #DE on division by zero
     jnz [rb + base], execute_aam_non_zero
 
-    # TODO validate this division by zero handling with bochs
-    #add [exec_ip + 0], 0, [reg_ip + 0]
-    #add [exec_ip + 1], 0, [reg_ip + 1]
+    jz  [config_de_fault_as_286], execute_aam_after_ip_adjust
+    add [exec_ip + 0], 0, [reg_ip + 0]
+    add [exec_ip + 1], 0, [reg_ip + 1]
 
+execute_aam_after_ip_adjust:
     add 0, 0, [flag_overflow]
     add 0, 0, [flag_sign]
     add 1, 0, [flag_zero]

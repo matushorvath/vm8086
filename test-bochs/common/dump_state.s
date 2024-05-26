@@ -1,11 +1,4 @@
-.EXPORT dump_dx
 .EXPORT dump_state
-.EXPORT handle_shutdown_api
-.EXPORT mark
-.EXPORT print_char
-
-# From execute.s
-.IMPORT halt
 
 # From flags.s
 .IMPORT pack_flags_lo
@@ -48,7 +41,7 @@
 
 ##########
 dump_state:
-.FRAME tmp
+.FRAME port, value; tmp
     arb -1
 
     add separator, 0, [rb - 1]
@@ -135,7 +128,7 @@ dump_state:
     out 10
 
     arb 1
-    ret 0
+    ret 2
 .ENDFRAME
 
 ##########
@@ -319,91 +312,6 @@ dump_stack_end:
 .ENDFRAME
 
 ##########
-mark:
-.FRAME mark; tmp
-    arb -1
-
-    add separator, 0, [rb - 1]
-    arb -1
-    call print_str
-
-    out 10
-
-    add mark_header, 0, [rb - 1]
-    arb -1
-    call print_str
-
-    add [rb + mark], 0, [rb - 1]
-    add 16, 0, [rb - 2]
-    add 2, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-
-    out 10
-
-    arb 1
-    ret 1
-.ENDFRAME
-
-##########
-dump_dx:
-.FRAME tmp
-    arb -1
-
-    mul [reg_dx + 1], 0x100, [rb + tmp]
-    add [reg_dx + 0], [rb + tmp], [rb - 1]
-    add 16, 0, [rb - 2]
-    add 4, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-
-    out 10
-
-    arb 1
-    ret 0
-.ENDFRAME
-
-##########
-print_char:
-.FRAME
-    out [reg_al]
-    ret 0
-.ENDFRAME
-
-##########
-handle_shutdown_api:
-.FRAME value; tmp
-    arb -1
-
-    add handle_shutdown_api_string, [handle_shutdown_api_state], [ip + 1]
-    eq  [0], [rb + value], [rb + tmp]
-    jnz [rb + tmp], handle_shutdown_api_advance_state
-
-    # Wrong character, reset the state
-    add 0, 0, [handle_shutdown_api_state]
-    jz  0, handle_shutdown_api_done
-
-handle_shutdown_api_advance_state:
-    add [handle_shutdown_api_state], 1, [handle_shutdown_api_state]
-
-    # If we are not at the end of the string, return
-    add handle_shutdown_api_string, [handle_shutdown_api_state], [ip + 1]
-    jnz [0], handle_shutdown_api_done
-
-    # Halt the VM
-    add 1, 0, [halt]
-
-handle_shutdown_api_done:
-    arb 1
-    ret 1
-
-handle_shutdown_api_state:
-    db  0
-handle_shutdown_api_string:
-    db  "Shutdown", 0
-.ENDFRAME
-
-##########
 separator:
     db  "----------", 0
 
@@ -440,8 +348,5 @@ dump_state_di:
 
 dump_state_stack:
     db  "stack:", 0
-
-mark_header:
-    db  "MARK: ", 0
 
 .EOF

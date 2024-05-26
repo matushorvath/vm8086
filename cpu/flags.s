@@ -115,7 +115,6 @@ pack_flags_lo:
 pack_flags_lo_after_carry:
 
     # set bit 1 to match bochs (which emulates the 32-bit eflags)
-    # TODO 8086 does this break test-cpu? if yes, use config_flags_as_286
     add [rb + flags_lo], 0b00000010, [rb + flags_lo]
 
     jz  [flag_parity], pack_flags_lo_after_parity

@@ -9,6 +9,7 @@ on:
 env:
   FORCE_COLOR: 1
   TERM: xterm-color
+  CC: gcc
 
 jobs:
   build:
@@ -63,7 +64,7 @@ jobs:
 
       - name: Build
         working-directory: vm8086
-        run: make build
+        run: make build-all
 
       - name: Test
         working-directory: vm8086

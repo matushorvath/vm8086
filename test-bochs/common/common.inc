@@ -255,41 +255,6 @@ mark_bochs:
 
 %ifdef BOCHS
 
-%macro dump_dx 0
-    call text_seg:dump_dx_bochs
-%endmacro
-
-dump_dx_bochs:
-    ; dump the dx register in raw form, to be formatted later by dump_state.c
-    push ax
-
-    ; record type is 0x0003
-    mov al, 0x03
-    call out_char
-    mov al, 0x00
-    call out_char
-
-    ; output the dx register
-    mov al, dl
-    call out_char
-    mov al, dh
-    call out_char
-
-    pop ax
-
-    retf
-%elifdef VM8086
-
-%macro dump_dx 0
-    out 0x44, al                        ; ask the vm to print dx
-    db  3 dup (0x90)                    ; 3x nop to match the length of the far call that bochs uses
-%endmacro
-
-%endif
-
-
-%ifdef BOCHS
-
 %macro dump_state 0
     call text_seg:dump_state_bochs
 %endmacro

@@ -11,6 +11,10 @@
 .EXPORT read_cs_ip_b
 .EXPORT read_cs_ip_w
 
+# From devices.s
+.IMPORT handle_memory_read
+.IMPORT handle_memory_write
+
 # From state.s
 .IMPORT mem
 .IMPORT reg_cs
@@ -21,12 +25,23 @@ read_b:
 .FRAME addr; value                                          # returns value
     arb -1
 
-    # TODO support memory mapped IO
+    # Try devices with mapped memory first
+    add [rb + addr], 0, [rb - 1]
+    arb -1
+    call handle_memory_read
 
+    # Should we read the value from main memory?
+    jnz [rb - 4], read_b_main_memory
+
+    add [rb - 3], 0, [rb + value]
+    jz  0, read_b_done
+
+read_b_main_memory:
     # Regular memory read
     add [mem], [rb + addr], [ip + 1]
     add [0], 0, [rb + value]
 
+read_b_done:
     arb 1
     ret 1
 .ENDFRAME
@@ -34,13 +49,20 @@ read_b:
 ##########
 write_b:
 .FRAME addr, value;
-    # TODO support memory mapped IO
-    # TODO handle not being able to write to ROM
+    # Try devices with mapped memory first
+    add [rb + addr], 0, [rb - 1]
+    add [rb + value], 0, [rb - 2]
+    arb -2
+    call handle_memory_write
 
-    # Regular memory write
+    # Should we write the value to main memory?
+    jz  [rb - 4], write_b_done
+
+    # Write to main memory
     add [mem], [rb + addr], [ip + 3]
     add [rb + value], 0, [0]
 
+write_b_done:
     ret 2
 .ENDFRAME
 
