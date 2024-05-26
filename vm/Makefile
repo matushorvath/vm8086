@@ -13,11 +13,10 @@ build: build-prep $(BINDIR)/vm.input
 build-prep:
 	mkdir -p "$(BINDIR)" "$(OBJDIR)"
 
-# The order of the object files matters: First include all the code in any order, then binary.o,
-# then the (optional) 8086 image header and data.
+# The order of the object files matters, the 8086 binary needs to be the last object.
 
-VM_OBJS = vm.o config.o shutdown.o $(BINDIR)/libcpu.a $(BINDIR)/libcga.a $(BINDIR)/libutil.a \
-	$(LIBXIB) binary_header.o cga_test.o
+VM_OBJS = vm.o binary_header.o config.o shutdown.o $(BINDIR)/libcpu.a $(BINDIR)/libcga.a \
+	$(BINDIR)/libutil.a $(LIBXIB) cga_test.o
 
 $(BINDIR)/vm.input: $(VM_OBJS:%.o=$(OBJDIR)/%.o)
 	$(run-intcode-ld)
@@ -30,7 +29,7 @@ $(OBJDIR)/%.o: $(OBJDIR)/%.bin
 
 $(OBJDIR)/cga_test.bin: cga_test.asm
 	nasm -f bin $< -o $@
-	hexdump -C $@ ; true
+	#hexdump -C $@ ; true
 
 .PHONY: clean
 clean:

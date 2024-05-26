@@ -32,8 +32,8 @@ build-all: build build-tests
 .PHONY: test
 test: test-bochs
 
-.PHONY: test-long
-test-long: test test-cpu
+.PHONY: test-all
+test-all: test test-cpu
 
 .PHONY: validate
 validate: validate-bochs

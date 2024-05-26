@@ -1,5 +1,4 @@
 # This the header for the 8086 test binary.
-# It needs to be linked immediately before the test binary itself.
 
 .EXPORT binary_start_address_cs
 .EXPORT binary_start_address_ip

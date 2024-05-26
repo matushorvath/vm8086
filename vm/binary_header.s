@@ -1,4 +1,4 @@
-# This the header for the 8086 binary. It needs to be linked immediately before the binary itself.
+# This the header for the 8086 binary.
 
 .EXPORT binary_start_address_cs
 .EXPORT binary_start_address_ip
