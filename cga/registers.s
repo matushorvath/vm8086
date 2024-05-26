@@ -9,6 +9,10 @@
 # From obj/bits.s
 .IMPORT bits
 
+# From libxib.a
+.IMPORT print_num_radix
+.IMPORT print_str
+
 ##########
 mc6845_address_read:
 .FRAME port; value                      # returns value
@@ -40,28 +44,6 @@ mc6845_data_write:
 .ENDFRAME
 
 ##########
-.SYMBOL MODE_TEXT_40_25                 0
-.SYMBOL MODE_TEXT_80_25                 1
-.SYMBOL MODE_GRAPHICS_320_200           2
-.SYMBOL MODE_GRAPHICS_640_200           3
-
-mode:
-    db  MODE_TEXT_80_25
-
-.SYMBOL PALETTE_RGY     0
-.SYMBOL PALETTE_MCW     1
-.SYMBOL PALETTE_RCW     2
-
-palette:
-    db  PALETTE_RGY
-
-enable_output:
-    db  0
-
-enable_blinking:
-    db  0
-
-##########
 mode_control_write:
 .FRAME addr, value; value_bits, tmp
     arb -2
@@ -70,70 +52,27 @@ mode_control_write:
     mul [rb + value], 8, [rb + tmp]
     add bits, [rb + tmp], [rb + value_bits]
 
-    # Enable video output?
-    add [rb + value_bits], 3, [ip + 1]
-    add [0], 0, [enable_output]
-
-    # Text mode or graphics mode?
-    add [rb + value_bits], 1, [ip + 1]
-    jnz [0], mode_control_write_graphics
-
-    # Text mode; enable blinking?
-    add [rb + value_bits], 5, [ip + 1]
-    add [0], 0, [enable_blinking]
-
-    # Text mode; 40 columns or 80 columns?
+    # Store individual bits
     add [rb + value_bits], 0, [ip + 1]
-    jnz [0], mode_control_write_text_80
+    add [0], 0, [mode_high_res_text]
 
-    add MODE_TEXT_40_25, 0, [mode]
-    jz  0, mode_control_write_redraw
+    add [rb + value_bits], 1, [ip + 1]
+    add [0], 0, [mode_graphics]
 
-mode_control_write_text_80:
-    add MODE_TEXT_80_25, 0, [mode]
-    jz  0, mode_control_write_redraw
-
-mode_control_write_graphics:
-    # Graphics mode; which resolution?
-    add [rb + value_bits], 4, [ip + 1]
-    jnz [0], mode_control_write_graphics_640
-
-    add MODE_GRAPHICS_320_200, 0, [mode]
-
-    # Graphics mode, 320x200; use the special palette?
     add [rb + value_bits], 2, [ip + 1]
-    jz  [0], mode_control_write_skip_palette_2
+    add [0], 0, [mode_back_and_white]
 
-    # Palette 2 overrides palette set using the color control register
-    add PALETTE_RCW, 0, [palette]
+    add [rb + value_bits], 3, [ip + 1]
+    add [0], 0, [mode_enable_output]
 
-mode_control_write_skip_palette_2:
-    jz  0, mode_control_write_redraw
+    add [rb + value_bits], 4, [ip + 1]
+    add [0], 0, [mode_high_res_graphics]
 
-mode_control_write_graphics_640:
-    # Graphics mode, 640x200
-    add MODE_GRAPHICS_640_200, 0, [mode]
-    jz  0, mode_control_write_redraw
+    add [rb + value_bits], 5, [ip + 1]
+    add [0], 0, [mode_blinking]
 
-mode_control_write_redraw:
-    # TODO redraw screen after updating mode
-
-    out 'M'
-    add '0', [mode], [rb + tmp]
-    out [rb + tmp]
-    out ' '
-    out 'P'
-    add '0', [palette], [rb + tmp]
-    out [rb + tmp]
-    out ' '
-    out 'O'
-    add '0', [enable_output], [rb + tmp]
-    out [rb + tmp]
-    out ' '
-    out 'B'
-    add '0', [enable_blinking], [rb + tmp]
-    out [rb + tmp]
-    out 10
+    # TODO remove
+    call dump_cga_state
 
     arb 2
     ret 2
@@ -141,7 +80,40 @@ mode_control_write_redraw:
 
 ##########
 color_control_write:
-.FRAME addr, value;
+.FRAME addr, value; value_bits, tmp
+    arb -2
+
+    # Convert value to bits
+    mul [rb + value], 8, [rb + tmp]
+    add bits, [rb + tmp], [rb + value_bits]
+
+    # Store selected color
+    add [rb + value_bits], 3, [ip + 1]
+    add [0], 0, [color_selected]
+    mul [color_selected], 2, [color_selected]
+
+    add [rb + value_bits], 2, [ip + 1]
+    add [0], [color_selected], [color_selected]
+    mul [color_selected], 2, [color_selected]
+
+    add [rb + value_bits], 1, [ip + 1]
+    add [0], [color_selected], [color_selected]
+    mul [color_selected], 2, [color_selected]
+
+    add [rb + value_bits], 0, [ip + 1]
+    add [0], [color_selected], [color_selected]
+
+    # Store the other bits
+    add [rb + value_bits], 4, [ip + 1]
+    add [0], 0, [color_bright]
+
+    add [rb + value_bits], 5, [ip + 1]
+    add [0], 0, [color_palette]
+
+    # TODO remove
+    call dump_cga_state
+
+    arb 2
     ret 2
 .ENDFRAME
 
@@ -150,8 +122,159 @@ status_read:
 .FRAME port; value                      # returns value
     arb -1
 
+    # There is no danger of visual snow, so we will always report 'display enable'
+    # and 'vertical retrace' as 1, hoping that does not break anything.
+    # There is no light pen support, which is represented by the two corresponding
+    # bits being set to 1.
+
+    add 0b00001111, 0, [rb + value]
+
     arb 1
     ret 1
 .ENDFRAME
+
+##########
+dump_cga_state:
+.FRAME
+    add dump_cga_state_separator, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add dump_cga_state_high_res_text, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [mode_high_res_text], 0, [rb - 1]
+    add 10, 0, [rb - 2]
+    add 0, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
+    add dump_cga_state_graphics, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [mode_graphics], 0, [rb - 1]
+    add 10, 0, [rb - 2]
+    add 0, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
+    add dump_cga_state_back_and_white, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [mode_back_and_white], 0, [rb - 1]
+    add 10, 0, [rb - 2]
+    add 0, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
+    add dump_cga_state_enable_output, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [mode_enable_output], 0, [rb - 1]
+    add 10, 0, [rb - 2]
+    add 0, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
+    add dump_cga_state_high_res_graphics, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [mode_high_res_graphics], 0, [rb - 1]
+    add 10, 0, [rb - 2]
+    add 0, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
+    add dump_cga_state_blinking, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [mode_blinking], 0, [rb - 1]
+    add 10, 0, [rb - 2]
+    add 0, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
+    add dump_cga_state_color_selected, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [color_selected], 0, [rb - 1]
+    add 10, 0, [rb - 2]
+    add 0, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
+    add dump_cga_state_bright, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [color_bright], 0, [rb - 1]
+    add 10, 0, [rb - 2]
+    add 0, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
+    add dump_cga_state_palette, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [color_palette], 0, [rb - 1]
+    add 10, 0, [rb - 2]
+    add 0, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
+    out 10
+
+    ret 0
+
+dump_cga_state_separator:
+    db  "----------", 0
+dump_cga_state_high_res_text:
+    db  10, "high res text: ", 0
+dump_cga_state_graphics:
+    db  10, "graphics: ", 0
+dump_cga_state_back_and_white:
+    db  10, "black and white: ", 0
+dump_cga_state_enable_output:
+    db  10, "enable output: ", 0
+dump_cga_state_high_res_graphics:
+    db  10, "high res graphics: ", 0
+dump_cga_state_blinking:
+    db  10, "blinking: ", 0
+dump_cga_state_color_selected:
+    db  10, "selected: ", 0
+dump_cga_state_bright:
+    db  10, "bright: ", 0
+dump_cga_state_palette:
+    db  10, "palette: ", 0
+.ENDFRAME
+
+##########
+mode_high_res_text:
+    db  0
+mode_graphics:
+    db  0
+mode_back_and_white:
+    db  0
+mode_enable_output:
+    db  0
+mode_high_res_graphics:
+    db  0
+mode_blinking:
+    db  0
+
+color_selected:
+    db  0
+color_bright:
+    db  0
+color_palette:
+    db  0
 
 .EOF
