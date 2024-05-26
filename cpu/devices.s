@@ -247,27 +247,17 @@ register_region_after_curr_check:
 
     # Otherwise link the root of the list
     add [rb + new_record], 0, [device_regions]
-    jz  0, register_region_after_link_prev
+    jz  0, register_region_link_next
 
 register_region_link_prev:
     add [rb + prev_record], 0, [ip + 3]
     add [rb + new_record], 0, [0]
 
-register_region_after_link_prev:
-    # If there is a current record, link it as next record
-    jnz [rb + curr_record], register_region_link_next   # TODO this condition is not needed
-
-    # Otherwise zero the next record
-    add [rb + new_record], 0, [ip + 3]
-    add 0, 0, [0]
-
-    jz  0, register_region_after_link_next
-
 register_region_link_next:
+    # Link the next record (which could be zero)
     add [rb + new_record], 0, [ip + 3]
     add [rb + curr_record], 0, [0]
 
-register_region_after_link_next:
     arb 6
     ret 4
 

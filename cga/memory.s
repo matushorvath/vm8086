@@ -11,7 +11,7 @@
 .IMPORT print_str
 
 ##########
-.FRAME addr, value; write_through, tmp      # TODO remove write_through, read_through
+.FRAME addr, value; write_through, tmp
     # Function with multiple entry points
 
 write_memory_bc000:
