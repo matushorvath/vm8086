@@ -39,6 +39,18 @@ TODO
 
 - Make sure makefiles display nad delete output files when compilation fails.
 
+BIOS
+====
+
+https://github.com/skiselev/8088_bios.git
+https://glabios.org/
+
+CGA
+===
+
+http://nerdlypleasures.blogspot.com/2016/05/ibms-cga-hardware-explained.html?m=1
+https://www.seasip.info/VintagePC/cga.html
+
 Emulators
 =========
 
@@ -47,7 +59,6 @@ https://github.com/YJDoc2/8086-Emulator/
 https://github.com/adriancable/8086tiny
 https://bochs.sourceforge.io/
 https://github.com/86Box/86Box
-
 
 Tests for 8086
 ==============

@@ -1,5 +1,3 @@
-.EXPORT main
-
 # From devices.s
 .IMPORT register_devices
 

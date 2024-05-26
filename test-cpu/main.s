@@ -1,5 +1,3 @@
-.EXPORT main
-
 # From exec.s
 .IMPORT execute
 
