@@ -1,5 +1,6 @@
 .EXPORT register_port
 .EXPORT register_ports
+.EXPORT register_region
 
 .EXPORT handle_port_read
 .EXPORT handle_port_write
@@ -8,6 +9,9 @@
 
 # From brk.s
 .IMPORT sbrk
+
+# From error.s
+.IMPORT report_error
 
 # From libxib.a
 .IMPORT zeromem
@@ -51,7 +55,7 @@ register_ports_done:
 
 ##########
 register_port:
-.FRAME port_lo, port_hi, read_callback, write_callback; table, position
+.FRAME port_lo, port_hi, read_callback, write_callback; table, ptr
     arb -2
 
     # Is there any table at all?
@@ -92,13 +96,13 @@ register_port_have_first_table:
 
 register_port_have_second_table:
     # Save read callback
-    mul [rb + port_lo], 2, [rb + position]
-    add [rb + table], [rb + position], [ip + 3]
+    mul [rb + port_lo], 2, [rb + ptr]
+    add [rb + table], [rb + ptr], [ip + 3]
     add [rb + read_callback], 0, [0]
 
     # Save write callback
-    add [rb + position], 1, [rb + position]
-    add [rb + table], [rb + position], [ip + 3]
+    add [rb + ptr], 1, [rb + ptr]
+    add [rb + table], [rb + ptr], [ip + 3]
     add [rb + write_callback], 0, [0]
 
     arb 2
@@ -179,6 +183,104 @@ handle_port_write_done:
 .ENDFRAME
 
 ##########
+register_region:
+.FRAME start_addr, stop_addr, read_callback, write_callback; curr_record, prev_record, new_record, curr_start_addr, prev_stop_addr, tmp
+    arb -6
+
+    # Store the regions in a linked list, ordered by start_addr
+
+    add 0, 0, [rb + prev_record]
+    add [device_regions], 0, [rb + curr_record]
+
+register_region_loop:
+    jz  [rb + curr_record], register_region_search_done
+
+    # Loop while start address of current region is lower than the region we are adding
+    add [rb + curr_record], 1, [ip + 1]
+    add [0], 0, [rb + curr_start_addr]
+
+    lt  [rb + curr_start_addr], [rb + start_addr], [rb + tmp]
+    jz  [rb + tmp], register_region_search_done
+
+    # Next record
+    add [rb + curr_record], 0, [rb + prev_record]
+    add [rb + curr_record], 0, [ip + 1]
+    add [0], 0, [rb + curr_record]
+
+    jz  0, register_region_loop
+
+register_region_search_done:
+    # Check that the region we're adding does not overlap previous region
+    jz  [rb + prev_record], register_region_after_prev_check
+
+    add [rb + prev_record], 2, [ip + 1]
+    add [0], 0, [rb + prev_stop_addr]
+
+    lt  [rb + start_addr], [rb + prev_stop_addr], [rb + tmp]
+    jnz [rb + tmp], register_region_overlap_error
+
+register_region_after_prev_check:
+    # Check that the region we're adding does not overlap current region
+    jz  [rb + curr_record], register_region_after_curr_check
+
+    lt  [rb + curr_start_addr], [rb + stop_addr], [rb + tmp]
+    jnz [rb + tmp], register_region_overlap_error
+
+register_region_after_curr_check:
+    # Create and fill a new region record
+    add 4, 0, [rb - 1]
+    arb -1
+    call sbrk
+    add [rb - 3], 0, [rb + new_record]
+
+    add [rb + new_record], 1, [ip + 3]
+    add [rb + start_addr], 0, [0]
+    add [rb + new_record], 2, [ip + 3]
+    add [rb + stop_addr], 0, [0]
+    add [rb + new_record], 3, [ip + 3]
+    add [rb + read_callback], 0, [0]
+    add [rb + new_record], 4, [ip + 3]
+    add [rb + write_callback], 0, [0]
+
+    # If there is a previous record, link it
+    jnz [rb + prev_record], register_region_link_prev
+
+    # Otherwise link the root of the list
+    add [rb + new_record], 0, [device_regions]
+    jz  0, register_region_after_link_prev
+
+register_region_link_prev:
+    add [rb + prev_record], 0, [ip + 3]
+    add [rb + new_record], 0, [0]
+
+register_region_after_link_prev:
+    # If there is a current record, link it as next record
+    jnz [rb + curr_record], register_region_link_next
+
+    # Otherwise zero the next record
+    add [rb + new_record], 0, [ip + 3]
+    add 0, 0, [0]
+
+    jz  0, register_region_after_link_next
+
+register_region_link_next:
+    add [rb + new_record], 0, [ip + 3]
+    add [rb + curr_record], 0, [0]
+
+register_region_after_link_next:
+    arb 6
+    ret 4
+
+register_region_overlap_error:
+    add register_region_overlap_message, 0, [rb - 1]
+    arb -1
+    call report_error
+
+register_region_overlap_message:
+    db  "Unable to register a memory region,", "the regions must not overlap", 0
+.ENDFRAME
+
+##########
 handle_memory_read:
 .FRAME addr; value, read_through, record, start_addr, stop_addr, callback, tmp                      # returns value, read_through
     arb -7
@@ -191,26 +293,30 @@ handle_memory_read:
     add [device_regions], 0, [rb + record]
 
 handle_memory_read_loop:
-    # Read stop address from current record
-    add [rb + record], 1, [ip + 1]
+    jz  [rb + record], handle_memory_read_done
+
+    # Loop while the stop address of current region is lower or equal than the search address
+    add [rb + record], 2, [ip + 1]
     add [0], 0, [rb + stop_addr]
 
-    # Stop the loop once we reach a record with stop_addr == 0
-    jz  [rb + stop_addr], handle_memory_read_done
-
-    # Is address < stop_addr?
     lt  [rb + addr], [rb + stop_addr], [rb + tmp]
-    jz  [rb + tmp], handle_memory_read_loop
+    jnz [rb + tmp], handle_memory_read_found
 
-    # Read start address from current record
+    # Next record
     add [rb + record], 0, [ip + 1]
+    add [0], 0, [rb + record]
+
+    jz  0, handle_memory_read_loop
+
+handle_memory_read_found:
+    # Check if start address of the current region is lower or equal then the search address
+    add [rb + record], 1, [ip + 1]
     add [0], 0, [rb + start_addr]
 
-    # Is address >= start_addr?
     lt  [rb + addr], [rb + start_addr], [rb + tmp]
-    jnz [rb + tmp], handle_memory_read_loop
+    jnz [rb + tmp], handle_memory_read_done
 
-    # Address is in this range, get the read callback
+    # Address is in this region, get the read callback
     add [rb + record], 3, [ip + 1]
     add [0], 0, [rb + callback]
 
@@ -228,7 +334,7 @@ handle_memory_read_done:
 
 ##########
 handle_memory_write:
-.FRAME addr, value; write_through, record, start_addr, stop_addr, callback, tmp                      # returns write_through
+.FRAME addr, value; write_through, record, start_addr, stop_addr, callback, tmp                     # returns write_through
     arb -6
 
     # Default is to write the value to main memory
@@ -239,24 +345,28 @@ handle_memory_write:
     add [device_regions], 0, [rb + record]
 
 handle_memory_write_loop:
-    # Read stop address from current record
-    add [rb + record], 1, [ip + 1]
+    jz  [rb + record], handle_memory_write_done
+
+    # Loop while the stop address of current region is lower or equal than the search address
+    add [rb + record], 2, [ip + 1]
     add [0], 0, [rb + stop_addr]
 
-    # Stop the loop once we reach a record with stop_addr == 0
-    jz  [rb + stop_addr], handle_memory_write_done
-
-    # Is address < stop_addr?
     lt  [rb + addr], [rb + stop_addr], [rb + tmp]
-    jz  [rb + tmp], handle_memory_write_loop
+    jnz [rb + tmp], handle_memory_write_found
 
-    # Read start address from current record
+    # Next record
     add [rb + record], 0, [ip + 1]
+    add [0], 0, [rb + record]
+
+    jz  0, handle_memory_write_loop
+
+handle_memory_write_found:
+    # Check if start address of the current region is lower or equal then the search address
+    add [rb + record], 1, [ip + 1]
     add [0], 0, [rb + start_addr]
 
-    # Is address >= start_addr?
     lt  [rb + addr], [rb + start_addr], [rb + tmp]
-    jnz [rb + tmp], handle_memory_write_loop
+    jnz [rb + tmp], handle_memory_write_done
 
     # Address is in this range, get the write callback
     add [rb + record], 4, [ip + 1]
@@ -283,9 +393,9 @@ handle_memory_write_done:
 device_ports:
     db  0
 
-# Pointer to a table of records, each 4 bytes
-# Records must not overlap, must be sorted by start_addr, last record must be all zeros
-# device_regions = { start_addr, stop_addr, read_callback, write_callback }[16]
+# Linked list of memory regions records, each 5 bytes
+# Regions must not overlap, must be sorted by start_addr
+# device_region = { next_record, start_addr, stop_addr, read_callback, write_callback }
 device_regions:
     db  0
 
