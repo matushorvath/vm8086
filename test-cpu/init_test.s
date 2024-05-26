@@ -1,5 +1,9 @@
 .EXPORT init_processor_test
 
+# From brk.s
+.IMPORT brk
+.IMPORT sbrk
+
 # From error.s
 .IMPORT report_error
 
@@ -50,9 +54,31 @@
 ##########
 init_processor_test:
 .FRAME
+    call init_heap
     call init_registers
     call init_memory
 
+    ret 0
+.ENDFRAME
+
+##########
+init_heap:
+.FRAME program_break
+    arb -1
+
+    # The __heap_start symbol does not account for the test data that was concatenated
+    # to the binary without properly linking it. Set up program break so future memory
+    # allocations will not overwrite the test data.
+
+    mul [init_mem_length], 2, [rb + program_break]
+    add [rb + program_break], [result_mem_length], [rb + program_break]
+    add [rb + program_break], mem_data, [rb + program_break]
+
+    add [rb + program_break], 0, [rb - 1]
+    arb -1
+    call brk
+
+    arb 1
     ret 0
 .ENDFRAME
 
@@ -163,10 +189,11 @@ init_memory:
 .FRAME index, count, address, value, tmp
     arb -5
 
-    # The 8086 memory space will start immediately after the test data
-    mul [init_mem_length], 2, [mem]
-    add [mem], [result_mem_length], [mem]
-    add [mem], mem_data, [mem]
+    # Reserve space for 8086 memory
+    add 0x100000, 0, [rb - 1]
+    arb -1
+    call sbrk
+    add [rb - 3], 0, [mem]
 
     # Iterate through memory initialization records and process them
     add 0, 0, [rb + index]

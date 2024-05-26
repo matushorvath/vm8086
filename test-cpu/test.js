@@ -429,6 +429,10 @@ const main = async () => {
     console.log(`Summary: ${passedMessage}  ${failedMessage}  ${filteredMessage}`);
 
     log.end();
+
+    if (totalFailed > 0) {
+        process.exit(1);
+    }
 };
 
 await main();

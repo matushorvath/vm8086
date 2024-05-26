@@ -8,6 +8,10 @@
 .IMPORT binary_header
 .IMPORT binary_data
 
+# From brk.s
+.IMPORT brk
+.IMPORT sbrk
+
 # From error.s
 .IMPORT report_error
 
@@ -69,8 +73,16 @@ init_binary_memory:
     arb -2
     call check_range
 
-    # The 8086 memory space will start where section data starts now
-    add binary_data, 0, [mem]
+    # Reclaim memory used by the binary data; assumes there were no allocations yet
+    add binary_data, 0, [rb - 1]
+    arb -1
+    call brk
+
+    # Reserve space for 8086 memory
+    add 0x100000, 0, [rb - 1]
+    arb -1
+    call sbrk
+    add [rb - 3], 0, [mem]
 
     # Process binary sections end to start
     add [binary_count], 0, [rb + section_index]
