@@ -1,4 +1,5 @@
 .EXPORT register_port
+.EXPORT register_ports
 
 .EXPORT handle_port_read
 .EXPORT handle_port_write
@@ -10,6 +11,43 @@
 
 # From libxib.a
 .IMPORT zeromem
+
+##########
+register_ports:
+.FRAME ports; record, tmp
+    arb -2
+
+    # Expect an array of 4 byte records (port_lo, port_hi, read_callback, write_callback)
+    # terminated by a record of four -1s.
+
+    add [rb + ports], 0, [rb + record]
+
+register_ports_loop:
+    # Load next record and register the port
+    add [rb + record], 0, [ip + 1]
+    add [0], 0, [rb - 1]
+
+    eq  [rb - 2], -1, [rb + tmp]
+    jnz [rb + tmp], register_ports_done
+
+    add [rb + record], 1, [ip + 1]
+    add [0], 0, [rb - 2]
+    add [rb + record], 2, [ip + 1]
+    add [0], 0, [rb - 3]
+    add [rb + record], 3, [ip + 1]
+    add [0], 0, [rb - 4]
+
+    arb -4
+    call register_port
+
+    add [rb + record], 4, [rb + record]
+
+    jz  0, register_ports_loop
+
+register_ports_done:
+    arb 2
+    ret 1
+.ENDFRAME
 
 ##########
 register_port:
