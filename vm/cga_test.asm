@@ -25,6 +25,19 @@ init:
 
     mov word [ds:0x3ffe], bx
 
+    ; set CGA mode
+    mov al, 0b000000
+    mov dx, 0x3d8
+    out dx, al
+
+    mov al, 0b101001    ; text mode, 80 column, enable output, blink
+    mov dx, 0x3d8
+    out dx, al
+
+    mov al, 0b001110    ; graphics mode, 320x200, enable output, palette 2
+    mov dx, 0x3d8
+    out dx, al
+
     ; shutdown
     mov al, 0x24
     out 0x42, al
