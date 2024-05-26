@@ -33,16 +33,16 @@ cga_ports:
 init_cga:
 .FRAME
     # Register video memory region 0xb8000
-    add 0xb8, 0, [rb - 1]
-    add 0x000, 0, [rb - 2]
+    add 0xb8000, 0, [rb - 1]
+    add 0xbc000, 0, [rb - 2]
     add 0, 0, [rb - 3]
     add write_memory_b8000, 0, [rb - 4]
     arb -4
     call register_region
 
     # Same memory is aliased also at 0xbc000
-    add 0xbc, 0, [rb - 1]
-    add 0x000, 0, [rb - 2]
+    add 0xbc000, 0, [rb - 1]
+    add 0xc0000, 0, [rb - 2]
     add read_memory_bc000, 0, [rb - 3]
     add write_memory_bc000, 0, [rb - 4]
     arb -4

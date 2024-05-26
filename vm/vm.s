@@ -25,7 +25,7 @@
 main:
 .FRAME
     call init_binary
-    #call init_cga
+    call init_cga
     call init_shutdown_port
 
     call execute
@@ -34,7 +34,7 @@ main:
 .ENDFRAME
 
 ##########
-    ds  50, 0
+    ds  100, 0
 stack:
 
 .EOF

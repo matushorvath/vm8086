@@ -31,7 +31,7 @@ register_ports_loop:
     add [rb + record], 0, [ip + 1]
     add [0], 0, [rb - 1]
 
-    eq  [rb - 2], -1, [rb + tmp]
+    eq  [rb - 1], -1, [rb + tmp]
     jnz [rb + tmp], register_ports_done
 
     add [rb + record], 1, [ip + 1]
@@ -228,7 +228,7 @@ register_region_after_prev_check:
 
 register_region_after_curr_check:
     # Create and fill a new region record
-    add 4, 0, [rb - 1]
+    add 5, 0, [rb - 1]
     arb -1
     call sbrk
     add [rb - 3], 0, [rb + new_record]
@@ -255,7 +255,7 @@ register_region_link_prev:
 
 register_region_after_link_prev:
     # If there is a current record, link it as next record
-    jnz [rb + curr_record], register_region_link_next
+    jnz [rb + curr_record], register_region_link_next   # TODO this condition is not needed
 
     # Otherwise zero the next record
     add [rb + new_record], 0, [ip + 3]
@@ -277,7 +277,7 @@ register_region_overlap_error:
     call report_error
 
 register_region_overlap_message:
-    db  "Unable to register a memory region,", "the regions must not overlap", 0
+    db  "Unable to register a memory region; ", "the regions must not overlap", 0
 .ENDFRAME
 
 ##########
@@ -319,6 +319,8 @@ handle_memory_read_found:
     # Address is in this region, get the read callback
     add [rb + record], 3, [ip + 1]
     add [0], 0, [rb + callback]
+
+    jz  [rb + callback], handle_memory_read_done
 
     # Call the callback
     add [rb + addr], 0, [rb - 1]
@@ -372,11 +374,13 @@ handle_memory_write_found:
     add [rb + record], 4, [ip + 1]
     add [0], 0, [rb + callback]
 
+    jz  [rb + callback], handle_memory_write_done
+
     # Call the callback
     add [rb + addr], 0, [rb - 1]
     add [rb + value], 0, [rb - 2]
     arb -2
-    call [rb + callback + 1]
+    call [rb + callback + 2]
     add [rb - 4], 0, [rb + write_through]
 
 handle_memory_write_done:

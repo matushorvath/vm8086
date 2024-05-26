@@ -151,7 +151,7 @@ line_end:
 footer:
     db  10, ".EOF", 10, 0
 
-    ds  50, 0
+    ds  100, 0
 stack:
 
 .EOF
