@@ -1,29 +1,71 @@
+.EXPORT register_port
+
 .EXPORT handle_port_read
 .EXPORT handle_port_write
 .EXPORT handle_memory_read
 .EXPORT handle_memory_write
 
-# From the config file
-.IMPORT device_ports
-.IMPORT device_regions
+# From brk.s
+.IMPORT sbrk
 
-# From the config file
-.IMPORT config_io_port_debugging
+# From libxib.a
+.IMPORT zeromem
 
-# Data structures that need to be linked in:
-#
-# device_ports:
-#     pointer to a two level table of 256 * 256 records, each 2 bytes
-#     device_ports = { device_ports_level_2 }[256]
-#     device_ports_level_2 = { read_callback, write_callback }[256]
-#
-# device_regions:
-#     pointer to a table of records, each 4 bytes
-#     records must not overlap, and must be sorted by start_addr
-#     last record must be all zeros
-#     device_regions = { start_addr, stop_addr, read_callback, write_callback }[16]
+##########
+register_port:
+.FRAME port_lo, port_hi, read_callback, write_callback; table, position
+    arb -2
 
-# TODO functions to register devices dynamically
+    # Is there any table at all?
+    jnz [device_ports], register_port_have_first_table
+
+    # No, create one
+    add 0x100, 0, [rb - 1]
+    arb -1
+    call sbrk
+    add [rb - 3], 0, [device_ports]
+
+    add [device_ports], 0, [rb - 1]
+    add 0x100, 0, [rb - 2]
+    arb -2
+    call zeromem
+
+register_port_have_first_table:
+    # Is there a second level table?
+    add [device_ports], [rb + port_hi], [ip + 1]
+    add [0], 0, [rb + table]
+
+    jnz [rb + table], register_port_have_second_table
+
+    # No, create one
+    add 0x200, 0, [rb - 1]
+    arb -1
+    call sbrk
+    add [rb - 3], 0, [rb + table]
+
+    add [rb + table], 0, [rb - 1]
+    add 0x200, 0, [rb - 2]
+    arb -2
+    call zeromem
+
+    # Link second level table
+    add [device_ports], [rb + port_hi], [ip + 3]
+    add [rb + table], 0, [0]
+
+register_port_have_second_table:
+    # Save read callback
+    mul [rb + port_lo], 2, [rb + position]
+    add [rb + table], [rb + position], [ip + 3]
+    add [rb + read_callback], 0, [0]
+
+    # Save write callback
+    add [rb + position], 1, [rb + position]
+    add [rb + table], [rb + position], [ip + 3]
+    add [rb + write_callback], 0, [0]
+
+    arb 2
+    ret 4
+.ENDFRAME
 
 ##########
 handle_port_read:
@@ -193,5 +235,20 @@ handle_memory_write_done:
     arb 6
     ret 2
 .ENDFRAME
+
+##########
+# Data structures:
+
+# Pointer to a two level table of 256 * 256 records, each 2 bytes
+# device_ports_level_1 = { device_ports_level_2 }[256]
+# device_ports_level_2 = { read_callback, write_callback }[256]
+device_ports:
+    db  0
+
+# Pointer to a table of records, each 4 bytes
+# Records must not overlap, must be sorted by start_addr, last record must be all zeros
+# device_regions = { start_addr, stop_addr, read_callback, write_callback }[16]
+device_regions:
+    db  0
 
 .EOF

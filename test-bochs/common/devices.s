@@ -1,9 +1,11 @@
-.EXPORT device_ports
-.EXPORT device_regions
+.EXPORT register_devices
 
 # From bochs_api.s
 .IMPORT bochs_shutdown
 .IMPORT bochs_out_char
+
+# From devices.s
+.IMPORT register_port
 
 # From dump_state.s
 .IMPORT dump_state
@@ -13,86 +15,59 @@
 .IMPORT port_out_debug
 .IMPORT print_mark
 
-# From libxib.a
-.IMPORT print_num_radix
-.IMPORT print_str
+##########
+data:
+    # Debug output for ports used in the in_out test
+    db  0x00, 0x00, port_in_debug, port_out_debug
+    db  0x00, 0xcd, port_in_debug, port_out_debug
+    db  0x00, 0xef, port_in_debug, port_out_debug
+    db  0x00, 0xf0, port_in_debug, port_out_debug
+    db  0x00, 0xff, port_in_debug, port_out_debug
+    db  0x12, 0x34, port_in_debug, port_out_debug
+    db  0xba, 0x98, port_in_debug, port_out_debug
+    db  0xba, 0x99, port_in_debug, port_out_debug
+    db  0xff, 0xff, port_in_debug, port_out_debug
 
-device_ports:
-    db  device_ports_table
-device_regions:
-    db  0
+    db  0x00, 0x42, 0, dump_state                           # dump VM state to stdout
+    db  0x00, 0x43, 0, print_mark                           # output a mark to stdout
 
-# Custom handling for selected I/O ports that are used in the tests
-device_ports_table:
-    db  device_ports_00
-    ds  0x11, 0
-    db  device_ports_12
-    ds  0x76, 0
-    db  device_ports_89
-    ds  0x30, 0
-    db  device_ports_ba
-    ds  0x44, 0
-    db  device_ports_ff
+    db  0x00, 0xe9, 0, bochs_out_char                       # bochs API to output a character to console
+    db  0x89, 0x00, 0, bochs_shutdown                       # bochs API to shutdown the computer
 
-device_ports_00:
-    db  port_in_debug, port_out_debug   # 0x0000 used by tests
+    db  -1, -1, -1, -1
 
-    ds  0x41, 0
-    ds  0x41, 0
+##########
+register_devices:
+.FRAME record, tmp
+    arb -2
 
-    db  0, dump_state                   # 0x0042 dump VM state to stdout
-    db  0, print_mark                   # 0x0043 output a mark to stdout
+    add data, 0, [rb + record]
 
-    ds  0x89, 0
-    ds  0x89, 0
+register_devices_loop:
+    # Load next data record and register the port
+    add [rb + record], 0, [ip + 1]
+    add [0], 0, [rb - 2]
 
-    db  port_in_debug, port_out_debug   # 0x00cd used by tests
+    eq  [rb - 2], -1, [rb + tmp]
+    jnz [rb + tmp], register_devices_done
 
-    ds  0x1b, 0
-    ds  0x1b, 0
+    add [rb + record], 1, [ip + 1]
+    add [0], 0, [rb - 1]
+    add [rb + record], 2, [ip + 1]
+    add [0], 0, [rb - 3]
+    add [rb + record], 3, [ip + 1]
+    add [0], 0, [rb - 4]
 
-    db  0, bochs_out_char               # 0x00e9 bochs API to output a character to console
+    arb -4
+    call register_port
 
-    ds  0x05, 0
-    ds  0x05, 0
+    add [rb + record], 4, [rb + record]
 
-    db  port_in_debug, port_out_debug   # 0x00ef used by tests
-    db  port_in_debug, port_out_debug   # 0x00f0 used by tests
+    jz  0, register_devices_loop
 
-    ds  0x0e, 0
-    ds  0x0e, 0
-
-    db  port_in_debug, port_out_debug   # 0x00ff used by tests
-
-device_ports_12:
-    ds  0x34, 0
-    ds  0x34, 0
-
-    db  port_in_debug, port_out_debug   # 0x1234 used by tests
-
-    ds 0xcb, 0
-    ds 0xcb, 0
-
-device_ports_89:
-    db 0, bochs_shutdown                # 0x8900 bochs API to shutdown the computer
-
-    ds 0xff, 0
-    ds 0xff, 0
-
-device_ports_ba:
-    ds  0x98, 0
-    ds  0x98, 0
-
-    db  port_in_debug, port_out_debug   # 0xba98 used by tests
-    db  port_in_debug, port_out_debug   # 0xba99 used by tests
-
-    ds 0x66, 0
-    ds 0x66, 0
-
-device_ports_ff:
-    ds  0xff, 0
-    ds  0xff, 0
-
-    db  port_in_debug, port_out_debug   # 0xffff used by tests
+register_devices_done:
+    arb 2
+    ret 0
+.ENDFRAME
 
 .EOF

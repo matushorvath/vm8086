@@ -1,5 +1,8 @@
 .EXPORT main
 
+# From devices.s
+.IMPORT register_devices
+
 # From exec.s
 .IMPORT execute
 
@@ -21,6 +24,7 @@
 main:
 .FRAME
     call init_binary
+    call register_devices
     call execute
 
     ret 0
