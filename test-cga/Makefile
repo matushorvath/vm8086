@@ -4,10 +4,10 @@ ICDIR ?= $(abspath $(VMDIR)/../xzintbit)
 include $(VMDIR)/intcode.mk
 
 BINDIR ?= $(VMDIR)/bin
-OBJDIR ?= $(VMDIR)/obj/vm
+OBJDIR ?= $(VMDIR)/obj/test-cga
 
 .PHONY: build
-build: build-prep $(BINDIR)/vm.input
+build: build-prep $(BINDIR)/test-cga.input
 
 .PHONY: build-prep
 build-prep:
@@ -15,10 +15,10 @@ build-prep:
 
 # The order of the object files matters, the 8086 binary needs to be the last object.
 
-VM_OBJS = vm.o binary_header.o config.o shutdown.o $(BINDIR)/libcpu.a $(BINDIR)/libcga.a \
+VM_OBJS = main.o binary_header.o config.o shutdown.o $(BINDIR)/libcpu.a $(BINDIR)/libcga.a \
 	$(BINDIR)/libutil.a $(LIBXIB) cga_test.o
 
-$(BINDIR)/vm.input: $(VM_OBJS:%.o=$(OBJDIR)/%.o)
+$(BINDIR)/test-cga.input: $(VM_OBJS:%.o=$(OBJDIR)/%.o)
 	$(run-intcode-ld)
 
 $(OBJDIR)/%.o: %.s

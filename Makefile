@@ -4,7 +4,7 @@ include intcode.mk
 BINDIR ?= bin
 OBJDIR ?= obj
 
-SRCDIRS = cga cpu util vm
+SRCDIRS = cga cpu util test-cga
 TESTDIRS = test-bochs test-cpu
 
 # Build VM
