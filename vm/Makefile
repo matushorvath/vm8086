@@ -3,11 +3,13 @@ VMDIR = $(abspath ..)
 ICDIR ?= $(abspath $(VMDIR)/../xzintbit)
 include $(VMDIR)/intcode.mk
 
+BIOS_BIN ?= $(abspath $(VMDIR)/../8088_bios/binaries/bios-xt.bin)
+
 BINDIR ?= $(VMDIR)/bin
-OBJDIR ?= $(VMDIR)/obj/test-cga
+OBJDIR ?= $(VMDIR)/obj/vm
 
 .PHONY: build
-build: build-prep $(BINDIR)/test-cga.input
+build: build-prep $(BINDIR)/vm.input
 
 .PHONY: build-prep
 build-prep:
@@ -15,21 +17,17 @@ build-prep:
 
 # The order of the object files matters, the 8086 binary needs to be the last object.
 
-TEST_CGA_OBJS = main.o binary_header.o config.o shutdown.o $(BINDIR)/libcpu.a $(BINDIR)/libcga.a \
-	$(BINDIR)/libutil.a $(LIBXIB) cga_test.o
+VM_OBJS = main.o binary_header.o config.o $(BINDIR)/libcpu.a $(BINDIR)/libcga.a \
+	$(BINDIR)/libutil.a $(LIBXIB) bios.o
 
-$(BINDIR)/test-cga.input: $(TEST_CGA:%.o=$(OBJDIR)/%.o)
+$(BINDIR)/vm.input: $(VM_OBJS:%.o=$(OBJDIR)/%.o)
 	$(run-intcode-ld)
 
 $(OBJDIR)/%.o: %.s
 	$(run-intcode-as)
 
-$(OBJDIR)/%.o: $(OBJDIR)/%.bin
+$(OBJDIR)/bios.o: $(BIOS_BIN)
 	$(run-intcode-bin2obj)
-
-$(OBJDIR)/cga_test.bin: cga_test.asm
-	nasm -f bin $< -o $@
-	#hexdump -C $@ ; true
 
 .PHONY: clean
 clean:
