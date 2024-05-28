@@ -145,8 +145,11 @@ channel_1_write_message:
 #     16-bit only
 # no read
 # pic_freq 1193182
-# write gate input: bit 0 of port 0x61
-# read output: bit 5 of port 0x61
+#
+# PC Speaker
+# bit 1 port 0x61: write controls speaker directly
+# bit 0 port 0x61: write 1 = controlled by PIT channel 2 (controls 8253 gate input)
+# bit 5 port 0x61: read output of PIT channel 2
 
 ##########
 channel_2_read:
