@@ -119,9 +119,6 @@ channel_1_write_message:
     db  "PIT CH1 WR: ", 0
 .ENDFRAME
 
-pic_freq	equ	1193182
-pic_freq/400
-
 ##########
 channel_2_read:
 .FRAME port; value                      # returns value
@@ -189,9 +186,8 @@ mode_command_write_message:
 
 .EOF
 
-
-
-
+CH0:
+ - 
 
 # Channel 0 is connected to IRQ0
 #   BIOS sets count 65535 or 0 -> 18.2065 Hz
@@ -202,12 +198,31 @@ mode_command_write_message:
 #   frequency of the output determines the frequency of the sound
 #   gate input write bit 0 of port 0x61, output read bit 5 of port 0x61
 
-# BCD mode, do not support
+# no need for BCD mode, readback
 
-# modes set by BIOS:
-# B6h 36h 54h 40h 0h (latch, 0)
+Channel 0:
+00h 00 00 000 0 latch, mode 0
+36h 00 11 011 0 lo+hi, mode 3
+write 0x0000
+read latch
 
-pit_ch0_reg write 0,0; read latch
-pit_ch1_reg write 12h (15ms) no write on XT
-pit_ch2_reg pic_freq/400	pic_freq/554 pic_freq/277 pic_freq/370 pic_freq/277 pic_freq/415 1193 (~1000Hz) 16-bit only
+Channel 1:
+40h 01 00 000 0 latch, mode 0
+54h 01 01 010 0 lo, mode 2
+write 0x12 = 15ms
+no read on xt
 
+Channel 2:
+B6h 10 11 011 0 lo+hi, mode 3
+write:
+    pic_freq/400
+    pic_freq/554
+    pic_freq/277
+    pic_freq/370
+    pic_freq/277
+    pic_freq/415
+    1193 (~1000Hz)
+    16-bit only
+no read
+
+pic_freq	equ	1193182
