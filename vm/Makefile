@@ -18,7 +18,7 @@ build-prep:
 # The order of the object files matters, the 8086 binary needs to be the last object.
 
 VM_OBJS = main.o binary_header.o config.o ports.o $(BINDIR)/libcpu.a $(BINDIR)/libcga.a \
-	$(BINDIR)/libutil.a $(LIBXIB) bios.o
+	$(BINDIR)/libdev.a $(BINDIR)/libutil.a $(LIBXIB) bios.o
 
 $(BINDIR)/vm.input: $(VM_OBJS:%.o=$(OBJDIR)/%.o)
 	$(run-intcode-ld)

@@ -10,6 +10,9 @@
 # From init_binary.s
 .IMPORT init_binary
 
+# From pit_8254.s
+.IMPORT init_pit_8254
+
 ##########
 # Entry point
     arb stack
@@ -25,6 +28,7 @@
 main:
 .FRAME
     call init_binary
+    call init_pit_8254
     call init_cga
     call init_ports
 
