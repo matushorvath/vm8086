@@ -18,7 +18,7 @@ build-prep:
 TEST_CGA_OBJS = main.o binary_header.o config.o shutdown.o $(BINDIR)/libcpu.a $(BINDIR)/libcga.a \
 	$(BINDIR)/libutil.a $(LIBXIB) cga_test.o
 
-$(BINDIR)/test-cga.input: $(TEST_CGA:%.o=$(OBJDIR)/%.o)
+$(BINDIR)/test-cga.input: $(TEST_CGA_OBJS:%.o=$(OBJDIR)/%.o)
 	$(run-intcode-ld)
 
 $(OBJDIR)/%.o: %.s
