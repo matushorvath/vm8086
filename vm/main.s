@@ -10,8 +10,8 @@
 # From init_binary.s
 .IMPORT init_binary
 
-# From pit_8254.s
-.IMPORT init_pit_8254
+# From pit_8253.s
+.IMPORT init_pit_8253
 
 ##########
 # Entry point
@@ -28,7 +28,7 @@
 main:
 .FRAME
     call init_binary
-    call init_pit_8254
+    call init_pit_8253
     call init_cga
     call init_ports
 
@@ -45,7 +45,7 @@ stack:
 
 # TODO
 
-PIT pit_ctl_reg
+PIT 8253 pit_ctl_reg pit_ch0_reg pit_ch1_reg pit_ch2_reg pit_ctl_reg
 nmi_mask_reg
 ppi_cwd_reg
 DMAC (8237) dmac_ch0_count_reg

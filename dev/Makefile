@@ -13,7 +13,7 @@ build: build-prep $(BINDIR)/libdev.a
 build-prep:
 	mkdir -p "$(BINDIR)" "$(OBJDIR)"
 
-DEV_OBJS = pit_8254.o
+DEV_OBJS = pit_8253.o
 
 $(BINDIR)/libdev.a: $(DEV_OBJS:%.o=$(OBJDIR)/%.o)
 	$(run-intcode-ar)
