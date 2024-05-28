@@ -1,4 +1,5 @@
 .EXPORT init_pit_8253
+.EXPORT config_vm_callback
 
 # From devices.s
 .IMPORT register_ports
@@ -67,6 +68,21 @@ init_pit_8253:
     arb -1
     call register_ports
 
+    ret 0
+.ENDFRAME
+
+##########
+config_vm_callback:
+    db  pit_8253_vm_callback
+
+##########
+pit_8253_vm_callback:
+.FRAME continue                         # returns continue
+    arb -1
+
+    add 1, 0, [rb + continue]
+
+    arb 1
     ret 0
 .ENDFRAME
 
