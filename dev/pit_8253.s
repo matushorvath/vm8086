@@ -45,8 +45,6 @@
 # - bit 5 port 0x61: read, output of PIT channel 2
 
 # TODO
-#  - need latch for delay_15us
-#  - strictly need just modes 0 and 3; and mode 2 for DRAM refresh should not crash
 #  - use 0 to represent 65536
 #  - IRQ0 is generated when channel 0 transitions low to high
 #  - if mode requires we decrement after reload, the decrement is not on the reload cycle, but one cycle after
@@ -82,25 +80,51 @@ pit_8253_vm_callback:
 
     add 1, 0, [rb + continue]
 
+    # TODO decrement counters
+
     arb 1
     ret 0
 .ENDFRAME
 
 ##########
+
+# The order of these variables is important. We use pointer arithmetics to access them, by adding
+# channel number to a base pointer. Because of this, each pair of ch0 and ch2 variables needs to
+# be exactly 2 bytes apart.
+#
+# access mode = pit_access + channel
+# Channel 0: = pit_access + 0 = pit_access_ch0
+# Channel 2: = pit_access + 2 = pit_access_ch2
+#
+# The order of lo/hi bytes is also important, we use pointer arithmetics with pit_hi_byte_next
+# to determine whether to access the lo or hi byte of a value.
+#
+# channel value = pit_value + channel + [pit_hi_byte_next + channel]
+# Channel 0, access lo: pit_value + 0 + [pit_hi_byte_next + 0]
+#     = pit_value + [pit_hi_byte_next_ch0] = pit_value + 0 = pit_value_lo_ch0
+# Channel 0, access hi: pit_value + 0 + [pit_hi_byte_next + 0]
+#     = pit_value + [pit_hi_byte_next_ch0] = pit_value + 1 = pit_value_hi_ch0
+# Channel 2, access lo: pit_value + 2 + [pit_hi_byte_next + 2]
+#     = pit_value + 2 + [pit_hi_byte_next_ch2] = pit_value + 2 + 0 = pit_value_lo_ch2
+# Channel 2, access hi: pit_value + 0 + [pit_hi_byte_next + 2]
+#     = pit_value + 2 + [pit_hi_byte_next_ch2] = pit_value + 2 + 1 = pit_value_hi_ch2
+
 pit_operation:
 pit_operation_ch0:
     db  0
-pit_operation_ch2:
-    db  0
-
 pit_access:
 pit_access_ch0:
+    db  0
+pit_operation_ch2:
     db  0
 pit_access_ch2:
     db  0
 
+pit_reload:
+pit_reload_lo:
 pit_reload_lo_ch0:
     db  0
+pit_reload_hi:
 pit_reload_hi_ch0:
     db  0
 pit_reload_lo_ch2:
@@ -108,13 +132,36 @@ pit_reload_lo_ch2:
 pit_reload_hi_ch2:
     db  0
 
+pit_value:
+pit_value_lo:
 pit_value_lo_ch0:
     db  0
+pit_value_hi:
 pit_value_hi_ch0:
     db  0
 pit_value_lo_ch2:
     db  0
 pit_value_hi_ch2:
+    db  0
+
+pit_latch:
+pit_latch_lo:
+pit_latch_lo_ch0:
+    db  0
+pit_latch_hi:
+pit_latch_hi_ch0:
+    db  0
+pit_latch_lo_ch2:
+    db  0
+pit_latch_hi_ch2:
+    db  0
+
+# In 16-bit access mode, is the next byte to be accessed hi or low?
+pit_hi_byte_next:
+pit_hi_byte_next_ch0:
+    db  0
+    db  0           # keep the ch0 and ch2 values 2 bytes apart
+pit_hi_byte_next_ch2:
     db  0
 
 ##########
@@ -182,9 +229,13 @@ mode_command_write_after_aliases:
 
 mode_command_write_supported_operation:
     # Save the operation
-    eq  [rb + channel], 2, [rb + tmp]
-    add [pit_operation], [rb + tmp], [ip + 3]
+    add pit_operation, [rb + channel], [ip + 3]
     add [rb + operation], 0, [0]
+
+    # Reset the channel to initial state, which depends on operation
+    # TODO make sure everything is reset
+    add pit_hi_byte_next, [rb + channel], [ip + 3]
+    add 0, 0, [0]
 
     # Read the access mode
     add [rb + value_bits], 5, [ip + 1]
@@ -193,12 +244,21 @@ mode_command_write_supported_operation:
     add [rb + value_bits], 4, [ip + 1]
     add [0], [rb + access], [rb + access]
 
-    # Save the access mode
-    eq  [rb + access], 2, [rb + tmp]
-    add [pit_access], [rb + tmp], [ip + 3]
-    add [rb + access], 0, [0]
+    # In latch access mode, save current counter value to the latch
+    jnz [rb + access], mode_command_write_after_latch
 
-    # TODO reset the channel to initial state, which depends on mode
+    add pit_value_lo, [rb + channel], [ip + 5]
+    add pit_latch_lo, [rb + channel], [ip + 3]
+    add [0], 0, [0]
+
+    add pit_value_hi, [rb + channel], [ip + 5]
+    add pit_latch_hi, [rb + channel], [ip + 3]
+    add [0], 0, [0]
+
+mode_command_write_after_latch:
+    # Save the access mode
+    add pit_access, [rb + channel], [ip + 3]
+    add [rb + access], 0, [0]
 
     # Log parsed values
     out ' '
@@ -257,73 +317,39 @@ mode_command_write_bad_operation:
     call report_error
 
 mode_command_write_message:
-    db  "PIT M/C WR: ", 0
+    db  "PIT WR: MC ", 0
 mode_command_write_bcd_error:
-    db  "PIT M/C WR: Error, BCD mode is not supported", 0
+    db  "PIT WR: MC Error, BCD mode is not supported", 0
 mode_command_write_read_back_error:
-    db  "PIT M/C WR: Error, read-back ", "command is not supported", 0
+    db  "PIT WR: MC Error, read-back ", "command is not supported", 0
 mode_command_write_bad_operation_error:
-    db  "PIT M/C WR: Error, ", "operating mode is not supported", 0
+    db  "PIT WR: MC Error, ", "operating mode is not supported", 0
 .ENDFRAME
 
 ##########
+.FRAME addr, value; channel, tmp
+    # Function with multiple entry points
+
 channel_0_write:
-.FRAME addr, value;
-    # Log access
-    # TODO remove log
-    add channel_0_write_message, 0, [rb - 1]
-    arb -1
-    call print_str
+    arb -2
+    add 0, 0, [rb + channel]
+    jz  0, channel_write
 
-    add [rb + value], 0, [rb - 1]
-    add 16, 0, [rb - 2]
-    add 2, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-
-    out 10
-
-
-
-    ret 2
-
-channel_0_write_message:
-    db  "PIT CH0 WR: ", 0
-.ENDFRAME
-
-##########
-channel_0_read:
-.FRAME port; value                      # returns value
-    arb -1
-
-    # Log access
-    # TODO remove log
-    add channel_0_read_message, 0, [rb - 1]
-    arb -1
-    call print_str
-
-    add [rb + value], 0, [rb - 1]
-    add 16, 0, [rb - 2]
-    add 2, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-
-    out 10
-
-    arb 1
-    ret 1
-
-channel_0_read_message:
-    db  "PIT CH0 RD: ", 0
-.ENDFRAME
-
-##########
 channel_2_write:
-.FRAME addr, value;
+    arb -2
+    add 2, 0, [rb + channel]
+
+channel_write:
     # Log access
-    add channel_2_write_message, 0, [rb - 1]
+    # TODO remove log
+    add channel_write_message, 0, [rb - 1]
     arb -1
     call print_str
+
+    out 'C'
+    add '0', [rb + channel], [rb + tmp]
+    out [rb + tmp]
+    out ' '
 
     add [rb + value], 0, [rb - 1]
     add 16, 0, [rb - 2]
@@ -333,36 +359,97 @@ channel_2_write:
 
     out 10
 
-    # TODO implement channel 2 properly
-
+    arb 2
     ret 2
 
-channel_2_write_message:
-    db  "PIT CH2 WR: ", 0
+channel_write_message:
+    db  "PIT WR: ", 0
 .ENDFRAME
 
 ##########
-channel_2_read:
-.FRAME port; value                      # returns value
-    arb -1
+.FRAME port; value, channel, tmp        # returns value
+    # Function with multiple entry points
 
+channel_0_read:
+    arb -3
+    add 0, 0, [rb + channel]
+
+    jz  0, channel_read
+
+channel_2_read:
+    arb -3
+    add 2, 0, [rb + channel]
+
+channel_read:
     # Log access
     # TODO remove log
-    add channel_2_read_message, 0, [rb - 1]
+    add channel_read_message, 0, [rb - 1]
     arb -1
     call print_str
 
+    out 'C'
+    add '0', [rb + channel], [rb + tmp]
+    out [rb + tmp]
+
+    # Decide what to return based on access mode
+    add channel_read_table, [pit_access_ch0], [ip + 2]
+    jz  0, [0]
+
+channel_read_table:
+    db  channel_read_latch
+    db  channel_read_lo
+    db  channel_read_hi
+    db  channel_read_lo_hi
+
+channel_read_latch:
+    # Read lo/hi byte from the latch
+    add pit_hi_byte_next, [rb + channel], [ip + 1]
+    add [0], [rb + channel], [rb + tmp]
+
+    add pit_latch, [rb + tmp], [ip + 1]
+    add [0], 0, [rb + value]
+
+    jz  0, channel_read_done
+
+channel_read_lo:
+    # Read lo byte from the value
+    add pit_latch_lo, [rb + channel], [ip + 1]
+    add [0], 0, [rb + value]
+
+    jz  0, channel_read_done
+
+channel_read_hi:
+    # Read hi byte from the value
+    add pit_latch_hi, [rb + channel], [ip + 1]
+    add [0], 0, [rb + value]
+
+    jz  0, channel_read_done
+
+channel_read_lo_hi:
+    # Read lo/hi byte from the value
+    add pit_hi_byte_next, [rb + channel], [ip + 1]
+    add [0], [rb + channel], [rb + tmp]
+
+    add pit_value, [rb + tmp], [ip + 1]
+    add [0], 0, [rb + value]
+
+channel_read_done:
+    # Finish the log message
+    out ' '
+
+    add [rb + value], 0, [rb - 1]
+    add 16, 0, [rb - 2]
+    add 2, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
     out 10
 
-    # Return a dummy value
-    # TODO implement channel 2 properly
-    add 0xff, 0, [rb + value]
-
-    arb 1
+    arb 3
     ret 1
 
-channel_2_read_message:
-    db  "PIT CH2 RD", 0
+channel_read_message:
+    db  "PIT RD: ", 0
 .ENDFRAME
 
 .EOF
