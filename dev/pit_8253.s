@@ -109,13 +109,13 @@ pit_8253_vm_callback:
 # Channel 2, access hi: pit_value + 0 + [pit_hi_byte_next + 2]
 #     = pit_value + 2 + [pit_hi_byte_next_ch2] = pit_value + 2 + 1 = pit_value_hi_ch2
 
-pit_operation:
-pit_operation_ch0:
+pit_mode:
+pit_mode_ch0:
     db  0
 pit_access:
 pit_access_ch0:
     db  0
-pit_operation_ch2:
+pit_mode_ch2:
     db  0
 pit_access_ch2:
     db  0
@@ -156,6 +156,17 @@ pit_latch_lo_ch2:
 pit_latch_hi_ch2:
     db  0
 
+pit_running:
+pit_running_ch0:
+    db  0
+pit_output:
+pit_output_ch0:
+    db  0
+pit_running_ch2:
+    db  0
+pit_output_ch2:
+    db  0
+
 # In 16-bit access mode, is the next byte to be accessed hi or low?
 pit_hi_byte_next:
 pit_hi_byte_next_ch0:
@@ -166,7 +177,7 @@ pit_hi_byte_next_ch2:
 
 ##########
 mode_command_write:
-.FRAME addr, value; value_bits, channel, operation, access, tmp
+.FRAME addr, value; value_bits, channel, mode, access, tmp
     arb -5
 
     # Log access
@@ -204,35 +215,35 @@ mode_command_write:
     eq  [rb + channel], 1, [rb + tmp]
     jnz [rb + tmp], mode_command_write_done
 
-    # Read the operation
+    # Read the operating mode
     add [rb + value_bits], 3, [ip + 1]
-    add [0], 0, [rb + operation]
-    mul [rb + operation], 2, [rb + operation]
+    add [0], 0, [rb + mode]
+    mul [rb + mode], 2, [rb + mode]
     add [rb + value_bits], 2, [ip + 1]
-    add [0], [rb + operation], [rb + operation]
-    mul [rb + operation], 2, [rb + operation]
+    add [0], [rb + mode], [rb + mode]
+    mul [rb + mode], 2, [rb + mode]
     add [rb + value_bits], 1, [ip + 1]
-    add [0], [rb + operation], [rb + operation]
+    add [0], [rb + mode], [rb + mode]
 
     # Operations 0b110 and 0b111 are aliases for 0b010 and 0b011
-    lt  [rb + operation], 0b110, [rb + tmp]
+    lt  [rb + mode], 0b110, [rb + tmp]
     jnz [rb + tmp], mode_command_write_after_aliases
-    add [rb + operation], -0b100, [rb + operation]
+    add [rb + mode], -0b100, [rb + mode]
 
 mode_command_write_after_aliases:
-    # Only operations 0 and 3 are implemented.
-    jz  [rb + operation], mode_command_write_supported_operation
-    eq  [rb + operation], 3, [rb + tmp]
-    jnz [rb + tmp], mode_command_write_supported_operation
+    # Only operating modes 0 and 3 are implemented.
+    jz  [rb + mode], mode_command_write_supported_mode
+    eq  [rb + mode], 3, [rb + tmp]
+    jnz [rb + tmp], mode_command_write_supported_mode
 
-    jz  0, mode_command_write_bad_operation
+    jz  0, mode_command_write_bad_mode
 
-mode_command_write_supported_operation:
-    # Save the operation
-    add pit_operation, [rb + channel], [ip + 3]
-    add [rb + operation], 0, [0]
+mode_command_write_supported_mode:
+    # Save the operating mode
+    add pit_mode, [rb + channel], [ip + 3]
+    add [rb + mode], 0, [0]
 
-    # Reset the channel to initial state, which depends on operation
+    # Reset the channel to initial state, which depends on mode
     # TODO make sure everything is reset
     add pit_hi_byte_next, [rb + channel], [ip + 3]
     add 0, 0, [0]
@@ -262,10 +273,10 @@ mode_command_write_after_latch:
 
     # Log parsed values
     out ' '
-    out 'O'
+    out 'M'
     out ' '
 
-    add [rb + operation], 0, [rb - 1]
+    add [rb + mode], 0, [rb - 1]
     add 16, 0, [rb - 2]
     add 1, 0, [rb - 3]
     arb -3
@@ -310,9 +321,9 @@ mode_command_write_read_back:
     arb -1
     call report_error
 
-mode_command_write_bad_operation:
+mode_command_write_bad_mode:
     out 10
-    add mode_command_write_bad_operation_error, 0, [rb - 1]
+    add mode_command_write_bad_mode_error, 0, [rb - 1]
     arb -1
     call report_error
 
@@ -322,7 +333,7 @@ mode_command_write_bcd_error:
     db  "PIT WR: MC Error, BCD mode is not supported", 0
 mode_command_write_read_back_error:
     db  "PIT WR: MC Error, read-back ", "command is not supported", 0
-mode_command_write_bad_operation_error:
+mode_command_write_bad_mode_error:
     db  "PIT WR: MC Error, ", "operating mode is not supported", 0
 .ENDFRAME
 
