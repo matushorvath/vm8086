@@ -88,16 +88,39 @@ pit_8253_vm_callback:
 
 ##########
 pit_operation:
+pit_operation_ch0:
     db  0
+pit_operation_ch2:
+    db  0
+
 pit_access:
+pit_access_ch0:
     db  0
-pit_channel:
+pit_access_ch2:
+    db  0
+
+pit_reload_lo_ch0:
+    db  0
+pit_reload_hi_ch0:
+    db  0
+pit_reload_lo_ch2:
+    db  0
+pit_reload_hi_ch2:
+    db  0
+
+pit_value_lo_ch0:
+    db  0
+pit_value_hi_ch0:
+    db  0
+pit_value_lo_ch2:
+    db  0
+pit_value_hi_ch2:
     db  0
 
 ##########
 mode_command_write:
-.FRAME addr, value; value_bits, tmp
-    arb -2
+.FRAME addr, value; value_bits, channel, operation, access, tmp
+    arb -5
 
     # Log access
     # TODO remove log
@@ -119,41 +142,62 @@ mode_command_write:
     add [rb + value_bits], 0, [ip + 1]
     jnz [0], mode_command_write_bcd
 
-    # Save the operation
-    add [rb + value_bits], 3, [ip + 1]
-    add [0], 0, [pit_operation]
-    mul [pit_operation], 2, [pit_operation]
-    add [rb + value_bits], 2, [ip + 1]
-    add [0], [pit_operation], [pit_operation]
-    mul [pit_operation], 2, [pit_operation]
-    add [rb + value_bits], 1, [ip + 1]
-    add [0], [pit_operation], [pit_operation]
-
-    # Operations 0b110 and 0b111 are aliases for 0b010 and 0b011
-    lt  [pit_operation], 0b110, [rb + tmp]
-    jnz [rb + tmp], mode_command_write_after_aliases
-    add [pit_operation], -0b100, [pit_operation]
-
-mode_command_write_after_aliases:
-    # Save the access mode
-    add [rb + value_bits], 5, [ip + 1]
-    add [0], 0, [pit_access]
-    mul [pit_access], 2, [pit_access]
-    add [rb + value_bits], 4, [ip + 1]
-    add [0], [pit_access], [pit_access]
-
-    # Save the channel
+    # Read the channel
     add [rb + value_bits], 7, [ip + 1]
-    add [0], 0, [pit_channel]
-    mul [pit_channel], 2, [pit_channel]
+    add [0], 0, [rb + channel]
+    mul [rb + channel], 2, [rb + channel]
     add [rb + value_bits], 6, [ip + 1]
-    add [0], [pit_channel], [pit_channel]
+    add [0], [rb + channel], [rb + channel]
 
     # No support for read-back
-    eq  [pit_channel], 3, [rb + tmp]
+    eq  [rb + channel], 3, [rb + tmp]
     jnz [rb + tmp], mode_command_write_read_back
 
-    # TODO filter only supported modes
+    # Channel 1 is silently ignored
+    eq  [rb + channel], 1, [rb + tmp]
+    jnz [rb + tmp], mode_command_write_done
+
+    # Read the operation
+    add [rb + value_bits], 3, [ip + 1]
+    add [0], 0, [rb + operation]
+    mul [rb + operation], 2, [rb + operation]
+    add [rb + value_bits], 2, [ip + 1]
+    add [0], [rb + operation], [rb + operation]
+    mul [rb + operation], 2, [rb + operation]
+    add [rb + value_bits], 1, [ip + 1]
+    add [0], [rb + operation], [rb + operation]
+
+    # Operations 0b110 and 0b111 are aliases for 0b010 and 0b011
+    lt  [rb + operation], 0b110, [rb + tmp]
+    jnz [rb + tmp], mode_command_write_after_aliases
+    add [rb + operation], -0b100, [rb + operation]
+
+mode_command_write_after_aliases:
+    # Only operations 0 and 3 are implemented.
+    jz  [rb + operation], mode_command_write_supported_operation
+    eq  [rb + operation], 3, [rb + tmp]
+    jnz [rb + tmp], mode_command_write_supported_operation
+
+    jz  0, mode_command_write_bad_operation
+
+mode_command_write_supported_operation:
+    # Save the operation
+    eq  [rb + channel], 2, [rb + tmp]
+    add [pit_operation], [rb + tmp], [ip + 3]
+    add [rb + operation], 0, [0]
+
+    # Read the access mode
+    add [rb + value_bits], 5, [ip + 1]
+    add [0], 0, [rb + access]
+    mul [rb + access], 2, [rb + access]
+    add [rb + value_bits], 4, [ip + 1]
+    add [0], [rb + access], [rb + access]
+
+    # Save the access mode
+    eq  [rb + access], 2, [rb + tmp]
+    add [pit_access], [rb + tmp], [ip + 3]
+    add [rb + access], 0, [0]
+
     # TODO reset the channel to initial state, which depends on mode
 
     # Log parsed values
@@ -161,7 +205,7 @@ mode_command_write_after_aliases:
     out 'o'
     out ' '
 
-    add [pit_operation], 0, [rb - 1]
+    add [rb + operation], 0, [rb - 1]
     add 16, 0, [rb - 2]
     add 1, 0, [rb - 3]
     arb -3
@@ -171,7 +215,7 @@ mode_command_write_after_aliases:
     out 'a'
     out ' '
 
-    add [pit_access], 0, [rb - 1]
+    add [rb + access], 0, [rb - 1]
     add 16, 0, [rb - 2]
     add 1, 0, [rb - 3]
     arb -3
@@ -181,28 +225,34 @@ mode_command_write_after_aliases:
     out 'c'
     out ' '
 
-    add [pit_channel], 0, [rb - 1]
+    add [rb + channel], 0, [rb - 1]
     add 16, 0, [rb - 2]
     add 1, 0, [rb - 3]
     arb -3
     call print_num_radix
 
+mode_command_write_done:
+    # Line end after the log
     out 10
 
-    arb 2
+    arb 5
     ret 2
 
 mode_command_write_bcd:
-    # Report error
     out 10
     add mode_command_write_bcd_error, 0, [rb - 1]
     arb -1
     call report_error
 
 mode_command_write_read_back:
-    # Report error
     out 10
     add mode_command_write_read_back_error, 0, [rb - 1]
+    arb -1
+    call report_error
+
+mode_command_write_bad_operation:
+    out 10
+    add mode_command_write_bad_operation_error, 0, [rb - 1]
     arb -1
     call report_error
 
@@ -212,6 +262,33 @@ mode_command_write_bcd_error:
     db  "PIT M/C WR: Error, BCD mode is not supported", 0
 mode_command_write_read_back_error:
     db  "PIT M/C WR: Error, read-back ", "command is not supported", 0
+mode_command_write_bad_operation_error:
+    db  "PIT M/C WR: Error, ", "operating mode is not supported", 0
+.ENDFRAME
+
+##########
+channel_0_write:
+.FRAME addr, value;
+    # Log access
+    # TODO remove log
+    add channel_0_write_message, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [rb + value], 0, [rb - 1]
+    add 16, 0, [rb - 2]
+    add 2, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
+    out 10
+
+
+
+    ret 2
+
+channel_0_write_message:
+    db  "PIT CH0 WR: ", 0
 .ENDFRAME
 
 ##########
@@ -241,11 +318,10 @@ channel_0_read_message:
 .ENDFRAME
 
 ##########
-channel_0_write:
+channel_2_write:
 .FRAME addr, value;
     # Log access
-    # TODO remove log
-    add channel_0_write_message, 0, [rb - 1]
+    add channel_2_write_message, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -257,10 +333,12 @@ channel_0_write:
 
     out 10
 
+    # TODO implement channel 2 properly
+
     ret 2
 
-channel_0_write_message:
-    db  "PIT CH0 WR: ", 0
+channel_2_write_message:
+    db  "PIT CH2 WR: ", 0
 .ENDFRAME
 
 ##########
@@ -285,30 +363,6 @@ channel_2_read:
 
 channel_2_read_message:
     db  "PIT CH2 RD", 0
-.ENDFRAME
-
-##########
-channel_2_write:
-.FRAME addr, value;
-    # Log access
-    add channel_2_write_message, 0, [rb - 1]
-    arb -1
-    call print_str
-
-    add [rb + value], 0, [rb - 1]
-    add 16, 0, [rb - 2]
-    add 2, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-
-    out 10
-
-    # TODO implement channel 2 properly
-
-    ret 2
-
-channel_2_write_message:
-    db  "PIT CH2 WR: ", 0
 .ENDFRAME
 
 .EOF
