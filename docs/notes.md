@@ -4,22 +4,6 @@ Decoding
 Instruction set 2-51 p70  
 Instruction encoding 4-22 p259  
 
-Memory
-======
-
-```
-00H through 7FH (128 bytes) interrupt (system + reserved)
-+80H - 3FFH (available)
-1k memory total, 256 interrupts
-00, 01: IP offset
-02, 03: CS base address
-```
-
-```
-IO:
-F8H through FFH (eight of the 64k locations) in the I/O space are reserved by Intel Corporation for use by future Intel hardware
-```
-
 Possible Optimizations
 ======================
 
@@ -32,24 +16,12 @@ Possible Optimizations
        second_level_table, -1, -1   means split away the MOD, go through a second level table
   The second level table would allow its own args_fn to handle instructions with strange parameter count
 
-- Optimize physical address calculation (calc_seg_off_addr_*), it's very heavy and used a lot.
+- Optimize physical address calculation (calc_seg_off_addr_*), it's very heavy and used a lot. It's mostly heavy to handle corner cases (integer overflows).
 
 TODO
 ====
 
 - Make sure makefiles display nad delete output files when compilation fails.
-
-BIOS
-====
-
-https://github.com/skiselev/8088_bios.git
-https://glabios.org/
-
-CGA
-===
-
-http://nerdlypleasures.blogspot.com/2016/05/ibms-cga-hardware-explained.html?m=1
-https://www.seasip.info/VintagePC/cga.html
 
 Emulators
 =========
@@ -72,6 +44,21 @@ https://www.pcjs.org/software/pcx86/test/cpu/
 DAA behavior with AF=1
 https://draft.blogger.com/comment.g?blogID=6264947694886887540&postID=1529067761550380331&bpli=1&pli=1
 https://github.com/shirriff/DAA
+
+BIOS
+====
+
+https://github.com/skiselev/8088_bios.git
+https://glabios.org/
+
+CGA
+===
+
+http://nerdlypleasures.blogspot.com/2016/05/ibms-cga-hardware-explained.html?m=1
+https://www.seasip.info/VintagePC/cga.html
+
+https://en.wikipedia.org/wiki/ANSI_escape_code
+https://www.lihaoyi.com/post/BuildyourownCommandLinewithANSIescapecodes.html
 
 PIT 8253
 ========

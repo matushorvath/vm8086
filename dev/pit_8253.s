@@ -262,7 +262,7 @@ mode_command_write_after_latch:
 
     # Log parsed values
     out ' '
-    out 'o'
+    out 'O'
     out ' '
 
     add [rb + operation], 0, [rb - 1]
@@ -272,7 +272,7 @@ mode_command_write_after_latch:
     call print_num_radix
 
     out ' '
-    out 'a'
+    out 'A'
     out ' '
 
     add [rb + access], 0, [rb - 1]
@@ -282,7 +282,7 @@ mode_command_write_after_latch:
     call print_num_radix
 
     out ' '
-    out 'c'
+    out 'C'
     out ' '
 
     add [rb + channel], 0, [rb - 1]
@@ -358,6 +358,32 @@ channel_write:
     call print_num_radix
 
     out 10
+
+    # Mode 0:
+    #  - when mode set: output low, stop
+    #  - when reload start: output low, stop
+    #  - when reload done: output low, set value to reload, run (if gate)
+    #  - when dec from 1 to 0: output high, keep run (if gate)
+
+    # Mode 1, same as mode 0 except:
+    #  - when reload done: do nothing
+    #  - when gate lo->hi: output low, set value to reload, run (if gate)
+
+    # Mode 2:
+    #  - when mode set: output high, stop
+    #  - when reload done: if stopped only: set value to reload, run (if gate)
+    #  - when dec from 2 to 1: output pulse low, set value to reload, keep run (if gate)
+    #  - when gate hi->lo: output high, stop
+    #  - when gate lo->hi: set value to reload, run (if gate)
+
+    # Mode 3, same as mode 3 except:
+    #  - decrement by 2 instead of 1
+    #  - mode 2 output change flips a flip-flop, real output comes from the flip-flop
+    #  - when reload from 2 to 1 -> from 2 to 0
+    #  - when setting value from reload, mask off the 0 bit (not the exact behavior, but close enough)
+    #    or maybe tweak the condition - when value changes from 2 or 1 (to 0 or -1) 
+
+    # Mode 4, 5: similar to 0, 2; TODO
 
     arb 2
     ret 2
