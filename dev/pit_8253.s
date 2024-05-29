@@ -44,11 +44,52 @@
 # - bit 1 port 0x61: write, controls speaker directly
 # - bit 5 port 0x61: read, output of PIT channel 2
 
+# Operating modes:
+#
+# Mode 0:
+#  - when mode set: output low, stop
+#  - when reload start: output low, stop
+#  - when reload done: set value to reload, run (if gate)
+#  - when dec from 1 to 0: output high, keep run (if gate)
+#
+# Mode 1:
+#  - when mode set: output high, stop
+#  - when reload start: do nothing
+#  - when reload done: do nothing
+#  - when gate lo->hi: output low, set value to reload, run (if gate)
+#  - when dec from 1 to 0: output high, keep run (if gate)
+#
+# Mode 2:
+#  - when mode set: output high, stop
+#  - when reload done: if stopped only: set value to reload, run (if gate)
+#  - when dec from 2 to 1: output pulse low, set value to reload, keep run (if gate)
+#  - when gate hi->lo: output high (which it normally is anyway), stop
+#  - when gate lo->hi: set value to reload, run (if gate)
+#
+# Mode 3, same as mode 2 except:
+#  - decrement by 2 instead of 1
+#  - mode 2 output change flips a flip-flop, real output comes from the flip-flop
+#  - when dec from 2 to 1 -> dec from 2 to 0
+#  - when setting value from reload, mask off the 0 bit (not the exact behavior, but close enough)
+#    or maybe tweak the condition - when value changes from 2 or 1 (to 0 or -1)
+#
+# Mode 4:
+#  - when mode set: output high, stop
+#  - when reload start: stop (not 100% right)
+#  - when reload done: set value to reload, run (if gate)
+#  - when dec from 1 to 0: output pulse low, keep run (if gate)
+#
+# Mode 5, same as mode 4 except:
+#  - when mode set: output high, stop
+#  - when reload start: do nothing
+#  - when reload done: do nothing
+#  - when dec from 1 to 0: output pulse low, keep run (if gate)
+#  - when gate lo->hi: set value to reload, run (if gate)
+
 # TODO
-#  - use 0 to represent 65536
 #  - IRQ0 is generated when channel 0 transitions low to high
-#  - if mode requires we decrement after reload, the decrement is not on the reload cycle, but one cycle after
 #  - only run channel 2 if gate is enabled (port 0x63 bit 0)
+#  - mode 3 output comes from the flip-flop
 
 ##########
 pit_ports:
@@ -96,18 +137,18 @@ pit_8253_vm_callback:
 # Channel 0: = pit_access + 0 = pit_access_ch0
 # Channel 2: = pit_access + 2 = pit_access_ch2
 #
-# The order of lo/hi bytes is also important, we use pointer arithmetics with pit_hi_byte_next
+# The order of lo/hi bytes is also important, we use pointer arithmetics with pit_read_hi_byte_next
 # to determine whether to access the lo or hi byte of a value.
 #
-# channel value = pit_value + channel + [pit_hi_byte_next + channel]
-# Channel 0, access lo: pit_value + 0 + [pit_hi_byte_next + 0]
-#     = pit_value + [pit_hi_byte_next_ch0] = pit_value + 0 = pit_value_lo_ch0
-# Channel 0, access hi: pit_value + 0 + [pit_hi_byte_next + 0]
-#     = pit_value + [pit_hi_byte_next_ch0] = pit_value + 1 = pit_value_hi_ch0
-# Channel 2, access lo: pit_value + 2 + [pit_hi_byte_next + 2]
-#     = pit_value + 2 + [pit_hi_byte_next_ch2] = pit_value + 2 + 0 = pit_value_lo_ch2
-# Channel 2, access hi: pit_value + 0 + [pit_hi_byte_next + 2]
-#     = pit_value + 2 + [pit_hi_byte_next_ch2] = pit_value + 2 + 1 = pit_value_hi_ch2
+# channel value = pit_value + channel + [pit_read_hi_byte_next + channel]
+# Channel 0, access lo: pit_value + 0 + [pit_read_hi_byte_next + 0]
+#     = pit_value + [pit_read_hi_byte_next_ch0] = pit_value + 0 = pit_value_lo_ch0
+# Channel 0, access hi: pit_value + 0 + [pit_read_hi_byte_next + 0]
+#     = pit_value + [pit_read_hi_byte_next_ch0] = pit_value + 1 = pit_value_hi_ch0
+# Channel 2, access lo: pit_value + 2 + [pit_read_hi_byte_next + 2]
+#     = pit_value + 2 + [pit_read_hi_byte_next_ch2] = pit_value + 2 + 0 = pit_value_lo_ch2
+# Channel 2, access hi: pit_value + 0 + [pit_read_hi_byte_next + 2]
+#     = pit_value + 2 + [pit_read_hi_byte_next_ch2] = pit_value + 2 + 1 = pit_value_hi_ch2
 
 pit_mode:
 pit_mode_ch0:
@@ -168,17 +209,21 @@ pit_output_ch2:
     db  0
 
 # In 16-bit access mode, is the next byte to be accessed hi or low?
-pit_hi_byte_next:
-pit_hi_byte_next_ch0:
+pit_read_hi_byte_next:
+pit_read_hi_byte_next_ch0:
     db  0
-    db  0           # keep the ch0 and ch2 values 2 bytes apart
-pit_hi_byte_next_ch2:
+pit_write_hi_byte_next:
+pit_write_hi_byte_next_ch0:
+    db  0
+pit_read_hi_byte_next_ch2:
+    db  0
+pit_write_hi_byte_next_ch2:
     db  0
 
 ##########
 mode_command_write:
-.FRAME addr, value; value_bits, channel, mode, access, tmp
-    arb -5
+.FRAME addr, value; value_bits, channel, mode, access, orig_output, tmp
+    arb -6
 
     # Log access
     # TODO remove log
@@ -215,6 +260,16 @@ mode_command_write:
     eq  [rb + channel], 1, [rb + tmp]
     jnz [rb + tmp], mode_command_write_done
 
+    # Read the access mode
+    add [rb + value_bits], 5, [ip + 1]
+    add [0], 0, [rb + access]
+    mul [rb + access], 2, [rb + access]
+    add [rb + value_bits], 4, [ip + 1]
+    add [0], [rb + access], [rb + access]
+
+    # Handle latch command
+    jz  [rb + access], mode_command_write_latch_command
+
     # Read the operating mode
     add [rb + value_bits], 3, [ip + 1]
     add [0], 0, [rb + mode]
@@ -231,45 +286,44 @@ mode_command_write:
     add [rb + mode], -0b100, [rb + mode]
 
 mode_command_write_after_aliases:
-    # Only operating modes 0 and 3 are implemented.
-    jz  [rb + mode], mode_command_write_supported_mode
-    eq  [rb + mode], 3, [rb + tmp]
-    jnz [rb + tmp], mode_command_write_supported_mode
+    # Reset the channel to initial state, which depends on mode
+    add pit_read_hi_byte_next, [rb + channel], [ip + 3]
+    add 0, 0, [0]
+    add pit_write_hi_byte_next, [rb + channel], [ip + 3]
+    add 0, 0, [0]
 
-    jz  0, mode_command_write_bad_mode
+    # Mode 0: output low, stop; mode >0: output high, stop
+    add pit_output, [rb + channel], [ip + 1]
+    add [0], 0, [rb + orig_output]
+    add pit_output, [rb + channel], [ip + 3]
+    lt  0, [rb + mode], [0]
+    add pit_running, [rb + channel], [ip + 3]
+    add 0, 0, [0]
 
-mode_command_write_supported_mode:
-    # Save the operating mode
+    # Reset the latch
+    add pit_latch_lo, [rb + channel], [ip + 3]
+    add -1, 0, [0]
+    add pit_latch_hi, [rb + channel], [ip + 3]
+    add -1, 0, [0]
+
+    # Save the access mode and operating mode
+    add pit_access, [rb + channel], [ip + 3]
+    add [rb + access], 0, [0]
+
     add pit_mode, [rb + channel], [ip + 3]
     add [rb + mode], 0, [0]
 
-    # Reset the channel to initial state, which depends on mode
-    # TODO make sure everything is reset
-    add pit_hi_byte_next, [rb + channel], [ip + 3]
-    add 0, 0, [0]
+    # If output goes hi from lo, trigger INT0 for channel 0
+    jnz [rb + channel], mode_command_write_after_int0
 
-    # Read the access mode
-    add [rb + value_bits], 5, [ip + 1]
-    add [0], 0, [rb + access]
-    mul [rb + access], 2, [rb + access]
-    add [rb + value_bits], 4, [ip + 1]
-    add [0], [rb + access], [rb + access]
+    add pit_output, [rb + channel], [ip + 1]
+    eq  [0], 0, [rb + tmp]
+    add [rb + tmp], [rb + orig_output], [rb + tmp]
+    jnz [rb + tmp], mode_command_write_after_int0
 
-    # In latch access mode, save current counter value to the latch
-    jnz [rb + access], mode_command_write_after_latch
+    # TODO trigger INT0 here (probably delay after instruction finished?)
 
-    add pit_value_lo, [rb + channel], [ip + 5]
-    add pit_latch_lo, [rb + channel], [ip + 3]
-    add [0], 0, [0]
-
-    add pit_value_hi, [rb + channel], [ip + 5]
-    add pit_latch_hi, [rb + channel], [ip + 3]
-    add [0], 0, [0]
-
-mode_command_write_after_latch:
-    # Save the access mode
-    add pit_access, [rb + channel], [ip + 3]
-    add [rb + access], 0, [0]
+mode_command_write_after_int0:
 
     # Log parsed values
     out ' '
@@ -302,11 +356,28 @@ mode_command_write_after_latch:
     arb -3
     call print_num_radix
 
+    jz  0, mode_command_write_done
+
+mode_command_write_latch_command:
+    # Don't re-latch an already latched value
+    add pit_value_lo, [rb + channel], [ip + 1]
+    eq  [0], -1, [rb + tmp]
+    jnz [rb + tmp], mode_command_write_done
+
+    # Latch the current value
+    add pit_value_lo, [rb + channel], [ip + 5]
+    add pit_latch_lo, [rb + channel], [ip + 3]
+    add [0], 0, [0]
+
+    add pit_value_hi, [rb + channel], [ip + 5]
+    add pit_latch_hi, [rb + channel], [ip + 3]
+    add [0], 0, [0]
+
 mode_command_write_done:
     # Line end after the log
     out 10
 
-    arb 5
+    arb 6
     ret 2
 
 mode_command_write_bcd:
@@ -321,33 +392,25 @@ mode_command_write_read_back:
     arb -1
     call report_error
 
-mode_command_write_bad_mode:
-    out 10
-    add mode_command_write_bad_mode_error, 0, [rb - 1]
-    arb -1
-    call report_error
-
 mode_command_write_message:
     db  "PIT WR: MC ", 0
 mode_command_write_bcd_error:
     db  "PIT WR: MC Error, BCD mode is not supported", 0
 mode_command_write_read_back_error:
     db  "PIT WR: MC Error, read-back ", "command is not supported", 0
-mode_command_write_bad_mode_error:
-    db  "PIT WR: MC Error, ", "operating mode is not supported", 0
 .ENDFRAME
 
 ##########
-.FRAME addr, value; channel, tmp
+.FRAME addr, value; channel, position, reload_start, reload_stop, mode, tmp
     # Function with multiple entry points
 
 channel_0_write:
-    arb -2
+    arb -6
     add 0, 0, [rb + channel]
     jz  0, channel_write
 
 channel_2_write:
-    arb -2
+    arb -6
     add 2, 0, [rb + channel]
 
 channel_write:
@@ -370,33 +433,109 @@ channel_write:
 
     out 10
 
-    # Mode 0:
-    #  - when mode set: output low, stop
-    #  - when reload start: output low, stop
-    #  - when reload done: output low, set value to reload, run (if gate)
-    #  - when dec from 1 to 0: output high, keep run (if gate)
+    # Decide what to return based on access mode
+    add channel_write_table, [pit_access_ch0], [ip + 2]
+    jz  0, [0]
 
-    # Mode 1, same as mode 0 except:
-    #  - when reload done: do nothing
-    #  - when gate lo->hi: output low, set value to reload, run (if gate)
+channel_write_table:
+    db  channel_write_done
+    db  channel_write_lo
+    db  channel_write_hi
+    db  channel_write_lo_hi
 
-    # Mode 2:
-    #  - when mode set: output high, stop
-    #  - when reload done: if stopped only: set value to reload, run (if gate)
-    #  - when dec from 2 to 1: output pulse low, set value to reload, keep run (if gate)
-    #  - when gate hi->lo: output high, stop
-    #  - when gate lo->hi: set value to reload, run (if gate)
+channel_write_lo:
+    # Write lo byte to the value
+    add pit_reload_lo, [rb + channel], [ip + 3]
+    add [rb + value], 0, [0]
 
-    # Mode 3, same as mode 3 except:
-    #  - decrement by 2 instead of 1
-    #  - mode 2 output change flips a flip-flop, real output comes from the flip-flop
-    #  - when reload from 2 to 1 -> from 2 to 0
-    #  - when setting value from reload, mask off the 0 bit (not the exact behavior, but close enough)
-    #    or maybe tweak the condition - when value changes from 2 or 1 (to 0 or -1) 
+    add 0, 0, [rb + reload_start]
+    add 0, 0, [rb + reload_stop]
 
-    # Mode 4, 5: similar to 0, 2; TODO
+    jz  0, channel_write_handle_reload
 
-    arb 2
+channel_write_hi:
+    # Write hi byte to the value
+    add pit_reload_hi, [rb + channel], [ip + 3]
+    add [rb + value], 0, [0]
+
+    add 0, 0, [rb + reload_start]
+    add 0, 0, [rb + reload_stop]
+
+    jz  0, channel_write_handle_reload
+
+channel_write_lo_hi:
+    # Write lo/hi byte to the value
+    add pit_write_hi_byte_next, [rb + channel], [ip + 1]
+    add [0], [rb + channel], [rb + position]
+    eq  [pit_write_hi_byte_next], 0, [pit_write_hi_byte_next]
+
+    add pit_reload, [rb + position], [ip + 3]
+    add [rb + value], 0, [0]
+
+    eq  [pit_write_hi_byte_next], 0, [rb + reload_start]
+    eq  [pit_write_hi_byte_next], 1, [rb + reload_stop]
+
+channel_write_handle_reload:
+    add pit_mode, [rb + channel], [ip + 1]
+    add [0], 0, [rb + mode]
+
+    # React to the reload start, if it happened
+    jnz [rb + reload_start], channel_write_handle_reload_stop
+
+    # Is it mode 0?
+    jnz [rb + mode], channel_write_handle_reload_after_output_low
+
+    # Set output low for mode 0
+    add pit_output, [rb + channel], [ip + 3]
+    add 0, 0, [0]
+
+channel_write_handle_reload_after_output_low:
+    # Is it mode 0 and 4?
+    jz  [rb + mode], channel_write_handle_reload_timer
+    eq  [rb + mode], 4, [rb + tmp]
+    jnz [rb + tmp], channel_write_handle_reload_timer
+
+    jz  0, channel_write_handle_reload_stop
+
+channel_write_handle_reload_timer:
+    # Stop the timer for mode 0 and 4
+    add pit_running, [rb + channel], [ip + 3]
+    add 0, 0, [0]
+
+channel_write_handle_reload_stop:
+    # React to the reload stop, if it happened
+    jnz [rb + reload_start], channel_write_done
+
+    # Is it mode 0, 4; or stopped in mode 2, 3?
+    jz  [rb + mode], channel_write_handle_reload_update_value
+    eq  [rb + mode], 4, [rb + tmp]
+    jnz [rb + tmp], channel_write_handle_reload_update_value
+
+    add pit_running, [rb + channel], [ip + 1]
+    jnz [0], channel_write_done
+
+    eq  [rb + mode], 2, [rb + tmp]
+    jnz [rb + tmp], channel_write_handle_reload_update_value
+    eq  [rb + mode], 3, [rb + tmp]
+    jnz [rb + tmp], channel_write_handle_reload_update_value
+
+    jz  0, channel_write_done
+
+channel_write_handle_reload_update_value:
+    # Yes, set reload to value, start the timer
+    add pit_reload_lo, [rb + channel], [ip + 5]
+    add pit_value_lo, [rb + channel], [ip + 3]
+    add [0], 0, [0]
+
+    add pit_reload_hi, [rb + channel], [ip + 5]
+    add pit_value_hi, [rb + channel], [ip + 3]
+    add [0], 0, [0]
+
+    add pit_running, [rb + channel], [ip + 3]
+    add 1, 0, [0]
+
+channel_write_done:
+    arb 6
     ret 2
 
 channel_write_message:
@@ -404,17 +543,17 @@ channel_write_message:
 .ENDFRAME
 
 ##########
-.FRAME port; value, channel, tmp        # returns value
+.FRAME port; value, channel, position, tmp                  # returns value
     # Function with multiple entry points
 
 channel_0_read:
-    arb -3
+    arb -4
     add 0, 0, [rb + channel]
 
     jz  0, channel_read
 
 channel_2_read:
-    arb -3
+    arb -4
     add 2, 0, [rb + channel]
 
 channel_read:
@@ -433,42 +572,68 @@ channel_read:
     jz  0, [0]
 
 channel_read_table:
-    db  channel_read_latch
+    db  channel_read_invalid_mode
     db  channel_read_lo
     db  channel_read_hi
     db  channel_read_lo_hi
 
-channel_read_latch:
-    # Read lo/hi byte from the latch
-    add pit_hi_byte_next, [rb + channel], [ip + 1]
-    add [0], [rb + channel], [rb + tmp]
-
-    add pit_latch, [rb + tmp], [ip + 1]
-    add [0], 0, [rb + value]
-
-    jz  0, channel_read_done
+channel_read_invalid_mode:
+    # This can only happen before the counter is used the first time
+    add 0xff, 0, [rb + value]
+    jz  0, channel_read_clear_latch
 
 channel_read_lo:
-    # Read lo byte from the value
+    # Read lo byte from the latch/value
     add pit_latch_lo, [rb + channel], [ip + 1]
+    add [0], 0, [rb + value]
+
+    eq  [rb + value], -1, [rb + tmp]
+    jz  [rb + tmp], channel_read_clear_latch
+
+    add pit_value_lo, [rb + channel], [ip + 1]
     add [0], 0, [rb + value]
 
     jz  0, channel_read_done
 
 channel_read_hi:
-    # Read hi byte from the value
+    # Read hi byte from the latch/value
     add pit_latch_hi, [rb + channel], [ip + 1]
+    add [0], 0, [rb + value]
+
+    eq  [rb + value], -1, [rb + tmp]
+    jz  [rb + tmp], channel_read_clear_latch
+
+    add pit_value_hi, [rb + channel], [ip + 1]
     add [0], 0, [rb + value]
 
     jz  0, channel_read_done
 
 channel_read_lo_hi:
-    # Read lo/hi byte from the value
-    add pit_hi_byte_next, [rb + channel], [ip + 1]
-    add [0], [rb + channel], [rb + tmp]
+    # Read lo/hi byte from the latch/value
+    add pit_read_hi_byte_next, [rb + channel], [ip + 1]
+    add [0], [rb + channel], [rb + position]
+    eq  [pit_read_hi_byte_next], 0, [pit_read_hi_byte_next]
 
-    add pit_value, [rb + tmp], [ip + 1]
+    add pit_latch, [rb + position], [ip + 1]
     add [0], 0, [rb + value]
+
+    eq  [rb + value], -1, [rb + tmp]
+    jz  [rb + tmp], channel_read_clear_latch_if_lo_byte_next
+
+    add pit_value, [rb + position], [ip + 1]
+    add [0], 0, [rb + value]
+
+    jz  0, channel_read_done
+
+channel_read_clear_latch_if_lo_byte_next:
+    # Only reset the latch after reading the hi byte
+    jz  [pit_read_hi_byte_next], channel_read_done
+
+channel_read_clear_latch:
+    add pit_latch_lo, [rb + channel], [ip + 3]
+    add -1, 0, [rb + value]
+    add pit_latch_hi, [rb + channel], [ip + 3]
+    add -1, 0, [rb + value]
 
 channel_read_done:
     # Finish the log message
@@ -482,7 +647,7 @@ channel_read_done:
 
     out 10
 
-    arb 3
+    arb 4
     ret 1
 
 channel_read_message:
@@ -490,3 +655,30 @@ channel_read_message:
 .ENDFRAME
 
 .EOF
+
+# TODO
+#
+# Mode 0:
+#  - when dec from 1 to 0: output high, keep run (if gate)
+#
+# Mode 1:
+#  - when gate lo->hi: output low, set value to reload, run (if gate)
+#  - when dec from 1 to 0: output high, keep run (if gate)
+#
+# Mode 2:
+#  - when dec from 2 to 1: output pulse low, set value to reload, keep run (if gate)
+#  - when gate hi->lo: output high (which it normally is anyway), stop
+#  - when gate lo->hi: set value to reload, run (if gate)
+#
+# Mode 3, same as mode 2 except:
+#  - decrement by 2 instead of 1
+#  - when dec from 2 to 1 -> dec from 2 to 0
+#  - when setting value from reload, handle odd/even by checking when value changes from 2 or 1 (to 0 or -1)
+#  - mode 2 output changes a flip-flop, real mode 3 output comes from the flip-flop
+#
+# Mode 4:
+#  - when dec from 1 to 0: output pulse low, keep run (if gate)
+#
+# Mode 5, same as mode 4 except:
+#  - when dec from 1 to 0: output pulse low, keep run (if gate)
+#  - when gate lo->hi: set value to reload, run (if gate)
