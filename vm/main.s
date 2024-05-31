@@ -45,7 +45,7 @@ stack:
 
 # TODO
 
-PIT 8253 pit_ctl_reg pit_ch0_reg pit_ch1_reg pit_ch2_reg pit_ctl_reg
+PIT 8253 pit_ctl_reg pit_ch0_reg pit_ch1_reg pit_ch2_reg
 nmi_mask_reg
 ppi_cwd_reg
 DMAC (8237) dmac_ch0_count_reg
