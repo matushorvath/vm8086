@@ -13,6 +13,9 @@
 # From pit_8253.s
 .IMPORT init_pit_8253
 
+# From ppi_8255a.s
+.IMPORT init_ppi_8255a
+
 ##########
 # Entry point
     arb stack
@@ -29,6 +32,7 @@ main:
 .FRAME
     call init_binary
     call init_pit_8253
+    call init_ppi_8255a
     call init_cga
     call init_ports
 

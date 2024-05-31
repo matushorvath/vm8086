@@ -60,7 +60,27 @@ https://www.seasip.info/VintagePC/cga.html
 https://en.wikipedia.org/wiki/ANSI_escape_code
 https://www.lihaoyi.com/post/BuildyourownCommandLinewithANSIescapecodes.html
 
-PIT 8253
-========
+PIT Programmable Interval Timer 8253
+====================================
 
 https://wiki.osdev.org/Programmable_Interval_Timer
+
+PPI Programmable Peripheral Interface 8255
+==========================================
+
+https://www.geeksforgeeks.org/programmable-peripheral-interface-8255/
+https://www.renesas.com/us/en/document/dst/82c55a-datasheet
+http://aturing.umcs.maine.edu/~meadow/courses/cos335/Intel8255A.pdf
+https://www.learn-c.com/8255.pdf
+
+ppi_pa_reg 60h: 8255 PPI port A
+read keyboard data
+
+ppi_pb_reg 61h: 8255 PPI port B
+write
+
+ppi_pc_reg 62h: 8255 PPI port C
+read
+
+ppi_cwd_reg	63h: 8255 PPI control word register
+0b10011001

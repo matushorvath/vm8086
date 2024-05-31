@@ -25,4 +25,11 @@ pit_channel:
 pit_trigger_int0:
     db  1
 
+# Dummy gate that is always on
+pit_gate:
+    db  1
+
+pit_output:
+    db  0
+
 .EOF

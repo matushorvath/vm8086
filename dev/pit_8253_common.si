@@ -653,8 +653,6 @@ pit_latch_hi:
 
 pit_running:
     db  0
-pit_output:
-    db  0
 
 # In 16-bit access mode, is the next byte to be accessed hi or low?
 pit_read_hi_byte_next:
@@ -667,8 +665,5 @@ pit_decrement:
     db  -1
 pit_target_lo:
     db  0
-
-pit_gate:
-    db  1
 
 .EOI
