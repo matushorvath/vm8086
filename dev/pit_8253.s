@@ -88,8 +88,16 @@
 
 # TODO
 #  - IRQ0 is generated when channel 0 transitions low to high
-#  - only run channel 2 if gate is enabled (port 0x63 bit 0)
 #  - mode 3 output comes from the flip-flop
+#  - once we have macros, we should handle two channels using macros, not using copy-paste
+
+# TODO gate handling
+# mode 1 when gate lo->hi: output low, set value to reload, run (if gate)
+# mode 2 when gate hi->lo: output high (which it normally is anyway), stop
+#        when gate lo->hi: set value to reload, run (if gate)
+# mode 3 same as mode 2 except:
+#        mode 2 output changes a flip-flop, real mode 3 output comes from the flip-flop
+# mode 5 when gate lo->hi: set value to reload, run (if gate)
 
 ##########
 pit_ports:
@@ -116,109 +124,64 @@ config_vm_callback:
 
 ##########
 pit_8253_vm_callback:
-.FRAME continue                         # returns continue
-    arb -1
+.FRAME continue, tmp                         # returns continue
+    arb -X
 
     add 1, 0, [rb + continue]
 
-    # TODO decrement counters
+    # Is channel 0 running?
+    jz  [pit_running_ch0], pit_8253_vm_callback_after_ch0
 
-    arb 1
+    add [pit_output_ch0], 0, [rb + orig_output]
+
+    # Decrement channel 0
+    add [pit_value_lo_ch0], [pit_decrement_ch0], [pit_value_lo_ch0]
+
+    lt  [pit_value_lo_ch0], 0, [rb + tmp]
+    jz  [rb + tmp], pit_8253_vm_callback_after_ch0
+
+    add [pit_value_lo_ch0], 0x100, [pit_value_lo_ch0]
+    add [pit_value_hi_ch0], -1, [pit_value_hi_ch0]
+
+    lt  [pit_value_hi_ch0], 0, [rb + tmp]
+    jz  [rb + tmp], pit_8253_vm_callback_after_ch0
+
+    add [pit_value_hi_ch0], 0x100, [pit_value_lo_ch0]
+
+    # Check if we reached the target value
+    jnz [pit_value_hi_ch0], pit_8253_vm_callback_after_ch0
+    eq  [pit_value_lo_ch0], [pit_target_lo_ch0], [rb + tmp]
+    jz  [rb + tmp], pit_8253_vm_callback_after_ch0
+
+    # Target reached; set output high
+    add 1, 0, [pit_output_ch0]
+
+    # Is this mode 2 or 3?
+    eq  [pit_mode_ch0], 2, [rb + tmp]                       # [0, 1, 2, 3, 4, 5] -> [0, 0, 1, 0, 0, 0]
+    add [pit_mode_ch0], [rb + tmp], [rb + tmp]              # [0, 1, 2, 3, 4, 5] + [0, 0, 1, 0, 0, 0] -> [0, 1, 3, 3, 4, 5]
+    eq  [rb + tmp], 3, [rb + tmp]
+    jz  [rb + tmp], pit_8253_vm_callback_after_reload_ch0
+
+    # Reload value
+    add [pit_reload_lo_ch0], 0, [pit_value_lo_ch0]
+    add [pit_reload_hi_ch0], 0, [pit_value_hi_ch0]
+
+pit_8253_vm_callback_after_reload_ch0:
+    # In mode 0-1, INT0 if orig_output was low; in mode >1, INT0 always
+    jz  [pit_mode_ch0], pit_8253_vm_callback_after_ch0
+    eq  [pit_mode_ch0], 1, [rb + tmp]
+    jnz [rb + tmp], pit_8253_vm_callback_after_ch0
+
+    # TODO trigger INT0 here (probably delay after instruction finished?)
+
+pit_8253_vm_callback_after_ch0:
+
+    # TODO same handling for ch2
+    # TODO only run channel 2 if gate is enabled (port 0x63 bit 0)
+
+    arb 2
     ret 0
 .ENDFRAME
-
-##########
-
-# The order of these variables is important. We use pointer arithmetics to access them, by adding
-# channel number to a base pointer. Because of this, each pair of ch0 and ch2 variables needs to
-# be exactly 2 bytes apart.
-#
-# access mode = pit_access + channel
-# Channel 0: = pit_access + 0 = pit_access_ch0
-# Channel 2: = pit_access + 2 = pit_access_ch2
-#
-# The order of lo/hi bytes is also important, we use pointer arithmetics with pit_read_hi_byte_next
-# to determine whether to access the lo or hi byte of a value.
-#
-# channel value = pit_value + channel + [pit_read_hi_byte_next + channel]
-# Channel 0, access lo: pit_value + 0 + [pit_read_hi_byte_next + 0]
-#     = pit_value + [pit_read_hi_byte_next_ch0] = pit_value + 0 = pit_value_lo_ch0
-# Channel 0, access hi: pit_value + 0 + [pit_read_hi_byte_next + 0]
-#     = pit_value + [pit_read_hi_byte_next_ch0] = pit_value + 1 = pit_value_hi_ch0
-# Channel 2, access lo: pit_value + 2 + [pit_read_hi_byte_next + 2]
-#     = pit_value + 2 + [pit_read_hi_byte_next_ch2] = pit_value + 2 + 0 = pit_value_lo_ch2
-# Channel 2, access hi: pit_value + 0 + [pit_read_hi_byte_next + 2]
-#     = pit_value + 2 + [pit_read_hi_byte_next_ch2] = pit_value + 2 + 1 = pit_value_hi_ch2
-
-pit_mode:
-pit_mode_ch0:
-    db  0
-pit_access:
-pit_access_ch0:
-    db  0
-pit_mode_ch2:
-    db  0
-pit_access_ch2:
-    db  0
-
-pit_reload:
-pit_reload_lo:
-pit_reload_lo_ch0:
-    db  0
-pit_reload_hi:
-pit_reload_hi_ch0:
-    db  0
-pit_reload_lo_ch2:
-    db  0
-pit_reload_hi_ch2:
-    db  0
-
-pit_value:
-pit_value_lo:
-pit_value_lo_ch0:
-    db  0
-pit_value_hi:
-pit_value_hi_ch0:
-    db  0
-pit_value_lo_ch2:
-    db  0
-pit_value_hi_ch2:
-    db  0
-
-pit_latch:
-pit_latch_lo:
-pit_latch_lo_ch0:
-    db  0
-pit_latch_hi:
-pit_latch_hi_ch0:
-    db  0
-pit_latch_lo_ch2:
-    db  0
-pit_latch_hi_ch2:
-    db  0
-
-pit_running:
-pit_running_ch0:
-    db  0
-pit_output:
-pit_output_ch0:
-    db  0
-pit_running_ch2:
-    db  0
-pit_output_ch2:
-    db  0
-
-# In 16-bit access mode, is the next byte to be accessed hi or low?
-pit_read_hi_byte_next:
-pit_read_hi_byte_next_ch0:
-    db  0
-pit_write_hi_byte_next:
-pit_write_hi_byte_next_ch0:
-    db  0
-pit_read_hi_byte_next_ch2:
-    db  0
-pit_write_hi_byte_next_ch2:
-    db  0
 
 ##########
 mode_command_write:
@@ -291,6 +254,15 @@ mode_command_write_after_aliases:
     add 0, 0, [0]
     add pit_write_hi_byte_next, [rb + channel], [ip + 3]
     add 0, 0, [0]
+
+    # Precalculate some values we will use in vm callback
+    eq  [rb + mode], 3, [rb + tmp]
+    add [rb + tmp], 1, [rb + tmp]
+    add pit_decrement, [rb + channel], [ip + 3]
+    mul [rb + tmp], -1, [0]
+
+    add pit_target_lo, [rb + channel], [ip + 3]
+    eq  [rb + mode], 2, [0]
 
     # Mode 0: output low, stop; mode >0: output high, stop
     add pit_output, [rb + channel], [ip + 1]
@@ -401,16 +373,16 @@ mode_command_write_read_back_error:
 .ENDFRAME
 
 ##########
-.FRAME addr, value; channel, position, reload_start, reload_stop, mode, tmp
+.FRAME addr, value; channel, position, reload_start, reload_stop, hi_byte_next, mode, tmp
     # Function with multiple entry points
 
 channel_0_write:
-    arb -6
+    arb -7
     add 0, 0, [rb + channel]
     jz  0, channel_write
 
 channel_2_write:
-    arb -6
+    arb -7
     add 2, 0, [rb + channel]
 
 channel_write:
@@ -433,7 +405,7 @@ channel_write:
 
     out 10
 
-    # Decide what to return based on access mode
+    # Decide what to write based on access mode
     add channel_write_table, [pit_access_ch0], [ip + 2]
     jz  0, [0]
 
@@ -444,12 +416,20 @@ channel_write_table:
     db  channel_write_lo_hi
 
 channel_write_lo:
+    # Zero the least significant bit of value in mode 3
+    eq  [rb + mode], 3, [rb + tmp]
+    jz  [rb + tmp], channel_write_lo_skip_mod2
+    add bits, [rb + value], [ip + 1]
+    jz  [0], channel_write_lo_skip_mod2
+    add [rb + value], -1, [rb + value]
+
+channel_write_lo_skip_mod2:
     # Write lo byte to the value
     add pit_reload_lo, [rb + channel], [ip + 3]
     add [rb + value], 0, [0]
 
-    add 0, 0, [rb + reload_start]
-    add 0, 0, [rb + reload_stop]
+    add 1, 0, [rb + reload_start]
+    add 1, 0, [rb + reload_stop]
 
     jz  0, channel_write_handle_reload
 
@@ -458,29 +438,45 @@ channel_write_hi:
     add pit_reload_hi, [rb + channel], [ip + 3]
     add [rb + value], 0, [0]
 
-    add 0, 0, [rb + reload_start]
-    add 0, 0, [rb + reload_stop]
+    add 1, 0, [rb + reload_start]
+    add 1, 0, [rb + reload_stop]
 
     jz  0, channel_write_handle_reload
 
 channel_write_lo_hi:
-    # Write lo/hi byte to the value
+    # Read pit_write_hi_byte_next
     add pit_write_hi_byte_next, [rb + channel], [ip + 1]
-    add [0], [rb + channel], [rb + position]
-    eq  [pit_write_hi_byte_next], 0, [pit_write_hi_byte_next]
+    add [0], 0, [rb + hi_byte_next]
+
+    # Zero the least significant bit of lo value in mode 3
+    jnz [rb + hi_byte_next], channel_write_lo_hi_skip_mod2
+    eq  [rb + mode], 3, [rb + tmp]
+    jz  [rb + tmp], channel_write_lo_hi_skip_mod2
+    add bits, [rb + value], [ip + 1]
+    jz  [0], channel_write_lo_hi_skip_mod2
+    add [rb + value], -1, [rb + value]
+
+channel_write_lo_hi_skip_mod2:
+    # Write lo/hi byte to the value
+    add [rb + hi_byte_next], [rb + channel], [rb + position]
+    eq  [rb + hi_byte_next], 0, [pit_write_hi_byte_next]
 
     add pit_reload, [rb + position], [ip + 3]
     add [rb + value], 0, [0]
 
-    eq  [pit_write_hi_byte_next], 0, [rb + reload_start]
-    eq  [pit_write_hi_byte_next], 1, [rb + reload_stop]
+    eq  [rb + hi_byte_next], 0, [rb + reload_start]
+    eq  [rb + hi_byte_next], 1, [rb + reload_stop]
+
+    # Negate pit_write_hi_byte_next
+    add pit_write_hi_byte_next, [rb + channel], [ip + 3]
+    eq  [rb + hi_byte_next], 0, [0]
 
 channel_write_handle_reload:
     add pit_mode, [rb + channel], [ip + 1]
     add [0], 0, [rb + mode]
 
     # React to the reload start, if it happened
-    jnz [rb + reload_start], channel_write_handle_reload_stop
+    jz  [rb + reload_start], channel_write_handle_reload_stop
 
     # Is it mode 0?
     jnz [rb + mode], channel_write_handle_reload_after_output_low
@@ -504,7 +500,7 @@ channel_write_handle_reload_timer:
 
 channel_write_handle_reload_stop:
     # React to the reload stop, if it happened
-    jnz [rb + reload_start], channel_write_done
+    jz  [rb + reload_stop], channel_write_done
 
     # Is it mode 0, 4; or stopped in mode 2, 3?
     jz  [rb + mode], channel_write_handle_reload_update_value
@@ -522,6 +518,7 @@ channel_write_handle_reload_stop:
     jz  0, channel_write_done
 
 channel_write_handle_reload_update_value:
+    # TODO I don't think we always reload on write
     # Yes, set reload to value, start the timer
     add pit_reload_lo, [rb + channel], [ip + 5]
     add pit_value_lo, [rb + channel], [ip + 3]
@@ -567,7 +564,7 @@ channel_read:
     add '0', [rb + channel], [rb + tmp]
     out [rb + tmp]
 
-    # Decide what to return based on access mode
+    # Decide what to read based on access mode
     add channel_read_table, [pit_access_ch0], [ip + 2]
     jz  0, [0]
 
@@ -654,31 +651,109 @@ channel_read_message:
     db  "PIT RD: ", 0
 .ENDFRAME
 
-.EOF
+##########
 
-# TODO
+# The order of these variables is important. We use pointer arithmetics to access them, by adding
+# channel number to a base pointer. Because of this, each pair of ch0 and ch2 variables needs to
+# be exactly 2 bytes apart.
 #
-# Mode 0:
-#  - when dec from 1 to 0: output high, keep run (if gate)
+# access mode = pit_access + channel
+# Channel 0: = pit_access + 0 = pit_access_ch0
+# Channel 2: = pit_access + 2 = pit_access_ch2
 #
-# Mode 1:
-#  - when gate lo->hi: output low, set value to reload, run (if gate)
-#  - when dec from 1 to 0: output high, keep run (if gate)
+# The order of lo/hi bytes is also important, we use pointer arithmetics with pit_read_hi_byte_next
+# to determine whether to access the lo or hi byte of a value.
 #
-# Mode 2:
-#  - when dec from 2 to 1: output pulse low, set value to reload, keep run (if gate)
-#  - when gate hi->lo: output high (which it normally is anyway), stop
-#  - when gate lo->hi: set value to reload, run (if gate)
-#
-# Mode 3, same as mode 2 except:
-#  - decrement by 2 instead of 1
-#  - when dec from 2 to 1 -> dec from 2 to 0
-#  - when setting value from reload, handle odd/even by checking when value changes from 2 or 1 (to 0 or -1)
-#  - mode 2 output changes a flip-flop, real mode 3 output comes from the flip-flop
-#
-# Mode 4:
-#  - when dec from 1 to 0: output pulse low, keep run (if gate)
-#
-# Mode 5, same as mode 4 except:
-#  - when dec from 1 to 0: output pulse low, keep run (if gate)
-#  - when gate lo->hi: set value to reload, run (if gate)
+# channel value = pit_value + channel + [pit_read_hi_byte_next + channel]
+# Channel 0, access lo: pit_value + 0 + [pit_read_hi_byte_next + 0]
+#     = pit_value + [pit_read_hi_byte_next_ch0] = pit_value + 0 = pit_value_lo_ch0
+# Channel 0, access hi: pit_value + 0 + [pit_read_hi_byte_next + 0]
+#     = pit_value + [pit_read_hi_byte_next_ch0] = pit_value + 1 = pit_value_hi_ch0
+# Channel 2, access lo: pit_value + 2 + [pit_read_hi_byte_next + 2]
+#     = pit_value + 2 + [pit_read_hi_byte_next_ch2] = pit_value + 2 + 0 = pit_value_lo_ch2
+# Channel 2, access hi: pit_value + 0 + [pit_read_hi_byte_next + 2]
+#     = pit_value + 2 + [pit_read_hi_byte_next_ch2] = pit_value + 2 + 1 = pit_value_hi_ch2
+
+pit_mode:
+pit_mode_ch0:
+    db  0
+pit_access:
+pit_access_ch0:
+    db  0
+pit_mode_ch2:
+    db  0
+pit_access_ch2:
+    db  0
+
+pit_reload:
+pit_reload_lo:
+pit_reload_lo_ch0:
+    db  0
+pit_reload_hi:
+pit_reload_hi_ch0:
+    db  0
+pit_reload_lo_ch2:
+    db  0
+pit_reload_hi_ch2:
+    db  0
+
+pit_value:
+pit_value_lo:
+pit_value_lo_ch0:
+    db  0
+pit_value_hi:
+pit_value_hi_ch0:
+    db  0
+pit_value_lo_ch2:
+    db  0
+pit_value_hi_ch2:
+    db  0
+
+pit_latch:
+pit_latch_lo:
+pit_latch_lo_ch0:
+    db  0
+pit_latch_hi:
+pit_latch_hi_ch0:
+    db  0
+pit_latch_lo_ch2:
+    db  0
+pit_latch_hi_ch2:
+    db  0
+
+pit_running:
+pit_running_ch0:
+    db  0
+pit_output:
+pit_output_ch0:
+    db  0
+pit_running_ch2:
+    db  0
+pit_output_ch2:
+    db  0
+
+# In 16-bit access mode, is the next byte to be accessed hi or low?
+pit_read_hi_byte_next:
+pit_read_hi_byte_next_ch0:
+    db  0
+pit_write_hi_byte_next:
+pit_write_hi_byte_next_ch0:
+    db  0
+pit_read_hi_byte_next_ch2:
+    db  0
+pit_write_hi_byte_next_ch2:
+    db  0
+
+# These values depend on mode, they are precalculated to speed up the vm callback
+pit_decrement:
+pit_decrement_ch0:
+    db  1
+pit_target_lo:
+pit_target_lo_ch0:
+    db  0
+pit_decrement_ch2:
+    db  1
+pit_target_lo_ch2:
+    db  0
+
+.EOF
