@@ -32,25 +32,29 @@ write_memory:
     add [rb + value], 0, [0]
 
     # Log the memory access
-    add write_memory_message, 0, [rb - 1]
-    arb -1
-    call print_str
+    # TODO remove
+#    add write_memory_message, 0, [rb - 1]
+#    arb -1
+#    call print_str
+#
+#    add [rb + addr], 0, [rb - 1]
+#    add 16, 0, [rb - 2]
+#    add 4, 0, [rb - 3]
+#    arb -3
+#    call print_num_radix
+#
+#    out ' '
+#
+#    add [rb + value], 0, [rb - 1]
+#    add 16, 0, [rb - 2]
+#    add 2, 0, [rb - 3]
+#    arb -3
+#    call print_num_radix
+#
+#    out ' '
+    out [rb + value]
 
-    add [rb + addr], 0, [rb - 1]
-    add 16, 0, [rb - 2]
-    add 4, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-
-    out ' '
-
-    add [rb + value], 0, [rb - 1]
-    add 16, 0, [rb - 2]
-    add 2, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-
-    out 10
+#    out 10
 
     arb 2
     ret 2
