@@ -36,8 +36,6 @@
 .IMPORT execute_cmp_b
 .IMPORT execute_cmp_w
 
-# TODO 8086 check what REPNZ does with MOVS and other instructions; probably works same as REP/REPZ?
-
 ##########
 .FRAME operation, do_si, do_di, index_delta, check_zf, src_seg, src_off, dst_seg, dst_off, tmp
     # Function with multiple entry points

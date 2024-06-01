@@ -5,11 +5,6 @@
 # From state.o
 .IMPORT mem
 
-# From libxib.a
-# TODO remove
-.IMPORT print_num_radix
-.IMPORT print_str
-
 ##########
 .FRAME addr, value; write_through, tmp
     # Function with multiple entry points
@@ -33,28 +28,7 @@ write_memory:
 
     # Log the memory access
     # TODO remove
-#    add write_memory_message, 0, [rb - 1]
-#    arb -1
-#    call print_str
-#
-#    add [rb + addr], 0, [rb - 1]
-#    add 16, 0, [rb - 2]
-#    add 4, 0, [rb - 3]
-#    arb -3
-#    call print_num_radix
-#
-#    out ' '
-#
-#    add [rb + value], 0, [rb - 1]
-#    add 16, 0, [rb - 2]
-#    add 2, 0, [rb - 3]
-#    arb -3
-#    call print_num_radix
-#
-#    out ' '
     out [rb + value]
-
-#    out 10
 
     arb 2
     ret 2

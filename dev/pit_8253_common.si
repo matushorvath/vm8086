@@ -56,10 +56,8 @@
 #  - when dec from 1 to 0: output pulse low, keep run (if gate)
 #  - when gate lo->hi: set value to reload, run (if gate)
 
-# TODO
-#  - IRQ0 is generated when channel 0 transitions low to high
-#  - mode 3 output comes from the flip-flop
-#  - once we have macros, we should handle two channels using macros, not using copy-paste
+# TODO IRQ0 is generated when channel 0 transitions low to high
+# TODO 8253 mode 3 output should come from the flip-flop
 
 ##########
 pit_vm_callback_common:
@@ -206,9 +204,9 @@ pit_mode_command_write_common_after_aliases:
     add -1, 0, [pit_latch_hi]
 
     # TODO remove log
-    add [rb + value], 0, [rb - 1]
-    arb -1
-    call mode_command_write_log
+    #add [rb + value], 0, [rb - 1]
+    #arb -1
+    #call mode_command_write_log
 
     # Do we trigger INT0 for this channel?
     jz  [pit_trigger_int0], pit_mode_command_write_common_done
@@ -223,7 +221,7 @@ pit_mode_command_write_common_after_aliases:
     jz  0, pit_mode_command_write_common_done
 
     # TODO remove debug
-    call pit_status_log
+    #call pit_status_log
 
 pit_mode_command_write_common_latch:
     # Don't re-latch an already latched value
@@ -435,8 +433,6 @@ pit_data_read_common_done:
 pit_set_gate_common:
 .FRAME value;
     # TODO gate handling
-    #
-    # control gate using port 0x61 bit 0 (ppi_pb_reg)
     #
     # mode 1 when gate lo->hi: output low, set value to reload, run (if gate)
     # mode 2 when gate hi->lo: output high (which it normally is anyway), stop

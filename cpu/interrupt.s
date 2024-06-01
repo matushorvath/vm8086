@@ -113,7 +113,7 @@ interrupt:
     call read_b
     add [rb - 3], 0, [reg_ip + 1]
 
-    # TODO raise #DF (INT 8) for double fault, reset for triple fault
+    # TODO reset/halt for triple fault
 
     arb 1
     ret 1
