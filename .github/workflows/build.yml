@@ -38,6 +38,12 @@ jobs:
           CC: gcc
         run: make build-vm
 
+      - name: Checkout 8088_bios
+        uses: actions/checkout@v4
+        with:
+          repository: skiselev/8088_bios
+          path: 8088_bios
+
       - name: Install nasm
         run: |
           if [ "$RUNNER_OS" == "Linux" ]; then

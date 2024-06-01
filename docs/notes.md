@@ -4,22 +4,6 @@ Decoding
 Instruction set 2-51 p70  
 Instruction encoding 4-22 p259  
 
-Memory
-======
-
-```
-00H through 7FH (128 bytes) interrupt (system + reserved)
-+80H - 3FFH (available)
-1k memory total, 256 interrupts
-00, 01: IP offset
-02, 03: CS base address
-```
-
-```
-IO:
-F8H through FFH (eight of the 64k locations) in the I/O space are reserved by Intel Corporation for use by future Intel hardware
-```
-
 Possible Optimizations
 ======================
 
@@ -32,7 +16,7 @@ Possible Optimizations
        second_level_table, -1, -1   means split away the MOD, go through a second level table
   The second level table would allow its own args_fn to handle instructions with strange parameter count
 
-- Optimize physical address calculation (calc_seg_off_addr_*), it's very heavy and used a lot.
+- Optimize physical address calculation (calc_seg_off_addr_*), it's very heavy and used a lot. It's mostly heavy to handle corner cases (integer overflows).
 
 TODO
 ====
@@ -48,7 +32,6 @@ https://github.com/adriancable/8086tiny
 https://bochs.sourceforge.io/
 https://github.com/86Box/86Box
 
-
 Tests for 8086
 ==============
 
@@ -61,3 +44,43 @@ https://www.pcjs.org/software/pcx86/test/cpu/
 DAA behavior with AF=1
 https://draft.blogger.com/comment.g?blogID=6264947694886887540&postID=1529067761550380331&bpli=1&pli=1
 https://github.com/shirriff/DAA
+
+BIOS
+====
+
+https://github.com/skiselev/8088_bios.git
+https://glabios.org/
+
+CGA
+===
+
+http://nerdlypleasures.blogspot.com/2016/05/ibms-cga-hardware-explained.html?m=1
+https://www.seasip.info/VintagePC/cga.html
+
+https://en.wikipedia.org/wiki/ANSI_escape_code
+https://www.lihaoyi.com/post/BuildyourownCommandLinewithANSIescapecodes.html
+
+PIT Programmable Interval Timer 8253
+====================================
+
+https://wiki.osdev.org/Programmable_Interval_Timer
+
+PPI Programmable Peripheral Interface 8255
+==========================================
+
+https://www.geeksforgeeks.org/programmable-peripheral-interface-8255/
+https://www.renesas.com/us/en/document/dst/82c55a-datasheet
+http://aturing.umcs.maine.edu/~meadow/courses/cos335/Intel8255A.pdf
+https://www.learn-c.com/8255.pdf
+
+ppi_pa_reg 60h: 8255 PPI port A
+read keyboard data
+
+ppi_pb_reg 61h: 8255 PPI port B
+write
+
+ppi_pc_reg 62h: 8255 PPI port C
+read
+
+ppi_cwd_reg	63h: 8255 PPI control word register
+0b10011001

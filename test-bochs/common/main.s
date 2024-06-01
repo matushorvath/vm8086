@@ -1,5 +1,3 @@
-.EXPORT main
-
 # From devices.s
 .IMPORT register_devices
 
@@ -31,7 +29,7 @@ main:
 .ENDFRAME
 
 ##########
-    ds  50, 0
+    ds  100, 0
 stack:
 
 .EOF

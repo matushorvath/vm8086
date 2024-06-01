@@ -1,0 +1,669 @@
+# Common logic for PIT 8253 handling
+#
+# Instead of parametrizing this code to handle both channels 0 and 2, or copy-pasting it twice,
+# we keep it in this file that is included twice in pit_8253_ch0.s and pit_8253_ch2.s.
+
+# From error.s
+.IMPORT report_error
+
+# From obj/bits.s
+.IMPORT bits
+
+# From libxib.a
+# TODO remove
+.IMPORT print_num_radix
+.IMPORT print_str
+
+# Operating modes:
+#
+# Mode 0:
+#  - when mode set: output low, stop
+#  - when reload start: output low, stop
+#  - when reload done: set value to reload, run (if gate)
+#  - when dec from 1 to 0: output high, keep run (if gate)
+#
+# Mode 1:
+#  - when mode set: output high, stop
+#  - when reload start: do nothing
+#  - when reload done: do nothing
+#  - when gate lo->hi: output low, set value to reload, run (if gate)
+#  - when dec from 1 to 0: output high, keep run (if gate)
+#
+# Mode 2:
+#  - when mode set: output high, stop
+#  - when reload done: if stopped only: set value to reload, run (if gate)
+#  - when dec from 2 to 1: output pulse low, set value to reload, keep run (if gate)
+#  - when gate hi->lo: output high (which it normally is anyway), stop
+#  - when gate lo->hi: set value to reload, run (if gate)
+#
+# Mode 3, same as mode 2 except:
+#  - decrement by 2 instead of 1
+#  - mode 2 output change flips a flip-flop, real output comes from the flip-flop
+#  - when dec from 2 to 1 -> dec from 2 to 0
+#  - when setting value from reload, mask off the 0 bit (not the exact behavior, but close enough)
+#    or maybe tweak the condition - when value changes from 2 or 1 (to 0 or -1)
+#
+# Mode 4:
+#  - when mode set: output high, stop
+#  - when reload start: stop (not 100% right)
+#  - when reload done: set value to reload, run (if gate)
+#  - when dec from 1 to 0: output pulse low, keep run (if gate)
+#
+# Mode 5, same as mode 4 except:
+#  - when mode set: output high, stop
+#  - when reload start: do nothing
+#  - when reload done: do nothing
+#  - when dec from 1 to 0: output pulse low, keep run (if gate)
+#  - when gate lo->hi: set value to reload, run (if gate)
+
+# TODO
+#  - IRQ0 is generated when channel 0 transitions low to high
+#  - mode 3 output comes from the flip-flop
+#  - once we have macros, we should handle two channels using macros, not using copy-paste
+
+##########
+pit_vm_callback_common:
+.FRAME orig_output, tmp                         # returns continue
+    arb -2
+
+    # Is the channel running?
+    jz  [pit_running], pit_vm_callback_common_done
+    jz  [pit_gate], pit_vm_callback_common_done
+
+    add [pit_output], 0, [rb + orig_output]
+
+    # Decrement the value
+    add [pit_value_lo], [pit_decrement], [pit_value_lo]
+
+    lt  [pit_value_lo], 0, [rb + tmp]
+    jz  [rb + tmp], pit_vm_callback_common_after_dec
+
+    add [pit_value_lo], 0x100, [pit_value_lo]
+    add [pit_value_hi], -1, [pit_value_hi]
+
+    lt  [pit_value_hi], 0, [rb + tmp]
+    jz  [rb + tmp], pit_vm_callback_common_after_dec
+
+    add [pit_value_hi], 0x100, [pit_value_hi]
+
+pit_vm_callback_common_after_dec:
+    # Check if we reached the target value
+    jnz [pit_value_hi], pit_vm_callback_common_done
+    eq  [pit_value_lo], [pit_target_lo], [rb + tmp]
+    jz  [rb + tmp], pit_vm_callback_common_done
+
+    # Target reached; set output high
+    add 1, 0, [pit_output]
+
+    # Is this mode 2 or 3?
+    eq  [pit_mode], 2, [rb + tmp]                           # [0, 1, 2, 3, 4, 5] -> [0, 0, 1, 0, 0, 0]
+    add [pit_mode], [rb + tmp], [rb + tmp]                  # [0, 1, 2, 3, 4, 5] + [0, 0, 1, 0, 0, 0] -> [0, 1, 3, 3, 4, 5]
+    eq  [rb + tmp], 3, [rb + tmp]
+    jz  [rb + tmp], pit_vm_callback_common_after_reload
+
+    # Yes, reload value
+    add [pit_reload_lo], 0, [pit_value_lo]
+    add [pit_reload_hi], 0, [pit_value_hi]
+
+pit_vm_callback_common_after_reload:
+    # Do we trigger INT0 for this channel?
+    jz  [pit_trigger_int0], pit_vm_callback_common_done
+
+    # Is this mode other >=2? If yes, trigger INT0 always.
+    lt  [pit_mode], 2, [rb + tmp]
+    jz  [rb + tmp], pit_vm_callback_common_int0
+
+    # Mode 0-1, trigger INT0 only if output has changed
+    eq  [rb + orig_output], [pit_output], [rb + tmp]
+    jz  [rb + tmp], pit_vm_callback_common_done
+
+pit_vm_callback_common_int0:
+    # TODO trigger INT0 here (probably delay after instruction finished?)
+
+pit_vm_callback_common_done:
+#    # TODO remove debug
+#    out 'C'
+#    out 'B'
+#    out ' '
+#    out 'C'
+#    add '0', [pit_channel], [rb + tmp]
+#    out [rb + tmp]
+#
+#    out ' '
+#    mul [pit_value_hi], 0x100, [rb - 1]
+#    add [pit_value_lo], [rb - 1], [rb - 1]
+#    add 16, 0, [rb - 2]
+#    add 4, 0, [rb - 3]
+#    arb -3
+#    call print_num_radix
+#    out 10
+#
+#    call pit_status_log
+
+    arb 2
+    ret 0
+.ENDFRAME
+
+##########
+pit_mode_command_write_common:
+.FRAME value; value_bits, orig_output, tmp
+    arb -3
+
+    # Split value to components
+    mul [rb + value], 8, [rb + tmp]
+    add bits, [rb + tmp], [rb + value_bits]
+
+    # Check for BCD mode, which is not supported
+    add [rb + value_bits], 0, [ip + 1]
+    jnz [0], pit_mode_command_write_common_bcd
+
+    # Read the access mode
+    add [rb + value_bits], 5, [ip + 1]
+    add [0], 0, [rb + tmp]
+    mul [rb + tmp], 2, [rb + tmp]
+    add [rb + value_bits], 4, [ip + 1]
+    add [0], [rb + tmp], [rb + tmp]
+
+    # Handle latch command
+    jz  [rb + tmp], pit_mode_command_write_common_latch
+    add [rb + tmp], 0, [pit_access]
+
+    # Read the operating mode
+    add [rb + value_bits], 3, [ip + 1]
+    add [0], 0, [pit_mode]
+    mul [pit_mode], 2, [pit_mode]
+    add [rb + value_bits], 2, [ip + 1]
+    add [0], [pit_mode], [pit_mode]
+    mul [pit_mode], 2, [pit_mode]
+    add [rb + value_bits], 1, [ip + 1]
+    add [0], [pit_mode], [pit_mode]
+
+    # Modes 0b110 and 0b111 are aliases for 0b010 and 0b011
+    lt  [pit_mode], 0b110, [rb + tmp]
+    jnz [rb + tmp], pit_mode_command_write_common_after_aliases
+    add [pit_mode], -0b100, [pit_mode]
+
+pit_mode_command_write_common_after_aliases:
+    # Reset the channel to its initial state
+    add 0, 0, [pit_read_hi_byte_next]
+    add 0, 0, [pit_write_hi_byte_next]
+    add 0, 0, [pit_running]
+
+    # Target value is 1 in mode 2, 0 otherwise
+    eq  [pit_mode], 2, [pit_target_lo]
+
+    # Decrement by 2 in mode 3, by 1 otherwise
+    eq  [pit_mode], 3, [pit_decrement]
+    add [pit_decrement], 1, [pit_decrement]
+    mul [pit_decrement], -1, [pit_decrement]
+
+    # Save the output, then set output low in mode 0, high otherwise
+    add [pit_output], 0, [rb + orig_output]
+    lt  0, [pit_mode], [pit_output]
+
+    # Reset the latch
+    add -1, 0, [pit_latch_lo]
+    add -1, 0, [pit_latch_hi]
+
+    # TODO remove log
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call mode_command_write_log
+
+    # Do we trigger INT0 for this channel?
+    jz  [pit_trigger_int0], pit_mode_command_write_common_done
+
+    # If output goes hi from lo, trigger INT0
+    eq  [pit_output], 0, [rb + tmp]
+    add [rb + tmp], [rb + orig_output], [rb + tmp]
+    jnz [rb + tmp], pit_mode_command_write_common_done
+
+    # TODO trigger INT0 here (probably delay after instruction finished?)
+
+    jz  0, pit_mode_command_write_common_done
+
+    # TODO remove debug
+    call pit_status_log
+
+pit_mode_command_write_common_latch:
+    # Don't re-latch an already latched value
+    eq  [pit_value_lo], -1, [rb + tmp]
+    jnz [rb + tmp], pit_mode_command_write_common_done
+
+    add [pit_value_lo], 0, [pit_latch_lo]
+    add [pit_value_hi], 0, [pit_latch_hi]
+
+pit_mode_command_write_common_done:
+    arb 3
+    ret 1
+
+pit_mode_command_write_common_bcd:
+    add pit_mode_command_write_common_bcd_error, 0, [rb - 1]
+    arb -1
+    call report_error
+
+pit_mode_command_write_common_bcd_error:
+    db  "PIT WR: MC Error, BCD mode is not supported", 0
+.ENDFRAME
+
+##########
+pit_data_write_common:
+.FRAME addr, value; position, reload_start, reload_stop, tmp
+    arb -4
+
+    # TODO remove log
+    #add [rb + value], 0, [rb - 1]
+    #arb -1
+    #call pit_data_write_log
+
+    # Decide what to write based on access mode
+    add pit_data_write_common_table, [pit_access], [ip + 2]
+    jz  0, [0]
+
+pit_data_write_common_table:
+    db  pit_data_write_common_done
+    db  pit_data_write_common_lo
+    db  pit_data_write_common_hi
+    db  pit_data_write_common_lo_hi
+
+pit_data_write_common_lo:
+    # Store lo byte of the value
+    add [rb + value], 0, [pit_reload_lo]
+    add 0, 0, [pit_reload_hi]
+
+    # We both started and finished a reload
+    add 1, 0, [rb + reload_start]
+    add 1, 0, [rb + reload_stop]
+
+    jz  0, pit_data_write_common_handle_reload
+
+pit_data_write_common_hi:
+    # Store hi byte of the value
+    add 0, 0, [pit_reload_lo]
+    add [rb + value], 0, [pit_reload_hi]
+
+    # We both started and finished a reload
+    add 1, 0, [rb + reload_start]
+    add 1, 0, [rb + reload_stop]
+
+    jz  0, pit_data_write_common_handle_reload
+
+pit_data_write_common_lo_hi:
+    # Store lo/hi byte of the value
+    add pit_reload_w, [pit_write_hi_byte_next], [ip + 3]
+    add [rb + value], 0, [0]
+
+    # We wither started and finished a reload, depending on which byte was written
+    eq  [pit_write_hi_byte_next], 0, [rb + reload_start]
+    eq  [pit_write_hi_byte_next], 1, [rb + reload_stop]
+
+    # Negate pit_write_hi_byte_next
+    eq  [pit_write_hi_byte_next], 0, [pit_write_hi_byte_next]
+
+pit_data_write_common_handle_reload:
+    # Zero least significant bit of the reload value in mode 3
+    eq  [pit_mode], 3, [rb + tmp]
+    jz  [rb + tmp], pit_data_write_common_after_mod2
+    add bits, [pit_reload_lo], [ip + 1]
+    jz  [0], pit_data_write_common_after_mod2
+    add [pit_reload_lo], -1, [pit_reload_lo]
+
+pit_data_write_common_after_mod2:
+    # Did we start a reload?
+    jz  [rb + reload_start], pit_data_write_common_after_reload_start
+
+    # Set output low for mode 0
+    jnz [pit_mode], pit_data_write_common_after_output_low
+    add 0, 0, [pit_output]
+
+pit_data_write_common_after_output_low:
+    # Is this mode 0 or 4?
+    jz  [pit_mode], pit_data_write_common_stop_timer
+    eq  [pit_mode], 4, [rb + tmp]
+    jnz [rb + tmp], pit_data_write_common_stop_timer
+    jz  0, pit_data_write_common_after_reload_start
+
+pit_data_write_common_stop_timer:
+    # Yes, stop the timer
+    add 0, 0, [pit_running]
+
+pit_data_write_common_after_reload_start:
+    # Did we stop a reload?
+    jz  [rb + reload_stop], pit_data_write_common_done
+
+    # Is it mode 0, 4; or stopped in mode 2, 3?
+    jz  [pit_mode], pit_data_write_common_update_value
+    eq  [pit_mode], 4, [rb + tmp]
+    jnz [rb + tmp], pit_data_write_common_update_value
+
+    jnz [pit_running], pit_data_write_common_done
+
+    eq  [pit_mode], 2, [rb + tmp]
+    jnz [rb + tmp], pit_data_write_common_update_value
+    eq  [pit_mode], 3, [rb + tmp]
+    jnz [rb + tmp], pit_data_write_common_update_value
+
+    jz  0, pit_data_write_common_done
+
+pit_data_write_common_update_value:
+    # Yes, set reload to value, start the timer
+    add [pit_reload_lo], 0, [pit_value_lo]
+    add [pit_reload_hi], 0, [pit_value_hi]
+    add 1, 0, [pit_running]
+
+pit_data_write_common_done:
+    # TODO remove debug
+    #call pit_status_log
+
+    arb 4
+    ret 2
+.ENDFRAME
+
+##########
+pit_data_read_common:
+.FRAME addr; value, position, tmp                           # returns value
+    arb -3
+
+    # Decide what to read based on access mode
+    add pit_data_read_common_table, [pit_access], [ip + 2]
+    jz  0, [0]
+
+pit_data_read_common_table:
+    db  pit_data_read_common_invalid_mode
+    db  pit_data_read_common_lo
+    db  pit_data_read_common_hi
+    db  pit_data_read_common_lo_hi
+
+pit_data_read_common_invalid_mode:
+    # This can only happen before the counter is used the first time
+    add 0xff, 0, [rb + value]
+    jz  0, pit_data_read_common_clear_latch
+
+pit_data_read_common_lo:
+    # Read lo byte from the latch/value
+    add [pit_latch_lo], 0, [rb + value]
+
+    eq  [rb + value], -1, [rb + tmp]
+    jz  [rb + tmp], pit_data_read_common_clear_latch
+
+    add [pit_value_lo], 0, [rb + value]
+
+    jz  0, pit_data_read_common_done
+
+pit_data_read_common_hi:
+    # Read hi byte from the latch/value
+    add [pit_latch_hi], 0, [rb + value]
+
+    eq  [rb + value], -1, [rb + tmp]
+    jz  [rb + tmp], pit_data_read_common_clear_latch
+
+    add [pit_value_hi], 0, [rb + value]
+
+    jz  0, pit_data_read_common_done
+
+pit_data_read_common_lo_hi:
+    # Read lo/hi byte from the latch/value
+    add pit_latch_w, [pit_read_hi_byte_next], [ip + 1]
+    add [0], 0, [rb + value]
+
+    eq  [rb + value], -1, [rb + tmp]
+    jz  [rb + tmp], pit_data_read_common_clear_latch
+
+    add pit_value_w, [pit_read_hi_byte_next], [ip + 1]
+    add [0], 0, [rb + value]
+
+    jz  0, pit_data_read_common_done
+
+pit_data_read_common_clear_latch:
+    add -1, 0, [pit_latch_lo]
+    add -1, 0, [pit_latch_hi]
+
+pit_data_read_common_done:
+    # TODO remove log
+    #add [rb + value], 0, [rb - 1]
+    #arb -1
+    #call pit_data_read_log
+
+    # TODO remove debug
+    #call pit_status_log
+
+    arb 3
+    ret 1
+.ENDFRAME
+
+##########
+pit_set_gate_common:
+.FRAME value;
+    # TODO gate handling
+    #
+    # control gate using port 0x61 bit 0 (ppi_pb_reg)
+    #
+    # mode 1 when gate lo->hi: output low, set value to reload, run (if gate)
+    # mode 2 when gate hi->lo: output high (which it normally is anyway), stop
+    #        when gate lo->hi: set value to reload, run (if gate)
+    # mode 3 same as mode 2 except:
+    #        mode 2 output changes a flip-flop, real mode 3 output comes from the flip-flop
+    # mode 5 when gate lo->hi: set value to reload, run (if gate)
+
+    add [rb + value], 0, [pit_gate]
+
+    ret 1
+.ENDFRAME
+
+##########
+mode_command_write_log:                 # TODO remove
+.FRAME value;
+    add mode_command_write_log_message, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [rb + value], 0, [rb - 1]
+    add 16, 0, [rb - 2]
+    add 2, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
+    out ' '
+    out 'C'
+    out ' '
+
+    add [pit_channel], 0, [rb - 1]
+    add 16, 0, [rb - 2]
+    add 1, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
+    # Log parsed values
+    out ' '
+    out 'M'
+    out ' '
+
+    add [pit_mode], 0, [rb - 1]
+    add 16, 0, [rb - 2]
+    add 1, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
+    out ' '
+    out 'A'
+    out ' '
+
+    add [pit_access], 0, [rb - 1]
+    add 16, 0, [rb - 2]
+    add 1, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
+    out 10
+
+    ret 1
+
+mode_command_write_log_message:
+    db  "PIT WR: MC ", 0
+.ENDFRAME
+
+##########
+pit_data_write_log:                     # TODO remove
+.FRAME value; tmp
+    arb -1
+
+    add pit_data_write_log_message, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    out 'C'
+    add '0', [pit_channel], [rb + tmp]
+    out [rb + tmp]
+    out ' '
+
+    add [rb + value], 0, [rb - 1]
+    add 16, 0, [rb - 2]
+    add 2, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
+    out 10
+
+    arb 1
+    ret 1
+
+pit_data_write_log_message:
+    db  "PIT WR: ", 0
+.ENDFRAME
+
+##########
+pit_data_read_log:                      # TODO remove
+.FRAME value; tmp
+    arb -1
+
+    add pit_data_read_log_message, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    out 'C'
+    add '0', [pit_channel], [rb + tmp]
+    out [rb + tmp]
+    out ' '
+
+    add [rb + value], 0, [rb - 1]
+    add 16, 0, [rb - 2]
+    add 2, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
+    out 10
+
+    arb 1
+    ret 1
+
+pit_data_read_log_message:
+    db  "PIT RD: ", 0
+.ENDFRAME
+
+##########
+pit_status_log:                         # TODO remove
+.FRAME tmp
+    arb -1
+
+    add pit_status_log_message, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    out 'C'
+    add '0', [pit_channel], [rb + tmp]
+    out [rb + tmp]
+    out ' '
+
+    out 'V'
+    mul [pit_value_hi], 0x100, [rb - 1]
+    add [pit_value_lo], [rb - 1], [rb - 1]
+    add 16, 0, [rb - 2]
+    add 4, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+    out ' '
+
+    out 'R'
+    mul [pit_reload_hi], 0x100, [rb - 1]
+    add [pit_reload_lo], [rb - 1], [rb - 1]
+    add 16, 0, [rb - 2]
+    add 4, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+    out ' '
+
+    out 'L'
+    mul [pit_latch_hi], 0x100, [rb - 1]
+    add [pit_latch_lo], [rb - 1], [rb - 1]
+    add 16, 0, [rb - 2]
+    add 4, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+    out ' '
+
+    out 'r'
+    add '0', [pit_running], [rb + tmp]
+    out [rb + tmp]
+    out ' '
+    out 'd'
+    mul [pit_decrement], -1, [rb + tmp]
+    add '0', [rb + tmp], [rb + tmp]
+    out [rb + tmp]
+    out ' '
+    out 't'
+    add '0', [pit_target_lo], [rb + tmp]
+    out [rb + tmp]
+    out ' '
+    out 'g'
+    add '0', [pit_gate], [rb + tmp]
+    out [rb + tmp]
+
+    out 10
+
+    arb 1
+    ret 0
+
+pit_status_log_message:
+    db  "PIT status: ", 0
+.ENDFRAME
+
+##########
+pit_mode:
+    db  0
+pit_access:
+    db  0
+
+pit_reload_w:
+pit_reload_lo:
+    db  0
+pit_reload_hi:
+    db  0
+
+pit_value_w:
+pit_value_lo:
+    db  0
+pit_value_hi:
+    db  0
+
+pit_latch_w:
+pit_latch_lo:
+    db  0
+pit_latch_hi:
+    db  0
+
+pit_running:
+    db  0
+
+# In 16-bit access mode, is the next byte to be accessed hi or low?
+pit_read_hi_byte_next:
+    db  0
+pit_write_hi_byte_next:
+    db  0
+
+# These values depend on mode, we precalculate them to speed up vm callback
+pit_decrement:
+    db  -1
+pit_target_lo:
+    db  0
+
+.EOI

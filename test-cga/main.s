@@ -1,11 +1,14 @@
+# From cga.s
+.IMPORT init_cga
+
 # From exec.s
 .IMPORT execute
 
-# From init_test.s
-.IMPORT init_processor_test
+# From init_binary.s
+.IMPORT init_binary
 
-# From print_output.s
-.IMPORT print_output
+# From shutdown.s
+.IMPORT init_shutdown_port
 
 ##########
 # Entry point
@@ -21,9 +24,11 @@
 ##########
 main:
 .FRAME
-    call init_processor_test
+    call init_binary
+    call init_cga
+    call init_shutdown_port
+
     call execute
-    call print_output
 
     ret 0
 .ENDFRAME

@@ -14,7 +14,7 @@ ICLDMAP ?= $(abspath $(ICDIR)/bin/ldmap.input)
 LIBXIB ?= $(abspath $(ICDIR)/bin/libxib.a)
 
 define run-intcode-as
-	cat $^ | $(ICVM) $(ICAS) > $@ || ( cat $@ ; false )
+	cat $(filter-out $<,$^) $< | $(ICVM) $(ICAS) > $@ || ( cat $@ ; false )
 endef
 
 define run-intcode-ar

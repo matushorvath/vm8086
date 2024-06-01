@@ -26,8 +26,8 @@ build-intcode: $(OBJDIR)/test.input
 test: build
 	node test.js
 
-# The order of the object files matters: First include all the code in any order, then binary.o,
-# then the (optional) 8086 image header and data.
+# The order of the object files matters: First include all the code in any order,
+# then test_header.o, which will be followed by the 8086 during test runtime.
 
 TEST_OBJS = $(OBJDIR)/main.o $(OBJDIR)/callback.o $(OBJDIR)/config.o $(OBJDIR)/init_test.o \
 	$(OBJDIR)/print_output.o $(VMDIR)/bin/libcpu.a $(VMDIR)/bin/libutil.a $(LIBXIB) \

@@ -1,4 +1,4 @@
-# This the header for the 8086 test binary.
+# This the header for the 8086 binary.
 
 .EXPORT binary_start_address_cs
 .EXPORT binary_start_address_ip
@@ -12,10 +12,10 @@ binary_start_address_cs:
 binary_start_address_ip:
     db  0x00, 0x00
 
-# Load address of the simple test binary in 8086 memory
+# Load address of the binary in 8086 memory
 binary_load_address:
-    db  0xca000
+    db  0xfc000
 
-# Symbols binary_count, binary_size and binary_data are provided by the test binary
+# Symbols binary_count, binary_size and binary_data are provided by the binary
 
 .EOF
