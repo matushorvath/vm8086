@@ -49,6 +49,8 @@ BIOS
 ====
 
 https://github.com/skiselev/8088_bios.git
+make -C vm clean
+make && ~/intcode/xzintbit/vms/c/ic bin/vm.input
 
 https://glabios.org/
 BIOS_BIN=~/intcode/GLABIOS_0.2.5_8X.ROM make
@@ -59,7 +61,13 @@ install freebasic
 compile toolsrc using fbc -lang qb file.bas
 move the compiled tools to ./linux
 eproms/2764/pcxtbios.rom at 0xfe000 is mandatory, the rest is optional
-BIOS_BIN=~/intcode/pcxtbios/eproms/2764/pcxtbios.rom make, change binary_load_address to 0xfe000
+
+make -C vm clean
+BIOS_LOAD_ADDRESS=fe000 BIOS_BIN=~/intcode/pcxtbios/eproms/2764/pcxtbios.rom make && ~/intcode/xzintbit/vms/c/ic bin/vm.input
+
+make -C vm clean
+cat ~/intcode/pcxtbios/eproms/2764/basicfc.rom ~/intcode/pcxtbios/eproms/2764/pcxtbios.rom > bios.tmp
+BIOS_LOAD_ADDRESS=fc000 BIOS_BIN=$(pwd)/bios.tmp make && ~/intcode/xzintbit/vms/c/ic bin/vm.input
 
 CGA
 ===
