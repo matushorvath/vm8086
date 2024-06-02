@@ -30,8 +30,6 @@
 # 0x82 <op> REG8/MEM8, IMMED8
 # 0x83 <op> REG16/MEM16, IMMED8 (sign extend)
 
-# TODO HW is opcode 0x80 the same as 0x82?
-
 # Note: Opcodes 0x82 and 0x83 on Intel 8086 are not documented to include OR, AND and XOR.
 # However, NASM will generate '83 f0 ff' for 'xor ax, word 0xffff' even with 'cpu 8086'.
 # So, to make life easier, we support those operations even for opcodes 0x82 and 0x83.

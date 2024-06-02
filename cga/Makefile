@@ -13,7 +13,7 @@ build: build-prep $(BINDIR)/libcga.a
 build-prep:
 	mkdir -p "$(BINDIR)" "$(OBJDIR)"
 
-CGA_OBJS = cga.o memory.o registers.o
+CGA_OBJS = cga.o memory.o registers.o screen.o status.o text_mode.o
 
 $(BINDIR)/libcga.a: $(CGA_OBJS:%.o=$(OBJDIR)/%.o)
 	$(run-intcode-ar)

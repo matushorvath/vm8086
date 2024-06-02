@@ -2,13 +2,14 @@
 .EXPORT read_memory_bc000
 .EXPORT write_memory_bc000
 
-# From state.o
-.IMPORT mem
+# From registers.s
+.IMPORT mode_graphics
 
-# From libxib.a
-# TODO remove
-.IMPORT print_num_radix
-.IMPORT print_str
+# From text_mode.s
+.IMPORT write_memory_text
+
+# From cpu/state.s
+.IMPORT mem
 
 ##########
 .FRAME addr, value; write_through, tmp
@@ -31,36 +32,26 @@ write_memory:
     add [rb + tmp], 0xb8000, [ip + 3]
     add [rb + value], 0, [0]
 
-    # Log the memory access
-    # TODO remove
-#    add write_memory_message, 0, [rb - 1]
-#    arb -1
-#    call print_str
-#
-#    add [rb + addr], 0, [rb - 1]
-#    add 16, 0, [rb - 2]
-#    add 4, 0, [rb - 3]
-#    arb -3
-#    call print_num_radix
-#
-#    out ' '
-#
-#    add [rb + value], 0, [rb - 1]
-#    add 16, 0, [rb - 2]
-#    add 2, 0, [rb - 3]
-#    arb -3
-#    call print_num_radix
-#
-#    out ' '
-    out [rb + value]
+    # Update the screen based on screen mode
+    jz  [mode_graphics], write_memory_text_mode
 
-#    out 10
+    # TODO graphics mode
+    #add [rb + addr], 0, [rb - 1]
+    #add [rb + value], 0, [rb - 2]
+    #arb -2
+    #call write_memory_graphics
 
+    jz  0, write_memory_done
+
+write_memory_text_mode:
+    add [rb + addr], 0, [rb - 1]
+    add [rb + value], 0, [rb - 2]
+    arb -2
+    call write_memory_text
+
+write_memory_done:
     arb 2
     ret 2
-
-write_memory_message:
-    db  "CGA WR MEM: ", 0
 .ENDFRAME
 
 ##########

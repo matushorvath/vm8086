@@ -2,11 +2,26 @@
 .EXPORT mc6845_address_write
 .EXPORT mc6845_data_read
 .EXPORT mc6845_data_write
+
 .EXPORT mode_control_write
 .EXPORT color_control_write
 .EXPORT status_read
 
-# From obj/bits.s
+.EXPORT mode_high_res_text
+.EXPORT mode_graphics
+.EXPORT mode_back_and_white
+.EXPORT mode_enable_output
+.EXPORT mode_high_res_graphics
+.EXPORT mode_blinking
+
+.EXPORT color_selected
+.EXPORT color_bright
+.EXPORT color_palette
+
+# From screen.s
+.IMPORT reset_screen
+
+# From util/bits.s
 .IMPORT bits
 
 # From libxib.a
@@ -72,7 +87,9 @@ mode_control_write:
     add [0], 0, [mode_blinking]
 
     # TODO remove
-    call dump_cga_state
+    #call dump_cga_state
+
+    call reset_screen
 
     arb 2
     ret 2
@@ -111,7 +128,9 @@ color_control_write:
     add [0], 0, [color_palette]
 
     # TODO remove
-    call dump_cga_state
+    #call dump_cga_state
+
+    call reset_screen
 
     arb 2
     ret 2

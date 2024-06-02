@@ -64,7 +64,6 @@ execute_in_ax_immediate_b:
     add [rb - 4], 0, [reg_ax + 0]
 
     # Increment the port with wrap around
-    # TODO HW Does real hardware wrap around to 8 bits here?
     add [rb + port], 1, [rb + port]
 
     lt  [rb + port], 0x100, [rb + tmp]
@@ -176,7 +175,6 @@ execute_out_ax_immediate_b:
     call handle_port_write
 
     # Increment the port with wrap around
-    # TODO HW Does real hardware wrap around to 8 bits here?
     add [rb + port], 1, [rb + port]
 
     lt  [rb + port], 0x100, [rb + tmp]

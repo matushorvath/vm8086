@@ -69,7 +69,7 @@ tmp:
 header_1:
     db  ".EXPORT print99", 10, 10, "# Generated using gen_print99.s", 10, 10, "print99:", 10, ".FRAME byte;", 10, 0
 header_2:
-    db  "    mul [rb + byte], 9, [rb + byte]", 10, "    add print99_table, [rb + byte], [ip + 2]", 10, "    jz  0, [0]", 10, 10, "print99_table:", 10, 0
+    db  "    mul [rb + byte], 9, [rb + byte]", 10, "    add print99_table, [rb + byte], [rb + byte]", 10, "    jz  0, [rb + byte]", 10, 10, "print99_table:", 10, 0
 output_start_one_digit:
     db  "    arb 0", 10, "    out '", 0
 output_start_two_digits:
@@ -79,7 +79,7 @@ output_mid_two_digits:
 output_end:
     db  "'", 10, "    ret 1", 10, 10, 0
 footer:
-    db  10, ".ENDFRAME", 10, ".EOF", 10, 0
+    db  ".ENDFRAME", 10, 10, ".EOF", 10, 0
 
     ds  100, 0
 stack:

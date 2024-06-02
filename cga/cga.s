@@ -17,6 +17,7 @@
 .IMPORT mode_control_write
 .IMPORT color_control_write
 .IMPORT status_read
+.IMPORT reset_screen
 
 ##########
 cga_ports:
@@ -52,6 +53,9 @@ init_cga:
     add cga_ports, 0, [rb - 1]
     arb -1
     call register_ports
+
+    # Reset the screen
+    call reset_screen
 
     ret 0
 .ENDFRAME

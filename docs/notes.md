@@ -21,7 +21,7 @@ Possible Optimizations
 TODO
 ====
 
-- Make sure makefiles display nad delete output files when compilation fails.
+- Make sure makefiles display and delete output files when compilation fails.
 
 Emulators
 =========
