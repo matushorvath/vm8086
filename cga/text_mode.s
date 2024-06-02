@@ -1,5 +1,8 @@
 .EXPORT write_memory_text
 
+# From cp437.s
+.IMPORT cp437
+
 # From screen.s
 .IMPORT screen_cols
 
@@ -18,6 +21,8 @@
 
 # From util/util.s
 .IMPORT split_16_8_8
+
+# TODO convert CP437 to UTF8 using a table
 
 ##########
 write_memory_text:
@@ -74,8 +79,21 @@ write_memory_text_char:
     call print99
     out 'H'
 
-    # Print character byte
-    out [rb + value]
+    # Print the character, converting from CP437 to UTF-8
+    mul [rb + value], 3, [rb + tmp]
+
+    add cp437 + 0, [rb + tmp], [ip + 1]
+    out [0]
+
+    add cp437 + 1, [rb + tmp], [ip + 1]
+    jz  [0], write_memory_text_done
+    add cp437 + 1, [rb + tmp], [ip + 1]
+    out [0]
+
+    add cp437 + 2, [rb + tmp], [ip + 1]
+    jz  [0], write_memory_text_done
+    add cp437 + 2, [rb + tmp], [ip + 1]
+    out [0]
 
 write_memory_text_done:
     arb 6

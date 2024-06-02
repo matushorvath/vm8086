@@ -50,10 +50,10 @@ BIOS
 
 https://github.com/skiselev/8088_bios.git
 make -C vm clean
-make && ~/intcode/xzintbit/vms/c/ic bin/vm.input
+BIOS_LOAD_ADDRESS=fc000 BIOS_BIN=~/intcode/8088_bios/binaries/bios-xt.bin make && ~/intcode/xzintbit/vms/c/ic bin/vm.input
 
 https://glabios.org/
-BIOS_BIN=~/intcode/GLABIOS_0.2.5_8X.ROM make
+BIOS_BIN=~/intcode/GLABIOS_0.2.5_8X.ROM make (does not work yet)
 
 https://github.com/virtualxt/pcxtbios
 chmod a+x make_linux.sh
