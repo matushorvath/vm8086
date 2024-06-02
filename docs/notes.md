@@ -49,7 +49,17 @@ BIOS
 ====
 
 https://github.com/skiselev/8088_bios.git
+
 https://glabios.org/
+BIOS_BIN=~/intcode/GLABIOS_0.2.5_8X.ROM make
+
+https://github.com/virtualxt/pcxtbios
+chmod a+x make_linux.sh
+install freebasic
+compile toolsrc using fbc -lang qb file.bas
+move the compiled tools to ./linux
+eproms/2764/pcxtbios.rom at 0xfe000 is mandatory, the rest is optional
+BIOS_BIN=~/intcode/pcxtbios/eproms/2764/pcxtbios.rom make, change binary_load_address to 0xfe000
 
 CGA
 ===

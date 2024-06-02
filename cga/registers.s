@@ -141,12 +141,31 @@ status_read:
 .FRAME port; value                      # returns value
     arb -1
 
-    # There is no danger of visual snow, so we will always report 'display enable'
-    # and 'vertical retrace' as 1, hoping that does not break anything.
+    # There is no danger of visual snow, but some BIOSes expect the horizontal/vertical retrace
+    # to change between 0 and 1. We will very roughly simulate that using two counters.
     # There is no light pen support, which is represented by the two corresponding
-    # bits being set to 1.
+    # bits being always set to 1.
+    add 0b00000110, 0, [rb + value]
 
-    add 0b00001111, 0, [rb + value]
+    # Is it time for simulated horizontal retrace?
+    jnz [horizontal_retrace_counter], status_read_after_horizontal
+
+    # Yes, report horizontal retrace
+    add [rb + value], 0b00000001, [rb + value]
+    add 16, 0, [horizontal_retrace_counter]
+
+status_read_after_horizontal:
+    add [horizontal_retrace_counter], -1, [horizontal_retrace_counter]
+
+    # Is it time for simulated vertical retrace?
+    jnz [vertical_retrace_counter], status_read_after_vertical
+
+    # Yes, report vertical retrace
+    add [rb + value], 0b00001000, [rb + value]
+    add 16, 0, [horizontal_retrace_counter]
+
+status_read_after_vertical:
+    add [vertical_retrace_counter], -1, [vertical_retrace_counter]
 
     arb 1
     ret 1
@@ -294,6 +313,11 @@ color_selected:
 color_bright:
     db  0
 color_palette:
+    db  0
+
+horizontal_retrace_counter:
+    db  0
+vertical_retrace_counter:
     db  0
 
 .EOF
