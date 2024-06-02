@@ -1,11 +1,10 @@
 .EXPORT init_ports
 
-# From devices.s
+# From cpu/devices.s
 .IMPORT register_ports
 
-# From libxib.a
-.IMPORT print_str
-.IMPORT print_num_radix
+# From cga/status.s
+.IMPORT post_status_write
 
 ##########
 ports:
@@ -22,27 +21,6 @@ init_ports:
     call register_ports
 
     ret 0
-.ENDFRAME
-
-##########
-post_status_write:
-.FRAME port, value;
-    add post_status_message, 0, [rb - 1]
-    arb -1
-    call print_str
-
-    add [rb + value], 0, [rb - 1]
-    add 16, 0, [rb - 2]
-    add 2, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-
-    out 10
-
-    ret 2
-
-post_status_message:
-    db  "POST status: ", 0
 .ENDFRAME
 
 .EOF

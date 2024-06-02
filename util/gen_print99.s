@@ -79,7 +79,7 @@ output_mid_two_digits:
 output_end:
     db  "'", 10, "    ret 1", 10, 10, 0
 footer:
-    db  10, ".ENDFRAME", 10, ".EOF", 10, 0
+    db  ".ENDFRAME", 10, 10, ".EOF", 10, 0
 
     ds  100, 0
 stack:

@@ -1,20 +1,22 @@
-# From cga.s
-.IMPORT init_cga
-
-# From devices.s
+# From ports.s
 .IMPORT init_ports
 
-# From exec.s
+# From cga/cga.s
+.IMPORT init_cga
+
+# From cpu/exec.s
 .IMPORT execute
 
-# From init_binary.s
+# From cpu/init_binary.s
 .IMPORT init_binary
 
-# From pit_8253.s
+# From dev/pit_8253.s
 .IMPORT init_pit_8253
 
-# From ppi_8255a.s
+# From dev/ppi_8255a.s
 .IMPORT init_ppi_8255a
+
+# TODO make the BIOS read-only by registering a NOP write handler
 
 ##########
 # Entry point
