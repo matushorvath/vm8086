@@ -2,13 +2,24 @@
 .EXPORT mc6845_address_write
 .EXPORT mc6845_data_read
 .EXPORT mc6845_data_write
+
 .EXPORT mode_control_write
 .EXPORT color_control_write
 .EXPORT status_read
-.EXPORT reset_screen
 
-# From status.s
-.IMPORT redraw_vm_status
+.EXPORT mode_high_res_text
+.EXPORT mode_graphics
+.EXPORT mode_back_and_white
+.EXPORT mode_enable_output
+.EXPORT mode_high_res_graphics
+.EXPORT mode_blinking
+
+.EXPORT color_selected
+.EXPORT color_bright
+.EXPORT color_palette
+
+# From screen.s
+.IMPORT reset_screen
 
 # From util/bits.s
 .IMPORT bits
@@ -78,7 +89,6 @@ mode_control_write:
     # TODO remove
     #call dump_cga_state
 
-    # TODO only reset screen when it's needed
     call reset_screen
 
     arb 2
@@ -120,7 +130,6 @@ color_control_write:
     # TODO remove
     #call dump_cga_state
 
-    # TODO only reset screen when it's needed
     call reset_screen
 
     arb 2
@@ -141,21 +150,6 @@ status_read:
 
     arb 1
     ret 1
-.ENDFRAME
-
-##########
-reset_screen:
-.FRAME
-    # Clear the terminal
-    out 0x1b
-    out '['
-    out '2'
-    out 'J'
-
-    # Redraw the status line
-    call redraw_vm_status
-
-    ret 0
 .ENDFRAME
 
 ##########
