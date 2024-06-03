@@ -18,6 +18,8 @@ Possible Optimizations
 
 - Optimize physical address calculation (calc_seg_off_addr_*), it's very heavy and used a lot. It's mostly heavy to handle corner cases (integer overflows).
 
+- All the generated tables should be changed to avoid multiplying the input number by N
+
 TODO
 ====
 
