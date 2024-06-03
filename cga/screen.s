@@ -1,5 +1,6 @@
 .EXPORT reset_screen
-.EXPORT screen_cols
+.EXPORT screen_page_size
+.EXPORT screen_row_size_160
 
 # From registers.s
 .IMPORT mode_high_res_text
@@ -22,16 +23,21 @@ reset_screen:
     # Set screen parameters based on register values
     jz  [mode_graphics], reset_screen_text
 
-    # Graphics mode; 320 or 640?
-    add [mode_high_res_graphics], 1, [screen_cols]
-    mul [screen_cols], 320, [screen_cols]
+    # Graphics mode; screen row size is always 80 bytes
+    add 0, 0, [screen_row_size_160]
+
+    # Page size is 200 rows * 80 bytes per row = 16000 bytes
+    add 16000, 0, [screen_page_size]
 
     jz  0, reset_screen_redraw_memory
 
 reset_screen_text:
-    # Text mode; 80 or 40?
-    add [mode_high_res_text], 1, [screen_cols]
-    mul [screen_cols], 40, [screen_cols]
+    # Text mode; screen row is 160 bytes in 80x25 mode, 80 bytes otherwise
+    add [mode_high_res_text], 0, [screen_row_size_160]
+
+    # Page size is 25 rows * 80/160 bytes per row = 2000/4000 bytes depending on column count
+    add [mode_high_res_text], 1, [screen_page_size]
+    mul [screen_page_size], 2000, [screen_page_size]
 
 reset_screen_redraw_memory:
     # Don't redraw the memory if output is disabled
@@ -47,8 +53,15 @@ reset_screen_redraw_vm_status:
 .ENDFRAME
 
 ##########
-# Screen columns: 40 or 80 for text mode, 320 or 640 for graphics mode
-screen_cols:
-    db  80
+# Precalculated values used in address to row/column conversion
+# The defaults are set up for 80x25 text mode, which is the mode used at boot
+
+# One screen page size
+screen_page_size:
+    db  4000                            # 25 rows * 160 bytes per row
+
+# Every screen row is 160 bytes in 80x25 text mode, 80 bytes in all other modes
+screen_row_size_160:
+    db  1
 
 .EOF

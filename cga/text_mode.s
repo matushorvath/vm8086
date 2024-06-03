@@ -6,17 +6,17 @@
 .IMPORT cp437_b2
 
 # From screen.s
-.IMPORT screen_cols
-
-# From cpu/div.s
-# TODO use a faster algorithm instead
-.IMPORT divide
+.IMPORT screen_page_size
+.IMPORT screen_row_size_160
 
 # From cpu/state.s
 .IMPORT mem
 
 # From util/bits.s
 .IMPORT bits
+
+# From util/mod5.s
+.IMPORT div5
 
 # From util/nibbles.s
 .IMPORT nibbles
@@ -35,32 +35,66 @@ write_memory_text:
 .FRAME addr, value; row, col, col_x8, char, attr, addr_lo, addr_hi, tmp
     arb -8
 
-    # TODO Use something faster than the divide function here
-    #      divide by  80=2^4*5: shift right by 4, then use a table to divide by 5
-    #      divide by 160=2^5*5: shift right by 5, then use a table to divide by 5
-    # TODO Use the start address of the screen buffer
-    # TODO Receive address already pre-split to bytes to avoid the split_16_8_8
+    # Is this inside the screen area?
+    # TODO use start address of the screen buffer
+    lt  [rb + addr], [screen_page_size], [rb + tmp]
+    jz  [rb + tmp], write_memory_text_done
 
-    # Convert address to a row and column on screen
+    # Split the 14-bit address in video memory to bytes
+    # TODO receive address already pre-split to bytes to avoid the split_16_8_8
     add [rb + addr], 0, [rb - 1]
     arb -1
     call split_16_8_8
     add [rb - 3], 0, [rb + addr_lo]
     add [rb - 4], 0, [rb + addr_hi]
 
-    add 2, 0, [rb - 1]
-    add [rb + addr_hi], 0, [rb - 4]
-    add [rb + addr_lo], 0, [rb - 5]
-    mul [screen_cols], 2, [rb - 6]
-    arb -6
-    call divide
-    add [rb - 8], 0, [rb + row]
-    add [rb - 9], 0, [rb + col]
+    # Divide the address 80 or 160, depending on screen row size. We first divide by either
+    # 2^4 or 2^5 using shift operations, then use the div5/mod5 tables to divide by 5.
+    #
+    # 0 1 2 3 4 5 6 7   0 1 2 3 4 5 6 7
+    #     ==addr_hi==   ====addr_lo====
+    #     ====div====   ==div== ==mod==         divide by 2^4
+    #     ====div====   =div= ===mod===         divide by 2^5
+    #
+    # addr = div * 2^4 + mod1 = (row * 5 + mod2) * 2^4 + mod1 = row * 80 + col
+    # col = addr - row * 80
 
-    # Is this inside the screen area?
-    lt  [rb + row], 25, [rb + tmp]
-    jz  [rb + tmp], write_memory_text_done
+    jnz [screen_row_size_160], write_memory_text_calc_160
 
+    # Screen row is 80 bytes, divide by 2^4
+    mul [rb + addr_hi], 0x10, [rb + row]
+
+    mul [rb + addr_lo], 8, [rb + tmp]
+    add shr + 4, [rb + tmp], [ip + 1]
+    add [0], [rb + row], [rb + row]
+
+    # Divide the result by 5
+    add div5, [rb + row], [ip + 1]
+    add [0], 0, [rb + row]
+
+    # Calculate column
+    mul [rb + row], -80, [rb + tmp]
+    add [rb + addr], [rb + tmp], [rb + col]
+
+    jz  0, write_memory_text_after_calc
+
+write_memory_text_calc_160:
+    # Screen row is 160 bytes, divide by 2^5
+    mul [rb + addr_hi], 0x08, [rb + row]
+
+    mul [rb + addr_lo], 8, [rb + tmp]
+    add shr + 5, [rb + tmp], [ip + 1]
+    add [0], [rb + row], [rb + row]
+
+    # Divide the result by 5
+    add div5, [rb + row], [ip + 1]
+    add [0], 0, [rb + row]
+
+    # Calculate column
+    mul [rb + row], -160, [rb + tmp]
+    add [rb + addr], [rb + tmp], [rb + col]
+
+write_memory_text_after_calc:
     # Each screen location occupies two bytes, so divide col by 2
     mul [rb + col], 8, [rb + col_x8]
     add shr + 1, [rb + col_x8], [ip + 1]

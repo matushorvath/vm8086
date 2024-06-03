@@ -70,11 +70,11 @@ tmp:
     db  0
 
 header:
-    db  ".EXPORT div5", 10, ".EXPORT mod5", 10, 10, "# Generated using gen_mod5.s", 10, 10, "div5:", 10, 0
+    db  ".EXPORT div5", 10, ".EXPORT mod5", 10, 10, "# Generated using gen_mod5.s", 10, 10, "mod5:", 10, 0
 mod_line:
     db  "    db  0, 1, 2, 3, 4", 10, 0
 div_header:
-    db  10, "mod5:", 10, 0
+    db  10, "div5:", 10, 0
 div_line_start:
     db  "    db  ", 0
 footer:
