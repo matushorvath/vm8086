@@ -1,263 +1,781 @@
-.EXPORT cp437
+.EXPORT cp437_b0
+.EXPORT cp437_b1
+.EXPORT cp437_b2
 
 # Conversion table between CP437 and UTF-8; generated using cp437.js
 
-cp437:
-    db  0x20, 0x00, 0x00                #   0 (00)
-    db  0xe2, 0x98, 0xba                #   1 (01) ☺
-    db  0xe2, 0x98, 0xbb                #   2 (02) ☻
-    db  0xe2, 0x99, 0xa5                #   3 (03) ♥
-    db  0xe2, 0x99, 0xa6                #   4 (04) ♦
-    db  0xe2, 0x99, 0xa3                #   5 (05) ♣
-    db  0xe2, 0x99, 0xa0                #   6 (06) ♠
-    db  0xe2, 0x80, 0xa2                #   7 (07) •
-    db  0xe2, 0x97, 0x98                #   8 (08) ◘
-    db  0xe2, 0x97, 0x8b                #   9 (09) ○
-    db  0xe2, 0x97, 0x99                #  10 (0a) ◙
-    db  0xe2, 0x99, 0x82                #  11 (0b) ♂
-    db  0xe2, 0x99, 0x80                #  12 (0c) ♀
-    db  0xe2, 0x99, 0xaa                #  13 (0d) ♪
-    db  0xe2, 0x99, 0xab                #  14 (0e) ♫
-    db  0xe2, 0x98, 0xbc                #  15 (0f) ☼
-    db  0xe2, 0x96, 0xba                #  16 (10) ►
-    db  0xe2, 0x97, 0x84                #  17 (11) ◄
-    db  0xe2, 0x86, 0x95                #  18 (12) ↕
-    db  0xe2, 0x80, 0xbc                #  19 (13) ‼
-    db  0xc2, 0xb6, 0x00                #  20 (14) ¶
-    db  0xc2, 0xa7, 0x00                #  21 (15) §
-    db  0xe2, 0x96, 0xac                #  22 (16) ▬
-    db  0xe2, 0x86, 0xa8                #  23 (17) ↨
-    db  0xe2, 0x86, 0x91                #  24 (18) ↑
-    db  0xe2, 0x86, 0x93                #  25 (19) ↓
-    db  0xe2, 0x86, 0x92                #  26 (1a) →
-    db  0xe2, 0x86, 0x90                #  27 (1b) ←
-    db  0xe2, 0x88, 0x9f                #  28 (1c) ∟
-    db  0xe2, 0x86, 0x94                #  29 (1d) ↔
-    db  0xe2, 0x96, 0xb2                #  30 (1e) ▲
-    db  0xe2, 0x96, 0xbc                #  31 (1f) ▼
-    db  0x20, 0x00, 0x00                #  32 (20)
-    db  0x21, 0x00, 0x00                #  33 (21) !
-    db  0x22, 0x00, 0x00                #  34 (22) "
-    db  0x23, 0x00, 0x00                #  35 (23) #
-    db  0x24, 0x00, 0x00                #  36 (24) $
-    db  0x25, 0x00, 0x00                #  37 (25) %
-    db  0x26, 0x00, 0x00                #  38 (26) &
-    db  0x27, 0x00, 0x00                #  39 (27) '
-    db  0x28, 0x00, 0x00                #  40 (28) (
-    db  0x29, 0x00, 0x00                #  41 (29) )
-    db  0x2a, 0x00, 0x00                #  42 (2a) *
-    db  0x2b, 0x00, 0x00                #  43 (2b) +
-    db  0x2c, 0x00, 0x00                #  44 (2c) ,
-    db  0x2d, 0x00, 0x00                #  45 (2d) -
-    db  0x2e, 0x00, 0x00                #  46 (2e) .
-    db  0x2f, 0x00, 0x00                #  47 (2f) /
-    db  0x30, 0x00, 0x00                #  48 (30) 0
-    db  0x31, 0x00, 0x00                #  49 (31) 1
-    db  0x32, 0x00, 0x00                #  50 (32) 2
-    db  0x33, 0x00, 0x00                #  51 (33) 3
-    db  0x34, 0x00, 0x00                #  52 (34) 4
-    db  0x35, 0x00, 0x00                #  53 (35) 5
-    db  0x36, 0x00, 0x00                #  54 (36) 6
-    db  0x37, 0x00, 0x00                #  55 (37) 7
-    db  0x38, 0x00, 0x00                #  56 (38) 8
-    db  0x39, 0x00, 0x00                #  57 (39) 9
-    db  0x3a, 0x00, 0x00                #  58 (3a) :
-    db  0x3b, 0x00, 0x00                #  59 (3b) ;
-    db  0x3c, 0x00, 0x00                #  60 (3c) <
-    db  0x3d, 0x00, 0x00                #  61 (3d) =
-    db  0x3e, 0x00, 0x00                #  62 (3e) >
-    db  0x3f, 0x00, 0x00                #  63 (3f) ?
-    db  0x40, 0x00, 0x00                #  64 (40) @
-    db  0x41, 0x00, 0x00                #  65 (41) A
-    db  0x42, 0x00, 0x00                #  66 (42) B
-    db  0x43, 0x00, 0x00                #  67 (43) C
-    db  0x44, 0x00, 0x00                #  68 (44) D
-    db  0x45, 0x00, 0x00                #  69 (45) E
-    db  0x46, 0x00, 0x00                #  70 (46) F
-    db  0x47, 0x00, 0x00                #  71 (47) G
-    db  0x48, 0x00, 0x00                #  72 (48) H
-    db  0x49, 0x00, 0x00                #  73 (49) I
-    db  0x4a, 0x00, 0x00                #  74 (4a) J
-    db  0x4b, 0x00, 0x00                #  75 (4b) K
-    db  0x4c, 0x00, 0x00                #  76 (4c) L
-    db  0x4d, 0x00, 0x00                #  77 (4d) M
-    db  0x4e, 0x00, 0x00                #  78 (4e) N
-    db  0x4f, 0x00, 0x00                #  79 (4f) O
-    db  0x50, 0x00, 0x00                #  80 (50) P
-    db  0x51, 0x00, 0x00                #  81 (51) Q
-    db  0x52, 0x00, 0x00                #  82 (52) R
-    db  0x53, 0x00, 0x00                #  83 (53) S
-    db  0x54, 0x00, 0x00                #  84 (54) T
-    db  0x55, 0x00, 0x00                #  85 (55) U
-    db  0x56, 0x00, 0x00                #  86 (56) V
-    db  0x57, 0x00, 0x00                #  87 (57) W
-    db  0x58, 0x00, 0x00                #  88 (58) X
-    db  0x59, 0x00, 0x00                #  89 (59) Y
-    db  0x5a, 0x00, 0x00                #  90 (5a) Z
-    db  0x5b, 0x00, 0x00                #  91 (5b) [
-    db  0x5c, 0x00, 0x00                #  92 (5c) \
-    db  0x5d, 0x00, 0x00                #  93 (5d) ]
-    db  0x5e, 0x00, 0x00                #  94 (5e) ^
-    db  0x5f, 0x00, 0x00                #  95 (5f) _
-    db  0x60, 0x00, 0x00                #  96 (60) `
-    db  0x61, 0x00, 0x00                #  97 (61) a
-    db  0x62, 0x00, 0x00                #  98 (62) b
-    db  0x63, 0x00, 0x00                #  99 (63) c
-    db  0x64, 0x00, 0x00                # 100 (64) d
-    db  0x65, 0x00, 0x00                # 101 (65) e
-    db  0x66, 0x00, 0x00                # 102 (66) f
-    db  0x67, 0x00, 0x00                # 103 (67) g
-    db  0x68, 0x00, 0x00                # 104 (68) h
-    db  0x69, 0x00, 0x00                # 105 (69) i
-    db  0x6a, 0x00, 0x00                # 106 (6a) j
-    db  0x6b, 0x00, 0x00                # 107 (6b) k
-    db  0x6c, 0x00, 0x00                # 108 (6c) l
-    db  0x6d, 0x00, 0x00                # 109 (6d) m
-    db  0x6e, 0x00, 0x00                # 110 (6e) n
-    db  0x6f, 0x00, 0x00                # 111 (6f) o
-    db  0x70, 0x00, 0x00                # 112 (70) p
-    db  0x71, 0x00, 0x00                # 113 (71) q
-    db  0x72, 0x00, 0x00                # 114 (72) r
-    db  0x73, 0x00, 0x00                # 115 (73) s
-    db  0x74, 0x00, 0x00                # 116 (74) t
-    db  0x75, 0x00, 0x00                # 117 (75) u
-    db  0x76, 0x00, 0x00                # 118 (76) v
-    db  0x77, 0x00, 0x00                # 119 (77) w
-    db  0x78, 0x00, 0x00                # 120 (78) x
-    db  0x79, 0x00, 0x00                # 121 (79) y
-    db  0x7a, 0x00, 0x00                # 122 (7a) z
-    db  0x7b, 0x00, 0x00                # 123 (7b) {
-    db  0x7c, 0x00, 0x00                # 124 (7c) |
-    db  0x7d, 0x00, 0x00                # 125 (7d) }
-    db  0x7e, 0x00, 0x00                # 126 (7e) ~
-    db  0xe2, 0x8c, 0x82                # 127 (7f) ⌂
-    db  0xc3, 0x87, 0x00                # 128 (80) Ç
-    db  0xc3, 0xbc, 0x00                # 129 (81) ü
-    db  0xc3, 0xa9, 0x00                # 130 (82) é
-    db  0xc3, 0xa2, 0x00                # 131 (83) â
-    db  0xc3, 0xa4, 0x00                # 132 (84) ä
-    db  0xc3, 0xa0, 0x00                # 133 (85) à
-    db  0xc3, 0xa5, 0x00                # 134 (86) å
-    db  0xc3, 0xa7, 0x00                # 135 (87) ç
-    db  0xc3, 0xaa, 0x00                # 136 (88) ê
-    db  0xc3, 0xab, 0x00                # 137 (89) ë
-    db  0xc3, 0xa8, 0x00                # 138 (8a) è
-    db  0xc3, 0xaf, 0x00                # 139 (8b) ï
-    db  0xc3, 0xae, 0x00                # 140 (8c) î
-    db  0xc3, 0xac, 0x00                # 141 (8d) ì
-    db  0xc3, 0x84, 0x00                # 142 (8e) Ä
-    db  0xc3, 0x85, 0x00                # 143 (8f) Å
-    db  0xc3, 0x89, 0x00                # 144 (90) É
-    db  0xc3, 0xa6, 0x00                # 145 (91) æ
-    db  0xc3, 0x86, 0x00                # 146 (92) Æ
-    db  0xc3, 0xb4, 0x00                # 147 (93) ô
-    db  0xc3, 0xb6, 0x00                # 148 (94) ö
-    db  0xc3, 0xb2, 0x00                # 149 (95) ò
-    db  0xc3, 0xbb, 0x00                # 150 (96) û
-    db  0xc3, 0xb9, 0x00                # 151 (97) ù
-    db  0xc3, 0xbf, 0x00                # 152 (98) ÿ
-    db  0xc3, 0x96, 0x00                # 153 (99) Ö
-    db  0xc3, 0x9c, 0x00                # 154 (9a) Ü
-    db  0xc2, 0xa2, 0x00                # 155 (9b) ¢
-    db  0xc2, 0xa3, 0x00                # 156 (9c) £
-    db  0xc2, 0xa5, 0x00                # 157 (9d) ¥
-    db  0xe2, 0x82, 0xa7                # 158 (9e) ₧
-    db  0xc6, 0x92, 0x00                # 159 (9f) ƒ
-    db  0xc3, 0xa1, 0x00                # 160 (a0) á
-    db  0xc3, 0xad, 0x00                # 161 (a1) í
-    db  0xc3, 0xb3, 0x00                # 162 (a2) ó
-    db  0xc3, 0xba, 0x00                # 163 (a3) ú
-    db  0xc3, 0xb1, 0x00                # 164 (a4) ñ
-    db  0xc3, 0x91, 0x00                # 165 (a5) Ñ
-    db  0xc2, 0xaa, 0x00                # 166 (a6) ª
-    db  0xc2, 0xba, 0x00                # 167 (a7) º
-    db  0xc2, 0xbf, 0x00                # 168 (a8) ¿
-    db  0xe2, 0x8c, 0x90                # 169 (a9) ⌐
-    db  0xc2, 0xac, 0x00                # 170 (aa) ¬
-    db  0xc2, 0xbd, 0x00                # 171 (ab) ½
-    db  0xc2, 0xbc, 0x00                # 172 (ac) ¼
-    db  0xc2, 0xa1, 0x00                # 173 (ad) ¡
-    db  0xc2, 0xab, 0x00                # 174 (ae) «
-    db  0xc2, 0xbb, 0x00                # 175 (af) »
-    db  0xe2, 0x96, 0x91                # 176 (b0) ░
-    db  0xe2, 0x96, 0x92                # 177 (b1) ▒
-    db  0xe2, 0x96, 0x93                # 178 (b2) ▓
-    db  0xe2, 0x94, 0x82                # 179 (b3) │
-    db  0xe2, 0x94, 0xa4                # 180 (b4) ┤
-    db  0xe2, 0x95, 0xa1                # 181 (b5) ╡
-    db  0xe2, 0x95, 0xa2                # 182 (b6) ╢
-    db  0xe2, 0x95, 0x96                # 183 (b7) ╖
-    db  0xe2, 0x95, 0x95                # 184 (b8) ╕
-    db  0xe2, 0x95, 0xa3                # 185 (b9) ╣
-    db  0xe2, 0x95, 0x91                # 186 (ba) ║
-    db  0xe2, 0x95, 0x97                # 187 (bb) ╗
-    db  0xe2, 0x95, 0x9d                # 188 (bc) ╝
-    db  0xe2, 0x95, 0x9c                # 189 (bd) ╜
-    db  0xe2, 0x95, 0x9b                # 190 (be) ╛
-    db  0xe2, 0x94, 0x90                # 191 (bf) ┐
-    db  0xe2, 0x94, 0x94                # 192 (c0) └
-    db  0xe2, 0x94, 0xb4                # 193 (c1) ┴
-    db  0xe2, 0x94, 0xac                # 194 (c2) ┬
-    db  0xe2, 0x94, 0x9c                # 195 (c3) ├
-    db  0xe2, 0x94, 0x80                # 196 (c4) ─
-    db  0xe2, 0x94, 0xbc                # 197 (c5) ┼
-    db  0xe2, 0x95, 0x9e                # 198 (c6) ╞
-    db  0xe2, 0x95, 0x9f                # 199 (c7) ╟
-    db  0xe2, 0x95, 0x9a                # 200 (c8) ╚
-    db  0xe2, 0x95, 0x94                # 201 (c9) ╔
-    db  0xe2, 0x95, 0xa9                # 202 (ca) ╩
-    db  0xe2, 0x95, 0xa6                # 203 (cb) ╦
-    db  0xe2, 0x95, 0xa0                # 204 (cc) ╠
-    db  0xe2, 0x95, 0x90                # 205 (cd) ═
-    db  0xe2, 0x95, 0xac                # 206 (ce) ╬
-    db  0xe2, 0x95, 0xa7                # 207 (cf) ╧
-    db  0xe2, 0x95, 0xa8                # 208 (d0) ╨
-    db  0xe2, 0x95, 0xa4                # 209 (d1) ╤
-    db  0xe2, 0x95, 0xa5                # 210 (d2) ╥
-    db  0xe2, 0x95, 0x99                # 211 (d3) ╙
-    db  0xe2, 0x95, 0x98                # 212 (d4) ╘
-    db  0xe2, 0x95, 0x92                # 213 (d5) ╒
-    db  0xe2, 0x95, 0x93                # 214 (d6) ╓
-    db  0xe2, 0x95, 0xab                # 215 (d7) ╫
-    db  0xe2, 0x95, 0xaa                # 216 (d8) ╪
-    db  0xe2, 0x94, 0x98                # 217 (d9) ┘
-    db  0xe2, 0x94, 0x8c                # 218 (da) ┌
-    db  0xe2, 0x96, 0x88                # 219 (db) █
-    db  0xe2, 0x96, 0x84                # 220 (dc) ▄
-    db  0xe2, 0x96, 0x8c                # 221 (dd) ▌
-    db  0xe2, 0x96, 0x90                # 222 (de) ▐
-    db  0xe2, 0x96, 0x80                # 223 (df) ▀
-    db  0xce, 0xb1, 0x00                # 224 (e0) α
-    db  0xc3, 0x9f, 0x00                # 225 (e1) ß
-    db  0xce, 0x93, 0x00                # 226 (e2) Γ
-    db  0xcf, 0x80, 0x00                # 227 (e3) π
-    db  0xce, 0xa3, 0x00                # 228 (e4) Σ
-    db  0xcf, 0x83, 0x00                # 229 (e5) σ
-    db  0xc2, 0xb5, 0x00                # 230 (e6) µ
-    db  0xcf, 0x84, 0x00                # 231 (e7) τ
-    db  0xce, 0xa6, 0x00                # 232 (e8) Φ
-    db  0xce, 0x98, 0x00                # 233 (e9) Θ
-    db  0xce, 0xa9, 0x00                # 234 (ea) Ω
-    db  0xce, 0xb4, 0x00                # 235 (eb) δ
-    db  0xe2, 0x88, 0x9e                # 236 (ec) ∞
-    db  0xcf, 0x86, 0x00                # 237 (ed) φ
-    db  0xce, 0xb5, 0x00                # 238 (ee) ε
-    db  0xe2, 0x88, 0xa9                # 239 (ef) ∩
-    db  0xe2, 0x89, 0xa1                # 240 (f0) ≡
-    db  0xc2, 0xb1, 0x00                # 241 (f1) ±
-    db  0xe2, 0x89, 0xa5                # 242 (f2) ≥
-    db  0xe2, 0x89, 0xa4                # 243 (f3) ≤
-    db  0xe2, 0x8c, 0xa0                # 244 (f4) ⌠
-    db  0xe2, 0x8c, 0xa1                # 245 (f5) ⌡
-    db  0xc3, 0xb7, 0x00                # 246 (f6) ÷
-    db  0xe2, 0x89, 0x88                # 247 (f7) ≈
-    db  0xc2, 0xb0, 0x00                # 248 (f8) °
-    db  0xe2, 0x88, 0x99                # 249 (f9) ∙
-    db  0xc2, 0xb7, 0x00                # 250 (fa) ·
-    db  0xe2, 0x88, 0x9a                # 251 (fb) √
-    db  0xe2, 0x81, 0xbf                # 252 (fc) ⁿ
-    db  0xc2, 0xb2, 0x00                # 253 (fd) ²
-    db  0xe2, 0x96, 0xa0                # 254 (fe) ■
-    db  0x20, 0x00, 0x00                # 255 (ff)
+cp437_b0:
+    db  0x20       # 00[0]
+    db  0xe2       # 01[0] ☺
+    db  0xe2       # 02[0] ☻
+    db  0xe2       # 03[0] ♥
+    db  0xe2       # 04[0] ♦
+    db  0xe2       # 05[0] ♣
+    db  0xe2       # 06[0] ♠
+    db  0xe2       # 07[0] •
+    db  0xe2       # 08[0] ◘
+    db  0xe2       # 09[0] ○
+    db  0xe2       # 0a[0] ◙
+    db  0xe2       # 0b[0] ♂
+    db  0xe2       # 0c[0] ♀
+    db  0xe2       # 0d[0] ♪
+    db  0xe2       # 0e[0] ♫
+    db  0xe2       # 0f[0] ☼
+    db  0xe2       # 10[0] ►
+    db  0xe2       # 11[0] ◄
+    db  0xe2       # 12[0] ↕
+    db  0xe2       # 13[0] ‼
+    db  0xc2       # 14[0] ¶
+    db  0xc2       # 15[0] §
+    db  0xe2       # 16[0] ▬
+    db  0xe2       # 17[0] ↨
+    db  0xe2       # 18[0] ↑
+    db  0xe2       # 19[0] ↓
+    db  0xe2       # 1a[0] →
+    db  0xe2       # 1b[0] ←
+    db  0xe2       # 1c[0] ∟
+    db  0xe2       # 1d[0] ↔
+    db  0xe2       # 1e[0] ▲
+    db  0xe2       # 1f[0] ▼
+    db  0x20       # 20[0]
+    db  0x21       # 21[0] !
+    db  0x22       # 22[0] "
+    db  0x23       # 23[0] #
+    db  0x24       # 24[0] $
+    db  0x25       # 25[0] %
+    db  0x26       # 26[0] &
+    db  0x27       # 27[0] '
+    db  0x28       # 28[0] (
+    db  0x29       # 29[0] )
+    db  0x2a       # 2a[0] *
+    db  0x2b       # 2b[0] +
+    db  0x2c       # 2c[0] ,
+    db  0x2d       # 2d[0] -
+    db  0x2e       # 2e[0] .
+    db  0x2f       # 2f[0] /
+    db  0x30       # 30[0] 0
+    db  0x31       # 31[0] 1
+    db  0x32       # 32[0] 2
+    db  0x33       # 33[0] 3
+    db  0x34       # 34[0] 4
+    db  0x35       # 35[0] 5
+    db  0x36       # 36[0] 6
+    db  0x37       # 37[0] 7
+    db  0x38       # 38[0] 8
+    db  0x39       # 39[0] 9
+    db  0x3a       # 3a[0] :
+    db  0x3b       # 3b[0] ;
+    db  0x3c       # 3c[0] <
+    db  0x3d       # 3d[0] =
+    db  0x3e       # 3e[0] >
+    db  0x3f       # 3f[0] ?
+    db  0x40       # 40[0] @
+    db  0x41       # 41[0] A
+    db  0x42       # 42[0] B
+    db  0x43       # 43[0] C
+    db  0x44       # 44[0] D
+    db  0x45       # 45[0] E
+    db  0x46       # 46[0] F
+    db  0x47       # 47[0] G
+    db  0x48       # 48[0] H
+    db  0x49       # 49[0] I
+    db  0x4a       # 4a[0] J
+    db  0x4b       # 4b[0] K
+    db  0x4c       # 4c[0] L
+    db  0x4d       # 4d[0] M
+    db  0x4e       # 4e[0] N
+    db  0x4f       # 4f[0] O
+    db  0x50       # 50[0] P
+    db  0x51       # 51[0] Q
+    db  0x52       # 52[0] R
+    db  0x53       # 53[0] S
+    db  0x54       # 54[0] T
+    db  0x55       # 55[0] U
+    db  0x56       # 56[0] V
+    db  0x57       # 57[0] W
+    db  0x58       # 58[0] X
+    db  0x59       # 59[0] Y
+    db  0x5a       # 5a[0] Z
+    db  0x5b       # 5b[0] [
+    db  0x5c       # 5c[0] \
+    db  0x5d       # 5d[0] ]
+    db  0x5e       # 5e[0] ^
+    db  0x5f       # 5f[0] _
+    db  0x60       # 60[0] `
+    db  0x61       # 61[0] a
+    db  0x62       # 62[0] b
+    db  0x63       # 63[0] c
+    db  0x64       # 64[0] d
+    db  0x65       # 65[0] e
+    db  0x66       # 66[0] f
+    db  0x67       # 67[0] g
+    db  0x68       # 68[0] h
+    db  0x69       # 69[0] i
+    db  0x6a       # 6a[0] j
+    db  0x6b       # 6b[0] k
+    db  0x6c       # 6c[0] l
+    db  0x6d       # 6d[0] m
+    db  0x6e       # 6e[0] n
+    db  0x6f       # 6f[0] o
+    db  0x70       # 70[0] p
+    db  0x71       # 71[0] q
+    db  0x72       # 72[0] r
+    db  0x73       # 73[0] s
+    db  0x74       # 74[0] t
+    db  0x75       # 75[0] u
+    db  0x76       # 76[0] v
+    db  0x77       # 77[0] w
+    db  0x78       # 78[0] x
+    db  0x79       # 79[0] y
+    db  0x7a       # 7a[0] z
+    db  0x7b       # 7b[0] {
+    db  0x7c       # 7c[0] |
+    db  0x7d       # 7d[0] }
+    db  0x7e       # 7e[0] ~
+    db  0xe2       # 7f[0] ⌂
+    db  0xc3       # 80[0] Ç
+    db  0xc3       # 81[0] ü
+    db  0xc3       # 82[0] é
+    db  0xc3       # 83[0] â
+    db  0xc3       # 84[0] ä
+    db  0xc3       # 85[0] à
+    db  0xc3       # 86[0] å
+    db  0xc3       # 87[0] ç
+    db  0xc3       # 88[0] ê
+    db  0xc3       # 89[0] ë
+    db  0xc3       # 8a[0] è
+    db  0xc3       # 8b[0] ï
+    db  0xc3       # 8c[0] î
+    db  0xc3       # 8d[0] ì
+    db  0xc3       # 8e[0] Ä
+    db  0xc3       # 8f[0] Å
+    db  0xc3       # 90[0] É
+    db  0xc3       # 91[0] æ
+    db  0xc3       # 92[0] Æ
+    db  0xc3       # 93[0] ô
+    db  0xc3       # 94[0] ö
+    db  0xc3       # 95[0] ò
+    db  0xc3       # 96[0] û
+    db  0xc3       # 97[0] ù
+    db  0xc3       # 98[0] ÿ
+    db  0xc3       # 99[0] Ö
+    db  0xc3       # 9a[0] Ü
+    db  0xc2       # 9b[0] ¢
+    db  0xc2       # 9c[0] £
+    db  0xc2       # 9d[0] ¥
+    db  0xe2       # 9e[0] ₧
+    db  0xc6       # 9f[0] ƒ
+    db  0xc3       # a0[0] á
+    db  0xc3       # a1[0] í
+    db  0xc3       # a2[0] ó
+    db  0xc3       # a3[0] ú
+    db  0xc3       # a4[0] ñ
+    db  0xc3       # a5[0] Ñ
+    db  0xc2       # a6[0] ª
+    db  0xc2       # a7[0] º
+    db  0xc2       # a8[0] ¿
+    db  0xe2       # a9[0] ⌐
+    db  0xc2       # aa[0] ¬
+    db  0xc2       # ab[0] ½
+    db  0xc2       # ac[0] ¼
+    db  0xc2       # ad[0] ¡
+    db  0xc2       # ae[0] «
+    db  0xc2       # af[0] »
+    db  0xe2       # b0[0] ░
+    db  0xe2       # b1[0] ▒
+    db  0xe2       # b2[0] ▓
+    db  0xe2       # b3[0] │
+    db  0xe2       # b4[0] ┤
+    db  0xe2       # b5[0] ╡
+    db  0xe2       # b6[0] ╢
+    db  0xe2       # b7[0] ╖
+    db  0xe2       # b8[0] ╕
+    db  0xe2       # b9[0] ╣
+    db  0xe2       # ba[0] ║
+    db  0xe2       # bb[0] ╗
+    db  0xe2       # bc[0] ╝
+    db  0xe2       # bd[0] ╜
+    db  0xe2       # be[0] ╛
+    db  0xe2       # bf[0] ┐
+    db  0xe2       # c0[0] └
+    db  0xe2       # c1[0] ┴
+    db  0xe2       # c2[0] ┬
+    db  0xe2       # c3[0] ├
+    db  0xe2       # c4[0] ─
+    db  0xe2       # c5[0] ┼
+    db  0xe2       # c6[0] ╞
+    db  0xe2       # c7[0] ╟
+    db  0xe2       # c8[0] ╚
+    db  0xe2       # c9[0] ╔
+    db  0xe2       # ca[0] ╩
+    db  0xe2       # cb[0] ╦
+    db  0xe2       # cc[0] ╠
+    db  0xe2       # cd[0] ═
+    db  0xe2       # ce[0] ╬
+    db  0xe2       # cf[0] ╧
+    db  0xe2       # d0[0] ╨
+    db  0xe2       # d1[0] ╤
+    db  0xe2       # d2[0] ╥
+    db  0xe2       # d3[0] ╙
+    db  0xe2       # d4[0] ╘
+    db  0xe2       # d5[0] ╒
+    db  0xe2       # d6[0] ╓
+    db  0xe2       # d7[0] ╫
+    db  0xe2       # d8[0] ╪
+    db  0xe2       # d9[0] ┘
+    db  0xe2       # da[0] ┌
+    db  0xe2       # db[0] █
+    db  0xe2       # dc[0] ▄
+    db  0xe2       # dd[0] ▌
+    db  0xe2       # de[0] ▐
+    db  0xe2       # df[0] ▀
+    db  0xce       # e0[0] α
+    db  0xc3       # e1[0] ß
+    db  0xce       # e2[0] Γ
+    db  0xcf       # e3[0] π
+    db  0xce       # e4[0] Σ
+    db  0xcf       # e5[0] σ
+    db  0xc2       # e6[0] µ
+    db  0xcf       # e7[0] τ
+    db  0xce       # e8[0] Φ
+    db  0xce       # e9[0] Θ
+    db  0xce       # ea[0] Ω
+    db  0xce       # eb[0] δ
+    db  0xe2       # ec[0] ∞
+    db  0xcf       # ed[0] φ
+    db  0xce       # ee[0] ε
+    db  0xe2       # ef[0] ∩
+    db  0xe2       # f0[0] ≡
+    db  0xc2       # f1[0] ±
+    db  0xe2       # f2[0] ≥
+    db  0xe2       # f3[0] ≤
+    db  0xe2       # f4[0] ⌠
+    db  0xe2       # f5[0] ⌡
+    db  0xc3       # f6[0] ÷
+    db  0xe2       # f7[0] ≈
+    db  0xc2       # f8[0] °
+    db  0xe2       # f9[0] ∙
+    db  0xc2       # fa[0] ·
+    db  0xe2       # fb[0] √
+    db  0xe2       # fc[0] ⁿ
+    db  0xc2       # fd[0] ²
+    db  0xe2       # fe[0] ■
+    db  0x20       # ff[0]
+
+cp437_b1:
+    db  0x00       # 00[1]
+    db  0x98       # 01[1] ☺
+    db  0x98       # 02[1] ☻
+    db  0x99       # 03[1] ♥
+    db  0x99       # 04[1] ♦
+    db  0x99       # 05[1] ♣
+    db  0x99       # 06[1] ♠
+    db  0x80       # 07[1] •
+    db  0x97       # 08[1] ◘
+    db  0x97       # 09[1] ○
+    db  0x97       # 0a[1] ◙
+    db  0x99       # 0b[1] ♂
+    db  0x99       # 0c[1] ♀
+    db  0x99       # 0d[1] ♪
+    db  0x99       # 0e[1] ♫
+    db  0x98       # 0f[1] ☼
+    db  0x96       # 10[1] ►
+    db  0x97       # 11[1] ◄
+    db  0x86       # 12[1] ↕
+    db  0x80       # 13[1] ‼
+    db  0xb6       # 14[1] ¶
+    db  0xa7       # 15[1] §
+    db  0x96       # 16[1] ▬
+    db  0x86       # 17[1] ↨
+    db  0x86       # 18[1] ↑
+    db  0x86       # 19[1] ↓
+    db  0x86       # 1a[1] →
+    db  0x86       # 1b[1] ←
+    db  0x88       # 1c[1] ∟
+    db  0x86       # 1d[1] ↔
+    db  0x96       # 1e[1] ▲
+    db  0x96       # 1f[1] ▼
+    db  0x00       # 20[1]
+    db  0x00       # 21[1] !
+    db  0x00       # 22[1] "
+    db  0x00       # 23[1] #
+    db  0x00       # 24[1] $
+    db  0x00       # 25[1] %
+    db  0x00       # 26[1] &
+    db  0x00       # 27[1] '
+    db  0x00       # 28[1] (
+    db  0x00       # 29[1] )
+    db  0x00       # 2a[1] *
+    db  0x00       # 2b[1] +
+    db  0x00       # 2c[1] ,
+    db  0x00       # 2d[1] -
+    db  0x00       # 2e[1] .
+    db  0x00       # 2f[1] /
+    db  0x00       # 30[1] 0
+    db  0x00       # 31[1] 1
+    db  0x00       # 32[1] 2
+    db  0x00       # 33[1] 3
+    db  0x00       # 34[1] 4
+    db  0x00       # 35[1] 5
+    db  0x00       # 36[1] 6
+    db  0x00       # 37[1] 7
+    db  0x00       # 38[1] 8
+    db  0x00       # 39[1] 9
+    db  0x00       # 3a[1] :
+    db  0x00       # 3b[1] ;
+    db  0x00       # 3c[1] <
+    db  0x00       # 3d[1] =
+    db  0x00       # 3e[1] >
+    db  0x00       # 3f[1] ?
+    db  0x00       # 40[1] @
+    db  0x00       # 41[1] A
+    db  0x00       # 42[1] B
+    db  0x00       # 43[1] C
+    db  0x00       # 44[1] D
+    db  0x00       # 45[1] E
+    db  0x00       # 46[1] F
+    db  0x00       # 47[1] G
+    db  0x00       # 48[1] H
+    db  0x00       # 49[1] I
+    db  0x00       # 4a[1] J
+    db  0x00       # 4b[1] K
+    db  0x00       # 4c[1] L
+    db  0x00       # 4d[1] M
+    db  0x00       # 4e[1] N
+    db  0x00       # 4f[1] O
+    db  0x00       # 50[1] P
+    db  0x00       # 51[1] Q
+    db  0x00       # 52[1] R
+    db  0x00       # 53[1] S
+    db  0x00       # 54[1] T
+    db  0x00       # 55[1] U
+    db  0x00       # 56[1] V
+    db  0x00       # 57[1] W
+    db  0x00       # 58[1] X
+    db  0x00       # 59[1] Y
+    db  0x00       # 5a[1] Z
+    db  0x00       # 5b[1] [
+    db  0x00       # 5c[1] \
+    db  0x00       # 5d[1] ]
+    db  0x00       # 5e[1] ^
+    db  0x00       # 5f[1] _
+    db  0x00       # 60[1] `
+    db  0x00       # 61[1] a
+    db  0x00       # 62[1] b
+    db  0x00       # 63[1] c
+    db  0x00       # 64[1] d
+    db  0x00       # 65[1] e
+    db  0x00       # 66[1] f
+    db  0x00       # 67[1] g
+    db  0x00       # 68[1] h
+    db  0x00       # 69[1] i
+    db  0x00       # 6a[1] j
+    db  0x00       # 6b[1] k
+    db  0x00       # 6c[1] l
+    db  0x00       # 6d[1] m
+    db  0x00       # 6e[1] n
+    db  0x00       # 6f[1] o
+    db  0x00       # 70[1] p
+    db  0x00       # 71[1] q
+    db  0x00       # 72[1] r
+    db  0x00       # 73[1] s
+    db  0x00       # 74[1] t
+    db  0x00       # 75[1] u
+    db  0x00       # 76[1] v
+    db  0x00       # 77[1] w
+    db  0x00       # 78[1] x
+    db  0x00       # 79[1] y
+    db  0x00       # 7a[1] z
+    db  0x00       # 7b[1] {
+    db  0x00       # 7c[1] |
+    db  0x00       # 7d[1] }
+    db  0x00       # 7e[1] ~
+    db  0x8c       # 7f[1] ⌂
+    db  0x87       # 80[1] Ç
+    db  0xbc       # 81[1] ü
+    db  0xa9       # 82[1] é
+    db  0xa2       # 83[1] â
+    db  0xa4       # 84[1] ä
+    db  0xa0       # 85[1] à
+    db  0xa5       # 86[1] å
+    db  0xa7       # 87[1] ç
+    db  0xaa       # 88[1] ê
+    db  0xab       # 89[1] ë
+    db  0xa8       # 8a[1] è
+    db  0xaf       # 8b[1] ï
+    db  0xae       # 8c[1] î
+    db  0xac       # 8d[1] ì
+    db  0x84       # 8e[1] Ä
+    db  0x85       # 8f[1] Å
+    db  0x89       # 90[1] É
+    db  0xa6       # 91[1] æ
+    db  0x86       # 92[1] Æ
+    db  0xb4       # 93[1] ô
+    db  0xb6       # 94[1] ö
+    db  0xb2       # 95[1] ò
+    db  0xbb       # 96[1] û
+    db  0xb9       # 97[1] ù
+    db  0xbf       # 98[1] ÿ
+    db  0x96       # 99[1] Ö
+    db  0x9c       # 9a[1] Ü
+    db  0xa2       # 9b[1] ¢
+    db  0xa3       # 9c[1] £
+    db  0xa5       # 9d[1] ¥
+    db  0x82       # 9e[1] ₧
+    db  0x92       # 9f[1] ƒ
+    db  0xa1       # a0[1] á
+    db  0xad       # a1[1] í
+    db  0xb3       # a2[1] ó
+    db  0xba       # a3[1] ú
+    db  0xb1       # a4[1] ñ
+    db  0x91       # a5[1] Ñ
+    db  0xaa       # a6[1] ª
+    db  0xba       # a7[1] º
+    db  0xbf       # a8[1] ¿
+    db  0x8c       # a9[1] ⌐
+    db  0xac       # aa[1] ¬
+    db  0xbd       # ab[1] ½
+    db  0xbc       # ac[1] ¼
+    db  0xa1       # ad[1] ¡
+    db  0xab       # ae[1] «
+    db  0xbb       # af[1] »
+    db  0x96       # b0[1] ░
+    db  0x96       # b1[1] ▒
+    db  0x96       # b2[1] ▓
+    db  0x94       # b3[1] │
+    db  0x94       # b4[1] ┤
+    db  0x95       # b5[1] ╡
+    db  0x95       # b6[1] ╢
+    db  0x95       # b7[1] ╖
+    db  0x95       # b8[1] ╕
+    db  0x95       # b9[1] ╣
+    db  0x95       # ba[1] ║
+    db  0x95       # bb[1] ╗
+    db  0x95       # bc[1] ╝
+    db  0x95       # bd[1] ╜
+    db  0x95       # be[1] ╛
+    db  0x94       # bf[1] ┐
+    db  0x94       # c0[1] └
+    db  0x94       # c1[1] ┴
+    db  0x94       # c2[1] ┬
+    db  0x94       # c3[1] ├
+    db  0x94       # c4[1] ─
+    db  0x94       # c5[1] ┼
+    db  0x95       # c6[1] ╞
+    db  0x95       # c7[1] ╟
+    db  0x95       # c8[1] ╚
+    db  0x95       # c9[1] ╔
+    db  0x95       # ca[1] ╩
+    db  0x95       # cb[1] ╦
+    db  0x95       # cc[1] ╠
+    db  0x95       # cd[1] ═
+    db  0x95       # ce[1] ╬
+    db  0x95       # cf[1] ╧
+    db  0x95       # d0[1] ╨
+    db  0x95       # d1[1] ╤
+    db  0x95       # d2[1] ╥
+    db  0x95       # d3[1] ╙
+    db  0x95       # d4[1] ╘
+    db  0x95       # d5[1] ╒
+    db  0x95       # d6[1] ╓
+    db  0x95       # d7[1] ╫
+    db  0x95       # d8[1] ╪
+    db  0x94       # d9[1] ┘
+    db  0x94       # da[1] ┌
+    db  0x96       # db[1] █
+    db  0x96       # dc[1] ▄
+    db  0x96       # dd[1] ▌
+    db  0x96       # de[1] ▐
+    db  0x96       # df[1] ▀
+    db  0xb1       # e0[1] α
+    db  0x9f       # e1[1] ß
+    db  0x93       # e2[1] Γ
+    db  0x80       # e3[1] π
+    db  0xa3       # e4[1] Σ
+    db  0x83       # e5[1] σ
+    db  0xb5       # e6[1] µ
+    db  0x84       # e7[1] τ
+    db  0xa6       # e8[1] Φ
+    db  0x98       # e9[1] Θ
+    db  0xa9       # ea[1] Ω
+    db  0xb4       # eb[1] δ
+    db  0x88       # ec[1] ∞
+    db  0x86       # ed[1] φ
+    db  0xb5       # ee[1] ε
+    db  0x88       # ef[1] ∩
+    db  0x89       # f0[1] ≡
+    db  0xb1       # f1[1] ±
+    db  0x89       # f2[1] ≥
+    db  0x89       # f3[1] ≤
+    db  0x8c       # f4[1] ⌠
+    db  0x8c       # f5[1] ⌡
+    db  0xb7       # f6[1] ÷
+    db  0x89       # f7[1] ≈
+    db  0xb0       # f8[1] °
+    db  0x88       # f9[1] ∙
+    db  0xb7       # fa[1] ·
+    db  0x88       # fb[1] √
+    db  0x81       # fc[1] ⁿ
+    db  0xb2       # fd[1] ²
+    db  0x96       # fe[1] ■
+    db  0x00       # ff[1]
+
+cp437_b2:
+    db  0x00       # 00[2]
+    db  0xba       # 01[2] ☺
+    db  0xbb       # 02[2] ☻
+    db  0xa5       # 03[2] ♥
+    db  0xa6       # 04[2] ♦
+    db  0xa3       # 05[2] ♣
+    db  0xa0       # 06[2] ♠
+    db  0xa2       # 07[2] •
+    db  0x98       # 08[2] ◘
+    db  0x8b       # 09[2] ○
+    db  0x99       # 0a[2] ◙
+    db  0x82       # 0b[2] ♂
+    db  0x80       # 0c[2] ♀
+    db  0xaa       # 0d[2] ♪
+    db  0xab       # 0e[2] ♫
+    db  0xbc       # 0f[2] ☼
+    db  0xba       # 10[2] ►
+    db  0x84       # 11[2] ◄
+    db  0x95       # 12[2] ↕
+    db  0xbc       # 13[2] ‼
+    db  0x00       # 14[2] ¶
+    db  0x00       # 15[2] §
+    db  0xac       # 16[2] ▬
+    db  0xa8       # 17[2] ↨
+    db  0x91       # 18[2] ↑
+    db  0x93       # 19[2] ↓
+    db  0x92       # 1a[2] →
+    db  0x90       # 1b[2] ←
+    db  0x9f       # 1c[2] ∟
+    db  0x94       # 1d[2] ↔
+    db  0xb2       # 1e[2] ▲
+    db  0xbc       # 1f[2] ▼
+    db  0x00       # 20[2]
+    db  0x00       # 21[2] !
+    db  0x00       # 22[2] "
+    db  0x00       # 23[2] #
+    db  0x00       # 24[2] $
+    db  0x00       # 25[2] %
+    db  0x00       # 26[2] &
+    db  0x00       # 27[2] '
+    db  0x00       # 28[2] (
+    db  0x00       # 29[2] )
+    db  0x00       # 2a[2] *
+    db  0x00       # 2b[2] +
+    db  0x00       # 2c[2] ,
+    db  0x00       # 2d[2] -
+    db  0x00       # 2e[2] .
+    db  0x00       # 2f[2] /
+    db  0x00       # 30[2] 0
+    db  0x00       # 31[2] 1
+    db  0x00       # 32[2] 2
+    db  0x00       # 33[2] 3
+    db  0x00       # 34[2] 4
+    db  0x00       # 35[2] 5
+    db  0x00       # 36[2] 6
+    db  0x00       # 37[2] 7
+    db  0x00       # 38[2] 8
+    db  0x00       # 39[2] 9
+    db  0x00       # 3a[2] :
+    db  0x00       # 3b[2] ;
+    db  0x00       # 3c[2] <
+    db  0x00       # 3d[2] =
+    db  0x00       # 3e[2] >
+    db  0x00       # 3f[2] ?
+    db  0x00       # 40[2] @
+    db  0x00       # 41[2] A
+    db  0x00       # 42[2] B
+    db  0x00       # 43[2] C
+    db  0x00       # 44[2] D
+    db  0x00       # 45[2] E
+    db  0x00       # 46[2] F
+    db  0x00       # 47[2] G
+    db  0x00       # 48[2] H
+    db  0x00       # 49[2] I
+    db  0x00       # 4a[2] J
+    db  0x00       # 4b[2] K
+    db  0x00       # 4c[2] L
+    db  0x00       # 4d[2] M
+    db  0x00       # 4e[2] N
+    db  0x00       # 4f[2] O
+    db  0x00       # 50[2] P
+    db  0x00       # 51[2] Q
+    db  0x00       # 52[2] R
+    db  0x00       # 53[2] S
+    db  0x00       # 54[2] T
+    db  0x00       # 55[2] U
+    db  0x00       # 56[2] V
+    db  0x00       # 57[2] W
+    db  0x00       # 58[2] X
+    db  0x00       # 59[2] Y
+    db  0x00       # 5a[2] Z
+    db  0x00       # 5b[2] [
+    db  0x00       # 5c[2] \
+    db  0x00       # 5d[2] ]
+    db  0x00       # 5e[2] ^
+    db  0x00       # 5f[2] _
+    db  0x00       # 60[2] `
+    db  0x00       # 61[2] a
+    db  0x00       # 62[2] b
+    db  0x00       # 63[2] c
+    db  0x00       # 64[2] d
+    db  0x00       # 65[2] e
+    db  0x00       # 66[2] f
+    db  0x00       # 67[2] g
+    db  0x00       # 68[2] h
+    db  0x00       # 69[2] i
+    db  0x00       # 6a[2] j
+    db  0x00       # 6b[2] k
+    db  0x00       # 6c[2] l
+    db  0x00       # 6d[2] m
+    db  0x00       # 6e[2] n
+    db  0x00       # 6f[2] o
+    db  0x00       # 70[2] p
+    db  0x00       # 71[2] q
+    db  0x00       # 72[2] r
+    db  0x00       # 73[2] s
+    db  0x00       # 74[2] t
+    db  0x00       # 75[2] u
+    db  0x00       # 76[2] v
+    db  0x00       # 77[2] w
+    db  0x00       # 78[2] x
+    db  0x00       # 79[2] y
+    db  0x00       # 7a[2] z
+    db  0x00       # 7b[2] {
+    db  0x00       # 7c[2] |
+    db  0x00       # 7d[2] }
+    db  0x00       # 7e[2] ~
+    db  0x82       # 7f[2] ⌂
+    db  0x00       # 80[2] Ç
+    db  0x00       # 81[2] ü
+    db  0x00       # 82[2] é
+    db  0x00       # 83[2] â
+    db  0x00       # 84[2] ä
+    db  0x00       # 85[2] à
+    db  0x00       # 86[2] å
+    db  0x00       # 87[2] ç
+    db  0x00       # 88[2] ê
+    db  0x00       # 89[2] ë
+    db  0x00       # 8a[2] è
+    db  0x00       # 8b[2] ï
+    db  0x00       # 8c[2] î
+    db  0x00       # 8d[2] ì
+    db  0x00       # 8e[2] Ä
+    db  0x00       # 8f[2] Å
+    db  0x00       # 90[2] É
+    db  0x00       # 91[2] æ
+    db  0x00       # 92[2] Æ
+    db  0x00       # 93[2] ô
+    db  0x00       # 94[2] ö
+    db  0x00       # 95[2] ò
+    db  0x00       # 96[2] û
+    db  0x00       # 97[2] ù
+    db  0x00       # 98[2] ÿ
+    db  0x00       # 99[2] Ö
+    db  0x00       # 9a[2] Ü
+    db  0x00       # 9b[2] ¢
+    db  0x00       # 9c[2] £
+    db  0x00       # 9d[2] ¥
+    db  0xa7       # 9e[2] ₧
+    db  0x00       # 9f[2] ƒ
+    db  0x00       # a0[2] á
+    db  0x00       # a1[2] í
+    db  0x00       # a2[2] ó
+    db  0x00       # a3[2] ú
+    db  0x00       # a4[2] ñ
+    db  0x00       # a5[2] Ñ
+    db  0x00       # a6[2] ª
+    db  0x00       # a7[2] º
+    db  0x00       # a8[2] ¿
+    db  0x90       # a9[2] ⌐
+    db  0x00       # aa[2] ¬
+    db  0x00       # ab[2] ½
+    db  0x00       # ac[2] ¼
+    db  0x00       # ad[2] ¡
+    db  0x00       # ae[2] «
+    db  0x00       # af[2] »
+    db  0x91       # b0[2] ░
+    db  0x92       # b1[2] ▒
+    db  0x93       # b2[2] ▓
+    db  0x82       # b3[2] │
+    db  0xa4       # b4[2] ┤
+    db  0xa1       # b5[2] ╡
+    db  0xa2       # b6[2] ╢
+    db  0x96       # b7[2] ╖
+    db  0x95       # b8[2] ╕
+    db  0xa3       # b9[2] ╣
+    db  0x91       # ba[2] ║
+    db  0x97       # bb[2] ╗
+    db  0x9d       # bc[2] ╝
+    db  0x9c       # bd[2] ╜
+    db  0x9b       # be[2] ╛
+    db  0x90       # bf[2] ┐
+    db  0x94       # c0[2] └
+    db  0xb4       # c1[2] ┴
+    db  0xac       # c2[2] ┬
+    db  0x9c       # c3[2] ├
+    db  0x80       # c4[2] ─
+    db  0xbc       # c5[2] ┼
+    db  0x9e       # c6[2] ╞
+    db  0x9f       # c7[2] ╟
+    db  0x9a       # c8[2] ╚
+    db  0x94       # c9[2] ╔
+    db  0xa9       # ca[2] ╩
+    db  0xa6       # cb[2] ╦
+    db  0xa0       # cc[2] ╠
+    db  0x90       # cd[2] ═
+    db  0xac       # ce[2] ╬
+    db  0xa7       # cf[2] ╧
+    db  0xa8       # d0[2] ╨
+    db  0xa4       # d1[2] ╤
+    db  0xa5       # d2[2] ╥
+    db  0x99       # d3[2] ╙
+    db  0x98       # d4[2] ╘
+    db  0x92       # d5[2] ╒
+    db  0x93       # d6[2] ╓
+    db  0xab       # d7[2] ╫
+    db  0xaa       # d8[2] ╪
+    db  0x98       # d9[2] ┘
+    db  0x8c       # da[2] ┌
+    db  0x88       # db[2] █
+    db  0x84       # dc[2] ▄
+    db  0x8c       # dd[2] ▌
+    db  0x90       # de[2] ▐
+    db  0x80       # df[2] ▀
+    db  0x00       # e0[2] α
+    db  0x00       # e1[2] ß
+    db  0x00       # e2[2] Γ
+    db  0x00       # e3[2] π
+    db  0x00       # e4[2] Σ
+    db  0x00       # e5[2] σ
+    db  0x00       # e6[2] µ
+    db  0x00       # e7[2] τ
+    db  0x00       # e8[2] Φ
+    db  0x00       # e9[2] Θ
+    db  0x00       # ea[2] Ω
+    db  0x00       # eb[2] δ
+    db  0x9e       # ec[2] ∞
+    db  0x00       # ed[2] φ
+    db  0x00       # ee[2] ε
+    db  0xa9       # ef[2] ∩
+    db  0xa1       # f0[2] ≡
+    db  0x00       # f1[2] ±
+    db  0xa5       # f2[2] ≥
+    db  0xa4       # f3[2] ≤
+    db  0xa0       # f4[2] ⌠
+    db  0xa1       # f5[2] ⌡
+    db  0x00       # f6[2] ÷
+    db  0x88       # f7[2] ≈
+    db  0x00       # f8[2] °
+    db  0x99       # f9[2] ∙
+    db  0x00       # fa[2] ·
+    db  0x9a       # fb[2] √
+    db  0xbf       # fc[2] ⁿ
+    db  0x00       # fd[2] ²
+    db  0xa0       # fe[2] ■
+    db  0x00       # ff[2]
 
 .EOF

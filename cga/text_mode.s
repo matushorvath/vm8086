@@ -1,7 +1,9 @@
 .EXPORT write_memory_text
 
 # From cp437.s
-.IMPORT cp437
+.IMPORT cp437_b0
+.IMPORT cp437_b1
+.IMPORT cp437_b2
 
 # From screen.s
 .IMPORT screen_cols
@@ -127,19 +129,17 @@ write_memory_text_print:
     out 'm'
 
     # Print the character, converting from CP437 to UTF-8
-    mul [rb + char], 3, [rb + tmp]
-
-    add cp437 + 0, [rb + tmp], [ip + 1]
+    add cp437_b0, [rb + char], [ip + 1]
     out [0]
 
-    add cp437 + 1, [rb + tmp], [ip + 1]
+    add cp437_b1, [rb + char], [ip + 1]
     jz  [0], write_memory_text_done
-    add cp437 + 1, [rb + tmp], [ip + 1]
+    add cp437_b1, [rb + char], [ip + 1]
     out [0]
 
-    add cp437 + 2, [rb + tmp], [ip + 1]
+    add cp437_b2, [rb + char], [ip + 1]
     jz  [0], write_memory_text_done
-    add cp437 + 2, [rb + tmp], [ip + 1]
+    add cp437_b2, [rb + char], [ip + 1]
     out [0]
 
     # Reset color

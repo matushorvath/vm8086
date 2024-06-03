@@ -28,24 +28,32 @@ utf8[0x7f] = '⌂';
 // Fix character 0xff, which is NBSP, replace by a regular space
 utf8[0xff] = ' ';
 
-const comment = (index, char) => `# ${index.toString(10).padStart(3)} (${index.toString(16).padStart(2, '0')})${char === undefined ? '' : ` ${char}`.trimEnd()}`;
-const db = (bytes) => `    db  ${bytes.map(b => `0x${b.toString(16).padStart(2, '0')}`).join(', ')}${', 0x00'.repeat(3 - bytes.length)}`;
-const line = (index, bytes, char) => `${db(bytes)}                ${comment(index, char)}`
+const tohex = (num) => num.toString(16).padStart(2, '0');
+const comment = (byte, index, char) => `# ${tohex(index)}[${byte}]${(` ${char ?? ''}`).trimEnd()}`;
+const line = (byte, index, value, char) => `    db  0x${tohex(value ?? 0)}       ${comment(byte, index, char)}`
 
-console.log('.EXPORT cp437');
+console.log('.EXPORT cp437_b0');
+console.log('.EXPORT cp437_b1');
+console.log('.EXPORT cp437_b2');
 console.log('');
 console.log('# Conversion table between CP437 and UTF-8; generated using cp437.js');
 console.log('');
-console.log('cp437:');
 
-for (let index = 0; index < 256; index++) {
-    const char = utf8[index]
-    const bytes = [...Buffer.from(char, 'utf8').values()];
-    if (bytes.length > 3) {
-        throw new Error('char code too long');
+for (let byte = 0; byte < 3; byte++) {
+    console.log(`cp437_b${byte}:`);
+
+    for (let index = 0; index < 256; index++) {
+        const char = utf8[index]
+        const buffer = Buffer.from(char, 'utf8');
+
+        if (buffer.length > 3) {
+            throw new Error('utf-8 character too long');
+        }
+
+        console.log(line(byte, index, buffer[byte], char));
     }
-    console.log(line(index, bytes, char));
+
+    console.log('');
 }
 
-console.log('');
 console.log('.EOF');
