@@ -18,12 +18,18 @@ Possible Optimizations
 
 - Optimize physical address calculation (calc_seg_off_addr_*), it's very heavy and used a lot. It's mostly heavy to handle corner cases (integer overflows).
 
-- All the generated tables should be changed to avoid multiplying the input number by N
-
 TODO
 ====
 
 - Make sure makefiles display and delete output files when compilation fails.
+- All generated tables should be changed to avoid multiplying the input number by N
+
+VM:
+- nmi_mask_reg
+- ppi_cwd_reg
+- DMAC (8237) dmac_ch0_count_reg
+- PIC (8259) pic1_reg0
+- keyboard controller (8242) ppi_pb_reg; also read ppi_pb_reg
 
 Emulators
 =========

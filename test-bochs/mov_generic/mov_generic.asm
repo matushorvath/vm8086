@@ -9,12 +9,12 @@ section .text
 %include "reg_immed.inc"
     mark 0x81
 
-; TODO x MOV MEM8, IMMED8
-; TODO x MOV MEM16, IMMED16
+; TODO MOV MEM8, IMMED8
+; TODO MOV MEM16, IMMED16
 
-; TODO x MOV AL, MEM8
-; TODO x MOV AX, MEM16
-; TODO x MOV MEM8, AL
-; TODO x MOV MEM16, AX
+; TODO MOV AL, MEM8
+; TODO MOV AX, MEM16
+; TODO MOV MEM8, AL
+; TODO MOV MEM16, AX
 
     call power_off

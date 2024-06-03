@@ -86,9 +86,6 @@ mode_control_write:
     add [rb + value_bits], 5, [ip + 1]
     add [0], 0, [mode_blinking]
 
-    # TODO remove
-    #call dump_cga_state
-
     call reset_screen
 
     arb 2
@@ -126,9 +123,6 @@ color_control_write:
 
     add [rb + value_bits], 5, [ip + 1]
     add [0], 0, [color_palette]
-
-    # TODO remove
-    #call dump_cga_state
 
     call reset_screen
 
@@ -172,7 +166,7 @@ status_read_after_vertical:
 .ENDFRAME
 
 ##########
-dump_cga_state:
+dump_cga_state:                         # TODO remove
 .FRAME
     add dump_cga_state_separator, 0, [rb - 1]
     arb -1

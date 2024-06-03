@@ -30,8 +30,6 @@
 # From util/util.s
 .IMPORT split_16_8_8
 
-# TODO convert CP437 to UTF8 using a table
-
 ##########
 write_memory_text:
 .FRAME addr, value; row, col, col_x8, char, attr, addr_lo, addr_hi, tmp

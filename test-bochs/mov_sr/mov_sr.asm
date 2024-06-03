@@ -33,7 +33,7 @@ section .text
 
     dump_state
 
-    ; TODO x proper tests once we are able to fill registers with immediate
+    ; TODO proper tests once we are able to fill registers with immediate
 
     ; MOV sr, [registers]
     mov es, [bx + si]
@@ -57,10 +57,10 @@ section .text
 
     dump_state
 
-    ; TODO x MOV sr, MEM16 with 8-bit displacement, both directions
-    ; TODO x MOV sr, MEM16 with 16-bit displacement], both directions
-    ; TODO x MOV sr, reg, both directions
-    ; TODO x test setting cs (as the last test probably)
+    ; TODO MOV sr, MEM16 with 8-bit displacement, both directions
+    ; TODO MOV sr, MEM16 with 16-bit displacement], both directions
+    ; TODO MOV sr, reg, both directions
+    ; TODO test setting cs (as the last test probably)
 
     call power_off
 

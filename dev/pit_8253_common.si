@@ -104,19 +104,19 @@ pit_vm_callback_common_after_dec:
     add [pit_reload_hi], 0, [pit_value_hi]
 
 pit_vm_callback_common_after_reload:
-    # Do we trigger INT0 for this channel?
+    # Do we trigger IRQ0 for this channel?
     jz  [pit_trigger_int0], pit_vm_callback_common_done
 
-    # Is this mode other >=2? If yes, trigger INT0 always.
+    # Is this mode other >=2? If yes, trigger IRQ0 always.
     lt  [pit_mode], 2, [rb + tmp]
     jz  [rb + tmp], pit_vm_callback_common_int0
 
-    # Mode 0-1, trigger INT0 only if output has changed
+    # Mode 0-1, trigger IRQ0 only if output has changed
     eq  [rb + orig_output], [pit_output], [rb + tmp]
     jz  [rb + tmp], pit_vm_callback_common_done
 
 pit_vm_callback_common_int0:
-    # TODO trigger INT0 here (probably delay after instruction finished?)
+    # TODO trigger IRQ0 here (probably delay after instruction finished?)
 
 pit_vm_callback_common_done:
 #    # TODO remove debug
@@ -208,15 +208,15 @@ pit_mode_command_write_common_after_aliases:
     #arb -1
     #call mode_command_write_log
 
-    # Do we trigger INT0 for this channel?
+    # Do we trigger IRQ0 for this channel?
     jz  [pit_trigger_int0], pit_mode_command_write_common_done
 
-    # If output goes hi from lo, trigger INT0
+    # If output goes hi from lo, trigger IRQ0
     eq  [pit_output], 0, [rb + tmp]
     add [rb + tmp], [rb + orig_output], [rb + tmp]
     jnz [rb + tmp], pit_mode_command_write_common_done
 
-    # TODO trigger INT0 here (probably delay after instruction finished?)
+    # TODO trigger IRQ0 here (probably delay after instruction finished?)
 
     jz  0, pit_mode_command_write_common_done
 

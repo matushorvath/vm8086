@@ -1,6 +1,6 @@
 ; TODO force NASM to generate also the other variants for MOV REG8/REG8, REG8/REG16 (src/dst)
-; TODO x test sign-extended 8-bit displacement
-; TODO x test wrap around (register near 0xfffff + displacement, also negative displacement, also around 0x7f)
+; TODO test sign-extended 8-bit displacement
+; TODO test wrap around (register near 0xfffff + displacement, also negative displacement, also around 0x7f)
 
 %include "common.inc"
 
