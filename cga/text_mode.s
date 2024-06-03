@@ -5,9 +5,16 @@
 .IMPORT cp437_b1
 .IMPORT cp437_b2
 
+# From palette.s
+.IMPORT palette_text_fg
+.IMPORT palette_text_bg_ptr
+
 # From screen.s
 .IMPORT screen_page_size
 .IMPORT screen_row_size_160
+
+# From registers.s
+.IMPORT mode_not_blinking
 
 # From cpu/state.s
 .IMPORT mem
@@ -153,75 +160,48 @@ write_memory_text_print:
     out ';'
 
     add nibbles + 1, [rb + attr], [ip + 1]
-    add [0], palette_text_bg_light, [ip + 1]
+    add [0], [palette_text_bg_ptr], [ip + 1]
     add [0], 0, [rb - 1]
     arb -1
     call printb
 
     out 'm'
 
+    jnz [mode_not_blinking], write_memory_text_after_blink
+
+    # Turn on blinking
+    out 0x1b
+    out '['
+    out '5'
+    out 'm'
+
+write_memory_text_after_blink:
     # Print the character, converting from CP437 to UTF-8
     add cp437_b0, [rb + char], [ip + 1]
     out [0]
 
     add cp437_b1, [rb + char], [ip + 1]
-    jz  [0], write_memory_text_done
+    jz  [0], write_memory_text_after_print
     add cp437_b1, [rb + char], [ip + 1]
     out [0]
 
     add cp437_b2, [rb + char], [ip + 1]
-    jz  [0], write_memory_text_done
+    jz  [0], write_memory_text_after_print
     add cp437_b2, [rb + char], [ip + 1]
     out [0]
 
-    # Reset color
+write_memory_text_after_print:
+    # Reset all attributes
     out 0x1b
     out '['
     out '0'
     out 'm'
 
+    out 10
+
 write_memory_text_done:
     arb 8
     ret 2
 .ENDFRAME
-
-##########
-palette_text_fg:
-    db  30                              # Black
-    db  34                              # Blue
-    db  32                              # Green
-    db  36                              # Cyan
-    db  31                              # Red
-    db  35                              # Magenta
-    db  33                              # Brown
-    db  37                              # Light Gray
-    db  90                              # Dark Gray
-    db  94                              # Light Blue
-    db  92                              # Light Green
-    db  96                              # Light Cyan
-    db  91                              # Light Red
-    db  95                              # Light Magenta
-    db  93                              # Yellow
-    db  97                              # White
-
-palette_text_bg_light:
-    db  49                              # Black (49 for default color or 40 for explicitly black)
-    db  44                              # Blue
-    db  42                              # Green
-    db  46                              # Cyan
-    db  41                              # Red
-    db  45                              # Magenta
-    db  43                              # Brown
-    db  47                              # Light Gray
-    db  100                             # Dark Gray
-    db  104                             # Light Blue
-    db  102                             # Light Green
-    db  106                             # Light Cyan
-    db  101                             # Light Red
-    db  105                             # Light Magenta
-    db  103                             # Yellow
-    db  107                             # White
-
-# TODO text mode palette with blinking
 
 .EOF

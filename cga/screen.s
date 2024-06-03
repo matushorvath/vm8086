@@ -2,6 +2,9 @@
 .EXPORT screen_page_size
 .EXPORT screen_row_size_160
 
+# From palette.s
+.IMPORT select_palette_text_bg
+
 # From registers.s
 .IMPORT mode_high_res_text
 .IMPORT mode_graphics
@@ -38,6 +41,9 @@ reset_screen_text:
     # Page size is 25 rows * 80/160 bytes per row = 2000/4000 bytes depending on column count
     add [mode_high_res_text], 1, [screen_page_size]
     mul [screen_page_size], 2000, [screen_page_size]
+
+    # Palette for background
+    call select_palette_text_bg
 
 reset_screen_redraw_memory:
     # Don't redraw the memory if output is disabled

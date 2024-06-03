@@ -12,7 +12,7 @@
 .EXPORT mode_back_and_white
 .EXPORT mode_enable_output
 .EXPORT mode_high_res_graphics
-.EXPORT mode_blinking
+.EXPORT mode_not_blinking
 
 .EXPORT color_selected
 .EXPORT color_bright
@@ -84,7 +84,7 @@ mode_control_write:
     add [0], 0, [mode_high_res_graphics]
 
     add [rb + value_bits], 5, [ip + 1]
-    add [0], 0, [mode_blinking]
+    add [0], 0, [mode_not_blinking]
 
     call reset_screen
 
@@ -226,7 +226,7 @@ dump_cga_state:                         # TODO remove
     arb -1
     call print_str
 
-    add [mode_blinking], 0, [rb - 1]
+    add [mode_not_blinking], 0, [rb - 1]
     add 10, 0, [rb - 2]
     add 0, 0, [rb - 3]
     arb -3
@@ -299,8 +299,8 @@ mode_enable_output:
     db  0
 mode_high_res_graphics:
     db  0
-mode_blinking:
-    db  0
+mode_not_blinking:
+    db  1
 
 color_selected:
     db  0
