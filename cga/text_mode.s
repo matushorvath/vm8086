@@ -14,6 +14,7 @@
 .IMPORT screen_row_size_160
 
 # From registers.s
+.IMPORT mode_high_res_text
 .IMPORT mode_not_blinking
 
 # From cpu/state.s
@@ -167,6 +168,14 @@ write_memory_text_print:
 
     out 'm'
 
+    jnz [mode_high_res_text], write_memory_text_after_double_width
+
+    # Select double width font for 40x25
+    out 0x1b
+    out '#'
+    out '6'
+
+write_memory_text_after_double_width:
     jnz [mode_not_blinking], write_memory_text_after_blink
 
     # Turn on blinking
