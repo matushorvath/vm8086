@@ -48,12 +48,3 @@ main:
 stack:
 
 .EOF
-
-# TODO
-
-PIT 8253 pit_ctl_reg pit_ch0_reg pit_ch1_reg pit_ch2_reg
-nmi_mask_reg
-ppi_cwd_reg
-DMAC (8237) dmac_ch0_count_reg
-PIC (8259) pic1_reg0
-keyboard controller (8242) ppi_pb_reg; also read ppi_pb_reg

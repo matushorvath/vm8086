@@ -14,7 +14,7 @@ binary_start_address_ip:
 
 # Load address of the binary in 8086 memory
 binary_load_address:
-    db  0xfc000
+    db  0xBIOS_LOAD_ADDRESS
 
 # Symbols binary_count, binary_size and binary_data are provided by the binary
 

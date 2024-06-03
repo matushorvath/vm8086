@@ -22,6 +22,14 @@ TODO
 ====
 
 - Make sure makefiles display and delete output files when compilation fails.
+- All generated tables should be changed to avoid multiplying the input number by N
+
+VM:
+- nmi_mask_reg
+- ppi_cwd_reg
+- DMAC (8237) dmac_ch0_count_reg
+- PIC (8259) pic1_reg0
+- keyboard controller (8242) ppi_pb_reg; also read ppi_pb_reg
 
 Emulators
 =========
@@ -49,7 +57,25 @@ BIOS
 ====
 
 https://github.com/skiselev/8088_bios.git
+make -C vm clean
+BIOS_LOAD_ADDRESS=fc000 BIOS_BIN=~/intcode/8088_bios/binaries/bios-xt.bin make && ~/intcode/xzintbit/vms/c/ic bin/vm.input
+
 https://glabios.org/
+BIOS_BIN=~/intcode/GLABIOS_0.2.5_8X.ROM make (does not work yet)
+
+https://github.com/virtualxt/pcxtbios
+chmod a+x make_linux.sh
+install freebasic
+compile toolsrc using fbc -lang qb file.bas
+move the compiled tools to ./linux
+eproms/2764/pcxtbios.rom at 0xfe000 is mandatory, the rest is optional
+
+make -C vm clean
+BIOS_LOAD_ADDRESS=fe000 BIOS_BIN=~/intcode/pcxtbios/eproms/2764/pcxtbios.rom make && ~/intcode/xzintbit/vms/c/ic bin/vm.input
+
+make -C vm clean
+cat ~/intcode/pcxtbios/eproms/2764/basicfc.rom ~/intcode/pcxtbios/eproms/2764/pcxtbios.rom > bios.tmp
+BIOS_LOAD_ADDRESS=fc000 BIOS_BIN=$(pwd)/bios.tmp make && ~/intcode/xzintbit/vms/c/ic bin/vm.input
 
 CGA
 ===
