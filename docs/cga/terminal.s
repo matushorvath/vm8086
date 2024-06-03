@@ -12,8 +12,8 @@
 .EXPORT 
 .EXPORT 
 
-# From obj/print99.s
-.IMPORT print99
+# From obj/printb.s
+.IMPORT printb
 
 
 ##########
@@ -72,13 +72,13 @@ terminal_set_cursor:
 
     add [rb + row], 0, [rb - 1]
     arb -1
-    call print99
+    call printb
 
     out ';'
 
     add [rb + col], 0, [rb - 1]
     arb -1
-    call print99
+    call printb
 
     out 'H'
 

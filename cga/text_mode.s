@@ -24,8 +24,8 @@
 # From util/shr.s
 .IMPORT shr
 
-# From util/print99.s
-.IMPORT print99
+# From util/printb.s
+.IMPORT printb
 
 # From util/util.s
 .IMPORT split_16_8_8
@@ -96,13 +96,13 @@ write_memory_text_print:
 
     add [rb + row], 1, [rb - 1]
     arb -1
-    call print99
+    call printb
 
     out ';'
 
     add [rb + col], 1, [rb - 1]
     arb -1
-    call print99
+    call printb
 
     out 'H'
 
@@ -116,7 +116,7 @@ write_memory_text_print:
     add [0], palette_text_fg, [ip + 1]
     add [0], 0, [rb - 1]
     arb -1
-    call print99
+    call printb
 
     out ';'
 
@@ -124,7 +124,7 @@ write_memory_text_print:
     add [0], palette_text_bg_light, [ip + 1]
     add [0], 0, [rb - 1]
     arb -1
-    call print99
+    call printb
 
     out 'm'
 
@@ -181,15 +181,14 @@ palette_text_bg_light:
     db  45                              # Magenta
     db  43                              # Brown
     db  47                              # Light Gray
-    # TODO light colors don't work with print99, because they're > 100
-    db  49 #100                             # Dark Gray
-    db  44 #104                             # Light Blue
-    db  42 #102                             # Light Green
-    db  46 #106                             # Light Cyan
-    db  41 #101                             # Light Red
-    db  45 #105                             # Light Magenta
-    db  43 #103                             # Yellow
-    db  47 #107                             # White
+    db  100                             # Dark Gray
+    db  104                             # Light Blue
+    db  102                             # Light Green
+    db  106                             # Light Cyan
+    db  101                             # Light Red
+    db  105                             # Light Magenta
+    db  103                             # Yellow
+    db  107                             # White
 
 # TODO text mode palette with blinking
 
