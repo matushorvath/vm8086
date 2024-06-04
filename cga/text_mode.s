@@ -146,7 +146,10 @@ write_memory_text_print:
 
     out 'H'
 
-    # Set colors
+    # Set colors, unless it's the default white-on-black
+    eq  [rb + attr], 0x07, [rb + tmp]
+    jnz [rb + tmp], write_memory_text_after_color
+
     out 0x1b
     out '['
 
@@ -168,6 +171,7 @@ write_memory_text_print:
 
     out 'm'
 
+write_memory_text_after_color:
     jnz [mode_high_res_text], write_memory_text_after_double_width
 
     # Select double width font for 40x25
@@ -205,8 +209,6 @@ write_memory_text_after_print:
     out '['
     out '0'
     out 'm'
-
-    out 10
 
 write_memory_text_done:
     arb 8
