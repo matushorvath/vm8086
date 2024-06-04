@@ -1,3 +1,9 @@
+Notes
+=====
+
+Run without interpreting ANSI escape sequences:
+make && ~/intcode/xzintbit/vms/c/ic bin/vm.bios-xt.input | tr '\33' '\n'
+
 Decoding
 ========
 
