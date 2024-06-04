@@ -66,6 +66,10 @@ https://github.com/skiselev/8088_bios.git
 make -C vm clean
 BIOS_LOAD_ADDRESS=fc000 BIOS_BIN=~/intcode/8088_bios/binaries/bios-xt.bin make && ~/intcode/xzintbit/vms/c/ic bin/vm.input
 
+listing:
+set(CMAKE_ASM_NASM_FLAGS "-O9 -l $(basename $@).lst")
+./build/CMakeFiles/bios-xt.bin.dir/src/bios.asm.lst
+
 https://glabios.org/
 BIOS_BIN=~/intcode/GLABIOS_0.2.5_8X.ROM make (does not work yet)
 
