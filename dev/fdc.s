@@ -40,11 +40,11 @@ fdc_dor_write:
 
     # Store individual bits
     add [rb + value_bits], 0, [ip + 1]
-    add [0], 0, [fdc_drive_a_select]
+    add [0], 0, [fdc_drive_a_select] # TODO active low
 
-    # TODO we should probably perform a reset, not store the value, also reset is probably active low
+    # TODO we should probably perform a reset, not store the value
     add [rb + value_bits], 2, [ip + 1]
-    add [0], 0, [fdc_reset]
+    add [0], 0, [fdc_reset] # TODO active low
 
     add [rb + value_bits], 3, [ip + 1]
     add [0], 0, [fdc_enable_dma]
@@ -139,3 +139,23 @@ fdc_enable_motor_b:
     db  0
 
 .EOF
+
+fdc_init:
+
+- timer turns off motors by writing 0x0c to DOR
+- fdc_reset
+   - pulse bit 2 in DOR to reset (reset state if FDC)
+   - make sure it keeps DMA on
+   - then it waits for IRQ6 = INT 0E
+- read status, fail if not bit 7, fail if bit 6
+- fdc sense interrupt status
+   - al = 0x08 -> fdc_write
+   - fdc_read -> ST0 (if carry, error)
+   - fdc_read -> current cylinder (if carry, error)
+   - if ST0 has 0x0c bits set, error
+- fdc_send_specify
+   - sends data based on int_1E
+   - I think the only interesting bit is ND, we need to check it's 0 (DMA mode)
+
+int_19
+setloc	0E6F2h

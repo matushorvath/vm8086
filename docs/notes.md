@@ -131,3 +131,11 @@ FDC
 https://www.pcjs.org/machines/pcx86/ibm/hdc/
 https://www.datasheet.live/pdfviewer?url=https%3A%2F%2Fpdf.datasheet.live%2F3fe4a52f%2Fintel.com%2FP8272A.pdf
 https://en.m.wikipedia.org/wiki/Floppy-disk_controller
+
+config_tracing_cs:
+    db  0xf000
+config_tracing_ip:
+    db  0xe6f2 # int_19
+    db  0xec59 # int_13
+    db  0xc425 # int_13_fn00
+    db  0xc42f # fdc_init
