@@ -205,6 +205,7 @@ write_memory_text_after_blink:
 
 write_memory_text_after_print:
     # Reset all attributes
+    # TODO only reset when needed
     out 0x1b
     out '['
     out '0'

@@ -5,6 +5,7 @@
 .EXPORT config_flags_as_286
 .EXPORT config_bcd_as_bochs
 .EXPORT config_de_fault_as_286
+.EXPORT config_boot_80x25
 
 # Tracing (0 - disabled, 1 - enabled)
 config_enable_tracing:
@@ -30,6 +31,10 @@ config_bcd_as_bochs:
 
 # Make #DE push address of the failing DIV/IDIV, instead of the address after
 config_de_fault_as_286:
+    db  1
+
+# Boot in CGA 80x25 text mode
+config_boot_80x25:
     db  1
 
 .EOF
