@@ -15,7 +15,7 @@ const gunzipAsync = util.promisify(zlib.gunzip);
 const piscina = new Piscina({ filename: path.resolve(import.meta.dirname, 'worker.js') });
 const log = fs.createWriteStream('test.log', { flags: 'a', encoding: 'utf8' });
 
-const TESTS_DIR = path.join('..', '..', '8088', 'v1');
+const TESTS_DIR = path.join('..', '..', '8088');
 
 let mpb, options;
 
@@ -27,6 +27,7 @@ Usage: node test.js [options]
 
 Options:
     [--file|-f <file-prefix>]   Only run test cases starting with <file-prefix>
+    [--variant|-v <variant>]    Only run test cases from the <variant> subdirectory
     [--index|-i <index>]        Only run tests with idx field equal to <index>
     [--hash|-h <hash-prefix>]   Only run tests with hash field starting with <hash-prefix>
     [--continue|-c]             Start at specified file, then continue running following files
@@ -53,6 +54,7 @@ const parseCommandLine = () => {
         const { values } = util.parseArgs({
             options: {
                 file: { type: 'string', short: 'f', multiple: true },
+                variant: { type: 'string', short: 'v', multiple: true, default: ['v1', 'v2'] },
                 index: { type: 'string', short: 'i', multiple: true },
                 hash: { type: 'string', short: 'h', multiple: true },
                 'dump-errors': { type: 'boolean', short: 'e' },
@@ -115,8 +117,8 @@ const formatPassedFailed = (passed, failed, total, filtered) => {
     return output;
 };
 
-const loadTests = async (file, idx, hash) => {
-    const zbuffer = await fsp.readFile(path.join(TESTS_DIR, file));
+const loadTests = async (variant, file, idx, hash) => {
+    const zbuffer = await fsp.readFile(path.join(TESTS_DIR, variant, file));
     const buffer = await gunzipAsync(zbuffer);
 
     const json = buffer.toString('utf8');
@@ -134,8 +136,8 @@ const calcPhysicalAddress = (seg, off) => {
     return (seg * 0x10 + off) % 0x100000;
 };
 
-const adjustTests = (file, tests) => {
-    if (['F6.6.json.gz', 'F6.7.json.gz', 'F7.6.json.gz', 'F7.7.json.gz'].includes(file)) {
+const adjustTests = (variant, file, tests) => {
+    if (variant === 'v1' && ['F6.6.json.gz', 'F6.7.json.gz', 'F7.6.json.gz', 'F7.7.json.gz'].includes(file)) {
         for (const test of tests) {
             // For DIV and IDIV tests that cause a #DE, the flags are pushed to stack and checked.
             // However some of the flags are undefined and should not cause the tests to fail.
@@ -230,9 +232,9 @@ const dumpError = (test, result) => {
     log.write(JSON.stringify(result, undefined, 2) + '\n');
 };
 
-const logTestSummary = (file, passed, failed, filtered) => {
+const logTestSummary = (variant, file, passed, failed, filtered) => {
     const data = {
-        file, filtered,
+        variant, file, filtered,
         passed: passed.length,
         failed: failed.length
     };
@@ -240,8 +242,8 @@ const logTestSummary = (file, passed, failed, filtered) => {
     log.write(JSON.stringify(data) + '\n');
 };
 
-const runTests = async (file, tests, filtered) => {
-    mpb?.addTask(file, { type: 'percentage' });
+const runTests = async (variant, file, tests, filtered) => {
+    mpb?.addTask(`${variant}/${file}`, { type: 'percentage' });
 
     let passed = [], failed = [];
     const runOneTest = async (test, i) => {
@@ -252,7 +254,7 @@ const runTests = async (file, tests, filtered) => {
             [error, actual] = await piscina.run({ test, options });
         }
 
-        const result = { file, hash: test.hash };
+        const result = { variant, file, hash: test.hash };
         if (error === undefined) {
             passed.push(result);
         } else {
@@ -269,7 +271,7 @@ const runTests = async (file, tests, filtered) => {
         }
 
         const message = formatPassedFailed(passed.length, failed.length, tests.length, filtered);
-        mpb?.updateTask(file, { percentage: i / tests.length, message });
+        mpb?.updateTask(`${variant}/${file}`, { percentage: i / tests.length, message });
 
         return error === undefined;
     };
@@ -291,10 +293,10 @@ const runTests = async (file, tests, filtered) => {
         }
     }
 
-    logTestSummary(file, passed, failed, filtered);
+    logTestSummary(variant, file, passed, failed, filtered);
 
     const message = formatPassedFailed(passed.length, failed.length, tests.length, filtered);
-    mpb?.done(file, { message });
+    mpb?.done(`${variant}/${file}`, { message });
 
     return { passed: passed.length, failed: failed.length };
 };
@@ -313,7 +315,8 @@ const loadMetadata = async () => {
         return undefined;
     }
 
-    return JSON.parse(await fsp.readFile(path.join(TESTS_DIR, 'metadata.json'), 'utf8'));
+    return options.variant.map(async variant =>
+        [variant, JSON.parse(await fsp.readFile(path.join(TESTS_DIR, variant, 'metadata.json'), 'utf8'))]);
 };
 
 const byteToOpcodesKey = (byte) => byte.toString(16).toUpperCase().padStart(2, '0');
@@ -353,28 +356,38 @@ const applyMetadata = (test, metadata) => {
 };
 
 const listFiles = async () => {
+    const files = [];
+
     let haveStartingFile = false;
 
-    return (await fsp.readdir(TESTS_DIR)).filter((file) => {
-        if (!file.match(/.*\.gz/)) {
+    for (const variant of options.variant) {
+        const allVariantFiles = await fsp.readdir(path.join(TESTS_DIR, variant));
+
+        const filteredVariantFiles = allVariantFiles.filter((file) => {
+            if (!file.match(/.*\.gz/)) {
+                return false;
+            }
+
+            if (options.file === undefined) {
+                return true;
+            }
+
+            if (options.file.some(f => file.startsWith(f))) {
+                haveStartingFile = true;
+                return true;
+            }
+
+            if (options.continue && haveStartingFile) {
+                return true;
+            }
+
             return false;
-        }
+        });
 
-        if (options.file === undefined) {
-            return true;
-        }
+        files.push(...filteredVariantFiles.map(file => ({ variant, file })));
+    }
 
-        if (options.file.some(f => file.startsWith(f))) {
-            haveStartingFile = true;
-            return true;
-        }
-
-        if (options.continue && haveStartingFile) {
-            return true;
-        }
-
-        return false;
-    });
+    return files;
 };
 
 const main = async () => {
@@ -398,14 +411,14 @@ const main = async () => {
     const metadata = await loadMetadata();
     const files = await listFiles();
 
-    for (const file of files) {
-        const allTests = await loadTests(file, options.index, options.hash);
-        const validTests = allTests.flatMap(test => applyMetadata(test, metadata));
-        adjustTests(file, validTests);
+    for (const { variant, file } of files) {
+        const allTests = await loadTests(variant, file, options.index, options.hash);
+        const validTests = allTests.flatMap(test => applyMetadata(test, metadata[variant]));
+        adjustTests(variant, file, validTests);
         const filtered = allTests.length - validTests.length;
 
         if (validTests.length > 0) {
-            const { passed, failed } = await runTests(file, validTests, filtered);
+            const { passed, failed } = await runTests(variant, file, validTests, filtered);
 
             if (failed !== 0 && options.break) {
                 break;
