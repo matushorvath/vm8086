@@ -54,7 +54,7 @@ const parseCommandLine = () => {
         const { values } = util.parseArgs({
             options: {
                 file: { type: 'string', short: 'f', multiple: true },
-                variant: { type: 'string', short: 'v', multiple: true, default: ['v1', 'v2'] },
+                variant: { type: 'string', short: 'v', multiple: true, default: ['v2'] },
                 index: { type: 'string', short: 'i', multiple: true },
                 hash: { type: 'string', short: 'h', multiple: true },
                 'dump-errors': { type: 'boolean', short: 'e' },
