@@ -23,6 +23,9 @@
 # From cpu/images.s
 .IMPORT init_images
 
+# From dev/fdc.s
+.IMPORT init_fdc
+
 # From dev/pit_8253.s
 .IMPORT init_pit_8253
 
@@ -58,6 +61,7 @@ main:
     call init_pit_8253
     call init_ppi_8255a
     call init_cga
+    call init_fdc
     call init_ports
 
     call execute

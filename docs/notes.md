@@ -139,3 +139,29 @@ config_tracing_ip:
     db  0xec59 # int_13
     db  0xc425 # int_13_fn00
     db  0xc42f # fdc_init
+
+fdc_init:
+
+- OK timer turns off motors by writing 0x0c to DOR
+- OK fdc_dor_reset
+   - pulse bit 2 in DOR to reset (reset state if FDC)
+   - make sure it keeps DMA on
+   - then it waits for IRQ6 = INT 0E
+- OK read status register, fail if not bit 7, fail if bit 6
+- fdc sense interrupt status
+   - al = 0x08 -> fdc_write
+   - fdc_read -> ST0 (if carry, error)
+   - fdc_read -> current cylinder (if carry, error)
+   - if ST0 has 0x0c bits set, error
+- fdc_send_specify
+   - sends data based on int_1E
+   - I think the only interesting bit is ND, we need to check it's 0 (DMA mode)
+
+int_19
+setloc	0E6F2h
+
+TODO
+
+- fdc should not work while fdc_dor_reset == 0
+- fdc should not read/write data or seek etc while the motor is off fdc_dor_enable_motor_a/b
+- fdc should complain about fdc_dor_enable_dma 

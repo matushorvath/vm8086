@@ -1,12 +1,15 @@
 .EXPORT init_fdc
 
-# From devices.s
+# From cpu/devices.s
 .IMPORT register_ports
 
-# From error.s
+# From cpu/error.s
 .IMPORT report_error
 
-# From obj/bits.s
+# From cpu/interrupt.s
+.IMPORT interrupt
+
+# From util/bits.s
 .IMPORT bits
 
 ##########
@@ -34,28 +37,37 @@ fdc_dor_write:
 .FRAME addr, value; value_bits, tmp
     arb -2
 
+    out 'A' # TODO remove
+    out ' '
+
     # Convert value to bits
     mul [rb + value], 8, [rb + tmp]
     add bits, [rb + tmp], [rb + value_bits]
 
-    # Store individual bits
-    add [rb + value_bits], 0, [ip + 1]
-    add [0], 0, [fdc_drive_a_select] # TODO active low
-
-    # TODO we should probably perform a reset, not store the value
+    # Save the original fdc_dor_reset value before changing it
+    eq  [fdc_dor_reset], 0, [rb + tmp]
     add [rb + value_bits], 2, [ip + 1]
-    add [0], 0, [fdc_reset] # TODO active low
+    add [0], 0, [fdc_dor_reset]
+    add [fdc_dor_reset], [rb + tmp], [rb + tmp]
+
+    # If fdc_dor_reset was low and now is high, reset the floppy controller
+    eq  [rb + tmp], 2, [rb + tmp]
+    jz  [rb + tmp], fdc_dor_write_after_reset
+    call fdc_d765ac_reset
+
+fdc_dor_write_after_reset:
+    # Save the other bits
+    add [rb + value_bits], 0, [ip + 1]
+    add [0], 0, [fdc_dor_drive_a_select]
 
     add [rb + value_bits], 3, [ip + 1]
-    add [0], 0, [fdc_enable_dma]
+    add [0], 0, [fdc_dor_enable_dma]
 
     add [rb + value_bits], 4, [ip + 1]
-    add [0], 0, [fdc_enable_motor_a]
+    add [0], 0, [fdc_dor_enable_motor_a]
 
     add [rb + value_bits], 5, [ip + 1]
-    add [0], 0, [fdc_enable_motor_b]
-
-    # TODO "A channel reset clears all bits." in the manual, find out what they mean
+    add [0], 0, [fdc_dor_enable_motor_b]
 
     arb 2
     ret 2
@@ -66,17 +78,24 @@ fdc_status_read:
 .FRAME addr; value
     arb -1
 
-    # TODO
+    out 'S' # TODO remove
+    out ' '
 
-    # Bit 7 Request for Master (RQM)- The data register is ready to send or receive data to or from the processor.
-    # Bit 6 Data Input/Output (DIO)-The direction of data transfer between the diskette controller and the processor.
-    #       If this bit is aI, transfer is from the diskette controller's data register to the processor; if it is a 0, the opposite is true.
-    # Bit 5 Non-DMA Mode (NDM)-The diskette controller is in the non-DMA mode.
-    # Bit 4 Diskette Controller Busy (CB)- A Read or Write command is being executed.
-    # Bit 3 Reserved
-    # Bit 2 Reserved
-    # Bit 1 Diskette Drive B Busy (DBB)- Diskette drive B is in the seek mode.
-    # Bit 0 Diskette Drive A Busy (DAB)- Diskette drive A is in the seek mode.
+    # Following bits have fixed values, since seeking, reading and writing is immediate,
+    # we only support DMA mode, and the FDC is always ready:
+    # Bit 0 DAB - FDD A is busy seeking
+    # Bit 1 DBB - FDD B is busy seeking
+    # Bit 2 reserved
+    # Bit 3 reserved
+    # Bit 4 CB  - Controller is busy reading or writing
+    # Bit 5 NDM - non-DMA mode
+    # Bit 7 RQM - data register is ready for data transfer
+
+    # Data transfer direction is CPU to FDC in command phase, FDC to CPU in result phase
+    # Bit 6 DIO - data input/output, 0 - from CPU to FDC, 1 - from FDC to CPU
+
+    mul [fdc_result_phase], 0b01000000, [rb + value]
+    add [rb + value], 0b10000000, [rb + value]
 
     arb 1
     ret 1
@@ -86,6 +105,10 @@ fdc_status_read:
 fdc_data_write:
 .FRAME addr, value;
     # TODO
+
+    out 'D' # TODO remove
+    out 'w'
+    out ' '
 
     ret 2
 .ENDFRAME
@@ -97,6 +120,10 @@ fdc_data_read:
 
     # TODO
 
+    out 'D' # TODO remove
+    out 'r'
+    out ' '
+
     arb 1
     ret 1
 .ENDFRAME
@@ -105,6 +132,9 @@ fdc_data_read:
 fdc_control_write:
 .FRAME addr, value;
     # TODO
+
+    out 'C' # TODO remove
+    out ' '
 
     # Bits 7-2 Reserved
     # Bits 2-0 Diskette Data Rate (00 500000, 01 300000, 10 250000, 11 125000)
@@ -117,45 +147,45 @@ fdc_dir_read:
 .FRAME addr; value
     arb -1
 
-    # TODO
-
-    # Bit 7 Diskette Change
-    # Rest of bits applies to fixed disks only
+    # The only bit related to floppy operation is bit 7 - diskette change
+    # We don't support changing the diskette, so return all zeros
+    add 0, 0, [rb + value]
 
     arb 1
     ret 1
 .ENDFRAME
 
 ##########
-fdc_drive_a_select:
+fdc_d765ac_reset:
+.FRAME
+    # TODO reset D765AC registers to zero, but don't touch the DOR,
+    # also don't touch SRT HUT HLT in Specify command
+
+    # Raise INT 0e = IRQ6 if the FDD is ready, which we assume it always is
+    # TODO if the motor is off, is the FDD ready?
+    add 0x0e, 0, [rb - 1]
+    arb -1
+    call interrupt
+
+    out 'I' # TODO remove
+    out ' '
+
+    ret 0
+.ENDFRAME
+
+##########
+fdc_dor_drive_a_select:                 # 0 = drive A selected, 1 = drive B selected
     db  0
-fdc_reset:
+fdc_dor_reset:                          # 0 = reset
     db  0
-fdc_enable_dma:
+fdc_dor_enable_dma:
     db  0
-fdc_enable_motor_a:
+fdc_dor_enable_motor_a:
     db  0
-fdc_enable_motor_b:
+fdc_dor_enable_motor_b:
+    db  0
+
+fdc_result_phase:
     db  0
 
 .EOF
-
-fdc_init:
-
-- timer turns off motors by writing 0x0c to DOR
-- fdc_reset
-   - pulse bit 2 in DOR to reset (reset state if FDC)
-   - make sure it keeps DMA on
-   - then it waits for IRQ6 = INT 0E
-- read status, fail if not bit 7, fail if bit 6
-- fdc sense interrupt status
-   - al = 0x08 -> fdc_write
-   - fdc_read -> ST0 (if carry, error)
-   - fdc_read -> current cylinder (if carry, error)
-   - if ST0 has 0x0c bits set, error
-- fdc_send_specify
-   - sends data based on int_1E
-   - I think the only interesting bit is ND, we need to check it's 0 (DMA mode)
-
-int_19
-setloc	0E6F2h
