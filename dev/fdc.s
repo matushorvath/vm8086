@@ -12,6 +12,9 @@
 # From util/bits.s
 .IMPORT bits
 
+# From util/nibbles.s
+.IMPORT nibbles
+
 ##########
 fdc_ports:
     db  0xf2, 0x03, 0, fdc_dor_write                        # Digital Output Register
@@ -94,7 +97,7 @@ fdc_status_read:
     # Data transfer direction is CPU to FDC in command phase, FDC to CPU in result phase
     # Bit 6 DIO - data input/output, 0 - from CPU to FDC, 1 - from FDC to CPU
 
-    mul [fdc_result_phase], 0b01000000, [rb + value]
+    mul [fdc_cmd_result_phase], 0b01000000, [rb + value]
     add [rb + value], 0b10000000, [rb + value]
 
     arb 1
@@ -103,39 +106,72 @@ fdc_status_read:
 
 ##########
 fdc_data_write:
-.FRAME addr, value;
+.FRAME addr, value; value_bits, value_x8, tmp
+    arb -X
+
     out 'D' # TODO remove
     out 'w'
     out ' '
 
     # Is the FDC in the middle of processing a command?
-    jz  [fdc_command_state], fdc_data_write_idle
+    jz  [fdc_cmd_state], fdc_data_write_idle
 
     # Yes, is this the command phase?
-    jnz [fdc_result_phase], fdc_data_write_invalid
+    # TODO how is write in result phase handled correctly?
+    jnz [fdc_cmd_result_phase], fdc_data_write_invalid
 
     # Yes, use the state as a label to jump to
-    jz  0, [fdc_command_state]
+    jz  0, [fdc_cmd_state]
 
 fdc_data_write_idle:
-    # Accept a new command
+    # Parse the first byte of a command
+    mul [rb + value], 8, [rb + value_x8]
 
-    # MT MF SK 0 0 1 1 0: cmd = read_data; save MT MF SK; -> _hd_us
-    # MT MF SK 0 1 1 0 0: cmd = read_deleted_data; save MT MF SK; -> _hd_us
-    # MT MF  0 0 0 1 0 1: cmd = write_data; save MT MF; -> _hd_us
-    # MT MF  0 0 1 0 0 1: cmd = write_deleted_data; save MT MF; -> _hd_us
-    #  0 MF SK 0 0 0 1 0: cmd = read_track; save MF SK; -> _hd_us
-    #  0 MF  0 0 1 0 1 0: cmd = read_id; save MF; -> _hd_us
-    #  0 MF  0 0 1 1 0 0: cmd = format_track; save MF; -> _hd_us
-    # MT MF SK 1 0 0 0 1: cmd = scan_equal; save MT MF SK; -> _hd_us
-    # MT MF SK 1 1 0 0 1: cmd = scan_low_or_equal; save MT MF SK; -> _hd_us
-    # MT MF SK 1 1 1 0 1: cmd = scan_high_or_equal; save MT MF SK; -> _hd_us
-    #  0  0  0 0 0 1 1 1: cmd = recalibrate; -> _hd_us
-    #  0  0  0 0 1 0 0 0: cmd = sense_interrupt_status; -> execute, _st0 (or separate satus for SIS)
-    #  0  0  0 0 0 0 1 1: cmd = specify; -> _specify_srt_hut
-    #  0  0  0 0 0 0 1 1: cmd = sense_driver_status; -> _hd_us
-    #  0  0  0 0 1 1 1 1: cmd = seek; -> _hd_us
-    # other             : cmd = invalid; -> _hd_us
+    # Save MT, MF, SK
+    add value_bits + 7, [rb + value_x8], [ip + 1]
+    add [0], 0, [fdc_cmd_mt] # TODO execute multitrack operation
+
+    add value_bits + 6, [rb + value_x8], [ip + 1]
+    add [0], 0, [fdc_cmd_mf] # TODO validate that FM/MFM encoding matches the disk
+
+    add value_bits + 5, [rb + value_x8], [ip + 1]
+    add [0], 0, [fdc_cmd_sk] # TODO execute support for skip deleted data
+
+    # Read bottom 5 bits as the command
+    add value_bits + 4, [rb + value_x8], [ip + 1]
+    mul [0], 0b00010000, [fdc_cmd_code]
+
+    mul [rb + value], 2, [rb + tmp]
+    add nibbles, [rb + tmp], [ip + 1]
+    add [0], [fdc_cmd_code], [fdc_cmd_code]
+
+    # We are now in command phase, the command wasn't executed yet
+    add 0, 0, [fdc_cmd_result_phase]
+    add 0, 0, [fdc_cmd_executed]
+
+    # Handle the state transition
+    add fdc_data_write_idle_table, [fdc_cmd_code], [ip + 2]
+    jz  0, [0]
+
+fdc_data_write_idle_table:
+    db  fdc_data_write_idle_to_hd_us
+
+    # MT MF SK 0 0 1 1 0: cmd_code = read_data; save MT MF SK; -> _hd_us
+    # MT MF SK 0 1 1 0 0: cmd_code = read_deleted_data; save MT MF SK; -> _hd_us
+    # MT MF  0 0 0 1 0 1: cmd_code = write_data; save MT MF; -> _hd_us
+    # MT MF  0 0 1 0 0 1: cmd_code = write_deleted_data; save MT MF; -> _hd_us
+    #  0 MF SK 0 0 0 1 0: cmd_code = read_track; save MF SK; -> _hd_us
+    #  0 MF  0 0 1 0 1 0: cmd_code = read_id; save MF; -> _hd_us
+    #  0 MF  0 0 1 1 0 0: cmd_code = format_track; save MF; -> _hd_us
+    # MT MF SK 1 0 0 0 1: cmd_code = scan_equal; save MT MF SK; -> _hd_us
+    # MT MF SK 1 1 0 0 1: cmd_code = scan_low_or_equal; save MT MF SK; -> _hd_us
+    # MT MF SK 1 1 1 0 1: cmd_code = scan_high_or_equal; save MT MF SK; -> _hd_us
+    #  0  0  0 0 0 1 1 1: cmd_code = recalibrate; -> _hd_us
+    #  0  0  0 0 1 0 0 0: cmd_code = sense_interrupt_status; -> execute, _st0 (or separate status for SIS)
+    #  0  0  0 0 0 0 1 1: cmd_code = specify; -> _specify_srt_hut
+    #  0  0  0 0 0 0 1 1: cmd_code = sense_driver_status; -> _hd_us
+    #  0  0  0 0 1 1 1 1: cmd_code = seek; -> _hd_us
+    # other             : cmd_code = invalid; -> _st0 and next idle state
 
 _hd_us
     # X X X X X HD US1 US0: save head (HD), save drive (US0);
@@ -187,6 +223,8 @@ fdc_data_write_invalid:
     # in: X X X X X HD US1 US0
     # out ST0
 
+    # TODO after the execution phase, interrupt will occur
+
     ret 2
 .ENDFRAME
 
@@ -202,10 +240,10 @@ fdc_data_read:
     out ' '
 
 _st0
-    # read ST0 -> _st1 (default); idle (cmd=invalid); _pcn (cmd=sense_interrupt_status)
+    # read ST0 -> _st1 (default); idle (cmd=invalid; docs say ST0 = 80); _pcn (cmd=sense_interrupt_status)
 
 _st1
-    # read ST1 -> _c (cmd=read_data, read_deleted_data); -> _st2 (default)
+    # read ST1 -> _st2
 
 _st2
     # read ST2 -> _c
@@ -290,10 +328,10 @@ fdc_dor_enable_motor_a:
 fdc_dor_enable_motor_b:
     db  0
 
-fdc_result_phase:
+fdc_cmd_result_phase:
     db  0
 
-fdc_command_state:
+fdc_cmd_state:
     db  0
 
 .EOF
