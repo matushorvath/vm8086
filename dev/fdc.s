@@ -104,6 +104,8 @@ fdc_status_read:
     ret 1
 .ENDFRAME
 
+# TODO consider separate set of states for format_track command, would save a lot of conditions
+
 ##########
 fdc_data_write:
 .FRAME addr, value; value_bits, value_x8, tmp
@@ -309,7 +311,7 @@ fdc_data_write_r:
 fdc_data_write_n:
     # Save N (number of bytes in sector)
     # TODO how is this used, do we need to save it?
-    add [rb + value], 0, [fdc_cmd_bytes_in_sector]
+    add [rb + value], 0, [fdc_cmd_bytes_per_sector]
 
     # Is this the format track command?
     eq  [fdc_cmd_code], 0b01101, [rb + tmp]
@@ -322,6 +324,14 @@ fdc_data_write_n:
 fdc_data_write_n_format_track:
     # Format track command, next state for format track command is write SC
     add fdc_data_write_sc, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
+
+fdc_data_write_sc:
+    # Save SC (number of sectors per cylinder)
+    add [rb + value], 0, [fdc_cmd_sectors_per_cylinder]
+
+    # Next state is write GPL
+    add fdc_data_write_gpl, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
 
 fdc_data_write_eot:
@@ -342,17 +352,8 @@ fdc_data_write_gpl:
     eq  [fdc_cmd_code], 0b01101, [rb + tmp]
     jnz [rb + tmp], fdc_data_write_gpl_format_track
 
-    # Is this one of the scan commands?
-    # TODO merge STP and DTL, they are never used at the same time, they can share a variable and states
-    eq  [fdc_cmd_code], 0b10001, [rb + tmp]
-    jnz [rb + tmp], fdc_data_write_gpl_scan
-    eq  [fdc_cmd_code], 0b11001, [rb + tmp]
-    jnz [rb + tmp], fdc_data_write_gpl_scan
-    eq  [fdc_cmd_code], 0b11101, [rb + tmp]
-    jnz [rb + tmp], fdc_data_write_gpl_scan
-
-    # No, default next state is write DTL
-    add fdc_data_write_dtl, 0, [fdc_cmd_state]
+    # No, default next state is write DTL/STP
+    add fdc_data_write_dtl_stp, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
 
 fdc_data_write_gpl_format_track:
@@ -360,14 +361,11 @@ fdc_data_write_gpl_format_track:
     add fdc_data_write_d, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
 
-fdc_data_write_gpl_scan
-    # One of the scan commands, next state for format track command is write STP
-    add fdc_data_write_stp, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
-
-fdc_data_write_dtl:
-    # Save DTL (data length, if N is 0, DTL is the length to read/write to a sector)
-    add [rb + value], 0, [fdc_cmd_data_length]
+fdc_data_write_dtl_stp:
+    # Save DTL or STP, they share the same variable
+    # DTL (data length, if N is 0, DTL is the length to read/write to a sector)
+    # STP (1=compare contiguous sectors, 2=compare alternate sectors)
+    add [rb + value], 0, [fdc_cmd_dtl_stp]
 
     # Next state is always read ST0
     add 1, 0, [fdc_cmd_result_phase]
@@ -387,7 +385,13 @@ fdc_data_write_dtl_table:
     db  fdc_data_write_exec_write_deleted_data              # 01001: write_deleted_data
     ds  2, 0                                                # 01010, 01011: read_id
     db  fdc_data_write_exec_read_deleted_data               # 01100: read_deleted_data
-    ds  19, 0                                               # 01101-11111: format_track, seek, scan_*
+    ds  4, 0                                                # 01101-10000: format_track, seek
+    db  fdc_data_write_exec_scan_equal                      # 10001: scan_equal
+    ds  7, 0                                                # 10010-11000
+    db  fdc_data_write_exec_scan_low_or_equal               # 11001: scan_low_or_equal
+    ds  3, 0                                                # 11010-11100
+    db  fdc_data_write_exec_scan_high_or_equal              # 11101: scan_high_or_equal
+    ds  2, 0                                                # 11110, 11111
 
 fdc_data_write_exec_read_track:
     # Execute read track
@@ -414,56 +418,61 @@ fdc_data_write_exec_read_deleted_data:
     # TODO
     jz  0, fdc_data_write_done
 
-fdc_data_write_stp:
-    # Save STP (1=compare contiguous sectors, 2=compare alternate sectors)
-    add [rb + value], 0, [fdc_cmd_stp]
+fdc_data_write_exec_scan_equal
+    # Execute scan equal
+    # TODO
+    jz  0, fdc_data_write_done
 
-    # Next state is always read ST0
-    add 1, 0, [fdc_cmd_result_phase]
-    add fdc_data_read_st0, 0, [fdc_cmd_state]
+fdc_data_write_exec_scan_low_or_equal
+    # Execute scan low or equal
+    # TODO
+    jz  0, fdc_data_write_done
 
-    # Execute the command
-    add fdc_data_write_stp_table, [fdc_cmd_code], [ip + 2]
-    jz  0, [0]
-
-fdc_data_write_dtl_table:
-    ds  2, 0                                                # 00000, 00001
-    db  fdc_data_write_exec_read_track                      # 00010: read_track
-    ds  2, 0                                                # 00011, 00100: specify, sense_drive_status
-    db  fdc_data_write_exec_write_data                      # 00101: write_data
-    db  fdc_data_write_exec_read_data                       # 00110: read_data
-    ds  2, 0                                                # 00111, 01000: recalibrate, sense_interrupt_status
-    db  fdc_data_write_exec_write_deleted_data              # 01001: write_deleted_data
-    ds  2, 0                                                # 01010, 01011: read_id
-    db  fdc_data_write_exec_read_deleted_data               # 01100: read_deleted_data
-    ds  19, 0                                               # 01101-11111: format_track, seek, scan_*
-
-
-fdc_data_write_sc:
-    # SC: number of sectors per cylinder; -> _gpl (or separate state for format?)
+fdc_data_write_exec_scan_high_or_equal
+    # Execute scan high or equal
+    # TODO
+    jz  0, fdc_data_write_done
 
 fdc_data_write_d:
-    # D: data pattern to be written to a sector; execute, -> _st0
+    # Save D (data pattern to be written to a sector)
+    add [rb + value], 0, [fdc_cmd_data_pattern]
 
-fdc_data_write_ncn:
-    # NCN: -> idle
+    # Execute format track
+    # TODO
 
-fdc_data_write_srt_hut:
-    # SRT 4b, HUT 4b: read -> fdc_data_write_hlt_nd
-
-fdc_data_write_hlt_nd:
-    # HLT 7b ND 1b: read -> idle
-
-fdc_data_write_invalid:
-    # Whatever was received is discarded, return status of 0x80
-    add 0x80, 0, [fdc_cmd_st0]
-
-    # Current command code is invalid, next state is read ST0
-    add 0, 0, [fdc_cmd_code]
+    # Next state is read ST0
     add 1, 0, [fdc_cmd_result_phase]
     add fdc_data_read_st0, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
 
-    # TODO consider separate set of states for format_track command, would save a lot of conditions
+fdc_data_write_ncn:
+    # Execute seek
+    # TODO
+
+    # Next state is idle
+    add 0, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
+
+fdc_data_write_srt_hut:
+    # Next state is write HLT ND
+    # TODO save SRT, HUT if we need them (SRT 4b, HUT 4b)
+    add fdc_data_write_hlt_nd, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
+
+fdc_data_write_hlt_nd:
+    # Next state is idle
+    # TODO save HLT, ND if we need them (HLT 7b ND 1b)
+    add 0, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
+
+fdc_data_write_invalid:
+    # Current command is invalid, return ST0 status 0x80
+    add 0, 0, [fdc_cmd_code]
+    add 0x80, 0, [fdc_cmd_st0]
+
+    # Next state is read ST0
+    add 1, 0, [fdc_cmd_result_phase]
+    add fdc_data_read_st0, 0, [fdc_cmd_state]
 
 fdc_data_write_done:
     ret 2
