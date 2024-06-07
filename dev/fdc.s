@@ -223,38 +223,28 @@ fdc_data_write_hd_us:
     jz  0, [0]
 
 fdc_data_write_hd_us_table:
-    db  fdc_data_write_invalid                              # 00000
-    db  fdc_data_write_invalid                              # 00001
+    db  0, 0                                                # 00000, 00001
     db  fdc_data_write_hd_us_to_c                           # 00010: read_track
-    db  fdc_data_write_invalid                              # 00011: specify
+    db  0                                                   # 00011: specify
     db  fdc_data_write_exec_sense_drive_status              # 00100: sense_drive_status
     db  fdc_data_write_hd_us_to_c                           # 00101: write_data
     db  fdc_data_write_hd_us_to_c                           # 00110: read_data
     db  fdc_data_write_exec_recalibrate                     # 00111: recalibrate
-    db  fdc_data_write_invalid                              # 01000: sense_interrupt_status
+    db  0                                                   # 01000: sense_interrupt_status
     db  fdc_data_write_hd_us_to_c                           # 01001: write_deleted_data
     db  fdc_data_write_exec_read_id                         # 01010: read_id
-    db  fdc_data_write_invalid                              # 01011
+    db  0                                                   # 01011
     db  fdc_data_write_hd_us_to_c                           # 01100: read_deleted_data
     db  fdc_data_write_hd_us_to_n                           # 01101: format_track
-    db  fdc_data_write_invalid                              # 01110
+    db  0                                                   # 01110
     db  fdc_data_write_hd_us_to_ncn                         # 01111: seek
-    db  fdc_data_write_invalid                              # 10000
+    db  0                                                   # 10000
     db  fdc_data_write_hd_us_to_c                           # 10001: scan_equal
-    db  fdc_data_write_invalid                              # 10010
-    db  fdc_data_write_invalid                              # 10011
-    db  fdc_data_write_invalid                              # 10100
-    db  fdc_data_write_invalid                              # 10101
-    db  fdc_data_write_invalid                              # 10110
-    db  fdc_data_write_invalid                              # 10111
-    db  fdc_data_write_invalid                              # 11000
+    db  0, 0, 0, 0, 0, 0, 0                                 # 10010-11000
     db  fdc_data_write_hd_us_to_c                           # 11001: scan_low_or_equal
-    db  fdc_data_write_invalid                              # 11010
-    db  fdc_data_write_invalid                              # 11011
-    db  fdc_data_write_invalid                              # 11100
+    db  0, 0, 0                                             # 11010-11100
     db  fdc_data_write_hd_us_to_c                           # 11101: scan_high_or_equal
-    db  fdc_data_write_invalid                              # 11110
-    db  fdc_data_write_invalid                              # 11111
+    db  0, 0                                                # 11110, 11111
 
 fdc_data_write_hd_us_to_c:
     # Next state is write C
@@ -297,43 +287,114 @@ fdc_data_write_hd_us_to_ncn:
     add fdc_data_write_ncn, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
 
+fdc_data_write_c:
+    # Save C (cylinder)
+    add [rb + value], 0, [fdc_cmd_cylinder]
 
+    # Next state is write H
+    add fdc_data_write_h, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
 
-_c
-    # C: save cylinder (C); -> _h
+fdc_data_write_h:
+    # Is head number from the first byte equal to the head number here?
+    eq  [fdc_cmd_head], [rb + value], [rb + tmp]
 
-_h
-    # H: verify that H === HD (from first byte); -> _r
+    # If it isn't, that's not valid
+    jz  [rb + tmp], fdc_data_write_invalid
 
-_r
-    # R: save sector (record, R); -> _n
+    # Next state is write R
+    add fdc_data_write_r, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
 
-_n
-    # N: save number of bytes in sector (?) perhaps size to read/write?; -> _eot (default); _sc (cmd=format_track, or separate state for format?)
+    jz  0, fdc_data_write_done
 
-_eot
-    # EOT: end of track, final sector number on a cylinder (does it need saving?); -> _gpl
+fdc_data_write_r:
+    # Save R (record, sector number)
+    add [rb + value], 0, [fdc_cmd_sector]
 
-_gpl
-    # GPL: gap 3 length (spacing between sectors) perhaps just verify it is correct?; -> _dtl (default); _d (cmd=format_track or separate state for format)
+    # Next state is write N
+    add fdc_data_write_n, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
 
-_dtl
+fdc_data_write_n:
+    # Save N (number of bytes in sector)
+    # TODO how is this used, do we need to save it?
+    add [rb + value], 0, [fdc_cmd_bytes_in_sector]
+
+    # Is this the format track command?
+    eq  [fdc_cmd_code], 0b01101, [rb + tmp]
+    jnz [rb + tmp], fdc_data_write_n_format_track
+
+    # No, default next state is write EOT
+    add fdc_data_write_eot, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
+
+fdc_data_write_n_format_track:
+    # Format track command, next state for format track command is write SC
+    add fdc_data_write_sc, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
+
+fdc_data_write_eot:
+    # Save EOT (end of track, final sector number on a cylinder)
+    # TODO how is this used, do we need to save it?
+    add [rb + value], 0, [fdc_cmd_end_of_track]
+
+    # Next state is write GPL
+    add fdc_data_write_gpl, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
+
+fdc_data_write_gpl:
+    # Save GPL (gap 3 length, spacing between sectors)
+    # TODO how is this used, do we need to save it? maybe just verify it is correct for this floppy type?
+    add [rb + value], 0, [fdc_cmd_gap_length]
+
+    # Is this the format track command?
+    eq  [fdc_cmd_code], 0b01101, [rb + tmp]
+    jnz [rb + tmp], fdc_data_write_gpl_format_track
+
+    # Is this one of the scan commands?
+    eq  [fdc_cmd_code], 0b10001, [rb + tmp]
+    jnz [rb + tmp], fdc_data_write_gpl_scan
+    eq  [fdc_cmd_code], 0b11001, [rb + tmp]
+    jnz [rb + tmp], fdc_data_write_gpl_scan
+    eq  [fdc_cmd_code], 0b11101, [rb + tmp]
+    jnz [rb + tmp], fdc_data_write_gpl_scan
+
+    # No, default next state is write DTL
+    add fdc_data_write_dtl, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
+
+fdc_data_write_gpl_format_track:
+    # Format track command, next state for format track command is write D
+    add fdc_data_write_d, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
+
+fdc_data_write_gpl_scan
+    # One of the scan commands, next state for format track command is write STP
+    add fdc_data_write_stp, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
+
+fdc_data_write_dtl:
     # DTL data length; if N is 0, DTL is the length to read/write to a sector (save/verify with N); result phase = 1, execute, -> _st0
 
-_sc
+
+fdc_data_write_stp:
+    # STP: 1=compare contiguous sectors, 2=compare alternate sectors
+
+fdc_data_write_sc:
     # SC: number of sectors per cylinder; -> _gpl (or separate state for format?)
 
-_d
+fdc_data_write_d:
     # D: data pattern to be written to a sector; execute, -> _st0
 
-_specify_srt_hut
-    # SRT 4b, HUT 4b: read -> _specify_hlt_nd
-
-_specify_hlt_nd
-    # HLT 7b ND 1b: read -> idle
-
-_ncn
+fdc_data_write_ncn:
     # NCN: -> idle
+
+fdc_data_write_srt_hut:
+    # SRT 4b, HUT 4b: read -> fdc_data_write_hlt_nd
+
+fdc_data_write_hlt_nd:
+    # HLT 7b ND 1b: read -> idle
 
 fdc_data_write_invalid:
     # Whatever was received is discarded, return status of 0x80
@@ -343,6 +404,8 @@ fdc_data_write_invalid:
     add 0, 0, [fdc_cmd_code]
     add 1, 0, [fdc_cmd_result_phase]
     add fdc_data_read_st0, 0, [fdc_cmd_state]
+
+    # TODO consider separate set of states for format_track command, would save a lot of conditions
 
 fdc_data_write_done:
     ret 2
