@@ -153,8 +153,7 @@ fdc_data_write_idle:
     jz  0, [0]
 
 fdc_data_write_idle_table:
-    db  fdc_data_write_invalid                              #          00000
-    db  fdc_data_write_invalid                              #          00001
+    ds  2, fdc_data_write_invalid                           #          00000, 00001
     db  fdc_data_write_idle_to_hd_us                        #  0 MF SK 00010: read_track
     db  fdc_data_write_idle_to_srt_hut                      #  0  0  0 00011: specify
     db  fdc_data_write_idle_to_hd_us                        #  0  0  0 00100: sense_drive_status
@@ -171,20 +170,11 @@ fdc_data_write_idle_table:
     db  fdc_data_write_idle_to_hd_us                        #  0  0  0 01111: seek
     db  fdc_data_write_invalid                              #          10000
     db  fdc_data_write_idle_to_hd_us                        # MT MF SK 10001: scan_equal
-    db  fdc_data_write_invalid                              #          10010
-    db  fdc_data_write_invalid                              #          10011
-    db  fdc_data_write_invalid                              #          10100
-    db  fdc_data_write_invalid                              #          10101
-    db  fdc_data_write_invalid                              #          10110
-    db  fdc_data_write_invalid                              #          10111
-    db  fdc_data_write_invalid                              #          11000
+    ds  7, fdc_data_write_invalid                           #          10010-11000
     db  fdc_data_write_idle_to_hd_us                        # MT MF SK 11001: scan_low_or_equal
-    db  fdc_data_write_invalid                              #          11010
-    db  fdc_data_write_invalid                              #          11011
-    db  fdc_data_write_invalid                              #          11100
+    ds  3, fdc_data_write_invalid                           #          11010-11100
     db  fdc_data_write_idle_to_hd_us                        # MT MF SK 11101: scan_high_or_equal
-    db  fdc_data_write_invalid                              #          11110
-    db  fdc_data_write_invalid                              #          11111
+    ds  2, fdc_data_write_invalid                           #          11110, 11111
 
 fdc_data_write_idle_to_hd_us:
     # Next state is write HD US
@@ -223,7 +213,7 @@ fdc_data_write_hd_us:
     jz  0, [0]
 
 fdc_data_write_hd_us_table:
-    db  0, 0                                                # 00000, 00001
+    ds  2, 0                                               # 00000, 00001
     db  fdc_data_write_hd_us_to_c                           # 00010: read_track
     db  0                                                   # 00011: specify
     db  fdc_data_write_exec_sense_drive_status              # 00100: sense_drive_status
@@ -240,11 +230,11 @@ fdc_data_write_hd_us_table:
     db  fdc_data_write_hd_us_to_ncn                         # 01111: seek
     db  0                                                   # 10000
     db  fdc_data_write_hd_us_to_c                           # 10001: scan_equal
-    db  0, 0, 0, 0, 0, 0, 0                                 # 10010-11000
+    ds  7, 0                                                # 10010-11000
     db  fdc_data_write_hd_us_to_c                           # 11001: scan_low_or_equal
-    db  0, 0, 0                                             # 11010-11100
+    ds  3, 0                                                # 11010-11100
     db  fdc_data_write_hd_us_to_c                           # 11101: scan_high_or_equal
-    db  0, 0                                                # 11110, 11111
+    ds  2, 0                                                # 11110, 11111
 
 fdc_data_write_hd_us_to_c:
     # Next state is write C
@@ -353,6 +343,7 @@ fdc_data_write_gpl:
     jnz [rb + tmp], fdc_data_write_gpl_format_track
 
     # Is this one of the scan commands?
+    # TODO merge STP and DTL, they are never used at the same time, they can share a variable and states
     eq  [fdc_cmd_code], 0b10001, [rb + tmp]
     jnz [rb + tmp], fdc_data_write_gpl_scan
     eq  [fdc_cmd_code], 0b11001, [rb + tmp]
@@ -375,11 +366,78 @@ fdc_data_write_gpl_scan
     jz  0, fdc_data_write_done
 
 fdc_data_write_dtl:
-    # DTL data length; if N is 0, DTL is the length to read/write to a sector (save/verify with N); result phase = 1, execute, -> _st0
+    # Save DTL (data length, if N is 0, DTL is the length to read/write to a sector)
+    add [rb + value], 0, [fdc_cmd_data_length]
 
+    # Next state is always read ST0
+    add 1, 0, [fdc_cmd_result_phase]
+    add fdc_data_read_st0, 0, [fdc_cmd_state]
+
+    # Execute the command
+    add fdc_data_write_dtl_table, [fdc_cmd_code], [ip + 2]
+    jz  0, [0]
+
+fdc_data_write_dtl_table:
+    ds  2, 0                                                # 00000, 00001
+    db  fdc_data_write_exec_read_track                      # 00010: read_track
+    ds  2, 0                                                # 00011, 00100: specify, sense_drive_status
+    db  fdc_data_write_exec_write_data                      # 00101: write_data
+    db  fdc_data_write_exec_read_data                       # 00110: read_data
+    ds  2, 0                                                # 00111, 01000: recalibrate, sense_interrupt_status
+    db  fdc_data_write_exec_write_deleted_data              # 01001: write_deleted_data
+    ds  2, 0                                                # 01010, 01011: read_id
+    db  fdc_data_write_exec_read_deleted_data               # 01100: read_deleted_data
+    ds  19, 0                                               # 01101-11111: format_track, seek, scan_*
+
+fdc_data_write_exec_read_track:
+    # Execute read track
+    # TODO
+    jz  0, fdc_data_write_done
+
+fdc_data_write_exec_write_data:
+    # Execute write data
+    # TODO
+    jz  0, fdc_data_write_done
+
+fdc_data_write_exec_read_data:
+    # Execute read data
+    # TODO
+    jz  0, fdc_data_write_done
+
+fdc_data_write_exec_write_deleted_data:
+    # Execute write deleted data
+    # TODO
+    jz  0, fdc_data_write_done
+
+fdc_data_write_exec_read_deleted_data:
+    # Execute read deleted data
+    # TODO
+    jz  0, fdc_data_write_done
 
 fdc_data_write_stp:
-    # STP: 1=compare contiguous sectors, 2=compare alternate sectors
+    # Save STP (1=compare contiguous sectors, 2=compare alternate sectors)
+    add [rb + value], 0, [fdc_cmd_stp]
+
+    # Next state is always read ST0
+    add 1, 0, [fdc_cmd_result_phase]
+    add fdc_data_read_st0, 0, [fdc_cmd_state]
+
+    # Execute the command
+    add fdc_data_write_stp_table, [fdc_cmd_code], [ip + 2]
+    jz  0, [0]
+
+fdc_data_write_dtl_table:
+    ds  2, 0                                                # 00000, 00001
+    db  fdc_data_write_exec_read_track                      # 00010: read_track
+    ds  2, 0                                                # 00011, 00100: specify, sense_drive_status
+    db  fdc_data_write_exec_write_data                      # 00101: write_data
+    db  fdc_data_write_exec_read_data                       # 00110: read_data
+    ds  2, 0                                                # 00111, 01000: recalibrate, sense_interrupt_status
+    db  fdc_data_write_exec_write_deleted_data              # 01001: write_deleted_data
+    ds  2, 0                                                # 01010, 01011: read_id
+    db  fdc_data_write_exec_read_deleted_data               # 01100: read_deleted_data
+    ds  19, 0                                               # 01101-11111: format_track, seek, scan_*
+
 
 fdc_data_write_sc:
     # SC: number of sectors per cylinder; -> _gpl (or separate state for format?)
