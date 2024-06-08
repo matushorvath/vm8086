@@ -70,7 +70,7 @@ main:
 .ENDFRAME
 
 ##########
-    ds  100, 0
+    ds  1000, 0
 stack:
 
 .EOF

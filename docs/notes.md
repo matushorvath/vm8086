@@ -166,3 +166,5 @@ TODO
 - fdc should not work while fdc_dor_reset == 0
 - fdc should not read/write data or seek etc while the motor is off fdc_dor_enable_motor_a/b
 - fdc should complain about fdc_dor_enable_dma 
+
+<bin/vm.bios-xt.input.map.yaml yq '.symbols.fdc_dor_write.export|(.module)+(.offset)'

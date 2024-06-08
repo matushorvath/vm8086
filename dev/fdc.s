@@ -109,7 +109,7 @@ fdc_status_read:
 ##########
 fdc_data_write:
 .FRAME addr, value; value_bits, value_x8, tmp
-    arb -5
+    arb -3
 
     out 'D' # TODO remove
     out 'w'
@@ -541,14 +541,14 @@ fdc_data_write_invalid:
     add fdc_data_read_st0, 0, [fdc_cmd_state]
 
 fdc_data_write_done:
-    arb 5
+    arb 3
     ret 2
 .ENDFRAME
 
 ##########
 fdc_data_read:
 .FRAME addr; value, tmp
-    arb -3
+    arb -2
 
     out 'D' # TODO remove
     out 'r'
@@ -672,7 +672,7 @@ fdc_data_read_invalid:
     add 0, 0, [fdc_cmd_state]
 
 fdc_data_read_done:
-    arb 3
+    arb 2
     ret 1
 .ENDFRAME
 
