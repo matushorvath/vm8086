@@ -104,7 +104,6 @@ fdc_status_read:
     ret 1
 .ENDFRAME
 
-# TODO consider separate set of states for format_track command, would save a lot of conditions
 # TODO after the execution phase, interrupt will occur
 
 ##########
@@ -457,6 +456,9 @@ fdc_data_write_d:
     jz  0, fdc_data_write_done
 
 fdc_data_write_ncn:
+    # Save NCN (next cylinder number)
+    add [rb + value], 0, [fdc_cmd_cylinder]
+
     # Execute seek
     # TODO
 
@@ -517,7 +519,7 @@ fdc_data_read_st0:
     jz  [fdc_cmd_code], fdc_data_read_invalid
 
     # Read ST0
-    # TODO
+    add [fdc_cmd_st0], 0, [rb + value]
 
     # Is this the sense interrupt status command?
     eq  [fdc_cmd_code], 0b01000, [rb + tmp]
@@ -534,7 +536,7 @@ fdc_data_read_st0_sense_interrupt_status:
 
 fdc_data_read_st1:
     # Read ST1
-    # TODO
+    add [fdc_cmd_st1], 0, [rb + value]
 
     # Next state is read ST2
     add fdc_data_read_st2, 0, [fdc_cmd_state]
@@ -542,7 +544,7 @@ fdc_data_read_st1:
 
 fdc_data_read_st2:
     # Read ST2
-    # TODO
+    add [fdc_cmd_st2], 0, [rb + value]
 
     # Next state is read C
     add fdc_data_read_c, 0, [fdc_cmd_state]
@@ -550,7 +552,7 @@ fdc_data_read_st2:
 
 fdc_data_read_c:
     # Read C (cylinder)
-    # TODO
+    add [fdc_cmd_cylinder], 0, [rb + value]
 
     # Next state is read H
     add fdc_data_read_h, 0, [fdc_cmd_state]
@@ -558,7 +560,7 @@ fdc_data_read_c:
 
 fdc_data_read_h:
     # Read H (head)
-    # TODO
+    add [fdc_cmd_head], 0, [rb + value]
 
     # Next state is read R
     add fdc_data_read_r, 0, [fdc_cmd_state]
@@ -566,7 +568,7 @@ fdc_data_read_h:
 
 fdc_data_read_r:
     # Read R (record, sector number)
-    # TODO
+    add [fdc_cmd_sector], 0, [rb + value]
 
     # Next state is read N
     add fdc_data_read_n, 0, [fdc_cmd_state]
@@ -574,7 +576,7 @@ fdc_data_read_r:
 
 fdc_data_read_n:
     # Read N (number of bytes)
-    # TODO
+    add [fdc_cmd_bytes], 0, [rb + value]
 
     # Next state is idle
     add 0, 0, [fdc_cmd_result_phase]
@@ -583,7 +585,7 @@ fdc_data_read_n:
 
 fdc_data_read_pcn:
     # Read PCN (present cylinder number, position of the head)
-    # TODO
+    add [fdc_cmd_cylinder], 0, [rb + value]
 
     # Next state is idle
     add 0, 0, [fdc_cmd_result_phase]
@@ -592,7 +594,7 @@ fdc_data_read_pcn:
 
 fdc_data_read_st3:
     # Read ST3
-    # TODO
+    add [fdc_cmd_st3], 0, [rb + value]
 
     # Next state is idle
     add 0, 0, [fdc_cmd_result_phase]
@@ -710,12 +712,6 @@ fdc_cmd_data_length_or_step:
 fdc_cmd_sectors_per_cylinder:
     db  0
 fdc_cmd_data_pattern:
-    db  0
-
-# TODO maybe merge fdc_cmd_present_cylinder_number and fdc_cmd_new_cylinder_number
-fdc_cmd_present_cylinder_number:
-    db  0
-fdc_cmd_new_cylinder_number:
     db  0
 
 fdc_cmd_st0:
