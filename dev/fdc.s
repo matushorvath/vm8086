@@ -108,8 +108,8 @@ fdc_status_read:
 
 ##########
 fdc_data_write:
-.FRAME addr, value; value_bits, value_x8, tmp
-    arb -3
+.FRAME addr, value; value_bits, tmp
+    arb -2
 
     out 'D' # TODO remove
     out 'w'
@@ -130,20 +130,21 @@ fdc_data_write:
 fdc_data_write_idle:
     # Parse the first byte of a new command
     # MT MF SK CMD_CODE(5)
-    mul [rb + value], 8, [rb + value_x8]
+    mul [rb + value], 8, [rb + tmp]
+    add bits, [rb + tmp], [rb + value_bits]
 
     # Save MT, MF, SK
-    add value_bits + 7, [rb + value_x8], [ip + 1]
+    add [rb + value_bits], 7, [ip + 1]
     add [0], 0, [fdc_cmd_multi_track] # TODO execute multitrack operation
 
-    add value_bits + 6, [rb + value_x8], [ip + 1]
+    add [rb + value_bits], 6, [ip + 1]
     add [0], 0, [fdc_cmd_mfm] # TODO validate that FM/MFM encoding matches the disk type
 
-    add value_bits + 5, [rb + value_x8], [ip + 1]
+    add [rb + value_bits], 5, [ip + 1]
     add [0], 0, [fdc_cmd_skip_deleted] # TODO execute support for skip deleted data
 
     # Read bottom 5 bits as the command code
-    add value_bits + 4, [rb + value_x8], [ip + 1]
+    add [rb + value_bits], 4, [ip + 1]
     mul [0], 0b00010000, [fdc_cmd_code]
 
     mul [rb + value], 2, [rb + tmp]
@@ -208,15 +209,16 @@ fdc_data_write_hd_us:
     # Parse head and unit select information
     # X X X X X HD US(2)
 
-    mul [rb + value], 8, [rb + value_x8]
+    mul [rb + value], 8, [rb + tmp]
+    add bits, [rb + tmp], [rb + value_bits]
 
     # Save HD and US
-    add value_bits + 2, [rb + value_x8], [ip + 1]
+    add [rb + value_bits], 2, [ip + 1]
     add [0], 0, [fdc_cmd_head]
 
-    add value_bits + 1, [rb + value_x8], [ip + 1]
+    add [rb + value_bits], 1, [ip + 1]
     mul [0], 0x00000010, [fdc_cmd_unit_select]
-    add value_bits + 0, [rb + value_x8], [ip + 1]
+    add [rb + value_bits], 0, [ip + 1]
     add [0], [fdc_cmd_unit_select], [fdc_cmd_unit_select]
 
     # Handle the state transition
@@ -541,7 +543,7 @@ fdc_data_write_invalid:
     add fdc_data_read_st0, 0, [fdc_cmd_state]
 
 fdc_data_write_done:
-    arb 3
+    arb 2
     ret 2
 .ENDFRAME
 
