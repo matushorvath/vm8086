@@ -560,7 +560,7 @@ fdc_data_read:
     jz  [fdc_cmd_state], fdc_data_read_invalid
 
     # Yes, is this the result phase?
-    jz [fdc_cmd_result_phase], fdc_data_read_invalid
+    jz  [fdc_cmd_result_phase], fdc_data_read_invalid
 
     # Yes, use the state as a label to jump to
     jz  0, [fdc_cmd_state]
@@ -581,12 +581,12 @@ fdc_data_read_st0:
 
     # No, default next state is read ST1
     add fdc_data_read_st1, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+    jz  0, fdc_data_read_done
 
 fdc_data_read_st0_sense_interrupt_status:
     # Sense interrupt status command, next state is read PCN
     add fdc_data_read_pcn, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+    jz  0, fdc_data_read_done
 
 fdc_data_read_st1:
     # Read ST1
@@ -594,7 +594,7 @@ fdc_data_read_st1:
 
     # Next state is read ST2
     add fdc_data_read_st2, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+    jz  0, fdc_data_read_done
 
 fdc_data_read_st2:
     # Read ST2
@@ -602,7 +602,7 @@ fdc_data_read_st2:
 
     # Next state is read C
     add fdc_data_read_c, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+    jz  0, fdc_data_read_done
 
 fdc_data_read_st3:
     # Read ST3
@@ -611,7 +611,7 @@ fdc_data_read_st3:
     # Next state is idle
     add 0, 0, [fdc_cmd_result_phase]
     add 0, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+    jz  0, fdc_data_read_done
 
 ##########
 # C, H, R, N states
@@ -622,7 +622,7 @@ fdc_data_read_c:
 
     # Next state is read H
     add fdc_data_read_h, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+    jz  0, fdc_data_read_done
 
 fdc_data_read_h:
     # Read H (head)
@@ -630,7 +630,7 @@ fdc_data_read_h:
 
     # Next state is read R
     add fdc_data_read_r, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+    jz  0, fdc_data_read_done
 
 fdc_data_read_r:
     # Read R (record, sector number)
@@ -638,7 +638,7 @@ fdc_data_read_r:
 
     # Next state is read N
     add fdc_data_read_n, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+    jz  0, fdc_data_read_done
 
 fdc_data_read_n:
     # Read N (number of bytes)
@@ -647,7 +647,7 @@ fdc_data_read_n:
     # Next state is idle
     add 0, 0, [fdc_cmd_result_phase]
     add 0, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+    jz  0, fdc_data_read_done
 
 ##########
 # Misc other states
@@ -659,7 +659,7 @@ fdc_data_read_pcn:
     # Next state is idle
     add 0, 0, [fdc_cmd_result_phase]
     add 0, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+    jz  0, fdc_data_read_done
 
 fdc_data_read_invalid:
     # Invalid command, either unexpected read or unexpected write
