@@ -124,6 +124,9 @@ fdc_data_write:
     # Yes, use the state as a label to jump to
     jz  0, [fdc_cmd_state]
 
+##########
+# Idle state
+
 fdc_data_write_idle:
     # Parse the first byte of a new command
     # MT MF SK CMD_CODE(5)
@@ -198,12 +201,8 @@ fdc_data_write_idle_to_srt_hut:
     add fdc_data_write_srt_hut, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
 
-fdc_data_write_exec_sense_interrupt_status:
-    # Execute sense interrupt status, next state is read ST0
-    # Bits 5, 6, 7 have already been set up by previous seek or recalibrate command
-    add 1, 0, [fdc_cmd_result_phase]
-    add fdc_data_read_st0, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+##########
+# HD US state
 
 fdc_data_write_hd_us:
     # Parse head and unit select information
@@ -237,9 +236,9 @@ fdc_data_write_hd_us_table:
     db  fdc_data_write_exec_read_id                         # 01010: read_id
     db  0                                                   # 01011
     db  fdc_data_write_hd_us_to_c                           # 01100: read_deleted_data
-    db  fdc_data_write_hd_us_to_n                           # 01101: format_track
+    db  fdc_data_write_hd_us_to_format_track_n              # 01101: format_track
     db  0                                                   # 01110
-    db  fdc_data_write_hd_us_to_ncn                         # 01111: seek
+    db  fdc_data_write_hd_us_to_exec_seek                   # 01111: seek
     db  0                                                   # 10000
     db  fdc_data_write_hd_us_to_c                           # 10001: scan_equal
     ds  7, 0                                                # 10010-11000
@@ -253,43 +252,18 @@ fdc_data_write_hd_us_to_c:
     add fdc_data_write_c, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
 
-fdc_data_write_exec_read_id:
-    # Execute read id
-    # TODO
-
-    # Next state is read ST0
-    add 1, 0, [fdc_cmd_result_phase]
-    add fdc_data_read_st0, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
-
-fdc_data_write_hd_us_to_n:
+fdc_data_write_hd_us_to_format_track_n:
     # Next state is write N
-    add fdc_data_write_n, 0, [fdc_cmd_state]
+    add fdc_data_write_format_track_n, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
 
-fdc_data_write_exec_recalibrate:
-    # Execute recalibrate
-    # TODO
-
-    # TODO recalibrate zeros all PCN
-
-    # Next state is idle
-    add 0, 0, [fdc_cmd_state]
+fdc_data_write_hd_us_to_exec_seek:
+    # Next state is write NCN + execute seek
+    add fdc_data_write_exec_seek, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
 
-fdc_data_write_exec_sense_drive_status:
-    # Execute sense drive status
-    # TODO
-
-    # Next state is read ST3
-    add 1, 0, [fdc_cmd_result_phase]
-    add fdc_data_read_st3, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
-
-fdc_data_write_hd_us_to_ncn:
-    # Next state is write NCN
-    add fdc_data_write_ncn, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+##########
+# C, H, R, N states
 
 fdc_data_write_c:
     # Save C (cylinder)
@@ -325,26 +299,12 @@ fdc_data_write_n:
     # TODO how is this used, do we need to save it?
     add [rb + value], 0, [fdc_cmd_bytes]
 
-    # Is this the format track command?
-    eq  [fdc_cmd_code], 0b01101, [rb + tmp]
-    jnz [rb + tmp], fdc_data_write_n_format_track
-
-    # No, default next state is write EOT
+    # Next state is write EOT (outside of format track command)
     add fdc_data_write_eot, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
 
-fdc_data_write_n_format_track:
-    # Format track command, next state is write SC
-    add fdc_data_write_sc, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
-
-fdc_data_write_sc:
-    # Save SC (number of sectors per cylinder)
-    add [rb + value], 0, [fdc_cmd_sectors_per_cylinder]
-
-    # Next state is write GPL
-    add fdc_data_write_gpl, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+##########
+# EOT, GPL, DTL/STP states
 
 fdc_data_write_eot:
     # Save EOT (end of track, final sector number on a cylinder)
@@ -360,17 +320,8 @@ fdc_data_write_gpl:
     # TODO how is this used, do we need to save it? maybe just verify it is correct for this floppy type?
     add [rb + value], 0, [fdc_cmd_gap_length]
 
-    # Is this the format track command?
-    eq  [fdc_cmd_code], 0b01101, [rb + tmp]
-    jnz [rb + tmp], fdc_data_write_gpl_format_track
-
-    # No, default next state is write DTL/STP
+    # Next state is write DTL/STP (outside of format track command)
     add fdc_data_write_dtl_stp, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
-
-fdc_data_write_gpl_format_track:
-    # Format track command, next state is write D
-    add fdc_data_write_d, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
 
 fdc_data_write_dtl_stp:
@@ -405,15 +356,47 @@ fdc_data_write_dtl_stp_table:
     db  fdc_data_write_exec_scan_high_or_equal              # 11101: scan_high_or_equal
     ds  2, 0                                                # 11110, 11111
 
-fdc_data_write_exec_read_track:
-    # Execute read track
-    # TODO
+##########
+# Format track states: N, SC, GPL, D
+
+fdc_data_write_format_track_n:
+    # Save N (number of bytes in sector)
+    # TODO how is this used, do we need to save it?
+    add [rb + value], 0, [fdc_cmd_bytes]
+
+    # Format track command, next state is write SC
+    add fdc_data_write_format_track_sc, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
 
-fdc_data_write_exec_write_data:
-    # Execute write data
-    # TODO
+fdc_data_write_format_track_sc:
+    # Save SC (number of sectors per cylinder)
+    add [rb + value], 0, [fdc_cmd_sectors_per_cylinder]
+
+    # Next state is write GPL
+    add fdc_data_write_format_track_gpl, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
+
+fdc_data_write_format_track_gpl:
+    # Save GPL (gap 3 length, spacing between sectors)
+    # TODO how is this used, do we need to save it? maybe just verify it is correct for this floppy type?
+    add [rb + value], 0, [fdc_cmd_gap_length]
+
+    # Format track command, next state is write D + execute format track
+    add fdc_data_write_exec_format_track, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
+
+##########
+# Specify state: SRT/HUT
+
+fdc_data_write_srt_hut:
+    # TODO save SRT, HUT if we need them (SRT 4b, HUT 4b)
+
+    # Next state is write HLT ND + execute specify
+    add fdc_data_write_exec_specify, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
+
+##########
+# Command execution
 
 fdc_data_write_exec_read_data:
     # Execute read data
@@ -444,14 +427,45 @@ fdc_data_write_exec_read_data:
 
     jz  0, fdc_data_write_done
 
+fdc_data_write_exec_read_deleted_data:
+    # Execute read deleted data
+    # TODO
+    jz  0, fdc_data_write_done
+
+fdc_data_write_exec_write_data:
+    # Execute write data
+    # TODO
+    jz  0, fdc_data_write_done
+
 fdc_data_write_exec_write_deleted_data:
     # Execute write deleted data
     # TODO
     jz  0, fdc_data_write_done
 
-fdc_data_write_exec_read_deleted_data:
-    # Execute read deleted data
+fdc_data_write_exec_read_track:
+    # Execute read track
     # TODO
+    jz  0, fdc_data_write_done
+
+fdc_data_write_exec_read_id:
+    # Execute read id
+    # TODO
+
+    # Next state is read ST0
+    add 1, 0, [fdc_cmd_result_phase]
+    add fdc_data_read_st0, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
+
+fdc_data_write_exec_format_track:
+    # Save D (data pattern to be written to a sector)
+    add [rb + value], 0, [fdc_cmd_data_pattern]
+
+    # Execute format track
+    # TODO
+
+    # Next state is read ST0
+    add 1, 0, [fdc_cmd_result_phase]
+    add fdc_data_read_st0, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
 
 fdc_data_write_exec_scan_equal:
@@ -469,19 +483,43 @@ fdc_data_write_exec_scan_high_or_equal:
     # TODO
     jz  0, fdc_data_write_done
 
-fdc_data_write_d:
-    # Save D (data pattern to be written to a sector)
-    add [rb + value], 0, [fdc_cmd_data_pattern]
-
-    # Execute format track
+fdc_data_write_exec_recalibrate:
+    # Execute recalibrate
     # TODO
 
-    # Next state is read ST0
+    # TODO recalibrate zeros all PCN
+
+    # Next state is idle
+    add 0, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
+
+fdc_data_write_exec_sense_interrupt_status:
+    # Execute sense interrupt status, next state is read ST0
+    # Bits 5, 6, 7 have already been set up by previous seek or recalibrate command
     add 1, 0, [fdc_cmd_result_phase]
     add fdc_data_read_st0, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
 
-fdc_data_write_ncn:
+fdc_data_write_exec_specify:
+    # TODO save HLT, ND if we need them (HLT 7b ND 1b)
+
+    # Execute specify
+    # TODO
+
+    # Next state is idle
+    add 0, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
+
+fdc_data_write_exec_sense_drive_status:
+    # Execute sense drive status
+    # TODO
+
+    # Next state is read ST3
+    add 1, 0, [fdc_cmd_result_phase]
+    add fdc_data_read_st3, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
+
+fdc_data_write_exec_seek:
     # Save NCN (next cylinder number)
     add [rb + value], 0, [fdc_cmd_cylinder]
 
@@ -489,23 +527,6 @@ fdc_data_write_ncn:
     # TODO
 
     # TODO during seek compare PCN with fdc_cmd_cylinder which is the target cylinder
-
-    # Next state is idle
-    add 0, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
-
-fdc_data_write_srt_hut:
-    # TODO save SRT, HUT if we need them (SRT 4b, HUT 4b)
-
-    # Next state is write HLT ND
-    add fdc_data_write_hlt_nd, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
-
-fdc_data_write_hlt_nd:
-    # TODO save HLT, ND if we need them (HLT 7b ND 1b)
-
-    # Execute specify
-    # TODO
 
     # Next state is idle
     add 0, 0, [fdc_cmd_state]
@@ -541,6 +562,9 @@ fdc_data_read:
 
     # Yes, use the state as a label to jump to
     jz  0, [fdc_cmd_state]
+
+##########
+# ST0, ST1, ST2, ST3 states
 
 fdc_data_read_st0:
     # Is this the invalid command?
@@ -578,6 +602,18 @@ fdc_data_read_st2:
     add fdc_data_read_c, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
 
+fdc_data_read_st3:
+    # Read ST3
+    add [fdc_cmd_st3], 0, [rb + value]
+
+    # Next state is idle
+    add 0, 0, [fdc_cmd_result_phase]
+    add 0, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
+
+##########
+# C, H, R, N states
+
 fdc_data_read_c:
     # Read C (cylinder)
     add [fdc_cmd_cylinder], 0, [rb + value]
@@ -611,18 +647,12 @@ fdc_data_read_n:
     add 0, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
 
+##########
+# Misc other states
+
 fdc_data_read_pcn:
     # Read PCN (present cylinder number, position of the head)
     add [fdc_cmd_cylinder], 0, [rb + value]
-
-    # Next state is idle
-    add 0, 0, [fdc_cmd_result_phase]
-    add 0, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
-
-fdc_data_read_st3:
-    # Read ST3
-    add [fdc_cmd_st3], 0, [rb + value]
 
     # Next state is idle
     add 0, 0, [fdc_cmd_result_phase]
