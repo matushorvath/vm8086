@@ -85,7 +85,6 @@ fdc_status_read:
     arb -1
 
     out 'S' # TODO remove
-    out ' '
 
     # Following bits have fixed values, since seeking, reading and writing is immediate,
     # we only support DMA mode, and the FDC is always ready:
@@ -103,6 +102,14 @@ fdc_status_read:
     mul [fdc_cmd_result_phase], 0b01000000, [rb + value]
     add [rb + value], 0b10000000, [rb + value]
 
+    # TODO remove
+    add [rb + value], 0, [rb - 1]
+    add 2, 0, [rb - 2]
+    add 8, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+    out ' '
+
     arb 1
     ret 1
 .ENDFRAME
@@ -118,8 +125,8 @@ fdc_data_write:
     out 'w'
 
     add [rb + value], 0, [rb - 1]
-    add 16, 0, [rb - 2]
-    add 0, 0, [rb - 3]
+    add 2, 0, [rb - 2]
+    add 8, 0, [rb - 3]
     arb -3
     call print_num_radix
 
@@ -203,11 +210,17 @@ fdc_data_write_idle_table:
     db  fdc_data_write_invalid                              #          11111
 
 fdc_data_write_idle_to_hd_us:
+    # Any interrupt is cleared
+    add 0, 0, [fdc_interrupt_pending]
+
     # Next state is write HD US
     add fdc_data_write_hd_us, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
 
 fdc_data_write_idle_to_srt_hut:
+    # Any interrupt is cleared
+    add 0, 0, [fdc_interrupt_pending]
+
     # Next state is write SRT HUT
     add fdc_data_write_srt_hut, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
@@ -437,31 +450,64 @@ fdc_data_write_exec_read_data:
 
     # For CHRN in result phase, see table on page 435 in UPD765.pdf. Based on MT and EOT.
 
+    # Mark interrupt pending
+    add 1, 0, [fdc_interrupt_pending]
+    # TODO raise interrupt here
+    # TODO set up next state
+
     jz  0, fdc_data_write_done
 
 fdc_data_write_exec_read_deleted_data:
     # Execute read deleted data
     # TODO
+
+    # Mark interrupt pending
+    add 1, 0, [fdc_interrupt_pending]
+    # TODO raise interrupt here
+    # TODO set up next state
+
     jz  0, fdc_data_write_done
 
 fdc_data_write_exec_write_data:
     # Execute write data
     # TODO
+
+    # Mark interrupt pending
+    add 1, 0, [fdc_interrupt_pending]
+    # TODO raise interrupt here
+    # TODO set up next state
+
     jz  0, fdc_data_write_done
 
 fdc_data_write_exec_write_deleted_data:
     # Execute write deleted data
     # TODO
+
+    # Mark interrupt pending
+    add 1, 0, [fdc_interrupt_pending]
+    # TODO raise interrupt here
+    # TODO set up next state
+
     jz  0, fdc_data_write_done
 
 fdc_data_write_exec_read_track:
     # Execute read track
     # TODO
+
+    # Mark interrupt pending
+    add 1, 0, [fdc_interrupt_pending]
+    # TODO raise interrupt here
+    # TODO set up next state
+
     jz  0, fdc_data_write_done
 
 fdc_data_write_exec_read_id:
     # Execute read id
     # TODO
+
+    # Mark interrupt pending
+    add 1, 0, [fdc_interrupt_pending]
+    # TODO raise interrupt here
 
     # Next state is read ST0
     add 1, 0, [fdc_cmd_result_phase]
@@ -475,6 +521,10 @@ fdc_data_write_exec_format_track:
     # Execute format track
     # TODO
 
+    # Mark interrupt pending
+    add 1, 0, [fdc_interrupt_pending]
+    # TODO raise interrupt here
+
     # Next state is read ST0
     add 1, 0, [fdc_cmd_result_phase]
     add fdc_data_read_st0, 0, [fdc_cmd_state]
@@ -483,16 +533,34 @@ fdc_data_write_exec_format_track:
 fdc_data_write_exec_scan_equal:
     # Execute scan equal
     # TODO
+
+    # Mark interrupt pending
+    add 1, 0, [fdc_interrupt_pending]
+    # TODO raise interrupt here
+    # TODO set up next state
+
     jz  0, fdc_data_write_done
 
 fdc_data_write_exec_scan_low_or_equal:
     # Execute scan low or equal
     # TODO
+
+    # Mark interrupt pending
+    add 1, 0, [fdc_interrupt_pending]
+    # TODO raise interrupt here
+    # TODO set up next state
+
     jz  0, fdc_data_write_done
 
 fdc_data_write_exec_scan_high_or_equal:
     # Execute scan high or equal
     # TODO
+
+    # Mark interrupt pending
+    add 1, 0, [fdc_interrupt_pending]
+    # TODO raise interrupt here
+    # TODO set up next state
+
     jz  0, fdc_data_write_done
 
 fdc_data_write_exec_recalibrate:
@@ -506,8 +574,13 @@ fdc_data_write_exec_recalibrate:
     jz  0, fdc_data_write_done
 
 fdc_data_write_exec_sense_interrupt_status:
-    # Execute sense interrupt status, next state is read ST0
-    # Bits 5, 6, 7 have already been set up by previous seek or recalibrate command
+    # Execute sense interrupt status; invalid command if interrupt is not pending
+    jz  [fdc_interrupt_pending], fdc_data_write_invalid
+
+    # ST0 bits 0, 5, 6, 7 as well as PCN are set up by a previous seek or recalibrate command
+    # If another command was executed, it also should set ST0 accordingly
+
+    # Next state is read ST0
     add 1, 0, [fdc_cmd_result_phase]
     add fdc_data_read_st0, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
@@ -548,6 +621,9 @@ fdc_data_write_invalid:
     # Whatever the command code was, set it to zero
     add 0, 0, [fdc_cmd_code]
 
+    # Any interrupt is cleared
+    add 0, 0, [fdc_interrupt_pending]
+
     # Next state is read ST0
     add 1, 0, [fdc_cmd_result_phase]
     add fdc_data_read_st0, 0, [fdc_cmd_state]
@@ -564,13 +640,15 @@ fdc_data_read:
 
     out 'D' # TODO remove
     out 'r'
-    out ' '
 
     # Is the FDC processing a command?
     jz  [fdc_cmd_state], fdc_data_read_invalid
 
     # Yes, is this the result phase?
     jz  [fdc_cmd_result_phase], fdc_data_read_invalid
+
+    # Any interrupt is cleared
+    add 0, 0, [fdc_interrupt_pending]
 
     # Yes, use the state as a label to jump to
     jz  0, [fdc_cmd_state]
@@ -664,7 +742,11 @@ fdc_data_read_n:
 
 fdc_data_read_pcn:
     # Read PCN (present cylinder number, position of the head)
-    add [fdc_cmd_cylinder], 0, [rb + value]
+    # Determine which unit was used by last command from bit 0 of ST0 (US0)
+    mul [fdc_cmd_st0], 8, [rb + tmp]
+    add bits, [rb + tmp], [ip + 1]
+    add [0], fdc_present_cylinder_units, [ip + 1]
+    add [0], 0, [rb + value]
 
     # Next state is idle
     add 0, 0, [fdc_cmd_result_phase]
@@ -684,6 +766,14 @@ fdc_data_read_invalid:
     add 0, 0, [fdc_cmd_state]
 
 fdc_data_read_done:
+    # TODO remove
+    add [rb + value], 0, [rb - 1]
+    add 2, 0, [rb - 2]
+    add 8, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+    out ' '
+
     arb 2
     ret 1
 .ENDFRAME
@@ -722,13 +812,20 @@ fdc_d765ac_reset:
     # TODO reset D765AC registers to zero, but don't touch the DOR,
     # also don't touch SRT HUT HLT in Specify command
 
+    # Mark interrupt pending
+    add 1, 0, [fdc_interrupt_pending]
+
+    # After reset both units have changed ready status, so sense interrupt status
+    # returns ST0 with bits 6 and 7 set
+    add 0b11000000, 0, [fdc_cmd_st0]
+
     # Raise INT 0e = IRQ6 if the FDD is ready, which we assume it always is
     # TODO if the motor is off, is the FDD ready?
     add 0x0e, 0, [rb - 1]
     arb -1
     call interrupt
 
-    out 'I' # TODO remove
+    out 'R' # TODO remove
     out ' '
 
     ret 0
@@ -784,11 +881,6 @@ fdc_cmd_sectors_per_cylinder:
 fdc_cmd_data_pattern:
     db  0
 
-fdc_cmd_present_cylinder_unit0:
-    db  0
-fdc_cmd_present_cylinder_unit1:
-    db  0
-
 fdc_cmd_st0:
     db  0
 fdc_cmd_st1:
@@ -796,6 +888,15 @@ fdc_cmd_st1:
 fdc_cmd_st2:
     db  0
 fdc_cmd_st3:
+    db  0
+
+fdc_present_cylinder_units:
+fdc_present_cylinder_unit0:
+    db  0
+fdc_present_cylinder_unit1:
+    db  0
+
+fdc_interrupt_pending:
     db  0
 
 
