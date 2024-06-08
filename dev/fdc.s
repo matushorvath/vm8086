@@ -48,6 +48,13 @@ fdc_dor_write:
     arb -2
 
     out 'A' # TODO remove
+    out 'w'
+    out '_'
+    add [rb + value], 0, [rb - 1]
+    add 2, 0, [rb - 2]
+    add 8, 0, [rb - 3]
+    arb -3
+    call print_num_radix
     out ' '
 
     # Convert value to bits
@@ -71,8 +78,13 @@ fdc_dor_write_after_reset:
     add [0], 0, [fdc_dor_drive_a_select]
 
     add [rb + value_bits], 3, [ip + 1]
-    add [0], 0, [fdc_dor_enable_dma]
+    jnz [0], fdc_dor_write_dma_enabled
 
+    add fdc_error_non_dma, 0, [rb - 1]
+    arb -1
+    call report_error
+
+fdc_dor_write_dma_enabled:
     add [rb + value_bits], 4, [ip + 1]
     add [0], 0, [fdc_dor_enable_motor_a]
 
@@ -89,6 +101,8 @@ fdc_status_read:
     arb -1
 
     out 'S' # TODO remove
+    out 'r'
+    out '_'
 
     # Following bits have fixed values, since seeking, reading and writing is immediate,
     # we only support DMA mode, and the FDC is always ready:
@@ -125,8 +139,14 @@ fdc_data_write:
 .FRAME addr, value; value_bits, tmp
     arb -2
 
-    out 'D' # TODO remove
+    # TODO remove
+    jnz [fdc_cmd_state], TODO_fdc_data_write_skip_nl
+    out 10
+
+TODO_fdc_data_write_skip_nl:
+    out 'D'
     out 'w'
+    out '_'
 
     add [rb + value], 0, [rb - 1]
     add 2, 0, [rb - 2]
@@ -647,6 +667,7 @@ fdc_data_read:
 
     out 'D' # TODO remove
     out 'r'
+    out '_'
 
     # Is the FDC processing a command?
     jz  [fdc_cmd_state], fdc_data_read_invalid
@@ -792,6 +813,13 @@ fdc_control_write:
     # if yes, we need to return errors (when reading?) unless the speed is set correctly
 
     out 'C' # TODO remove
+    out 'w'
+    out '_'
+    add [rb + value], 0, [rb - 1]
+    add 2, 0, [rb - 2]
+    add 8, 0, [rb - 3]
+    arb -3
+    call print_num_radix
     out ' '
 
     # Bits 7-2 Reserved
@@ -842,8 +870,6 @@ fdc_d765ac_reset:
 fdc_dor_drive_a_select:                 # 0 = drive A selected, 1 = drive B selected
     db  0
 fdc_dor_reset:                          # 0 = reset
-    db  0
-fdc_dor_enable_dma:
     db  0
 fdc_dor_enable_motor_a:
     db  0

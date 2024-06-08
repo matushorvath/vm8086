@@ -168,7 +168,7 @@ setloc	0E6F2h
     - out: dl, number of drives
     - call get_drive_type
     - call get_media_state
-    - call 
+    - call set_media_state
     - looks like no use of fdc
 - int_13_fn02 read sector
     - al=1
@@ -176,3 +176,18 @@ setloc	0E6F2h
     - cx=1 (track 0, sector 1)
     - es:bx target buffer (0000:7c00)
     - out: CF=0 success
+    - OK fdc_motor_on
+    - fdc_disk_change
+    - fdc_set_rate
+    - fdc_detect_media
+    - fdc_configure_dma
+        - dmac_mode_reg
+        - dmac_ff_reg
+        - dmac_ch2_count_reg
+        - dmac_ch2_addr_reg
+        - dmapage_ch2_reg
+        - dmac_mask_reg
+    - fdc_seek
+    - fdc_send_cmd 0e6
+    - fdc_wait_irq
+    - fdc_get_result
