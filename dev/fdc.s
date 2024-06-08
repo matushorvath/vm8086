@@ -15,6 +15,9 @@
 # From util/nibbles.s
 .IMPORT nibbles
 
+# TODO remove
+.IMPORT print_num_radix
+
 ##########
 fdc_ports:
     db  0xf2, 0x03, 0, fdc_dor_write                        # Digital Output Register
@@ -113,6 +116,13 @@ fdc_data_write:
 
     out 'D' # TODO remove
     out 'w'
+
+    add [rb + value], 0, [rb - 1]
+    add 16, 0, [rb - 2]
+    add 0, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
     out ' '
 
     # Is the FDC processing a command?
@@ -787,5 +797,69 @@ fdc_cmd_st2:
     db  0
 fdc_cmd_st3:
     db  0
+
+
+
+
+
+# TODO remove
+.EXPORT fdc_dor_write
+.EXPORT fdc_dor_write_after_reset
+.EXPORT fdc_status_read
+.EXPORT fdc_data_write
+.EXPORT fdc_data_write_idle
+.EXPORT fdc_data_write_idle_table
+.EXPORT fdc_data_write_idle_to_hd_us
+.EXPORT fdc_data_write_idle_to_srt_hut
+.EXPORT fdc_data_write_hd_us
+.EXPORT fdc_data_write_hd_us_table
+.EXPORT fdc_data_write_hd_us_to_c
+.EXPORT fdc_data_write_hd_us_to_format_track_n
+.EXPORT fdc_data_write_hd_us_to_exec_seek
+.EXPORT fdc_data_write_c
+.EXPORT fdc_data_write_h
+.EXPORT fdc_data_write_r
+.EXPORT fdc_data_write_n
+.EXPORT fdc_data_write_eot
+.EXPORT fdc_data_write_gpl
+.EXPORT fdc_data_write_dtl_stp
+.EXPORT fdc_data_write_dtl_stp_table
+.EXPORT fdc_data_write_format_track_n
+.EXPORT fdc_data_write_format_track_sc
+.EXPORT fdc_data_write_format_track_gpl
+.EXPORT fdc_data_write_srt_hut
+.EXPORT fdc_data_write_exec_read_data
+.EXPORT fdc_data_write_exec_read_deleted_data
+.EXPORT fdc_data_write_exec_write_data
+.EXPORT fdc_data_write_exec_write_deleted_data
+.EXPORT fdc_data_write_exec_read_track
+.EXPORT fdc_data_write_exec_read_id
+.EXPORT fdc_data_write_exec_format_track
+.EXPORT fdc_data_write_exec_scan_equal
+.EXPORT fdc_data_write_exec_scan_low_or_equal
+.EXPORT fdc_data_write_exec_scan_high_or_equal
+.EXPORT fdc_data_write_exec_recalibrate
+.EXPORT fdc_data_write_exec_sense_interrupt_status
+.EXPORT fdc_data_write_exec_specify
+.EXPORT fdc_data_write_exec_sense_drive_status
+.EXPORT fdc_data_write_exec_seek
+.EXPORT fdc_data_write_invalid
+.EXPORT fdc_data_write_done
+.EXPORT fdc_data_read
+.EXPORT fdc_data_read_st0
+.EXPORT fdc_data_read_st0_sense_interrupt_status
+.EXPORT fdc_data_read_st1
+.EXPORT fdc_data_read_st2
+.EXPORT fdc_data_read_st3
+.EXPORT fdc_data_read_c
+.EXPORT fdc_data_read_h
+.EXPORT fdc_data_read_r
+.EXPORT fdc_data_read_n
+.EXPORT fdc_data_read_pcn
+.EXPORT fdc_data_read_invalid
+.EXPORT fdc_data_read_done
+.EXPORT fdc_control_write
+.EXPORT fdc_dir_read
+.EXPORT fdc_d765ac_reset
 
 .EOF
