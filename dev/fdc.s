@@ -18,6 +18,10 @@
 # TODO remove
 .IMPORT print_num_radix
 
+# TODO fdc should not work while fdc_dor_reset == 0
+# TODO fdc should not read/write data or seek etc while the motor is off fdc_dor_enable_motor_a/b
+# TODO fdc should complain about fdc_dor_enable_dma 
+
 ##########
 fdc_ports:
     db  0xf2, 0x03, 0, fdc_dor_write                        # Digital Output Register
@@ -414,8 +418,6 @@ fdc_data_write_format_track_gpl:
 # Specify state: SRT/HUT
 
 fdc_data_write_srt_hut:
-    # TODO save SRT, HUT if we need them (SRT 4b, HUT 4b)
-
     # Next state is write HLT ND + execute specify
     add fdc_data_write_exec_specify, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
@@ -586,14 +588,19 @@ fdc_data_write_exec_sense_interrupt_status:
     jz  0, fdc_data_write_done
 
 fdc_data_write_exec_specify:
-    # TODO save HLT, ND if we need them (HLT 7b ND 1b)
-
     # Execute specify
-    # TODO
+    # We ignore all the timings, but verify that ND (bit 0) is zero for DMA mode
+    add bits, [rb + value], [ip + 1]
+    jnz [0], fdc_data_write_exec_specify_non_dma
 
     # Next state is idle
     add 0, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
+
+fdc_data_write_exec_specify_non_dma:
+    add fdc_error_non_dma, 0, [rb - 1]
+    arb -1
+    call report_error
 
 fdc_data_write_exec_sense_drive_status:
     # Execute sense drive status
@@ -899,7 +906,8 @@ fdc_present_cylinder_unit1:
 fdc_interrupt_pending:
     db  0
 
-
+fdc_error_non_dma:
+    db  "fdc: Non-DMA operation is not supported", 0
 
 
 

@@ -70,6 +70,15 @@ interrupt:
 .FRAME type; vector
     arb -1
 
+    # TODO remove
+    eq  [rb + type], 0x13, [rb - 1]
+    jz  [rb - 1], TODO_skip
+    out 'i'
+    out '1'
+    out '3'
+    out ' '
+TODO_skip:
+
     # Push flags, then disable TF and IF
     call pushf
 
