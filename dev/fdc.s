@@ -416,6 +416,30 @@ fdc_data_write_exec_write_data:
 fdc_data_write_exec_read_data:
     # Execute read data
     # TODO
+
+    # Read sectors on current track, throw data away until sector number matches R
+    # (reads ID Address Marks and ID fields). Then put the data to bus.
+    # After reading the sector, increment sector number and continue outputting
+    # until DMA controller sends TC (terminal count) then stop outputting data
+    # (looks like in the middle of the sector).
+    # After TC, continue reading sector and throw data away, then check CRC and
+    # finish the read data command.
+
+    # With MT read sector 1 side 0... sector L side 1 (L = last sector on side)
+
+    # If N=0, DTL defines how much of the sector should we send to data bus.
+    # If N>0, DTL is ignored. Still includes reading multiple sectors if no TC.
+
+    # If we don't find R on this track, set ND=1 in SR1 and b7=0,b6=1 in SR0, then end.
+
+    # If CRC error in ID field, DE=1 in SR1. If CRC error in Data Field also DD=1 in SR2.
+    # Also b7=0,b6=1 in SR0, then end.
+
+    # If SK=0 and we read Deleted Data Address Mark, set CM=1 in SR2 then end.
+    # If SK=1 FDC skips the deleted sector and reads next sector, not even check CRC.
+
+    # For CHRN in result phase, see table on page 435 in UPD765.pdf. Based on MT and EOT.
+
     jz  0, fdc_data_write_done
 
 fdc_data_write_exec_write_deleted_data:
@@ -713,6 +737,10 @@ fdc_cmd_sectors_per_cylinder:
     db  0
 fdc_cmd_data_pattern:
     db  0
+
+# TODO for seek, have 2 "present cylinder number PCN" registers, one for each FDD
+# during seek compare with fdc_cmd_cylinder which is the target cylinder
+# recalibrate zeros all PCN
 
 fdc_cmd_st0:
     db  0
