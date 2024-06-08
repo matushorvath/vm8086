@@ -271,6 +271,8 @@ fdc_data_write_exec_recalibrate:
     # Execute recalibrate
     # TODO
 
+    # TODO recalibrate zeros all PCN
+
     # Next state is idle
     add 0, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
@@ -485,6 +487,8 @@ fdc_data_write_ncn:
 
     # Execute seek
     # TODO
+
+    # TODO during seek compare PCN with fdc_cmd_cylinder which is the target cylinder
 
     # Next state is idle
     add 0, 0, [fdc_cmd_state]
@@ -738,9 +742,10 @@ fdc_cmd_sectors_per_cylinder:
 fdc_cmd_data_pattern:
     db  0
 
-# TODO for seek, have 2 "present cylinder number PCN" registers, one for each FDD
-# during seek compare with fdc_cmd_cylinder which is the target cylinder
-# recalibrate zeros all PCN
+fdc_cmd_present_cylinder_unit0:
+    db  0
+fdc_cmd_present_cylinder_unit1:
+    db  0
 
 fdc_cmd_st0:
     db  0

@@ -152,7 +152,7 @@ fdc_init:
 - fdc sense interrupt status
    - al = 0x08 -> fdc_write
    - fdc_read -> ST0 (if carry, error)
-   - fdc_read -> current cylinder (if carry, error)
+   - fdc_read -> current cylinder (if carry, error) PCN
    - if ST0 has 0x0c bits set, error
 - fdc_send_specify
    - sends data based on int_1E
