@@ -105,6 +105,7 @@ fdc_status_read:
 .ENDFRAME
 
 # TODO consider separate set of states for format_track command, would save a lot of conditions
+# TODO after the execution phase, interrupt will occur
 
 ##########
 fdc_data_write:
@@ -115,7 +116,7 @@ fdc_data_write:
     out 'w'
     out ' '
 
-    # Is the FDC in the middle of processing a command?
+    # Is the FDC processing a command?
     jz  [fdc_cmd_state], fdc_data_write_idle
 
     # Yes, is this the command phase?
@@ -134,7 +135,7 @@ fdc_data_write_idle:
     add [0], 0, [fdc_cmd_multi_track] # TODO execute multitrack operation
 
     add value_bits + 6, [rb + value_x8], [ip + 1]
-    add [0], 0, [fdc_cmd_mfm] # TODO validate that FM/MFM encoding matches the disk
+    add [0], 0, [fdc_cmd_mfm] # TODO validate that FM/MFM encoding matches the disk type
 
     add value_bits + 5, [rb + value_x8], [ip + 1]
     add [0], 0, [fdc_cmd_skip_deleted] # TODO execute support for skip deleted data
@@ -322,7 +323,7 @@ fdc_data_write_n:
     jz  0, fdc_data_write_done
 
 fdc_data_write_n_format_track:
-    # Format track command, next state for format track command is write SC
+    # Format track command, next state is write SC
     add fdc_data_write_sc, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
 
@@ -357,7 +358,7 @@ fdc_data_write_gpl:
     jz  0, fdc_data_write_done
 
 fdc_data_write_gpl_format_track:
-    # Format track command, next state for format track command is write D
+    # Format track command, next state is write D
     add fdc_data_write_d, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
 
@@ -372,10 +373,10 @@ fdc_data_write_dtl_stp:
     add fdc_data_read_st0, 0, [fdc_cmd_state]
 
     # Execute the command
-    add fdc_data_write_dtl_table, [fdc_cmd_code], [ip + 2]
+    add fdc_data_write_dtl_stp_table, [fdc_cmd_code], [ip + 2]
     jz  0, [0]
 
-fdc_data_write_dtl_table:
+fdc_data_write_dtl_stp_table:
     ds  2, 0                                                # 00000, 00001
     db  fdc_data_write_exec_read_track                      # 00010: read_track
     ds  2, 0                                                # 00011, 00100: specify, sense_drive_status
@@ -454,21 +455,25 @@ fdc_data_write_ncn:
     jz  0, fdc_data_write_done
 
 fdc_data_write_srt_hut:
-    # Next state is write HLT ND
     # TODO save SRT, HUT if we need them (SRT 4b, HUT 4b)
+
+    # Next state is write HLT ND
     add fdc_data_write_hlt_nd, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
 
 fdc_data_write_hlt_nd:
-    # Next state is idle
     # TODO save HLT, ND if we need them (HLT 7b ND 1b)
+
+    # Execute specify
+    # TODO
+
+    # Next state is idle
     add 0, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
 
 fdc_data_write_invalid:
-    # Current command is invalid, return ST0 status 0x80
+    # Whatever the command code was, set it to zero
     add 0, 0, [fdc_cmd_code]
-    add 0x80, 0, [fdc_cmd_st0]
 
     # Next state is read ST0
     add 1, 0, [fdc_cmd_result_phase]
@@ -478,46 +483,124 @@ fdc_data_write_done:
     ret 2
 .ENDFRAME
 
-    # TODO after the execution phase, interrupt will occur
-
 ##########
 fdc_data_read:
 .FRAME addr; value
-    arb -1
-
-    # TODO
+    arb -X
 
     out 'D' # TODO remove
     out 'r'
     out ' '
 
-_st0
-    # read ST0 -> _st1 (default); idle (cmd=invalid; docs say ST0 = 80); _pcn (cmd=sense_interrupt_status)
+    # Is the FDC processing a command?
+    jz  [fdc_cmd_state], fdc_data_read_invalid
 
-_st1
-    # read ST1 -> _st2
+    # Yes, is this the result phase?
+    jz [fdc_cmd_result_phase], fdc_data_read_invalid
 
-_st2
-    # read ST2 -> _c
+    # Yes, use the state as a label to jump to
+    jz  0, [fdc_cmd_state]
 
-_c
-    # read C -> _h
+fdc_data_read_st0:
+    # Is this the invalid command?
+    jz  [fdc_cmd_code], fdc_data_read_invalid
 
-_h
-    # read H -> _r
+    # Read ST0
+    # TODO
 
-_r
-    # read R (sector) -> _n
+    # Is this the sense interrupt status command?
+    eq  [fdc_cmd_code], 0b01000, [rb + tmp]
+    jnz [rb + tmp], fdc_data_read_st0_sense_interrupt_status
 
-_n
-    # read N (number of bytes) -> idle
+    # No, default next state is read ST1
+    add fdc_data_read_st1, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
 
-_pcn
-    # read PCN (present cylinder number) position of the head -> idle
+fdc_data_read_st0_sense_interrupt_status:
+    # Sense interrupt status command, next state is read PCN
+    add fdc_data_read_pcn, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
 
-_st3
-    # read ST3 -> idle
+fdc_data_read_st1:
+    # Read ST1
+    # TODO
 
+    # Next state is read ST2
+    add fdc_data_read_st2, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
+
+fdc_data_read_st2:
+    # Read ST2
+    # TODO
+
+    # Next state is read C
+    add fdc_data_read_c, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
+
+fdc_data_read_c:
+    # Read C (cylinder)
+    # TODO
+
+    # Next state is read H
+    add fdc_data_read_h, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
+
+fdc_data_read_h:
+    # Read H (head)
+    # TODO
+
+    # Next state is read R
+    add fdc_data_read_r, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
+
+fdc_data_read_r:
+    # Read R (record, sector number)
+    # TODO
+
+    # Next state is read N
+    add fdc_data_read_n, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
+
+fdc_data_read_n:
+    # Read N (number of bytes)
+    # TODO
+
+    # Next state is idle
+    add 0, 0, [fdc_result_phase]
+    add 0, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
+
+fdc_data_read_pcn:
+    # Read PCN (present cylinder number, position of the head)
+    # TODO
+
+    # Next state is idle
+    add 0, 0, [fdc_result_phase]
+    add 0, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
+
+fdc_data_read_st3:
+    # Read ST3
+    # TODO
+
+    # Next state is idle
+    add 0, 0, [fdc_result_phase]
+    add 0, 0, [fdc_cmd_state]
+    jz  0, fdc_data_write_done
+
+fdc_data_read_invalid:
+    # Invalid command, either unexpected read or unexpected write
+    add 0, 0, [fdc_cmd_code]
+
+    # Return 0x80 as ST0 error code
+    add 0x80, 0, [fdc_cmd_st0]
+    add [fdc_cmd_st0], 0, [rb + value]
+
+    # Next state is idle
+    add 0, 0, [fdc_result_phase]
+    add 0, 0, [fdc_cmd_state]
+
+fdc_data_read_done:
     arb 1
     ret 1
 .ENDFRAME
