@@ -110,7 +110,7 @@ fdc_status_read:
 ##########
 fdc_data_write:
 .FRAME addr, value; value_bits, value_x8, tmp
-    arb -X
+    arb -5
 
     out 'D' # TODO remove
     out 'w'
@@ -156,7 +156,8 @@ fdc_data_write_idle:
     jz  0, [0]
 
 fdc_data_write_idle_table:
-    ds  2, fdc_data_write_invalid                           #          00000, 00001
+    db  fdc_data_write_invalid                              #          00000
+    db  fdc_data_write_invalid                              #          00001
     db  fdc_data_write_idle_to_hd_us                        #  0 MF SK 00010: read_track
     db  fdc_data_write_idle_to_srt_hut                      #  0  0  0 00011: specify
     db  fdc_data_write_idle_to_hd_us                        #  0  0  0 00100: sense_drive_status
@@ -173,11 +174,20 @@ fdc_data_write_idle_table:
     db  fdc_data_write_idle_to_hd_us                        #  0  0  0 01111: seek
     db  fdc_data_write_invalid                              #          10000
     db  fdc_data_write_idle_to_hd_us                        # MT MF SK 10001: scan_equal
-    ds  7, fdc_data_write_invalid                           #          10010-11000
+    db  fdc_data_write_invalid                              #          10010
+    db  fdc_data_write_invalid                              #          10011
+    db  fdc_data_write_invalid                              #          10100
+    db  fdc_data_write_invalid                              #          10101
+    db  fdc_data_write_invalid                              #          10110
+    db  fdc_data_write_invalid                              #          10111
+    db  fdc_data_write_invalid                              #          11000
     db  fdc_data_write_idle_to_hd_us                        # MT MF SK 11001: scan_low_or_equal
-    ds  3, fdc_data_write_invalid                           #          11010-11100
+    db  fdc_data_write_invalid                              #          11010
+    db  fdc_data_write_invalid                              #          11011
+    db  fdc_data_write_invalid                              #          11100
     db  fdc_data_write_idle_to_hd_us                        # MT MF SK 11101: scan_high_or_equal
-    ds  2, fdc_data_write_invalid                           #          11110, 11111
+    db  fdc_data_write_invalid                              #          11110
+    db  fdc_data_write_invalid                              #          11111
 
 fdc_data_write_idle_to_hd_us:
     # Next state is write HD US
@@ -312,7 +322,7 @@ fdc_data_write_r:
 fdc_data_write_n:
     # Save N (number of bytes in sector)
     # TODO how is this used, do we need to save it?
-    add [rb + value], 0, [fdc_cmd_bytes_per_sector]
+    add [rb + value], 0, [fdc_cmd_bytes]
 
     # Is this the format track command?
     eq  [fdc_cmd_code], 0b01101, [rb + tmp]
@@ -366,7 +376,7 @@ fdc_data_write_dtl_stp:
     # Save DTL or STP, they share the same variable
     # DTL (data length, if N is 0, DTL is the length to read/write to a sector)
     # STP (1=compare contiguous sectors, 2=compare alternate sectors)
-    add [rb + value], 0, [fdc_cmd_dtl_stp]
+    add [rb + value], 0, [fdc_cmd_data_length_or_step]
 
     # Next state is always read ST0
     add 1, 0, [fdc_cmd_result_phase]
@@ -419,17 +429,17 @@ fdc_data_write_exec_read_deleted_data:
     # TODO
     jz  0, fdc_data_write_done
 
-fdc_data_write_exec_scan_equal
+fdc_data_write_exec_scan_equal:
     # Execute scan equal
     # TODO
     jz  0, fdc_data_write_done
 
-fdc_data_write_exec_scan_low_or_equal
+fdc_data_write_exec_scan_low_or_equal:
     # Execute scan low or equal
     # TODO
     jz  0, fdc_data_write_done
 
-fdc_data_write_exec_scan_high_or_equal
+fdc_data_write_exec_scan_high_or_equal:
     # Execute scan high or equal
     # TODO
     jz  0, fdc_data_write_done
@@ -480,13 +490,14 @@ fdc_data_write_invalid:
     add fdc_data_read_st0, 0, [fdc_cmd_state]
 
 fdc_data_write_done:
+    arb 5
     ret 2
 .ENDFRAME
 
 ##########
 fdc_data_read:
-.FRAME addr; value
-    arb -X
+.FRAME addr; value, tmp
+    arb -3
 
     out 'D' # TODO remove
     out 'r'
@@ -566,7 +577,7 @@ fdc_data_read_n:
     # TODO
 
     # Next state is idle
-    add 0, 0, [fdc_result_phase]
+    add 0, 0, [fdc_cmd_result_phase]
     add 0, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
 
@@ -575,7 +586,7 @@ fdc_data_read_pcn:
     # TODO
 
     # Next state is idle
-    add 0, 0, [fdc_result_phase]
+    add 0, 0, [fdc_cmd_result_phase]
     add 0, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
 
@@ -584,7 +595,7 @@ fdc_data_read_st3:
     # TODO
 
     # Next state is idle
-    add 0, 0, [fdc_result_phase]
+    add 0, 0, [fdc_cmd_result_phase]
     add 0, 0, [fdc_cmd_state]
     jz  0, fdc_data_write_done
 
@@ -597,11 +608,11 @@ fdc_data_read_invalid:
     add [fdc_cmd_st0], 0, [rb + value]
 
     # Next state is idle
-    add 0, 0, [fdc_result_phase]
+    add 0, 0, [fdc_cmd_result_phase]
     add 0, 0, [fdc_cmd_state]
 
 fdc_data_read_done:
-    arb 1
+    arb 3
     ret 1
 .ENDFRAME
 
@@ -663,10 +674,57 @@ fdc_dor_enable_motor_a:
 fdc_dor_enable_motor_b:
     db  0
 
+fdc_cmd_state:
+    db  0
 fdc_cmd_result_phase:
     db  0
 
-fdc_cmd_state:
+fdc_cmd_code:
+    db  0
+
+fdc_cmd_multi_track:
+    db  0
+fdc_cmd_mfm:
+    db  0
+fdc_cmd_skip_deleted:
+    db  0
+fdc_cmd_unit_select:
+    db  0
+
+fdc_cmd_cylinder:
+    db  0
+fdc_cmd_head:
+    db  0
+fdc_cmd_sector:
+    db  0
+fdc_cmd_bytes:
+    db  0
+
+fdc_cmd_end_of_track:
+    db  0
+fdc_cmd_gap_length:
+    db  0
+fdc_cmd_data_length_or_step:
+    db  0
+
+fdc_cmd_sectors_per_cylinder:
+    db  0
+fdc_cmd_data_pattern:
+    db  0
+
+# TODO maybe merge fdc_cmd_present_cylinder_number and fdc_cmd_new_cylinder_number
+fdc_cmd_present_cylinder_number:
+    db  0
+fdc_cmd_new_cylinder_number:
+    db  0
+
+fdc_cmd_st0:
+    db  0
+fdc_cmd_st1:
+    db  0
+fdc_cmd_st2:
+    db  0
+fdc_cmd_st3:
     db  0
 
 .EOF
