@@ -180,6 +180,10 @@ setloc	0E6F2h
     - fdc_disk_change
     - fdc_set_rate
     - fdc_detect_media
+        - get_drive_type (hardcoded 1.44 3.5")
+        - fdc_read_id
+            - fdc_set_rate Cw
+            - fdc_recalibrate Dw 111
     - fdc_configure_dma
         - dmac_mode_reg
         - dmac_ff_reg
@@ -188,6 +192,40 @@ setloc	0E6F2h
         - dmapage_ch2_reg
         - dmac_mask_reg
     - fdc_seek
+        - fdc_recalibrate
     - fdc_send_cmd 0e6
     - fdc_wait_irq
     - fdc_get_result
+
+Booting OS...
+reset fdc fn00              i13 Aw_00001000 Aw_00001100 R Sr_10000000 Sr_10000000
+sense interrupt status      Dw_00001000 Sr_11000000 Sr_11000000 Dr_11000000 Sr_11000000 Sr_11000000 Dr_00000000 Sr_10000000
+specify                     Dw_00000011 Sr_10000000 Dw_10101111 Sr_10000000 Dw_00000010
+get drive parameters fn08   i13
+read sector fn02            i13 Aw_00011100 Cw_00000000 Sr_10000000
+recalibrate                 Dw_00000111 Sr_10000000 Dw_00000000 Sr_10000000
+Dw_00000111 Sr_10000000 Dw_00000000 Cw_00000010 Sr_10000000
+Dw_00000111 Sr_10000000 Dw_00000000 Sr_10000000
+Dw_00000111 Sr_10000000 Dw_00000000 Sr_10000000
+Dw_00000011 Sr_10000000 Dw_11011111 Sr_10000000 Dw_00000010 Sr_10000000
+Dw_00000111 Sr_10000000 Dw_00000000 Sr_10000000
+Dw_00000111 Sr_10000000 Dw_00000000 Sr_10000000
+
+(after recalibrate works)
+Booting OS...
+reset fdc fn00              i13 Aw_00001000 Aw_00001100 R Sr_10000000 Sr_10000000
+sense interrupt status      Dw_00001000 Sr_11000000 Sr_11000000 Dr_11000000 Sr_11000000 Sr_11000000 Dr_00000000 Sr_10000000
+specify                     Dw_00000011 Sr_10000000 Dw_10101111 Sr_10000000 Dw_00000010
+get drive parameters fn08   i13
+read sector fn02            i13 Aw_00011100 Cw_00000000 Sr_10000000
+recalibrate                 Dw_00000111 Sr_10000000 Dw_00000000 Sr_10000000
+sense interrupt status      Dw_00001000 Sr_11000000 Sr_11000000 looks unfinished
+Cw_00000010 Sr_11000000 Sr_11000000 Sr_11000000
+
+reset fdc fn00              i13 Aw_00011000 Aw_00011100 R Sr_11000000
+reset fdc fn00 attempt 2    Aw_00011000 Aw_00011100 R Sr_11000000
+reset fdc fn00              i13 Aw_00011000 Aw_00011100 R Sr_11000000
+reset fdc fn00 attempt 2    Aw_00011000 Aw_00011100 R Sr_11000000
+reset fdc fn00              i13 Aw_00011000 Aw_00011100 R Sr_11000000
+reset fdc fn00 attempt 2    Aw_00011000 Aw_00011100 R Sr_11000000
+                            i13

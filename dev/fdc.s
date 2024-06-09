@@ -195,6 +195,8 @@ fdc_data_write_idle:
     # We are now in command phase
     add 0, 0, [fdc_cmd_result_phase]
 
+    # TODO probably set FDC busy in MSR, at least seek command asks for that; clear when idle state?
+
     # Handle the state transition
     add fdc_data_write_idle_table, [fdc_cmd_code], [ip + 2]
     jz  0, [0]
@@ -264,9 +266,9 @@ fdc_data_write_hd_us:
     add [0], 0, [fdc_cmd_head]
 
     add [rb + value_bits], 1, [ip + 1]
-    mul [0], 0x00000010, [fdc_cmd_unit_select]
+    mul [0], 0x00000010, [fdc_cmd_unit_selected]
     add [rb + value_bits], 0, [ip + 1]
-    add [0], [fdc_cmd_unit_select], [fdc_cmd_unit_select]
+    add [0], [fdc_cmd_unit_selected], [fdc_cmd_unit_selected]
 
     # Handle the state transition
     add fdc_data_write_hd_us_table, [fdc_cmd_code], [ip + 2]
@@ -587,12 +589,42 @@ fdc_data_write_exec_scan_high_or_equal:
 
 fdc_data_write_exec_recalibrate:
     # Execute recalibrate
-    # TODO
+    mul [fdc_cmd_head], 0b00000100, [fdc_cmd_st0]
+    add [fdc_cmd_unit_selected], [fdc_cmd_st0], [fdc_cmd_st0]
 
-    # TODO recalibrate zeros all PCN
+    # Is this unit 0/1?
+    lt  [fdc_cmd_unit_selected], 2, [rb + tmp]
+    jnz [rb + tmp], fdc_data_write_exec_recalibrate_unit01
 
+    # Unit 2/3 is not present, set up ST0 to report a failure
+    # (not ready, equipment check, seek end, abnormal termination)
+    add 0b01111000, [fdc_cmd_st0], [fdc_cmd_st0]
+
+    jz  0, fdc_data_write_exec_recalibrate_terminated
+
+fdc_data_write_exec_recalibrate_unit01:
+    # Unit 0/1
+    # TODO these units could also be not present or not ready, make it configurable
+
+    # TODO set floppy busy with seek in MSR, it is cleared by sense interrupt
+    # TODO clear floppy busy in MSR when sense interrupt
+
+    # Retract the head of this unit to track 0
+    add fdc_present_cylinder_units, [fdc_cmd_unit_selected], [ip + 3]
+    add 0, 0, [0]
+
+    # Set up STO for a successful seek (seek end)
+    add 0b00010000, [fdc_cmd_st0], [fdc_cmd_st0]
+
+fdc_data_write_exec_recalibrate_terminated:
     # Next state is idle
     add 0, 0, [fdc_cmd_state]
+
+    # Raise INT 0e = IRQ6, since the recalibration is finished
+    add 0x0e, 0, [rb - 1]
+    arb -1
+    call interrupt
+
     jz  0, fdc_data_write_done
 
 fdc_data_write_exec_sense_interrupt_status:
@@ -638,7 +670,13 @@ fdc_data_write_exec_seek:
     # Execute seek
     # TODO
 
+    # TODO handle units 2 and 3, they're not ready, see docs what to do then
     # TODO during seek compare PCN with fdc_cmd_cylinder which is the target cylinder
+
+    # TODO interrupt
+    # TODO set floppy busy with seek in MSR, it is cleared by sense interrupt
+    # TODO clear floppy busy in MSR when sense interrupt
+    # TODO during command phase of seek fdc is in busy state (in MSR), during execution it's not
 
     # Next state is idle
     add 0, 0, [fdc_cmd_state]
@@ -833,6 +871,10 @@ fdc_dir_read:
 .FRAME addr; value
     arb -1
 
+    out 'A' # TODO remove
+    out 'r'
+    out ' '
+
     # The only bit related to floppy operation is bit 7 - diskette change
     # We don't support changing the diskette, so return all zeros
     add 0, 0, [rb + value]
@@ -855,7 +897,7 @@ fdc_d765ac_reset:
     add 0b11000000, 0, [fdc_cmd_st0]
 
     # Raise INT 0e = IRQ6 if the FDD is ready, which we assume it always is
-    # TODO if the motor is off, is the FDD ready?
+    # TODO if the motor is off, is the FDD ready? also, the FDD may not be present
     add 0x0e, 0, [rb - 1]
     arb -1
     call interrupt
@@ -890,7 +932,7 @@ fdc_cmd_mfm:
     db  0
 fdc_cmd_skip_deleted:
     db  0
-fdc_cmd_unit_select:
+fdc_cmd_unit_selected:
     db  0
 
 fdc_cmd_cylinder:
