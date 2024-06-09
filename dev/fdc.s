@@ -19,9 +19,14 @@
 .IMPORT print_num_radix
 
 # TODO fdc should not work while fdc_dor_reset == 0
-# TODO fdc should not read/write data or seek etc while the motor is off fdc_dor_enable_motor_a/b
+# TODO fdc should not read/write data or seek etc while the motor is off fdc_dor_enable_motor_a/b and if it is not selected in dor
 # TODO fdc should complain about fdc_dor_enable_dma 
 # TODO set equipment check bit in ST0 if FDD is not connected?
+
+# TODO The bottom 2 bits of DSR match CCR, and setting one of them sets the other.
+# TODO Require MF=1, don't support read/write deleted data, ignore SK since there is never deleted data, only support 1.44" floppies
+# TODO Read ID probably is simple, since there are never bad sectors
+# TODO relative seek: set the MT bit to 1, to seek up set MFM bit, to seek down clear MFM bit
 
 ##########
 fdc_ports:
