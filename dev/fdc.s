@@ -21,6 +21,7 @@
 # TODO fdc should not work while fdc_dor_reset == 0
 # TODO fdc should not read/write data or seek etc while the motor is off fdc_dor_enable_motor_a/b
 # TODO fdc should complain about fdc_dor_enable_dma 
+# TODO set equipment check bit in ST0 if FDD is not connected?
 
 ##########
 fdc_ports:
@@ -529,15 +530,45 @@ fdc_data_write_exec_read_track:
 
 fdc_data_write_exec_read_id:
     # Execute read id
-    # TODO
+    mul [fdc_cmd_head], 0b00000100, [fdc_cmd_st0]
+    add [fdc_cmd_unit_selected], [fdc_cmd_st0], [fdc_cmd_st0]
 
-    # Mark interrupt pending
-    add 1, 0, [fdc_interrupt_pending]
-    # TODO raise interrupt here
+    # Is a floppy inserted?
+    add fdc_config_inserted_units, [fdc_cmd_unit_selected], [ip + 1]
+    jnz [0], fdc_data_write_exec_read_id_have_floppy
 
+    # Floppy is not inserted, set up ST0 (not ready, abnormal termination),
+    # ST1 (missing address mark, no data), ST2
+    add 0b01001000, [fdc_cmd_st0], [fdc_cmd_st0]
+    add 0b00000101, 0, [fdc_cmd_st1]
+    add 0, 0, [fdc_cmd_st2]
+    # TODO find out what to store in C H R N, error case (zeros?)
+
+    jz  0, fdc_data_write_exec_read_id_terminated
+
+fdc_data_write_exec_read_id_have_floppy:
+    # Floppy is inserted, return the first ID Field read
+
+    # TODO read an ID Field from the floppy and return it
+    # "The first correct ID information on the cylinder is stored in data register"
+
+    # Set up response: ST0 (see above) ST1 ST2 C H R N
+    # TODO if missing address mark in floppy data, report MA in ST1
+    add 0, 0, [fdc_cmd_st1]
+    add 0, 0, [fdc_cmd_st2]
+    # TODO find out what to store in C H R N, success case
+
+fdc_data_write_exec_read_id_terminated:
     # Next state is read ST0
     add 1, 0, [fdc_cmd_result_phase]
     add fdc_data_read_st0, 0, [fdc_cmd_state]
+
+    # Raise INT 0e = IRQ6
+    add 1, 0, [fdc_interrupt_pending]
+    add 0x0e, 0, [rb - 1]
+    arb -1
+    call interrupt
+
     jz  0, fdc_data_write_done
 
 fdc_data_write_exec_format_track:
@@ -594,28 +625,23 @@ fdc_data_write_exec_recalibrate:
     mul [fdc_cmd_head], 0b00000100, [fdc_cmd_st0]
     add [fdc_cmd_unit_selected], [fdc_cmd_st0], [fdc_cmd_st0]
 
-    # Is this unit 0/1?
-    lt  [fdc_cmd_unit_selected], 2, [rb + tmp]
-    jnz [rb + tmp], fdc_data_write_exec_recalibrate_unit01
+    # Is a floppy inserted?
+    add fdc_config_inserted_units, [fdc_cmd_unit_selected], [ip + 1]
+    jnz [0], fdc_data_write_exec_recalibrate_have_floppy
 
-    # Unit 2/3 is not present, set up ST0 to report a failure
-    # (not ready, equipment check, seek end, abnormal termination)
-    add 0b01111000, [fdc_cmd_st0], [fdc_cmd_st0]
-
+    # Floppy is not inserted, set up ST0 (not ready, seek end, abnormal termination)
+    add 0b01101000, [fdc_cmd_st0], [fdc_cmd_st0]
     jz  0, fdc_data_write_exec_recalibrate_terminated
 
-fdc_data_write_exec_recalibrate_unit01:
-    # Unit 0/1
-    # TODO these units could also be not present or not ready, make it configurable
+fdc_data_write_exec_recalibrate_have_floppy:
+    # Floppy is inserted, retract the head to track 0
+    add fdc_present_cylinder_units, [fdc_cmd_unit_selected], [ip + 3]
+    add 0, 0, [0]
 
     # TODO set floppy busy with seek in MSR, it is cleared by sense interrupt
     # TODO clear floppy busy in MSR when sense interrupt
 
-    # Retract the head of this unit to track 0
-    add fdc_present_cylinder_units, [fdc_cmd_unit_selected], [ip + 3]
-    add 0, 0, [0]
-
-    # Set up STO for a successful seek (seek end)
+    # Set up STO to report a successful seek (seek end)
     add 0b00010000, [fdc_cmd_st0], [fdc_cmd_st0]
 
 fdc_data_write_exec_recalibrate_terminated:
@@ -623,6 +649,7 @@ fdc_data_write_exec_recalibrate_terminated:
     add 0, 0, [fdc_cmd_state]
 
     # Raise INT 0e = IRQ6, since the recalibration is finished
+    add 1, 0, [fdc_interrupt_pending]
     add 0x0e, 0, [rb - 1]
     arb -1
     call interrupt
@@ -672,7 +699,7 @@ fdc_data_write_exec_seek:
     # Execute seek
     # TODO
 
-    # TODO handle units 2 and 3, they're not ready, see docs what to do then
+    # TODO handle units that are not present/no floppy, see docs what to do then
     # TODO during seek compare PCN with fdc_cmd_cylinder which is the target cylinder
 
     # TODO interrupt
@@ -891,15 +918,13 @@ fdc_d765ac_reset:
     # TODO reset D765AC registers to zero, but don't touch the DOR,
     # also don't touch SRT HUT HLT in Specify command
 
-    # Mark interrupt pending
-    add 1, 0, [fdc_interrupt_pending]
-
     # After reset both units have changed ready status, so sense interrupt status
     # returns ST0 with bits 6 and 7 set
     add 0b11000000, 0, [fdc_cmd_st0]
 
     # Raise INT 0e = IRQ6 if the FDD is ready, which we assume it always is
     # TODO if the motor is off, is the FDD ready? also, the FDD may not be present
+    add 1, 0, [fdc_interrupt_pending]
     add 0x0e, 0, [rb - 1]
     arb -1
     call interrupt
@@ -978,6 +1003,35 @@ fdc_interrupt_pending:
 
 fdc_error_non_dma:
     db  "fdc: Non-DMA operation is not supported", 0
+
+##########
+# Configuration information
+
+# Is a FDD connected to this channel?
+fdc_config_connected_units:
+fdc_config_connected_unit0:
+    db  1
+fdc_config_connected_unit1:
+    db  0
+fdc_config_connected_unit2:
+    db  0
+fdc_config_connected_unit3:
+    db  0
+
+# What type of floppy is inserted?
+# If a floppy is inserted, we also assume the FDD is connected
+# TODO for now just 0=no floppy, 1=has floppy
+fdc_config_inserted_units:
+fdc_config_inserted_unit0:
+    db  1
+fdc_config_inserted_unit1:
+    db  0
+fdc_config_inserted_unit2:
+    db  0
+fdc_config_inserted_unit3:
+    db  0
+
+
 
 
 

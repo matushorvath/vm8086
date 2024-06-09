@@ -73,6 +73,7 @@ interrupt:
     # TODO remove
     eq  [rb + type], 0x13, [rb - 1]
     jz  [rb - 1], TODO_skip
+    out 10
     out 'i'
     out '1'
     out '3'
