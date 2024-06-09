@@ -229,3 +229,19 @@ reset fdc fn00 attempt 2    Aw_00011000 Aw_00011100 R Sr_11000000
 reset fdc fn00              i13 Aw_00011000 Aw_00011100 R Sr_11000000
 reset fdc fn00 attempt 2    Aw_00011000 Aw_00011100 R Sr_11000000
                             i13
+
+(after fdc busy flag)
+Booting OS...
+reset fdc fn00              i13_00 Aw_00001000 Aw_00001100 R Sr_10000000 Sr_10000000
+sense interrupt status      Dw_00001000 Sr_11010000 Sr_11010000 Dr_11000000 Sr_11010000 Sr_11010000 Dr_00000000 Sr_10000000
+specify                     Dw_00000011 Sr_10010000 Dw_10101111 Sr_10010000 Dw_00000010
+get drive parameters fn08   i13_08
+read sector fn02            i13_02 Aw_00011100 Cw_00000000 Sr_10000000
+recalibrate                 Dw_00000111 Sr_10010000 Dw_00000000 Sr_10000000
+sense interrupt status      Dw_00001000 Sr_11010000 Dr_10000000 Sr_10000000 Sr_10000000
+read id                     Dw_01001010 Sr_10010000 Dw_00000000 (waits, probably for interrupt) Cw_00000010 Sr_11010000 Sr_11010000 Sr_11010000
+
+reset fdc fn00              i13_00 Aw_00011000 Aw_00011100 R Sr_11010000 Aw_00011000 Aw_00011100 R Sr_11010000
+                            i13_00 Aw_00011000 Aw_00011100 R Sr_11010000 Aw_00011000 Aw_00011100 R Sr_11010000
+                            i13_00 Aw_00011000 Aw_00011100 R Sr_11010000 Aw_00011000 Aw_00011100 R Sr_11010000
+                            i13_0d

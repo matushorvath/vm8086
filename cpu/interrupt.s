@@ -76,6 +76,14 @@ interrupt:
     out 'i'
     out '1'
     out '3'
+    out '_'
+    .IMPORT print_num_radix
+    .IMPORT reg_ah
+    add [reg_ah], 0, [rb - 1]
+    add 16, 0, [rb - 2]
+    add 2, 0, [rb - 3]
+    arb -3
+    call print_num_radix
     out ' '
 TODO_skip:
 

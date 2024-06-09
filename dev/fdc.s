@@ -97,27 +97,31 @@ fdc_dor_write_dma_enabled:
 
 ##########
 fdc_status_read:
-.FRAME addr; value
-    arb -1
+.FRAME addr; value, tmp
+    arb -2
 
     out 'S' # TODO remove
     out 'r'
     out '_'
 
+    # Controller is busy in non-idle command state
+    # Bit 4 CB  - Controller is busy reading or writing
+    lt  0, [fdc_cmd_state], [rb + tmp]
+    mul [rb + tmp], 0b00010000, [rb + value]
+
+    # Data transfer direction is CPU to FDC in command phase, FDC to CPU in result phase
+    # Bit 6 DIO - data input/output, 0 - from CPU to FDC, 1 - from FDC to CPU
+    mul [fdc_cmd_result_phase], 0b01000000, [rb + tmp]
+    add [rb + value], [rb + tmp], [rb + value]
+
     # Following bits have fixed values, since seeking, reading and writing is immediate,
-    # we only support DMA mode, and the FDC is always ready:
+    # and we only support DMA mode:
     # Bit 0 DAB - FDD A is busy seeking
     # Bit 1 DBB - FDD B is busy seeking
     # Bit 2 reserved
     # Bit 3 reserved
-    # Bit 4 CB  - Controller is busy reading or writing
     # Bit 5 NDM - non-DMA mode
     # Bit 7 RQM - data register is ready for data transfer
-
-    # Data transfer direction is CPU to FDC in command phase, FDC to CPU in result phase
-    # Bit 6 DIO - data input/output, 0 - from CPU to FDC, 1 - from FDC to CPU
-
-    mul [fdc_cmd_result_phase], 0b01000000, [rb + value]
     add [rb + value], 0b10000000, [rb + value]
 
     # TODO remove
@@ -128,7 +132,7 @@ fdc_status_read:
     call print_num_radix
     out ' '
 
-    arb 1
+    arb 2
     ret 1
 .ENDFRAME
 
@@ -194,8 +198,6 @@ fdc_data_write_idle:
 
     # We are now in command phase
     add 0, 0, [fdc_cmd_result_phase]
-
-    # TODO probably set FDC busy in MSR, at least seek command asks for that; clear when idle state?
 
     # Handle the state transition
     add fdc_data_write_idle_table, [fdc_cmd_code], [ip + 2]
