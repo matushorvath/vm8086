@@ -4,7 +4,7 @@
 # From devices.s
 .IMPORT register_ports
 
-# From error.s
+# From util/error.s
 .IMPORT report_error
 
 # From obj/bits.s

@@ -13,8 +13,8 @@ build: build-prep $(BINDIR)/libutil.a
 build-prep:
 	mkdir -p "$(BINDIR)" "$(OBJDIR)"
 
-UTIL_OBJS = bits.o brk.o div5.o mod9.o mod17.o nibbles.o parity.o printb.o shl.o shr.o split233.o \
-	util.o
+UTIL_OBJS = bits.o brk.o div5.o error.o mod9.o mod17.o nibbles.o parity.o printb.o shl.o shr.o \
+	split233.o util.o
 
 $(BINDIR)/libutil.a: $(UTIL_OBJS:%.o=$(OBJDIR)/%.o)
 	$(run-intcode-ar)

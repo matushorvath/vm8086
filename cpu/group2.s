@@ -5,7 +5,7 @@
 .IMPORT execute_call_near_indirect
 .IMPORT execute_call_far_indirect
 
-# From error.s
+# From util/error.s
 .IMPORT report_error
 
 # From inc_dec.s

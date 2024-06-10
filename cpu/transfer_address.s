@@ -6,7 +6,7 @@
 .IMPORT decode_mod_rm
 .IMPORT decode_reg
 
-# From error.s
+# From util/error.s
 .IMPORT report_error
 
 # From location.s

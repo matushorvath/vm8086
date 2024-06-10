@@ -12,7 +12,7 @@
 .IMPORT config_tracing_ip
 .IMPORT config_vm_callback
 
-# From error.s
+# From util/error.s
 .IMPORT report_error
 
 # From instructions.s

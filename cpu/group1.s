@@ -17,7 +17,7 @@
 .IMPORT execute_idiv_b
 .IMPORT execute_idiv_w
 
-# From error.s
+# From util/error.s
 .IMPORT report_error
 
 # From mul.s

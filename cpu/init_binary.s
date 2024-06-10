@@ -12,7 +12,7 @@
 .IMPORT brk
 .IMPORT sbrk
 
-# From error.s
+# From util/error.s
 .IMPORT report_error
 
 # From state.s

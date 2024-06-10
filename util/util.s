@@ -1,7 +1,7 @@
 .EXPORT check_range
 .EXPORT split_16_8_8
 
-# From error.s
+# From util/error.s
 .IMPORT report_error
 
 ##########

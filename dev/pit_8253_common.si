@@ -3,7 +3,7 @@
 # Instead of parametrizing this code to handle both channels 0 and 2, or copy-pasting it twice,
 # we keep it in this file that is included twice in pit_8253_ch0.s and pit_8253_ch2.s.
 
-# From error.s
+# From util/error.s
 .IMPORT report_error
 
 # From obj/bits.s

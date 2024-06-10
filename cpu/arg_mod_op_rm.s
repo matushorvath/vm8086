@@ -11,7 +11,7 @@
 # From arg_mod_reg_rm.s
 .IMPORT arg_mod_rm_generic
 
-# From error.s
+# From util/error.s
 .IMPORT report_error
 
 # From memory.s

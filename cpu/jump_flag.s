@@ -15,7 +15,7 @@
 .EXPORT execute_jg
 .EXPORT execute_jng
 
-# From error.s
+# From util/error.s
 .IMPORT report_error
 
 # From jump.s
