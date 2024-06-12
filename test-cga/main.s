@@ -10,6 +10,11 @@
 # From shutdown.s
 .IMPORT init_shutdown_port
 
+# From test_cga.o
+.IMPORT cga_test_count
+.IMPORT cga_test_header
+.IMPORT cga_test_data
+
 ##########
 # Entry point
     arb stack
@@ -24,7 +29,12 @@
 ##########
 main:
 .FRAME
+    add [cga_test_count], 0, [rb - 1]
+    add cga_test_header, 0, [rb - 2]
+    add cga_test_data, 0, [rb - 3]
+    arb -3
     call init_binary
+
     call init_cga
     call init_shutdown_port
 

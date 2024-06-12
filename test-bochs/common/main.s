@@ -7,6 +7,11 @@
 # From cpu/init_binary.s
 .IMPORT init_binary
 
+# From the binary.o
+.IMPORT binary_count
+.IMPORT binary_header
+.IMPORT binary_data
+
 ##########
 # Entry point
     arb stack
@@ -21,7 +26,13 @@
 ##########
 main:
 .FRAME
+
+    add [binary_count], 0, [rb - 1]
+    add binary_header, 0, [rb - 2]
+    add binary_data, 0, [rb - 3]
+    arb -3
     call init_binary
+
     call register_devices
     call execute
 

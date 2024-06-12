@@ -4,9 +4,6 @@
 .IMPORT binary_start_address_cs
 .IMPORT binary_start_address_ip
 .IMPORT binary_load_address
-.IMPORT binary_count
-.IMPORT binary_header
-.IMPORT binary_data
 
 # From brk.s
 .IMPORT brk
@@ -25,11 +22,16 @@
 
 ##########
 init_binary:
-.FRAME
+.FRAME rom_section_count, rom_header, rom_data;
     call init_binary_state
+
+    add [rb + rom_section_count], 0, [rb - 1]
+    add [rb + rom_header], 0, [rb - 2]
+    add [rb + rom_data], 0, [rb - 3]
+    arb -3
     call init_binary_memory
 
-    ret 0
+    ret 3
 .ENDFRAME
 
 ##########
@@ -62,7 +64,7 @@ init_binary_state:
 
 ##########
 init_binary_memory:
-.FRAME section_index
+.FRAME rom_section_count, rom_header, rom_data; tmp
     arb -1
 
     # Initialize memory space for the 8086.
@@ -74,7 +76,7 @@ init_binary_memory:
     call check_range
 
     # Reclaim memory used by the binary data; assumes there were no allocations yet
-    add binary_data, 0, [rb - 1]
+    add [rb + rom_data], 0, [rb - 1]
     arb -1
     call brk
 
@@ -84,39 +86,36 @@ init_binary_memory:
     call sbrk
     add [rb - 3], 0, [mem]
 
-    # Process binary sections end to start
-    add [binary_count], 0, [rb + section_index]
-
 init_memory_loop:
-    jz  [rb + section_index], init_memory_done
-    add [rb + section_index], -1, [rb + section_index]
+    # Process binary sections end to start
+    jz  [rb + rom_section_count], init_memory_done
+    add [rb + rom_section_count], -1, [rb + rom_section_count]
 
-    add [rb + section_index], 0, [rb - 1]
-    arb -1
+    # Load section header
+    mul [rb + rom_section_count], 3, [rb + tmp]
+    add [rb + rom_header], [rb + tmp], [rb + tmp]
+
+    add [rb + tmp], 0, [ip + 1]
+    add [0], 0, [rb - 1]
+    add [rb + tmp], 1, [ip + 1]
+    add [0], 0, [rb - 2]
+    add [rb + tmp], 2, [ip + 1]
+    add [0], 0, [rb - 3]
+    add [rb + rom_data], 0, [rb - 4]
+    arb -4
     call init_binary_section
 
     jz  0, init_memory_loop
 
 init_memory_done:
     arb 1
-    ret 0
+    ret 3
 .ENDFRAME
 
 ##########
 init_binary_section:
-.FRAME section_index; section_address, section_start, section_size, tmp
-    arb -4
-
-    # Load section header
-    mul [rb + section_index], 3, [rb + tmp]
-    add binary_header, [rb + tmp], [rb + tmp]
-
-    add [rb + tmp], 0, [ip + 1]
-    add [0], 0, [rb + section_address]
-    add [rb + tmp], 1, [ip + 1]
-    add [0], 0, [rb + section_start]
-    add [rb + tmp], 2, [ip + 1]
-    add [0], 0, [rb + section_size]
+.FRAME section_address, section_start, section_size, rom_data; tmp
+    arb -1
 
     # Calculate target 8086 address where this section should be moved
     add [binary_load_address], [rb + section_address], [rb + section_address]
@@ -127,7 +126,7 @@ init_binary_section:
     jnz [rb + tmp], init_section_too_big
 
     # Source intcode address where this section currently is
-    add binary_data, [rb + section_start], [rb - 1]
+    add [rb + rom_data], [rb + section_start], [rb - 1]
     # Target intcode address where this section should be moved
     add [mem], [rb + section_address], [rb - 2]
     # Number of bytes to copy
@@ -136,8 +135,8 @@ init_binary_section:
     arb -3
     call move_memory_reverse
 
-    arb 4
-    ret 1
+    arb 1
+    ret 4
 
 init_section_too_big:
     add init_section_too_big_message, 0, [rb - 1]
