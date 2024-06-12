@@ -47,7 +47,7 @@ validate-bochs: build
 	make -C test-bochs validate
 
 .PHONY: $(TESTDIRS)
-$(TESTDIRS):
+$(TESTDIRS): build
 	make -C $@ test
 
 # Clean

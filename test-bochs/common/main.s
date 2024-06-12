@@ -26,7 +26,6 @@
 ##########
 main:
 .FRAME
-
     add [binary_count], 0, [rb - 1]
     add binary_header, 0, [rb - 2]
     add binary_data, 0, [rb - 3]

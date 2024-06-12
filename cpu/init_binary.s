@@ -1,9 +1,7 @@
 .EXPORT init_binary
 
-# From the linked 8086 binary
-.IMPORT binary_start_address_cs
-.IMPORT binary_start_address_ip
-.IMPORT binary_load_address
+# From the config file
+.IMPORT rom_load_address
 
 # From brk.s
 .IMPORT brk
@@ -23,8 +21,6 @@
 ##########
 init_binary:
 .FRAME rom_section_count, rom_header, rom_data;
-    call init_binary_state
-
     add [rb + rom_section_count], 0, [rb - 1]
     add [rb + rom_header], 0, [rb - 2]
     add [rb + rom_data], 0, [rb - 3]
@@ -35,34 +31,6 @@ init_binary:
 .ENDFRAME
 
 ##########
-init_binary_state:
-.FRAME tmp
-    arb -1
-
-    # Load the start address to cs:ip
-    add [binary_start_address_cs + 0], 0, [reg_cs + 0]
-    add [binary_start_address_cs + 1], 0, [reg_cs + 1]
-    add [binary_start_address_ip + 0], 0, [reg_ip + 0]
-    add [binary_start_address_ip + 1], 0, [reg_ip + 1]
-
-    # Check if cs:ip is a sane value
-    mul [reg_cs + 1], 0x100, [rb - 1]
-    add [reg_cs + 0], [rb - 1], [rb - 1]
-    add 0xffff, 0, [rb - 2]
-    arb -2
-    call check_range
-
-    mul [reg_ip + 1], 0x100, [rb - 1]
-    add [reg_ip + 0], [rb - 1], [rb - 1]
-    add 0xffff, 0, [rb - 2]
-    arb -2
-    call check_range
-
-    arb 1
-    ret 0
-.ENDFRAME
-
-##########
 init_binary_memory:
 .FRAME rom_section_count, rom_header, rom_data; tmp
     arb -1
@@ -70,7 +38,7 @@ init_binary_memory:
     # Initialize memory space for the 8086.
 
     # Validate the load address is a valid 16-bit number
-    add [binary_load_address], 0, [rb - 1]
+    add [rom_load_address], 0, [rb - 1]
     add 0xfffff, 0, [rb - 2]
     arb -2
     call check_range
@@ -118,7 +86,7 @@ init_binary_section:
     arb -1
 
     # Calculate target 8086 address where this section should be moved
-    add [binary_load_address], [rb + section_address], [rb + section_address]
+    add [rom_load_address], [rb + section_address], [rb + section_address]
 
     # Validate the section will fit to 20-bits when moved there
     add [rb + section_address], [rb + section_size], [rb + tmp]

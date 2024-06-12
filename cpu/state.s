@@ -89,8 +89,8 @@ reg_di:
     db  0
 
 reg_cs:
-    db  0
-    db  0
+    db  0xff
+    db  0xff
 
 reg_ds:
     db  0
