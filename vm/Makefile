@@ -52,4 +52,4 @@ $(OBJDIR)/$(BIOS_NAME)_header.s: header.template
 
 .PHONY: clean
 clean:
-	rm -rf $(BINDIR) $(OBJDIR)
+	rm -rf $(BINDIR)/vm.*.input* $(OBJDIR)

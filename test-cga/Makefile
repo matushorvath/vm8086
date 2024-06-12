@@ -33,4 +33,4 @@ $(OBJDIR)/cga_test.bin: cga_test.asm
 
 .PHONY: clean
 clean:
-	rm -rf $(BINDIR) $(OBJDIR)
+	rm -rf $(BINDIR)/test-cga.input* $(OBJDIR)

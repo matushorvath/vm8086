@@ -28,4 +28,4 @@ $(OBJDIR)/%.o: %.s
 
 .PHONY: clean
 clean:
-	rm -rf $(BINDIR) $(OBJDIR)
+	rm -rf $(BINDIR)/libcpu.a* $(OBJDIR)
