@@ -1,6 +1,6 @@
 .EXPORT init_cga
 
-# From devices.s
+# From cpu/devices.s
 .IMPORT register_region
 .IMPORT register_ports
 

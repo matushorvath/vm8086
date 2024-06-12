@@ -1,13 +1,13 @@
 .EXPORT dump_state
 
-# From flags.s
+# From cpu/flags.s
 .IMPORT pack_flags_lo
 .IMPORT pack_flags_hi
 
-# From memory.s
+# From cpu/memory.s
 .IMPORT read_seg_off_w
 
-# From state.s
+# From cpu/state.s
 .IMPORT reg_ip
 .IMPORT reg_al
 

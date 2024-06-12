@@ -20,7 +20,7 @@
 .IMPORT reg_ip
 .IMPORT mem
 
-# From util.s
+# From util/util.s
 .IMPORT check_range
 
 ##########

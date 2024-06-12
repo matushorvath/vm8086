@@ -9,16 +9,16 @@
 .IMPORT read_location_w
 .IMPORT write_location_w
 
-# From obj/bits.s
+# From util/bits.s
 .IMPORT bits
 
-# From obj/parity.s
+# From util/parity.s
 .IMPORT parity
 
-# From obj/shl.s
+# From util/shl.s
 .IMPORT shl
 
-# From obj/shr.s
+# From util/shr.s
 .IMPORT shr
 
 # From state.s

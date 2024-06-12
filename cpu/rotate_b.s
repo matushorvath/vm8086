@@ -11,19 +11,19 @@
 .IMPORT read_location_b
 .IMPORT write_location_b
 
-# From obj/bits.s
+# From util/bits.s
 .IMPORT bits
 
-# From obj/mod9.s
+# From util/mod9.s
 .IMPORT mod9
 
-# From obj/shl.s
+# From util/shl.s
 .IMPORT shl
 
-# From obj/shr.s
+# From util/shr.s
 .IMPORT shr
 
-# From obj/split233.s
+# From util/split233.s
 .IMPORT split233
 
 # From state.s

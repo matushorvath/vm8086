@@ -1,17 +1,17 @@
 .EXPORT init_processor_test
 
-# From brk.s
+# From util/brk.s
 .IMPORT brk
 .IMPORT sbrk
 
 # From util/error.s
 .IMPORT report_error
 
-# From flags.s
+# From cpu/flags.s
 .IMPORT unpack_flags_lo
 .IMPORT unpack_flags_hi
 
-# From state.s
+# From cpu/state.s
 .IMPORT reg_ip
 .IMPORT reg_ax
 .IMPORT reg_bx
@@ -48,7 +48,7 @@
 .IMPORT result_mem_length
 .IMPORT mem_data
 
-# From util.s
+# From util/util.s
 .IMPORT split_16_8_8
 
 ##########

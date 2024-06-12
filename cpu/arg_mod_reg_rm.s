@@ -16,7 +16,7 @@
 # From memory.s
 .IMPORT read_cs_ip_b
 
-# From obj/split233.s
+# From util/split233.s
 .IMPORT split233
 
 # From state.s

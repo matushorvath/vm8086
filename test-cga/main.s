@@ -1,10 +1,10 @@
-# From cga.s
+# From cga/cga.s
 .IMPORT init_cga
 
-# From exec.s
+# From cpu/execute.s
 .IMPORT execute
 
-# From init_binary.s
+# From cpu/init_binary.s
 .IMPORT init_binary
 
 # From shutdown.s

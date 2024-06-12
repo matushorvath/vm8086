@@ -20,7 +20,7 @@
 .IMPORT flag_sign
 .IMPORT flag_overflow
 
-# From util.s
+# From util/util.s
 .IMPORT split_16_8_8
 
 ##########

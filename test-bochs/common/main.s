@@ -1,10 +1,10 @@
-# From devices.s
+# From cpu/devices.s
 .IMPORT register_devices
 
-# From exec.s
+# From cpu/execute.s
 .IMPORT execute
 
-# From init_binary.s
+# From cpu/init_binary.s
 .IMPORT init_binary
 
 ##########

@@ -4,7 +4,7 @@
 # From cga/cga.s
 .IMPORT init_cga
 
-# From cpu/exec.s
+# From cpu/execute.s
 .IMPORT execute
 
 # From cpu/init_binary.s

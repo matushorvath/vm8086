@@ -1,10 +1,10 @@
 .EXPORT bochs_shutdown
 .EXPORT bochs_out_char
 
-# From execute.s
+# From cpu/execute.s
 .IMPORT halt
 
-# From state.s
+# From cpu/state.s
 .IMPORT reg_al
 
 ##########

@@ -6,7 +6,7 @@
 # From util/error.s
 .IMPORT report_error
 
-# From obj/bits.s
+# From util/bits.s
 .IMPORT bits
 
 # From libxib.a
