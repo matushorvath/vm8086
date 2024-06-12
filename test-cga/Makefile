@@ -25,6 +25,7 @@ $(OBJDIR)/%.o: %.s
 	$(run-intcode-as)
 
 $(OBJDIR)/%.o: $(OBJDIR)/%.bin
+	$(eval BIN2OBJ_NAME = binary)
 	$(run-intcode-bin2obj)
 
 $(OBJDIR)/cga_test.bin: cga_test.asm

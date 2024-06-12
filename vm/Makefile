@@ -41,6 +41,7 @@ $(OBJDIR)/%.o: %.s
 	$(run-intcode-as)
 
 $(OBJDIR)/$(BIOS_NAME).o: $(BIOS_BIN)
+	$(eval BIN2OBJ_NAME = binary)
 	$(run-intcode-bin2obj)
 
 $(OBJDIR)/$(BIOS_NAME)_header.o: $(OBJDIR)/$(BIOS_NAME)_header.s
