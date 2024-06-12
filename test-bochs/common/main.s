@@ -5,7 +5,7 @@
 .IMPORT execute
 
 # From cpu/init_binary.s
-.IMPORT init_binary
+.IMPORT init_memory
 
 # From the binary.o
 .IMPORT binary_count
@@ -30,7 +30,7 @@ main:
     add binary_header, 0, [rb - 2]
     add binary_data, 0, [rb - 3]
     arb -3
-    call init_binary
+    call init_memory
 
     call register_devices
     call execute

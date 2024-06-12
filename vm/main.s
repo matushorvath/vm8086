@@ -8,7 +8,7 @@
 .IMPORT execute
 
 # From cpu/init_binary.s
-.IMPORT init_binary
+.IMPORT init_memory
 
 # From dev/pit_8253.s
 .IMPORT init_pit_8253
@@ -41,7 +41,7 @@ main:
     add binary_header, 0, [rb - 2]
     add binary_data, 0, [rb - 3]
     arb -3
-    call init_binary
+    call init_memory
 
     call init_pit_8253
     call init_ppi_8255a

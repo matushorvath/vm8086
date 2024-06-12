@@ -5,7 +5,7 @@
 .IMPORT execute
 
 # From cpu/init_binary.s
-.IMPORT init_binary
+.IMPORT init_memory
 
 # From shutdown.s
 .IMPORT init_shutdown_port
@@ -33,7 +33,7 @@ main:
     add cga_test_header, 0, [rb - 2]
     add cga_test_data, 0, [rb - 3]
     arb -3
-    call init_binary
+    call init_memory
 
     call init_cga
     call init_shutdown_port

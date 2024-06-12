@@ -1,4 +1,4 @@
-.EXPORT init_binary
+.EXPORT init_memory
 
 # From the config file
 .IMPORT rom_load_address
@@ -19,19 +19,19 @@
 .IMPORT check_range
 
 ##########
-init_binary:
+init_memory:
 .FRAME rom_section_count, rom_header, rom_data;
     add [rb + rom_section_count], 0, [rb - 1]
     add [rb + rom_header], 0, [rb - 2]
     add [rb + rom_data], 0, [rb - 3]
     arb -3
-    call init_binary_memory
+    call init_binary
 
     ret 3
 .ENDFRAME
 
 ##########
-init_binary_memory:
+init_binary:
 .FRAME rom_section_count, rom_header, rom_data; tmp
     arb -1
 
