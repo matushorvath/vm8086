@@ -1,4 +1,4 @@
-# From exec.s
+# From cpu/execute.s
 .IMPORT execute
 
 # From init_test.s

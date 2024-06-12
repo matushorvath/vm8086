@@ -2,7 +2,7 @@
 .EXPORT decode_reg
 .EXPORT decode_sr
 
-# From error.s
+# From util/error.s
 .IMPORT report_error
 
 # From memory.s

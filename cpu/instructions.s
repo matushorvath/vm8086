@@ -98,7 +98,7 @@
 .IMPORT execute_ret_far_zero
 .IMPORT execute_ret_far_immediate_w
 
-# From exec.s
+# From execute.s
 .IMPORT execute_nop
 .IMPORT execute_esc
 .IMPORT execute_hlt

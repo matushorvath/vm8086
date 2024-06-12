@@ -1,13 +1,16 @@
 .EXPORT init_ppi_8255a
 
-# From devices.s
+# From cpu/devices.s
 .IMPORT register_ports
 
-# From error.s
+# From cpu/error.s
 .IMPORT report_error
 
-# From obj/bits.s
+# From util/bits.s
 .IMPORT bits
+
+# From the config file
+.IMPORT config_boot_80x25
 
 # From pit_8253_ch2.s
 .IMPORT pit_set_gate_ch2
@@ -153,18 +156,18 @@ ppi_port_c_read:
 
     jz  [ppi_read_high_switches], ppi_port_c_read_high_switches
 
-    # 0   : loop on post - 0 no
-    # 1   : coprocessor installed - 0 no
-    # 2, 3: RAM size - 11 640kB
+    # 0   : loop on post: 0 - no
+    # 1   : coprocessor installed: 0 - no
+    # 2, 3: RAM size: 11 - 640kB
     add [rb + value], 0b00001100, [rb + value]
 
     jz  0, ppi_port_c_read_done
 
 ppi_port_c_read_high_switches:
-
-    # 0, 1: Display - 10 color 80x25
-    # 2, 3: Number of drives - 00 1 drive
-    add [rb + value], 0b00000010, [rb + value]
+    # 0, 1: display: 01 - color 40x25, 10 - color 80x25
+    # 2, 3: number of drives: 00 - 1 drive
+    add [rb + value], 0b00000001, [rb + value]
+    add [rb + value], [config_boot_80x25], [rb + value]
 
 ppi_port_c_read_done:
     arb 1

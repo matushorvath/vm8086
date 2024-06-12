@@ -3,7 +3,7 @@
 .EXPORT execute_shift_cl_b
 .EXPORT execute_shift_cl_w
 
-# From error.s
+# From util/error.s
 .IMPORT report_error
 
 # From rotate_b.s

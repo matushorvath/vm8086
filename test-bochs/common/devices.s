@@ -4,10 +4,10 @@
 .IMPORT bochs_shutdown
 .IMPORT bochs_out_char
 
-# From devices.s
+# From cpu/devices.s
 .IMPORT register_ports
 
-# From dump_state.s
+# From cpu/dump_state.s
 .IMPORT dump_state
 
 # From test_api.s

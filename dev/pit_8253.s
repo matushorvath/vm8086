@@ -1,13 +1,13 @@
 .EXPORT init_pit_8253
 .EXPORT config_vm_callback
 
-# From devices.s
+# From cpu/devices.s
 .IMPORT register_ports
 
-# From error.s
+# From util/error.s
 .IMPORT report_error
 
-# From obj/bits.s
+# From util/bits.s
 .IMPORT bits
 
 # From pit_8253_ch0.s

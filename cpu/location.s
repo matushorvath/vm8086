@@ -4,7 +4,7 @@
 .EXPORT write_location_b
 .EXPORT write_location_w
 
-# From error.s
+# From util/error.s
 .IMPORT report_error
 
 # From memory.s

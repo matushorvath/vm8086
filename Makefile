@@ -15,6 +15,10 @@ build: $(SRCDIRS)
 $(SRCDIRS):
 	make -C $@
 
+.PHONY: run
+run: build
+	make -C vm run
+
 # Build tests
 BUILD_TESTS_TARGETS = $(addprefix build-,$(TESTDIRS))
 

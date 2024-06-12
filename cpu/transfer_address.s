@@ -6,7 +6,7 @@
 .IMPORT decode_mod_rm
 .IMPORT decode_reg
 
-# From error.s
+# From util/error.s
 .IMPORT report_error
 
 # From location.s
@@ -16,7 +16,7 @@
 # From memory.s
 .IMPORT read_cs_ip_b
 
-# From obj/split233.s
+# From util/split233.s
 .IMPORT split233
 
 # From state.s

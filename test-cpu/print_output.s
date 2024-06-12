@@ -1,6 +1,6 @@
 .EXPORT print_output
 
-# From flag.s
+# From cpu/flag.s
 .IMPORT pack_flags_lo
 .IMPORT pack_flags_hi
 
@@ -8,7 +8,7 @@
 .IMPORT print_str
 .IMPORT print_num_radix
 
-# From state.s
+# From cpu/state.s
 .IMPORT reg_ip
 .IMPORT reg_ax
 .IMPORT reg_bx

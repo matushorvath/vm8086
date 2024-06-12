@@ -8,9 +8,11 @@
 
 # From the config file
 .IMPORT config_enable_tracing
+.IMPORT config_tracing_cs
+.IMPORT config_tracing_ip
 .IMPORT config_vm_callback
 
-# From error.s
+# From util/error.s
 .IMPORT report_error
 
 # From instructions.s
@@ -37,12 +39,37 @@
 
 ##########
 execute:
-.FRAME tmp, op
-    arb -2
+.FRAME tmp, op, tracing_triggered
+    arb -3
+
+    # If there is no trigger address, tracing is always triggered
+    add 0, 0, [rb + tracing_triggered]
+    jnz [config_tracing_cs], execute_loop
+    jnz [config_tracing_ip], execute_loop
+    add 1, 0, [rb + tracing_triggered]
 
 execute_loop:
     # Skip tracing if disabled
     jz  [config_enable_tracing], execute_tracing_done
+
+    # If tracing was already triggered, jump directly to it
+    jnz [rb + tracing_triggered], execute_tracing_triggered
+
+    # Check if we have reached the trigger address
+    mul [reg_ip + 1], 0x100, [rb + tmp]
+    add [reg_ip + 0], [rb + tmp], [rb + tmp]
+    eq  [config_tracing_ip], [rb + tmp], [rb + tmp]
+    jz  [rb + tmp], execute_tracing_done
+
+    mul [reg_cs + 1], 0x100, [rb + tmp]
+    add [reg_cs + 0], [rb + tmp], [rb + tmp]
+    eq  [config_tracing_cs], [rb + tmp], [rb + tmp]
+    jz  [rb + tmp], execute_tracing_done
+
+    # Trigger address match
+    add 1, 0, [rb + tracing_triggered]
+
+execute_tracing_triggered:
     call print_trace
 
 execute_tracing_done:
@@ -125,7 +152,7 @@ execute_no_args_fn:
     jz  [halt], execute_loop
 
 execute_done:
-    arb 2
+    arb 3
     ret 0
 
 execute_exec_fn:

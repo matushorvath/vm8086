@@ -12,7 +12,7 @@
 .IMPORT brk
 .IMPORT sbrk
 
-# From error.s
+# From util/error.s
 .IMPORT report_error
 
 # From state.s
@@ -20,7 +20,7 @@
 .IMPORT reg_ip
 .IMPORT mem
 
-# From util.s
+# From util/util.s
 .IMPORT check_range
 
 ##########

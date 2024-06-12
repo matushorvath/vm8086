@@ -1,6 +1,6 @@
 .EXPORT report_error
 
-# From state.s
+# From cpu/state.s
 .IMPORT reg_ip
 .IMPORT reg_cs
 

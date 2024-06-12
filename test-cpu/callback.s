@@ -1,6 +1,6 @@
 .EXPORT config_vm_callback
 
-# From prefix.s
+# From cpu/prefix.s
 .IMPORT prefix_valid
 
 ##########

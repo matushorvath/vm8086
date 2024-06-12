@@ -1,9 +1,9 @@
 .EXPORT init_shutdown_port
 
-# From devices.s
+# From cpu/devices.s
 .IMPORT register_port
 
-# From execute.s
+# From cpu/execute.s
 .IMPORT halt
 
 # From libxib.a

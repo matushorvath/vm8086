@@ -15,10 +15,10 @@
 .IMPORT read_location_w
 .IMPORT write_location_w
 
-# From obj/bits.s
+# From util/bits.s
 .IMPORT bits
 
-# From obj/parity.s
+# From util/parity.s
 .IMPORT parity
 
 # From state.s
