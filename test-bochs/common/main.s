@@ -4,8 +4,8 @@
 # From cpu/execute.s
 .IMPORT execute
 
-# From cpu/init_memory.s
-.IMPORT init_memory
+# From cpu/images.s
+.IMPORT init_rom_image
 
 # From the binary.o
 .IMPORT binary_count
@@ -31,7 +31,7 @@ main:
     add binary_header, 0, [rb - 3]
     add binary_data, 0, [rb - 4]
     arb -4
-    call init_memory
+    call init_rom_image
 
     call register_devices
     call execute

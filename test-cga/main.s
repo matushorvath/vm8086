@@ -4,8 +4,8 @@
 # From cpu/execute.s
 .IMPORT execute
 
-# From cpu/init_memory.s
-.IMPORT init_memory
+# From cpu/images.s
+.IMPORT init_rom_image
 
 # From shutdown.s
 .IMPORT init_shutdown_port
@@ -34,7 +34,7 @@ main:
     add cga_test_header, 0, [rb - 3]
     add cga_test_data, 0, [rb - 4]
     arb -4
-    call init_memory
+    call init_rom_image
 
     call init_cga
     call init_shutdown_port

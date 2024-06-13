@@ -13,6 +13,10 @@ build: build-prep $(BINDIR)/test-cga.input
 build-prep:
 	mkdir -p "$(BINDIR)" "$(OBJDIR)"
 
+.PHONY: run
+run: build
+	$(ICVM) $(BINDIR)/test-cga.input
+
 # The order of the object files matters, the cga_test binary needs to be the last object.
 
 TEST_CGA_OBJS = main.o config.o shutdown.o $(BINDIR)/libcpu.a $(BINDIR)/libcga.a \
