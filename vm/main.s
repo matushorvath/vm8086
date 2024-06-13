@@ -1,3 +1,6 @@
+# From bios.o
+.IMPORT bios_address
+
 # From ports.s
 .IMPORT init_ports
 
@@ -37,10 +40,11 @@
 ##########
 main:
 .FRAME
-    add [binary_count], 0, [rb - 1]
-    add binary_header, 0, [rb - 2]
-    add binary_data, 0, [rb - 3]
-    arb -3
+    add [bios_address], 0, [rb - 1]
+    add [binary_count], 0, [rb - 2]
+    add binary_header, 0, [rb - 3]
+    add binary_data, 0, [rb - 4]
+    arb -4
     call init_memory
 
     call init_pit_8253

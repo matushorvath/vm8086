@@ -26,10 +26,11 @@
 ##########
 main:
 .FRAME
-    add [binary_count], 0, [rb - 1]
-    add binary_header, 0, [rb - 2]
-    add binary_data, 0, [rb - 3]
-    arb -3
+    add 0xca000, 0, [rb - 1]
+    add [binary_count], 0, [rb - 2]
+    add binary_header, 0, [rb - 3]
+    add binary_data, 0, [rb - 4]
+    arb -4
     call init_memory
 
     call register_devices

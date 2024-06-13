@@ -1,8 +1,5 @@
 .EXPORT init_memory
 
-# From the config file
-.IMPORT rom_load_address
-
 # From brk.s
 .IMPORT brk
 .IMPORT sbrk
@@ -20,30 +17,8 @@
 
 ##########
 init_memory:
-.FRAME rom_section_count, rom_header, rom_data;
-    add [rb + rom_section_count], 0, [rb - 1]
-    add [rb + rom_header], 0, [rb - 2]
-    add [rb + rom_data], 0, [rb - 3]
-    arb -3
-    call init_binary
-
-    ret 3
-.ENDFRAME
-
-##########
-init_binary:
-.FRAME rom_section_count, rom_header, rom_data; tmp
-    arb -1
-
-    # Initialize memory space for the 8086.
-
-    # Validate the load address is a valid 16-bit number
-    add [rom_load_address], 0, [rb - 1]
-    add 0xfffff, 0, [rb - 2]
-    arb -2
-    call check_range
-
-    # Reclaim memory used by the binary data; assumes there were no allocations yet
+.FRAME rom_address, rom_section_count, rom_header, rom_data;
+    # Reclaim memory used by the binary data; this assumes there were no allocations yet
     add [rb + rom_data], 0, [rb - 1]
     arb -1
     call brk
@@ -54,65 +29,71 @@ init_binary:
     call sbrk
     add [rb - 3], 0, [mem]
 
-init_memory_loop:
-    # Process binary sections end to start
-    jz  [rb + rom_section_count], init_memory_done
-    add [rb + rom_section_count], -1, [rb + rom_section_count]
+    # Validate the ROM address
+    add [rb + rom_address], 0, [rb - 1]
+    add 0xfffff, 0, [rb - 2]
+    arb -2
+    call check_range
 
-    # Load section header
-    mul [rb + rom_section_count], 3, [rb + tmp]
-    add [rb + rom_header], [rb + tmp], [rb + tmp]
+    # Inflate the ROM
+    add [rb + rom_section_count], 0, [rb - 1]
+    add [rb + rom_header], 0, [rb - 2]
+    add [rb + rom_data], 0, [rb - 3]
+    add [mem], [rb + rom_address], [rb - 4]
+    add [mem], 0x100000, [rb - 5]
+    arb -5
+    call inflate_image
 
-    add [rb + tmp], 0, [ip + 1]
-    add [0], 0, [rb - 1]
-    add [rb + tmp], 1, [ip + 1]
-    add [0], 0, [rb - 2]
-    add [rb + tmp], 2, [ip + 1]
-    add [0], 0, [rb - 3]
-    add [rb + rom_data], 0, [rb - 4]
-    arb -4
-    call init_binary_section
-
-    jz  0, init_memory_loop
-
-init_memory_done:
-    arb 1
-    ret 3
+    ret 4
 .ENDFRAME
 
 ##########
-init_binary_section:
-.FRAME section_address, section_start, section_size, rom_data; tmp
-    arb -1
+inflate_image:
+.FRAME img_section_count, img_header, img_data, img_address, limit; section_header, section_address, section_data, section_size, tmp
+    arb -5
 
-    # Calculate target 8086 address where this section should be moved
-    add [rom_load_address], [rb + section_address], [rb + section_address]
+    # Load image sections end to start
 
-    # Validate the section will fit to 20-bits when moved there
+inflate_image_loop:
+    jz  [rb + img_section_count], inflate_image_done
+    add [rb + img_section_count], -1, [rb + img_section_count]
+
+    # Load section header
+    mul [rb + img_section_count], 3, [rb + section_header]
+    add [rb + img_header], [rb + section_header], [rb + section_header]
+
+    add [rb + section_header], 0, [ip + 1]
+    add [0], [rb + img_address], [rb + section_address]
+    add [rb + section_header], 1, [ip + 1]
+    add [0], [rb + img_data], [rb + section_data]
+    add [rb + section_header], 2, [ip + 1]
+    add [0], 0, [rb + section_size]
+
+    # Validate the section will fit within the limit
     add [rb + section_address], [rb + section_size], [rb + tmp]
-    lt  0x100000, [rb + tmp], [rb + tmp]
-    jnz [rb + tmp], init_section_too_big
+    lt  [rb + limit], [rb + tmp], [rb + tmp]
+    jnz [rb + tmp], inflate_image_too_big
 
-    # Source intcode address where this section currently is
-    add [rb + rom_data], [rb + section_start], [rb - 1]
-    # Target intcode address where this section should be moved
-    add [mem], [rb + section_address], [rb - 2]
-    # Number of bytes to copy
+    # Move the section to target location
+    add [rb + section_data], 0, [rb - 1]
+    add [rb + section_address], 0, [rb - 2]
     add [rb + section_size], 0, [rb - 3]
-
     arb -3
     call move_memory_reverse
 
-    arb 1
-    ret 4
+    jz  0, inflate_image_loop
 
-init_section_too_big:
-    add init_section_too_big_message, 0, [rb - 1]
+inflate_image_done:
+    arb 5
+    ret 5
+
+inflate_image_too_big:
+    add inflate_image_too_big_message, 0, [rb - 1]
     arb -1
     call report_error
 
-init_section_too_big_message:
-    db  "image too big to load at specified address", 0
+inflate_image_too_big_message:
+    db  "image too big to load at that address", 0
 .ENDFRAME
 
 ##########

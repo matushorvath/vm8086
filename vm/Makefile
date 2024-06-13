@@ -5,10 +5,10 @@ include $(VMDIR)/intcode.mk
 
 ifeq ($(BIOS),pcxtbios)
 	BIOS_BIN ?= $(abspath $(VMDIR)/../pcxtbios/eproms/2764/pcxtbios.rom)
-	BIOS_LOAD_ADDRESS ?= fe000
+	BIOS_ADDRESS ?= fe000
 else
 	BIOS_BIN ?= $(abspath $(VMDIR)/../8088_bios/binaries/bios-xt.bin)
-	BIOS_LOAD_ADDRESS ?= fc000
+	BIOS_ADDRESS ?= fc000
 endif
 
 BINDIR ?= $(VMDIR)/bin
@@ -30,7 +30,7 @@ run: build
 
 # The order of the object files matters, the 8086 binary needs to be the last object.
 
-VM_OBJS = main.o config.o ports.o $(BIOS_NAME)_header.o $(BINDIR)/libcpu.a $(BINDIR)/libcga.a \
+VM_OBJS = main.o config.o ports.o $(BIOS_NAME)_address.o $(BINDIR)/libcpu.a $(BINDIR)/libcga.a \
 	$(BINDIR)/libdev.a $(BINDIR)/libutil.a $(LIBXIB) $(BIOS_NAME).o
 
 $(BINDIR)/$(VM_NAME): $(VM_OBJS:%.o=$(OBJDIR)/%.o)
@@ -44,11 +44,11 @@ $(OBJDIR)/$(BIOS_NAME).o: $(BIOS_BIN)
 	$(eval BIN2OBJ_NAME = binary)
 	$(run-intcode-bin2obj)
 
-$(OBJDIR)/$(BIOS_NAME)_header.o: $(OBJDIR)/$(BIOS_NAME)_header.s
+$(OBJDIR)/$(BIOS_NAME)_address.o: $(OBJDIR)/$(BIOS_NAME)_address.s
 	$(run-intcode-as)
 
-$(OBJDIR)/$(BIOS_NAME)_header.s: header.template
-	sed -e 's/BIOS_LOAD_ADDRESS/$(BIOS_LOAD_ADDRESS)/g' < $< > $@
+$(OBJDIR)/$(BIOS_NAME)_address.s: bios_address.template
+	sed -e 's/BIOS_ADDRESS/$(BIOS_ADDRESS)/g' < $< > $@
 
 .PHONY: clean
 clean:
