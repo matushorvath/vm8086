@@ -39,4 +39,4 @@ $(OBJDIR)/gen_%.input: $(OBJDIR)/gen_%.o $(LIBXIB)
 
 .PHONY: clean
 clean:
-	rm -rf $(BINDIR) $(OBJDIR)
+	rm -rf $(BINDIR)/libutil.a* $(OBJDIR)

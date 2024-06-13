@@ -120,3 +120,8 @@ read
 
 ppi_cwd_reg	63h: 8255 PPI control word register
 0b10011001
+
+DOS
+===
+
+https://github.com/codercowboy/freedosbootdisks

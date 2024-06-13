@@ -1,3 +1,16 @@
+# From bios.o
+.IMPORT bios_count
+.IMPORT bios_header
+.IMPORT bios_data
+
+# From bios_address.template
+.IMPORT bios_address
+
+# From floppy.o
+.IMPORT floppy_count
+.IMPORT floppy_header
+.IMPORT floppy_data
+
 # From ports.s
 .IMPORT init_ports
 
@@ -7,8 +20,8 @@
 # From cpu/execute.s
 .IMPORT execute
 
-# From cpu/init_binary.s
-.IMPORT init_binary
+# From cpu/images.s
+.IMPORT init_images
 
 # From dev/pit_8253.s
 .IMPORT init_pit_8253
@@ -32,7 +45,16 @@
 ##########
 main:
 .FRAME
-    call init_binary
+    add [bios_address], 0, [rb - 1]
+    add [bios_count], 0, [rb - 2]
+    add bios_header, 0, [rb - 3]
+    add bios_data, 0, [rb - 4]
+    add [floppy_count], 0, [rb - 5]
+    add floppy_header, 0, [rb - 6]
+    add floppy_data, 0, [rb - 7]
+    arb -7
+    call init_images
+
     call init_pit_8253
     call init_ppi_8255a
     call init_cga

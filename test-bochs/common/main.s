@@ -4,8 +4,13 @@
 # From cpu/execute.s
 .IMPORT execute
 
-# From cpu/init_binary.s
-.IMPORT init_binary
+# From cpu/images.s
+.IMPORT init_rom_image
+
+# From the binary.o
+.IMPORT binary_count
+.IMPORT binary_header
+.IMPORT binary_data
 
 ##########
 # Entry point
@@ -21,7 +26,13 @@
 ##########
 main:
 .FRAME
-    call init_binary
+    add 0xca000, 0, [rb - 1]
+    add [binary_count], 0, [rb - 2]
+    add binary_header, 0, [rb - 3]
+    add binary_data, 0, [rb - 4]
+    arb -4
+    call init_rom_image
+
     call register_devices
     call execute
 

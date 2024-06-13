@@ -5,17 +5,20 @@ include $(VMDIR)/intcode.mk
 
 ifeq ($(BIOS),pcxtbios)
 	BIOS_BIN ?= $(abspath $(VMDIR)/../pcxtbios/eproms/2764/pcxtbios.rom)
-	BIOS_LOAD_ADDRESS ?= fe000
+	BIOS_ADDRESS ?= fe000
 else
 	BIOS_BIN ?= $(abspath $(VMDIR)/../8088_bios/binaries/bios-xt.bin)
-	BIOS_LOAD_ADDRESS ?= fc000
+	BIOS_ADDRESS ?= fc000
 endif
+
+FLOPPY_BIN ?= $(abspath $(VMDIR)/../freedosbootdisks/bootdisks/freedos.boot.disk.1.4MB.img)
 
 BINDIR ?= $(VMDIR)/bin
 OBJDIR ?= $(VMDIR)/obj/vm
 
 BIOS_NAME = $(basename $(notdir $(BIOS_BIN)))
-VM_NAME = vm.$(BIOS_NAME).input
+FLOPPY_NAME = $(basename $(notdir $(FLOPPY_BIN)))
+VM_NAME = vm.$(BIOS_NAME).$(FLOPPY_NAME).input
 
 .PHONY: build
 build: build-prep $(BINDIR)/$(VM_NAME)
@@ -28,10 +31,10 @@ build-prep:
 run: build
 	$(ICVM) $(BINDIR)/$(VM_NAME)
 
-# The order of the object files matters, the 8086 binary needs to be the last object.
+# The order of the object files matters, the BIOS binary needs to be the last object.
 
-VM_OBJS = main.o config.o ports.o $(BIOS_NAME)_header.o $(BINDIR)/libcpu.a $(BINDIR)/libcga.a \
-	$(BINDIR)/libdev.a $(BINDIR)/libutil.a $(LIBXIB) $(BIOS_NAME).o
+VM_OBJS = main.o config.o ports.o $(BIOS_NAME)_address.o $(BINDIR)/libcpu.a $(BINDIR)/libcga.a \
+	$(BINDIR)/libdev.a $(BINDIR)/libutil.a $(LIBXIB) $(BIOS_NAME).o $(FLOPPY_NAME).o
 
 $(BINDIR)/$(VM_NAME): $(VM_OBJS:%.o=$(OBJDIR)/%.o)
 	$(run-intcode-ld)
@@ -41,14 +44,19 @@ $(OBJDIR)/%.o: %.s
 	$(run-intcode-as)
 
 $(OBJDIR)/$(BIOS_NAME).o: $(BIOS_BIN)
+	$(eval BIN2OBJ_NAME = bios)
 	$(run-intcode-bin2obj)
 
-$(OBJDIR)/$(BIOS_NAME)_header.o: $(OBJDIR)/$(BIOS_NAME)_header.s
+$(OBJDIR)/$(BIOS_NAME)_address.o: $(OBJDIR)/$(BIOS_NAME)_address.s
 	$(run-intcode-as)
 
-$(OBJDIR)/$(BIOS_NAME)_header.s: header.template
-	sed -e 's/BIOS_LOAD_ADDRESS/$(BIOS_LOAD_ADDRESS)/g' < $< > $@
+$(OBJDIR)/$(BIOS_NAME)_address.s: bios_address.template
+	sed -e 's/BIOS_ADDRESS/$(BIOS_ADDRESS)/g' < $< > $@
+
+$(OBJDIR)/$(FLOPPY_NAME).o: $(FLOPPY_BIN)
+	$(eval BIN2OBJ_NAME = floppy)
+	$(run-intcode-bin2obj)
 
 .PHONY: clean
 clean:
-	rm -rf $(BINDIR) $(OBJDIR)
+	rm -rf $(BINDIR)/vm.*.input* $(OBJDIR)

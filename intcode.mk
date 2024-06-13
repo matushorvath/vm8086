@@ -27,5 +27,5 @@ define run-intcode-ld
 endef
 
 define run-intcode-bin2obj
-	wc -c $< | sed 's/$$/\/binary/' | cat - $< | $(ICVM) $(ICBIN2OBJ) > $@ || ( cat $@ ; false )
+	wc -c $< | sed 's/$$/$(if $(BIN2OBJ_NAME),\/$(BIN2OBJ_NAME),)/' | cat - $< | $(ICVM) $(ICBIN2OBJ) > $@ || ( cat $@ ; false )
 endef

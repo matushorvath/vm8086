@@ -13,9 +13,13 @@ build: build-prep $(BINDIR)/test-cga.input
 build-prep:
 	mkdir -p "$(BINDIR)" "$(OBJDIR)"
 
-# The order of the object files matters, the 8086 binary needs to be the last object.
+.PHONY: run
+run: build
+	$(ICVM) $(BINDIR)/test-cga.input
 
-TEST_CGA_OBJS = main.o binary_header.o config.o shutdown.o $(BINDIR)/libcpu.a $(BINDIR)/libcga.a \
+# The order of the object files matters, the cga_test binary needs to be the last object.
+
+TEST_CGA_OBJS = main.o config.o shutdown.o $(BINDIR)/libcpu.a $(BINDIR)/libcga.a \
 	$(BINDIR)/libutil.a $(LIBXIB) cga_test.o
 
 $(BINDIR)/test-cga.input: $(TEST_CGA_OBJS:%.o=$(OBJDIR)/%.o)
@@ -33,4 +37,4 @@ $(OBJDIR)/cga_test.bin: cga_test.asm
 
 .PHONY: clean
 clean:
-	rm -rf $(BINDIR) $(OBJDIR)
+	rm -rf $(BINDIR)/test-cga.input* $(OBJDIR)
