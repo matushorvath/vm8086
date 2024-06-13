@@ -1,7 +1,46 @@
-.EXPORT init_fdc
+.EXPORT fdc_data_write
+.EXPORT fdc_data_read
 
-# From cpu/devices.s
-.IMPORT register_ports
+.EXPORT fdc_cmd_state
+.EXPORT fdc_cmd_result_phase
+.EXPORT fdc_cmd_st0
+
+# From fdc_commands.s
+# TODO
+#.IMPORT fdc_exec_read_data
+#.IMPORT fdc_exec_read_deleted_data
+#.IMPORT fdc_exec_write_data
+#.IMPORT fdc_exec_write_deleted_data
+#
+#.IMPORT fdc_exec_read_track
+#.IMPORT fdc_exec_read_id
+#.IMPORT fdc_exec_format_track
+#
+#.IMPORT fdc_exec_scan_equal
+#.IMPORT fdc_exec_scan_low_or_equal
+#.IMPORT fdc_exec_scan_high_or_equal
+#
+#.IMPORT fdc_exec_recalibrate
+#.IMPORT fdc_exec_sense_interrupt_status
+#.IMPORT fdc_exec_specify
+#.IMPORT fdc_exec_sense_drive_status
+#.IMPORT fdc_exec_seek
+
+# From fdc_config.s
+.IMPORT fdc_config_connected_units
+.IMPORT fdc_config_inserted_units
+
+# From fdc_control.s
+.IMPORT fdc_dor_enable_motor_units
+.IMPORT fdc_interrupt_pending
+
+# From fdc_drives.s
+.IMPORT fdc_medium_sectors_units
+.IMPORT fdc_present_cylinder_units
+.IMPORT fdc_present_sector_units
+
+# From fdc_init.s
+.IMPORT fdc_error_non_dma
 
 # From cpu/error.s
 .IMPORT report_error
@@ -17,193 +56,6 @@
 
 # TODO remove
 .IMPORT print_num_radix
-
-# TODO fdc should not work while fdc_dor_reset == 0
-# TODO fdc should not read/write data or seek etc while the motor is off fdc_dor_enable_motor_unit0/1 and if it is not selected in dor
-# TODO fdc should complain about fdc_dor_enable_dma 
-# TODO set equipment check bit in ST0 if FDD is not connected?
-
-# TODO The bottom 2 bits of DSR match CCR, and setting one of them sets the other.
-# TODO Require MF=1, don't support read/write deleted data, ignore SK since there is never deleted data, only support 1.44" floppies
-# TODO Read ID probably is simple, since there are never bad sectors
-# TODO relative seek: set the MT bit to 1, to seek up set MFM bit, to seek down clear MFM bit
-
-# TODO read track does not support multitrack, it just reads one side
-# TODO bytes per sector: 02 = 512 bytes per sector
-
-##########
-fdc_ports:
-    db  0xf2, 0x03, 0, fdc_dor_write                        # Digital Output Register
-    db  0xf4, 0x03, fdc_status_read, 0                      # Main Status Register
-    db  0xf5, 0x03, fdc_data_read, fdc_data_write           # Diskette Data Register
-    db  0xf7, 0x03, fdc_dir_read, fdc_control_write         # Digital Input Register/Diskette Control Register
-
-    db  -1, -1, -1, -1
-
-##########
-init_fdc:
-.FRAME unit
-    # Register I/O ports
-    add fdc_ports, 0, [rb - 1]
-    arb -1
-    call register_ports
-
-    # Initialize both drive units
-    add 0, 0, [rb - 1]
-    arb -1
-    call init_unit
-
-    add 1, 0, [rb - 1]
-    arb -1
-    call init_unit
-
-    ret 0
-.ENDFRAME
-
-##########
-init_unit:
-.FRAME unit; type, tmp
-    arb -2
-
-    # Initialize floppy parameters based on inserted floppy types
-    # Currently we only support 3.5" 1.44MB floppies
-
-    # Floppy geometry:
-    #           heads   tracks  sectors bytes   capacity    type
-    # 5.25"     1       40      9       512      184320     12
-    # 5.25"     2       80      9       512      368640     14
-    # 5.25"     2       80      15      512     1228800     17
-    # 3.5"      2       80      9       512      737280     24
-    # 3.5"      2       80      18      512     1474560     25
-
-    # Skip disconnected and empty drives
-    add fdc_config_connected_units, [rb + unit], [ip + 1]
-    jz  [0], init_unit_done
-    add fdc_config_inserted_units, [rb + unit], [ip + 1]
-    add [0], 0, [rb + type]
-    jz  [rb + type], init_unit_done
-
-    # Fill in floppy parameters; currently only 1.44MB 3.5" floppies are supported
-    eq  [rb + type], 25, [rb + tmp]
-    jz  [rb + tmp], init_unit_unsupported_type
-
-    # Set floppy parameters based on floppy type
-    # TODO support more floppy types
-    add fdc_medium_heads_units, [rb + unit], [ip + 3]
-    add 2, 0, [0]
-    add fdc_medium_tracks_units, [rb + unit], [ip + 3]
-    add 80, 0, [0]
-    add fdc_medium_sectors_units, [rb + unit], [ip + 3]
-    add 18, 0, [0]
-
-init_unit_done:
-    arb 2
-    ret 1
-
-init_unit_unsupported_type:
-    add init_unit_unsupported_type_message, 0, [rb - 1]
-    arb -1
-    call report_error
-
-init_unit_unsupported_type_message:
-    db  "fdd unit type is not supported", 0
-.ENDFRAME
-
-##########
-fdc_dor_write:
-.FRAME addr, value; value_bits, tmp
-    arb -2
-
-    out 'A' # TODO remove
-    out 'w'
-    out '_'
-    add [rb + value], 0, [rb - 1]
-    add 2, 0, [rb - 2]
-    add 8, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-    out ' '
-
-    # Convert value to bits
-    mul [rb + value], 8, [rb + tmp]
-    add bits, [rb + tmp], [rb + value_bits]
-
-    # Save the original fdc_dor_reset value before changing it
-    eq  [fdc_dor_reset], 0, [rb + tmp]
-    add [rb + value_bits], 2, [ip + 1]
-    add [0], 0, [fdc_dor_reset]
-    add [fdc_dor_reset], [rb + tmp], [rb + tmp]
-
-    # If fdc_dor_reset was low and now is high, reset the floppy controller
-    eq  [rb + tmp], 2, [rb + tmp]
-    jz  [rb + tmp], fdc_dor_write_after_reset
-    call fdc_d765ac_reset
-
-fdc_dor_write_after_reset:
-    # Save the other bits
-    add [rb + value_bits], 0, [ip + 1]
-    add [0], 0, [fdc_dor_drive_a_select]
-
-    add [rb + value_bits], 3, [ip + 1]
-    jnz [0], fdc_dor_write_dma_enabled
-
-    add fdc_error_non_dma, 0, [rb - 1]
-    arb -1
-    call report_error
-
-fdc_dor_write_dma_enabled:
-    add [rb + value_bits], 4, [ip + 1]
-    add [0], 0, [fdc_dor_enable_motor_unit0]
-
-    add [rb + value_bits], 5, [ip + 1]
-    add [0], 0, [fdc_dor_enable_motor_unit1]
-
-    arb 2
-    ret 2
-.ENDFRAME
-
-##########
-fdc_status_read:
-.FRAME addr; value, tmp
-    arb -2
-
-    out 'S' # TODO remove
-    out 'r'
-    out '_'
-
-    # Controller is busy in non-idle command state
-    # Bit 4 CB  - Controller is busy reading or writing
-    lt  0, [fdc_cmd_state], [rb + tmp]
-    mul [rb + tmp], 0b00010000, [rb + value]
-
-    # Data transfer direction is CPU to FDC in command phase, FDC to CPU in result phase
-    # Bit 6 DIO - data input/output, 0 - from CPU to FDC, 1 - from FDC to CPU
-    mul [fdc_cmd_result_phase], 0b01000000, [rb + tmp]
-    add [rb + value], [rb + tmp], [rb + value]
-
-    # Following bits have fixed values, since seeking, reading and writing is immediate,
-    # and we only support DMA mode:
-    # Bit 0 DAB - FDD A is busy seeking
-    # Bit 1 DBB - FDD B is busy seeking
-    # Bit 2 reserved
-    # Bit 3 reserved
-    # Bit 5 NDM - non-DMA mode
-    # Bit 7 RQM - data register is ready for data transfer
-    add [rb + value], 0b10000000, [rb + value]
-
-    # TODO remove
-    add [rb + value], 0, [rb - 1]
-    add 2, 0, [rb - 2]
-    add 8, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-    out ' '
-
-    arb 2
-    ret 1
-.ENDFRAME
-
-# TODO after the execution phase, interrupt will occur
 
 ##########
 fdc_data_write:
@@ -626,6 +478,7 @@ fdc_data_write_exec_read_id:
     # Increase the reported sector so we report a different one each time
     add [fdc_cmd_sector], 1, [fdc_cmd_sector]
 
+    # TODO track 0 has a different number of sectors
     add fdc_medium_sectors_units, [fdc_cmd_unit_selected], [ip + 1]
     lt  [0], [fdc_cmd_sector], [rb + tmp]
     jz  [rb + tmp], fdc_data_write_exec_read_id_after_sector
@@ -965,79 +818,6 @@ fdc_data_read_done:
 .ENDFRAME
 
 ##########
-fdc_control_write:
-.FRAME addr, value;
-    # TODO this is I think used to detect floppy type
-    # if yes, we need to return errors (when reading?) unless the speed is set correctly
-
-    out 'C' # TODO remove
-    out 'w'
-    out '_'
-    add [rb + value], 0, [rb - 1]
-    add 2, 0, [rb - 2]
-    add 8, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-    out ' '
-
-    # Bits 7-2 Reserved
-    # Bits 2-0 Diskette Data Rate (00 500000, 01 300000, 10 250000, 11 125000)
-
-    ret 2
-.ENDFRAME
-
-##########
-fdc_dir_read:
-.FRAME addr; value
-    arb -1
-
-    out 'A' # TODO remove
-    out 'r'
-    out ' '
-
-    # The only bit related to floppy operation is bit 7 - diskette change
-    # We don't support changing the diskette, so return all zeros
-    add 0, 0, [rb + value]
-
-    arb 1
-    ret 1
-.ENDFRAME
-
-##########
-fdc_d765ac_reset:
-.FRAME
-    # TODO reset D765AC registers to zero, but don't touch the DOR,
-    # also don't touch SRT HUT HLT in Specify command
-
-    # After reset both units have changed ready status, so sense interrupt status
-    # returns ST0 with bits 6 and 7 set
-    add 0b11000000, 0, [fdc_cmd_st0]
-
-    # Raise INT 0e = IRQ6 if the FDD is ready, which we assume it always is
-    # TODO if the motor is off, is the FDD ready? also, the FDD may not be present
-    add 1, 0, [fdc_interrupt_pending]
-    add 0x0e, 0, [rb - 1]
-    arb -1
-    call interrupt
-
-    out 'R' # TODO remove
-    out ' '
-
-    ret 0
-.ENDFRAME
-
-##########
-fdc_dor_drive_a_select:                 # 0 = drive A selected, 1 = drive B selected
-    db  0
-fdc_dor_reset:                          # 0 = reset
-    db  0
-
-fdc_dor_enable_motor_units:
-fdc_dor_enable_motor_unit0:
-    db  0
-fdc_dor_enable_motor_unit1:
-    db  0
-
 fdc_cmd_state:
     db  0
 fdc_cmd_result_phase:
@@ -1084,132 +864,5 @@ fdc_cmd_st2:
     db  0
 fdc_cmd_st3:
     db  0
-
-fdc_present_cylinder_units:
-fdc_present_cylinder_unit0:
-    db  0
-fdc_present_cylinder_unit1:
-    db  0
-
-fdc_present_sector_units:
-fdc_present_sector_unit0:
-    db  0
-fdc_present_sector_unit1:
-    db  0
-
-fdc_interrupt_pending:
-    db  0
-
-fdc_error_non_dma:
-    db  "fdc: Non-DMA operation is not supported", 0
-
-##########
-# Configuration information
-
-# Is a FDD connected to this channel?
-fdc_config_connected_units:
-fdc_config_connected_unit0:
-    db  1
-fdc_config_connected_unit1:
-    db  0
-fdc_config_connected_unit2:
-    db  0
-fdc_config_connected_unit3:
-    db  0
-
-# What type of floppy is inserted?
-# If a floppy is inserted, we also assume the FDD is connected
-fdc_config_inserted_units:
-fdc_config_inserted_unit0:
-    db  25                              # 25 = 3.5" 1.44MB; TODO make this configurable
-fdc_config_inserted_unit1:
-    db  0
-fdc_config_inserted_unit2:
-    db  0
-fdc_config_inserted_unit3:
-    db  0
-
-# Inserted floppy parameters
-fdc_medium_heads_units:
-fdc_medium_heads_unit0:
-    db  0
-fdc_medium_heads_unit1:
-    db  0
-
-fdc_medium_tracks_units:
-fdc_medium_tracks_unit0:
-    db  0
-fdc_medium_tracks_unit1:
-    db  0
-
-fdc_medium_sectors_units:
-fdc_medium_sectors_unit0:
-    db  0
-fdc_medium_sectors_unit1:
-    db  0
-
-
-
-
-
-# TODO remove
-.EXPORT fdc_dor_write
-.EXPORT fdc_dor_write_after_reset
-.EXPORT fdc_status_read
-.EXPORT fdc_data_write
-.EXPORT fdc_data_write_idle
-.EXPORT fdc_data_write_idle_table
-.EXPORT fdc_data_write_idle_to_hd_us
-.EXPORT fdc_data_write_idle_to_srt_hut
-.EXPORT fdc_data_write_hd_us
-.EXPORT fdc_data_write_hd_us_table
-.EXPORT fdc_data_write_hd_us_to_c
-.EXPORT fdc_data_write_hd_us_to_format_track_n
-.EXPORT fdc_data_write_hd_us_to_exec_seek
-.EXPORT fdc_data_write_c
-.EXPORT fdc_data_write_h
-.EXPORT fdc_data_write_r
-.EXPORT fdc_data_write_n
-.EXPORT fdc_data_write_eot
-.EXPORT fdc_data_write_gpl
-.EXPORT fdc_data_write_dtl_stp
-.EXPORT fdc_data_write_dtl_stp_table
-.EXPORT fdc_data_write_format_track_n
-.EXPORT fdc_data_write_format_track_sc
-.EXPORT fdc_data_write_format_track_gpl
-.EXPORT fdc_data_write_srt_hut
-.EXPORT fdc_data_write_exec_read_data
-.EXPORT fdc_data_write_exec_read_deleted_data
-.EXPORT fdc_data_write_exec_write_data
-.EXPORT fdc_data_write_exec_write_deleted_data
-.EXPORT fdc_data_write_exec_read_track
-.EXPORT fdc_data_write_exec_read_id
-.EXPORT fdc_data_write_exec_format_track
-.EXPORT fdc_data_write_exec_scan_equal
-.EXPORT fdc_data_write_exec_scan_low_or_equal
-.EXPORT fdc_data_write_exec_scan_high_or_equal
-.EXPORT fdc_data_write_exec_recalibrate
-.EXPORT fdc_data_write_exec_sense_interrupt_status
-.EXPORT fdc_data_write_exec_specify
-.EXPORT fdc_data_write_exec_sense_drive_status
-.EXPORT fdc_data_write_exec_seek
-.EXPORT fdc_data_write_invalid
-.EXPORT fdc_data_write_done
-.EXPORT fdc_data_read
-.EXPORT fdc_data_read_st0
-.EXPORT fdc_data_read_st0_sense_interrupt_status
-.EXPORT fdc_data_read_st1
-.EXPORT fdc_data_read_st2
-.EXPORT fdc_data_read_st3
-.EXPORT fdc_data_read_c
-.EXPORT fdc_data_read_h
-.EXPORT fdc_data_read_r
-.EXPORT fdc_data_read_n
-.EXPORT fdc_data_read_pcn
-.EXPORT fdc_data_read_invalid
-.EXPORT fdc_data_read_done
-.EXPORT fdc_control_write
-.EXPORT fdc_dir_read
-.EXPORT fdc_d765ac_reset
 
 .EOF
