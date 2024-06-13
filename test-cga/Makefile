@@ -13,7 +13,7 @@ build: build-prep $(BINDIR)/test-cga.input
 build-prep:
 	mkdir -p "$(BINDIR)" "$(OBJDIR)"
 
-# The order of the object files matters, the 8086 binary needs to be the last object.
+# The order of the object files matters, the cga_test binary needs to be the last object.
 
 TEST_CGA_OBJS = main.o config.o shutdown.o $(BINDIR)/libcpu.a $(BINDIR)/libcga.a \
 	$(BINDIR)/libutil.a $(LIBXIB) cga_test.o

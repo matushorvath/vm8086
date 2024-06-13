@@ -20,9 +20,9 @@
 .IMPORT init_ppi_8255a
 
 # From the BIOS binary
-.IMPORT binary_count
-.IMPORT binary_header
-.IMPORT binary_data
+.IMPORT bios_count
+.IMPORT bios_header
+.IMPORT bios_data
 
 # TODO make the BIOS read-only by registering a NOP write handler
 
@@ -41,9 +41,9 @@
 main:
 .FRAME
     add [bios_address], 0, [rb - 1]
-    add [binary_count], 0, [rb - 2]
-    add binary_header, 0, [rb - 3]
-    add binary_data, 0, [rb - 4]
+    add [bios_count], 0, [rb - 2]
+    add bios_header, 0, [rb - 3]
+    add bios_data, 0, [rb - 4]
     arb -4
     call init_memory
 

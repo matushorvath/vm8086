@@ -18,7 +18,7 @@
 ##########
 init_memory:
 .FRAME rom_address, rom_section_count, rom_header, rom_data;
-    # Reclaim memory used by the binary data; this assumes there were no allocations yet
+    # Reclaim memory used by the image data; this assumes there were no allocations yet
     add [rb + rom_data], 0, [rb - 1]
     arb -1
     call brk

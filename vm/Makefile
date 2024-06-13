@@ -28,7 +28,7 @@ build-prep:
 run: build
 	$(ICVM) $(BINDIR)/$(VM_NAME)
 
-# The order of the object files matters, the 8086 binary needs to be the last object.
+# The order of the object files matters, the BIOS binary needs to be the last object.
 
 VM_OBJS = main.o config.o ports.o $(BIOS_NAME)_address.o $(BINDIR)/libcpu.a $(BINDIR)/libcga.a \
 	$(BINDIR)/libdev.a $(BINDIR)/libutil.a $(LIBXIB) $(BIOS_NAME).o
@@ -41,7 +41,7 @@ $(OBJDIR)/%.o: %.s
 	$(run-intcode-as)
 
 $(OBJDIR)/$(BIOS_NAME).o: $(BIOS_BIN)
-	$(eval BIN2OBJ_NAME = binary)
+	$(eval BIN2OBJ_NAME = bios)
 	$(run-intcode-bin2obj)
 
 $(OBJDIR)/$(BIOS_NAME)_address.o: $(OBJDIR)/$(BIOS_NAME)_address.s
