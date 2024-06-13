@@ -10,7 +10,7 @@
 # From cpu/execute.s
 .IMPORT execute
 
-# From cpu/init_binary.s
+# From cpu/init_memory.s
 .IMPORT init_memory
 
 # From dev/pit_8253.s
