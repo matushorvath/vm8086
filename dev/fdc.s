@@ -19,7 +19,7 @@
 .IMPORT print_num_radix
 
 # TODO fdc should not work while fdc_dor_reset == 0
-# TODO fdc should not read/write data or seek etc while the motor is off fdc_dor_enable_motor_a/b and if it is not selected in dor
+# TODO fdc should not read/write data or seek etc while the motor is off fdc_dor_enable_motor_unit0/1 and if it is not selected in dor
 # TODO fdc should complain about fdc_dor_enable_dma 
 # TODO set equipment check bit in ST0 if FDD is not connected?
 
@@ -27,6 +27,9 @@
 # TODO Require MF=1, don't support read/write deleted data, ignore SK since there is never deleted data, only support 1.44" floppies
 # TODO Read ID probably is simple, since there are never bad sectors
 # TODO relative seek: set the MT bit to 1, to seek up set MFM bit, to seek down clear MFM bit
+
+# TODO read track does not support multitrack, it just reads one side
+# TODO bytes per sector: 02 = 512 bytes per sector
 
 ##########
 fdc_ports:
@@ -39,13 +42,71 @@ fdc_ports:
 
 ##########
 init_fdc:
-.FRAME
+.FRAME unit
     # Register I/O ports
     add fdc_ports, 0, [rb - 1]
     arb -1
     call register_ports
 
+    # Initialize both drive units
+    add 0, 0, [rb - 1]
+    arb -1
+    call init_unit
+
+    add 1, 0, [rb - 1]
+    arb -1
+    call init_unit
+
     ret 0
+.ENDFRAME
+
+##########
+init_unit:
+.FRAME unit; type, tmp
+    arb -2
+
+    # Initialize floppy parameters based on inserted floppy types
+    # Currently we only support 3.5" 1.44MB floppies
+
+    # Floppy geometry:
+    #           heads   tracks  sectors bytes   capacity    type
+    # 5.25"     1       40      9       512      184320     12
+    # 5.25"     2       80      9       512      368640     14
+    # 5.25"     2       80      15      512     1228800     17
+    # 3.5"      2       80      9       512      737280     24
+    # 3.5"      2       80      18      512     1474560     25
+
+    # Skip disconnected and empty drives
+    add fdc_config_connected_units, [rb + unit], [ip + 1]
+    jz  [0], init_unit_done
+    add fdc_config_inserted_units, [rb + unit], [ip + 1]
+    add [0], 0, [rb + type]
+    jz  [rb + type], init_unit_done
+
+    # Fill in floppy parameters; currently only 1.44MB 3.5" floppies are supported
+    eq  [rb + type], 25, [rb + tmp]
+    jz  [rb + tmp], init_unit_unsupported_type
+
+    # Set floppy parameters based on floppy type
+    # TODO support more floppy types
+    add fdc_medium_heads_units, [rb + unit], [ip + 3]
+    add 2, 0, [0]
+    add fdc_medium_tracks_units, [rb + unit], [ip + 3]
+    add 80, 0, [0]
+    add fdc_medium_sectors_units, [rb + unit], [ip + 3]
+    add 18, 0, [0]
+
+init_unit_done:
+    arb 2
+    ret 1
+
+init_unit_unsupported_type:
+    add init_unit_unsupported_type_message, 0, [rb - 1]
+    arb -1
+    call report_error
+
+init_unit_unsupported_type_message:
+    db  "fdd unit type is not supported", 0
 .ENDFRAME
 
 ##########
@@ -92,10 +153,10 @@ fdc_dor_write_after_reset:
 
 fdc_dor_write_dma_enabled:
     add [rb + value_bits], 4, [ip + 1]
-    add [0], 0, [fdc_dor_enable_motor_a]
+    add [0], 0, [fdc_dor_enable_motor_unit0]
 
     add [rb + value_bits], 5, [ip + 1]
-    add [0], 0, [fdc_dor_enable_motor_b]
+    add [0], 0, [fdc_dor_enable_motor_unit1]
 
     arb 2
     ret 2
@@ -534,34 +595,59 @@ fdc_data_write_exec_read_track:
     jz  0, fdc_data_write_done
 
 fdc_data_write_exec_read_id:
-    # Execute read id
+    # Execute read id; prepare defaults for ST0
     mul [fdc_cmd_head], 0b00000100, [fdc_cmd_st0]
     add [fdc_cmd_unit_selected], [fdc_cmd_st0], [fdc_cmd_st0]
 
+    # Is the unit connected?
+    add fdc_config_connected_units, [fdc_cmd_unit_selected], [ip + 1]
+    jz  [0], fdc_data_write_exec_read_id_no_floppy
+
     # Is a floppy inserted?
     add fdc_config_inserted_units, [fdc_cmd_unit_selected], [ip + 1]
-    jnz [0], fdc_data_write_exec_read_id_have_floppy
+    jz  [0], fdc_data_write_exec_read_id_no_floppy
 
-    # Floppy is not inserted, set up ST0 (not ready, abnormal termination),
+    # Is the motor running?
+    add fdc_dor_enable_motor_units, [fdc_cmd_unit_selected], [ip + 1]
+    jz  [0], fdc_data_write_exec_read_id_no_floppy
+
+    # Floppy is accessible; respond with ST0 (see above) ST1 ST2 C H R N
+    add 0, 0, [fdc_cmd_st1]
+    add 0, 0, [fdc_cmd_st2]
+
+    # For C H R N we return the head that was requested, current track, some random sector
+    # and 512 as the default number of bytes per sector
+    add fdc_present_cylinder_units, [fdc_cmd_unit_selected], [ip + 1]
+    add [0], 0, [fdc_cmd_cylinder]
+    add fdc_present_sector_units, [fdc_cmd_unit_selected], [ip + 1]
+    add [0], 0, [fdc_cmd_sector]
+    add 512, 0, [fdc_cmd_bytes]
+
+    # Increase the reported sector so we report a different one each time
+    add [fdc_cmd_sector], 1, [fdc_cmd_sector]
+
+    add fdc_medium_sectors_units, [fdc_cmd_unit_selected], [ip + 1]
+    lt  [0], [fdc_cmd_sector], [rb + tmp]
+    jz  [rb + tmp], fdc_data_write_exec_read_id_after_sector
+    add 0, 0, [fdc_cmd_sector]
+
+fdc_data_write_exec_read_id_after_sector:
+    add fdc_present_sector_units, [fdc_cmd_unit_selected], [ip + 3]
+    add [fdc_cmd_sector], 0, [0]
+
+    jz  0, fdc_data_write_exec_read_id_terminated
+
+fdc_data_write_exec_read_id_no_floppy:
+    # Floppy is not accessible, set up ST0 (not ready, abnormal termination),
     # ST1 (missing address mark, no data), ST2
     add 0b01001000, [fdc_cmd_st0], [fdc_cmd_st0]
     add 0b00000101, 0, [fdc_cmd_st1]
     add 0, 0, [fdc_cmd_st2]
-    # TODO find out what to store in C H R N, error case (zeros?)
 
-    jz  0, fdc_data_write_exec_read_id_terminated
-
-fdc_data_write_exec_read_id_have_floppy:
-    # Floppy is inserted, return the first ID Field read
-
-    # TODO read an ID Field from the floppy and return it
-    # "The first correct ID information on the cylinder is stored in data register"
-
-    # Set up response: ST0 (see above) ST1 ST2 C H R N
-    # TODO if missing address mark in floppy data, report MA in ST1
-    add 0, 0, [fdc_cmd_st1]
-    add 0, 0, [fdc_cmd_st2]
-    # TODO find out what to store in C H R N, success case
+    # Return requested head, zero out track and sector, use default bytes
+    add 0, 0, [fdc_cmd_cylinder]
+    add 0, 0, [fdc_cmd_sector]
+    add 512, 0, [fdc_cmd_bytes]
 
 fdc_data_write_exec_read_id_terminated:
     # Next state is read ST0
@@ -945,9 +1031,11 @@ fdc_dor_drive_a_select:                 # 0 = drive A selected, 1 = drive B sele
     db  0
 fdc_dor_reset:                          # 0 = reset
     db  0
-fdc_dor_enable_motor_a:
+
+fdc_dor_enable_motor_units:
+fdc_dor_enable_motor_unit0:
     db  0
-fdc_dor_enable_motor_b:
+fdc_dor_enable_motor_unit1:
     db  0
 
 fdc_cmd_state:
@@ -1003,6 +1091,12 @@ fdc_present_cylinder_unit0:
 fdc_present_cylinder_unit1:
     db  0
 
+fdc_present_sector_units:
+fdc_present_sector_unit0:
+    db  0
+fdc_present_sector_unit1:
+    db  0
+
 fdc_interrupt_pending:
     db  0
 
@@ -1025,15 +1119,33 @@ fdc_config_connected_unit3:
 
 # What type of floppy is inserted?
 # If a floppy is inserted, we also assume the FDD is connected
-# TODO for now just 0=no floppy, 1=has floppy
 fdc_config_inserted_units:
 fdc_config_inserted_unit0:
-    db  1
+    db  25                              # 25 = 3.5" 1.44MB; TODO make this configurable
 fdc_config_inserted_unit1:
     db  0
 fdc_config_inserted_unit2:
     db  0
 fdc_config_inserted_unit3:
+    db  0
+
+# Inserted floppy parameters
+fdc_medium_heads_units:
+fdc_medium_heads_unit0:
+    db  0
+fdc_medium_heads_unit1:
+    db  0
+
+fdc_medium_tracks_units:
+fdc_medium_tracks_unit0:
+    db  0
+fdc_medium_tracks_unit1:
+    db  0
+
+fdc_medium_sectors_units:
+fdc_medium_sectors_unit0:
+    db  0
+fdc_medium_sectors_unit1:
     db  0
 
 
