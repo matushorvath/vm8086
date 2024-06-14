@@ -191,14 +191,9 @@ fdc_exec_read_id:
     add [0], 1, [fdc_cmd_sector]
 
     # How many total sectors are on this cylinder?
-    # Cylinder 0 has 26 sectors, other cylinders depend on media type
-    add 26, 0, [rb + sector_count]
-    jz  [fdc_cmd_cylinder], fdc_exec_read_id_after_sector_count
-
     add fdc_medium_sectors_units, [fdc_cmd_unit_selected], [ip + 1]
     add [0], 0, [rb + sector_count]
 
-fdc_exec_read_id_after_sector_count:
     # Wrap around reported sector to 0 if we overflow
     eq  [fdc_cmd_sector], [rb + sector_count], [rb + tmp]
     jz  [rb + tmp], fdc_exec_read_id_after_sector_wraparound
