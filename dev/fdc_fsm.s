@@ -3,50 +3,47 @@
 
 .EXPORT fdc_cmd_state
 .EXPORT fdc_cmd_result_phase
+
+.EXPORT fdc_cmd_multi_track
+.EXPORT fdc_cmd_mfm
+.EXPORT fdc_cmd_skip_deleted
+.EXPORT fdc_cmd_unit_selected
+
+.EXPORT fdc_cmd_cylinder
+.EXPORT fdc_cmd_head
+.EXPORT fdc_cmd_sector
+
+.EXPORT fdc_cmd_hlt_nd
+
 .EXPORT fdc_cmd_st0
+.EXPORT fdc_cmd_st1
+.EXPORT fdc_cmd_st2
+.EXPORT fdc_cmd_st3
 
 # From fdc_commands.s
-# TODO
-#.IMPORT fdc_exec_read_data
-#.IMPORT fdc_exec_read_deleted_data
-#.IMPORT fdc_exec_write_data
-#.IMPORT fdc_exec_write_deleted_data
-#
-#.IMPORT fdc_exec_read_track
-#.IMPORT fdc_exec_read_id
-#.IMPORT fdc_exec_format_track
-#
-#.IMPORT fdc_exec_scan_equal
-#.IMPORT fdc_exec_scan_low_or_equal
-#.IMPORT fdc_exec_scan_high_or_equal
-#
-#.IMPORT fdc_exec_recalibrate
-#.IMPORT fdc_exec_sense_interrupt_status
-#.IMPORT fdc_exec_specify
-#.IMPORT fdc_exec_sense_drive_status
-#.IMPORT fdc_exec_seek
+.IMPORT fdc_exec_read_data
+.IMPORT fdc_exec_read_deleted_data
+.IMPORT fdc_exec_write_data
+.IMPORT fdc_exec_write_deleted_data
 
-# From fdc_config.s
-.IMPORT fdc_config_connected_units
-.IMPORT fdc_config_inserted_units
+.IMPORT fdc_exec_read_track
+.IMPORT fdc_exec_read_id
+.IMPORT fdc_exec_format_track
+
+.IMPORT fdc_exec_scan_equal
+.IMPORT fdc_exec_scan_low_or_equal
+.IMPORT fdc_exec_scan_high_or_equal
+
+.IMPORT fdc_exec_recalibrate
+.IMPORT fdc_exec_specify
+.IMPORT fdc_exec_sense_drive_status
+.IMPORT fdc_exec_seek
 
 # From fdc_control.s
-.IMPORT fdc_dor_enable_motor_units
 .IMPORT fdc_interrupt_pending
 
 # From fdc_drives.s
-.IMPORT fdc_medium_sectors_units
 .IMPORT fdc_present_cylinder_units
-.IMPORT fdc_present_sector_units
-
-# From fdc_init.s
-.IMPORT fdc_error_non_dma
-
-# From cpu/error.s
-.IMPORT report_error
-
-# From cpu/interrupt.s
-.IMPORT interrupt
 
 # From util/bits.s
 .IMPORT bits
@@ -63,10 +60,10 @@ fdc_data_write:
     arb -2
 
     # TODO remove
-    jnz [fdc_cmd_state], TODO_fdc_data_write_skip_nl
+    jnz [fdc_cmd_state], TODO_fsm_w_skip_nl
     out 10
 
-TODO_fdc_data_write_skip_nl:
+TODO_fsm_w_skip_nl:
     out 'D'
     out 'w'
     out '_'
@@ -80,10 +77,10 @@ TODO_fdc_data_write_skip_nl:
     out ' '
 
     # Is the FDC processing a command?
-    jz  [fdc_cmd_state], fdc_data_write_idle
+    jz  [fdc_cmd_state], fsm_w_idle
 
     # Yes, is this the command phase?
-    jnz [fdc_cmd_result_phase], fdc_data_write_invalid
+    jnz [fdc_cmd_result_phase], fsm_w_invalid
 
     # Yes, use the state as a label to jump to
     jz  0, [fdc_cmd_state]
@@ -91,7 +88,7 @@ TODO_fdc_data_write_skip_nl:
 ##########
 # Idle state
 
-fdc_data_write_idle:
+fsm_w_idle:
     # Parse the first byte of a new command
     # MT MF SK CMD_CODE(5)
     mul [rb + value], 8, [rb + tmp]
@@ -119,63 +116,75 @@ fdc_data_write_idle:
     add 0, 0, [fdc_cmd_result_phase]
 
     # Handle the state transition
-    add fdc_data_write_idle_table, [fdc_cmd_code], [ip + 2]
+    add fsm_w_idle_table, [fdc_cmd_code], [ip + 2]
     jz  0, [0]
 
-fdc_data_write_idle_table:
-    db  fdc_data_write_invalid                              #          00000
-    db  fdc_data_write_invalid                              #          00001
-    db  fdc_data_write_idle_to_hd_us                        #  0 MF SK 00010: read_track
-    db  fdc_data_write_idle_to_srt_hut                      #  0  0  0 00011: specify
-    db  fdc_data_write_idle_to_hd_us                        #  0  0  0 00100: sense_drive_status
-    db  fdc_data_write_idle_to_hd_us                        # MT MF  0 00101: write_data
-    db  fdc_data_write_idle_to_hd_us                        # MT MF SK 00110: read_data
-    db  fdc_data_write_idle_to_hd_us                        #  0  0  0 00111: recalibrate
-    db  fdc_data_write_exec_sense_interrupt_status          #  0  0  0 01000: sense_interrupt_status
-    db  fdc_data_write_idle_to_hd_us                        # MT MF  0 01001: write_deleted_data
-    db  fdc_data_write_idle_to_hd_us                        #  0 MF  0 01010: read_id
-    db  fdc_data_write_invalid                              #          01011
-    db  fdc_data_write_idle_to_hd_us                        # MT MF SK 01100: read_deleted_data
-    db  fdc_data_write_idle_to_hd_us                        #  0 MF  0 01101: format_track
-    db  fdc_data_write_invalid                              #          01110
-    db  fdc_data_write_idle_to_hd_us                        #  0  0  0 01111: seek
-    db  fdc_data_write_invalid                              #          10000
-    db  fdc_data_write_idle_to_hd_us                        # MT MF SK 10001: scan_equal
-    db  fdc_data_write_invalid                              #          10010
-    db  fdc_data_write_invalid                              #          10011
-    db  fdc_data_write_invalid                              #          10100
-    db  fdc_data_write_invalid                              #          10101
-    db  fdc_data_write_invalid                              #          10110
-    db  fdc_data_write_invalid                              #          10111
-    db  fdc_data_write_invalid                              #          11000
-    db  fdc_data_write_idle_to_hd_us                        # MT MF SK 11001: scan_low_or_equal
-    db  fdc_data_write_invalid                              #          11010
-    db  fdc_data_write_invalid                              #          11011
-    db  fdc_data_write_invalid                              #          11100
-    db  fdc_data_write_idle_to_hd_us                        # MT MF SK 11101: scan_high_or_equal
-    db  fdc_data_write_invalid                              #          11110
-    db  fdc_data_write_invalid                              #          11111
+fsm_w_idle_table:
+    db  fsm_w_invalid                                       #          00000
+    db  fsm_w_invalid                                       #          00001
+    db  fsm_w_idle_to_hd_us                                 #  0 MF SK 00010: read_track
+    db  fsm_w_idle_to_srt_hut                               #  0  0  0 00011: specify
+    db  fsm_w_idle_to_hd_us                                 #  0  0  0 00100: sense_drive_status
+    db  fsm_w_idle_to_hd_us                                 # MT MF  0 00101: write_data
+    db  fsm_w_idle_to_hd_us                                 # MT MF SK 00110: read_data
+    db  fsm_w_idle_to_hd_us                                 #  0  0  0 00111: recalibrate
+    db  fsm_w_idle_to_exec_sense_interrupt_status           #  0  0  0 01000: sense_interrupt_status
+    db  fsm_w_idle_to_hd_us                                 # MT MF  0 01001: write_deleted_data
+    db  fsm_w_idle_to_hd_us                                 #  0 MF  0 01010: read_id
+    db  fsm_w_invalid                                       #          01011
+    db  fsm_w_idle_to_hd_us                                 # MT MF SK 01100: read_deleted_data
+    db  fsm_w_idle_to_hd_us                                 #  0 MF  0 01101: format_track
+    db  fsm_w_invalid                                       #          01110
+    db  fsm_w_idle_to_hd_us                                 #  0  0  0 01111: seek
+    db  fsm_w_invalid                                       #          10000
+    db  fsm_w_idle_to_hd_us                                 # MT MF SK 10001: scan_equal
+    db  fsm_w_invalid                                       #          10010
+    db  fsm_w_invalid                                       #          10011
+    db  fsm_w_invalid                                       #          10100
+    db  fsm_w_invalid                                       #          10101
+    db  fsm_w_invalid                                       #          10110
+    db  fsm_w_invalid                                       #          10111
+    db  fsm_w_invalid                                       #          11000
+    db  fsm_w_idle_to_hd_us                                 # MT MF SK 11001: scan_low_or_equal
+    db  fsm_w_invalid                                       #          11010
+    db  fsm_w_invalid                                       #          11011
+    db  fsm_w_invalid                                       #          11100
+    db  fsm_w_idle_to_hd_us                                 # MT MF SK 11101: scan_high_or_equal
+    db  fsm_w_invalid                                       #          11110
+    db  fsm_w_invalid                                       #          11111
 
-fdc_data_write_idle_to_hd_us:
+fsm_w_idle_to_hd_us:
     # Any interrupt is cleared
     add 0, 0, [fdc_interrupt_pending]
 
     # Next state is write HD US
-    add fdc_data_write_hd_us, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+    add fsm_w_hd_us, 0, [fdc_cmd_state]
+    jz  0, fsm_w_done
 
-fdc_data_write_idle_to_srt_hut:
+fsm_w_idle_to_srt_hut:
     # Any interrupt is cleared
     add 0, 0, [fdc_interrupt_pending]
 
     # Next state is write SRT HUT
-    add fdc_data_write_srt_hut, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+    add fsm_w_srt_hut, 0, [fdc_cmd_state]
+    jz  0, fsm_w_done
+
+fsm_w_idle_to_exec_sense_interrupt_status:
+    # Sense interrupt status is an invalid command if interrupt is not pending
+    jz  [fdc_interrupt_pending], fsm_w_invalid
+
+    # ST0 bits 0, 5, 6, 7 as well as PCN are set up by a previous seek or recalibrate command
+    # If another command was executed, it also should set ST0 accordingly, so there is nothing to do
+
+    # Next state is read ST0
+    add 1, 0, [fdc_cmd_result_phase]
+    add fsm_r_st0, 0, [fdc_cmd_state]
+    jz  0, fsm_w_done
 
 ##########
 # HD US state
 
-fdc_data_write_hd_us:
+fsm_w_hd_us:
     # Parse head and unit select information
     # X X X X X HD US(2)
 
@@ -192,111 +201,138 @@ fdc_data_write_hd_us:
     add [0], [fdc_cmd_unit_selected], [fdc_cmd_unit_selected]
 
     # Handle the state transition
-    add fdc_data_write_hd_us_table, [fdc_cmd_code], [ip + 2]
+    add fsm_w_hd_us_table, [fdc_cmd_code], [ip + 2]
     jz  0, [0]
 
-fdc_data_write_hd_us_table:
-    ds  2, 0                                               # 00000, 00001
-    db  fdc_data_write_hd_us_to_c                           # 00010: read_track
+fsm_w_hd_us_table:
+    ds  2, 0                                                # 00000, 00001
+    db  fsm_w_hd_us_to_c                                    # 00010: read_track
     db  0                                                   # 00011: specify
-    db  fdc_data_write_exec_sense_drive_status              # 00100: sense_drive_status
-    db  fdc_data_write_hd_us_to_c                           # 00101: write_data
-    db  fdc_data_write_hd_us_to_c                           # 00110: read_data
-    db  fdc_data_write_exec_recalibrate                     # 00111: recalibrate
+    db  fsm_w_hd_us_to_exec_sense_drive_status              # 00100: sense_drive_status
+    db  fsm_w_hd_us_to_c                                    # 00101: write_data
+    db  fsm_w_hd_us_to_c                                    # 00110: read_data
+    db  fsm_w_hd_us_to_exec_recalibrate                     # 00111: recalibrate
     db  0                                                   # 01000: sense_interrupt_status
-    db  fdc_data_write_hd_us_to_c                           # 01001: write_deleted_data
-    db  fdc_data_write_exec_read_id                         # 01010: read_id
+    db  fsm_w_hd_us_to_c                                    # 01001: write_deleted_data
+    db  fsm_w_hd_us_to_exec_read_id                         # 01010: read_id
     db  0                                                   # 01011
-    db  fdc_data_write_hd_us_to_c                           # 01100: read_deleted_data
-    db  fdc_data_write_hd_us_to_format_track_n              # 01101: format_track
+    db  fsm_w_hd_us_to_c                                    # 01100: read_deleted_data
+    db  fsm_w_hd_us_to_format_track_n                       # 01101: format_track
     db  0                                                   # 01110
-    db  fdc_data_write_hd_us_to_exec_seek                   # 01111: seek
+    db  fsm_w_hd_us_to_ncn                                  # 01111: seek
     db  0                                                   # 10000
-    db  fdc_data_write_hd_us_to_c                           # 10001: scan_equal
+    db  fsm_w_hd_us_to_c                                    # 10001: scan_equal
     ds  7, 0                                                # 10010-11000
-    db  fdc_data_write_hd_us_to_c                           # 11001: scan_low_or_equal
+    db  fsm_w_hd_us_to_c                                    # 11001: scan_low_or_equal
     ds  3, 0                                                # 11010-11100
-    db  fdc_data_write_hd_us_to_c                           # 11101: scan_high_or_equal
+    db  fsm_w_hd_us_to_c                                    # 11101: scan_high_or_equal
     ds  2, 0                                                # 11110, 11111
 
-fdc_data_write_hd_us_to_c:
+fsm_w_hd_us_to_c:
     # Next state is write C
-    add fdc_data_write_c, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+    add fsm_w_c, 0, [fdc_cmd_state]
+    jz  0, fsm_w_done
 
-fdc_data_write_hd_us_to_format_track_n:
-    # Next state is write N
-    add fdc_data_write_format_track_n, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+fsm_w_hd_us_to_exec_sense_drive_status:
+    # Next state is read ST3
+    add 1, 0, [fdc_cmd_result_phase]
+    add fsm_r_st3, 0, [fdc_cmd_state]
 
-fdc_data_write_hd_us_to_exec_seek:
-    # Next state is write NCN + execute seek
-    add fdc_data_write_exec_seek, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+    # Execute sense drive status
+    call fdc_exec_sense_drive_status
+    jz  0, fsm_w_done
+
+fsm_w_hd_us_to_exec_recalibrate:
+    # Next state is idle
+    add 0, 0, [fdc_cmd_state]
+
+    # Execute recalibrate
+    call fdc_exec_recalibrate
+    jz  0, fsm_w_done
+
+fsm_w_hd_us_to_exec_read_id:
+    # Next state is read ST0
+    add 1, 0, [fdc_cmd_result_phase]
+    add fsm_r_st0, 0, [fdc_cmd_state]
+
+    # Execute read id
+    call fdc_exec_read_id
+    jz  0, fsm_w_done
+
+fsm_w_hd_us_to_format_track_n:
+    # Next state is write N (for format track)
+    add fsm_w_format_track_n, 0, [fdc_cmd_state]
+    jz  0, fsm_w_done
+
+fsm_w_hd_us_to_ncn:
+    # Next state is write NCN
+    add fsm_w_ncn, 0, [fdc_cmd_state]
+    jz  0, fsm_w_done
 
 ##########
 # C, H, R, N states
 
-fdc_data_write_c:
+fsm_w_c:
     # Save C (cylinder)
     add [rb + value], 0, [fdc_cmd_cylinder]
 
     # Next state is write H
-    add fdc_data_write_h, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+    add fsm_w_h, 0, [fdc_cmd_state]
+    jz  0, fsm_w_done
 
-fdc_data_write_h:
-    # Is head number from the first byte equal to the head number here?
+fsm_w_h:
+    # Head number from the first byte must be equal to the head number here
     eq  [fdc_cmd_head], [rb + value], [rb + tmp]
-
-    # If it isn't, that's not valid
-    jz  [rb + tmp], fdc_data_write_invalid
+    jz  [rb + tmp], fsm_w_invalid
 
     # Next state is write R
-    add fdc_data_write_r, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+    add fsm_w_r, 0, [fdc_cmd_state]
+    jz  0, fsm_w_done
 
-    jz  0, fdc_data_write_done
+    jz  0, fsm_w_done
 
-fdc_data_write_r:
+fsm_w_r:
     # Save R (record, sector number)
     add [rb + value], 0, [fdc_cmd_sector]
 
     # Next state is write N
-    add fdc_data_write_n, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+    add fsm_w_n, 0, [fdc_cmd_state]
+    jz  0, fsm_w_done
 
-fdc_data_write_n:
-    # Save N (number of bytes in sector)
-    # TODO how is this used, do we need to save it?
-    add [rb + value], 0, [fdc_cmd_bytes]
+fsm_w_n:
+    # Number of bytes per sector must be 512, which is N=0x02
+    eq  [rb + value], 0x02, [rb + tmp]
+    jz  [rb + tmp], fsm_w_invalid
 
     # Next state is write EOT (outside of format track command)
-    add fdc_data_write_eot, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+    add fsm_w_eot, 0, [fdc_cmd_state]
+    jz  0, fsm_w_done
 
 ##########
-# EOT, GPL, DTL/STP states
+# EOT and GPL states
 
-fdc_data_write_eot:
+fsm_w_eot:
     # Save EOT (end of track, final sector number on a cylinder)
     # TODO how is this used, do we need to save it?
     add [rb + value], 0, [fdc_cmd_end_of_track]
 
     # Next state is write GPL
-    add fdc_data_write_gpl, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+    add fsm_w_gpl, 0, [fdc_cmd_state]
+    jz  0, fsm_w_done
 
-fdc_data_write_gpl:
+fsm_w_gpl:
     # Save GPL (gap 3 length, spacing between sectors)
     # TODO how is this used, do we need to save it? maybe just verify it is correct for this floppy type?
     add [rb + value], 0, [fdc_cmd_gap_length]
 
     # Next state is write DTL/STP (outside of format track command)
-    add fdc_data_write_dtl_stp, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+    add fsm_w_dtl_stp, 0, [fdc_cmd_state]
+    jz  0, fsm_w_done
 
-fdc_data_write_dtl_stp:
+##########
+# DTL/STP state
+
+fsm_w_dtl_stp:
     # Save DTL or STP, they share the same variable
     # DTL (data length, if N is 0, DTL is the length to read/write to a sector)
     # STP (1=compare contiguous sectors, 2=compare alternate sectors)
@@ -304,358 +340,148 @@ fdc_data_write_dtl_stp:
 
     # Next state is always read ST0
     add 1, 0, [fdc_cmd_result_phase]
-    add fdc_data_read_st0, 0, [fdc_cmd_state]
+    add fsm_r_st0, 0, [fdc_cmd_state]
 
     # Execute the command
-    add fdc_data_write_dtl_stp_table, [fdc_cmd_code], [ip + 2]
+    add fsm_w_dtl_stp_table, [fdc_cmd_code], [ip + 2]
     jz  0, [0]
 
-fdc_data_write_dtl_stp_table:
+fsm_w_dtl_stp_table:
     ds  2, 0                                                # 00000, 00001
-    db  fdc_data_write_exec_read_track                      # 00010: read_track
+    db  fsm_w_dtl_stp_to_exec_read_track                    # 00010: read_track
     ds  2, 0                                                # 00011, 00100: specify, sense_drive_status
-    db  fdc_data_write_exec_write_data                      # 00101: write_data
-    db  fdc_data_write_exec_read_data                       # 00110: read_data
+    db  fsm_w_dtl_stp_to_exec_write_data                    # 00101: write_data
+    db  fsm_w_dtl_stp_to_exec_read_data                     # 00110: read_data
     ds  2, 0                                                # 00111, 01000: recalibrate, sense_interrupt_status
-    db  fdc_data_write_exec_write_deleted_data              # 01001: write_deleted_data
+    db  fsm_w_dtl_stp_to_exec_write_deleted_data            # 01001: write_deleted_data
     ds  2, 0                                                # 01010, 01011: read_id
-    db  fdc_data_write_exec_read_deleted_data               # 01100: read_deleted_data
+    db  fsm_w_dtl_stp_to_exec_read_deleted_data             # 01100: read_deleted_data
     ds  4, 0                                                # 01101-10000: format_track, seek
-    db  fdc_data_write_exec_scan_equal                      # 10001: scan_equal
+    db  fsm_w_dtl_stp_to_exec_scan_equal                    # 10001: scan_equal
     ds  7, 0                                                # 10010-11000
-    db  fdc_data_write_exec_scan_low_or_equal               # 11001: scan_low_or_equal
+    db  fsm_w_dtl_stp_to_exec_scan_low_or_equal             # 11001: scan_low_or_equal
     ds  3, 0                                                # 11010-11100
-    db  fdc_data_write_exec_scan_high_or_equal              # 11101: scan_high_or_equal
+    db  fsm_w_dtl_stp_to_exec_scan_high_or_equal            # 11101: scan_high_or_equal
     ds  2, 0                                                # 11110, 11111
+
+fsm_w_dtl_stp_to_exec_read_track:
+    # Execute read track
+    call fdc_exec_read_track
+    jz  0, fsm_w_done
+
+fsm_w_dtl_stp_to_exec_write_data:
+    # Execute write data
+    call fdc_exec_write_data
+    jz  0, fsm_w_done
+
+fsm_w_dtl_stp_to_exec_read_data:
+    # Execute read data
+    call fdc_exec_read_data
+    jz  0, fsm_w_done
+
+fsm_w_dtl_stp_to_exec_write_deleted_data:
+    # Execute write deleted data
+    call fdc_exec_write_deleted_data
+    jz  0, fsm_w_done
+
+fsm_w_dtl_stp_to_exec_read_deleted_data:
+    # Execute read deleted data
+    call fdc_exec_read_deleted_data
+    jz  0, fsm_w_done
+
+fsm_w_dtl_stp_to_exec_scan_equal:
+    # Execute scan equal
+    call fdc_exec_scan_equal
+    jz  0, fsm_w_done
+
+fsm_w_dtl_stp_to_exec_scan_low_or_equal:
+    # Execute scan low or equal
+    call fdc_exec_scan_low_or_equal
+    jz  0, fsm_w_done
+
+fsm_w_dtl_stp_to_exec_scan_high_or_equal:
+    # Execute scan high or equal
+    call fdc_exec_scan_high_or_equal
+    jz  0, fsm_w_done
 
 ##########
 # Format track states: N, SC, GPL, D
 
-fdc_data_write_format_track_n:
-    # Save N (number of bytes in sector)
-    # TODO how is this used, do we need to save it?
-    add [rb + value], 0, [fdc_cmd_bytes]
+fsm_w_format_track_n:
+    # Number of bytes per sector must be 512, which is N=0x02
+    eq  [rb + value], 0x02, [rb + tmp]
+    jz  [rb + tmp], fsm_w_invalid
 
     # Format track command, next state is write SC
-    add fdc_data_write_format_track_sc, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+    add fsm_w_format_track_sc, 0, [fdc_cmd_state]
+    jz  0, fsm_w_done
 
-fdc_data_write_format_track_sc:
+fsm_w_format_track_sc:
     # Save SC (number of sectors per cylinder)
     add [rb + value], 0, [fdc_cmd_sectors_per_cylinder]
 
     # Next state is write GPL
-    add fdc_data_write_format_track_gpl, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+    add fsm_w_format_track_gpl, 0, [fdc_cmd_state]
+    jz  0, fsm_w_done
 
-fdc_data_write_format_track_gpl:
+fsm_w_format_track_gpl:
     # Save GPL (gap 3 length, spacing between sectors)
     # TODO how is this used, do we need to save it? maybe just verify it is correct for this floppy type?
     add [rb + value], 0, [fdc_cmd_gap_length]
 
     # Format track command, next state is write D + execute format track
-    add fdc_data_write_exec_format_track, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+    add fsm_w_format_track_d, 0, [fdc_cmd_state]
+    jz  0, fsm_w_done
 
-##########
-# Specify state: SRT/HUT
-
-fdc_data_write_srt_hut:
-    # Next state is write HLT ND + execute specify
-    add fdc_data_write_exec_specify, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
-
-##########
-# Command execution
-
-fdc_data_write_exec_read_data:
-    # Execute read data
-    # TODO
-
-    # Read sectors on current track, throw data away until sector number matches R
-    # (reads ID Address Marks and ID fields). Then put the data to bus.
-    # After reading the sector, increment sector number and continue outputting
-    # until DMA controller sends TC (terminal count) then stop outputting data
-    # (looks like in the middle of the sector).
-    # After TC, continue reading sector and throw data away, then check CRC and
-    # finish the read data command.
-
-    # With MT read sector 1 side 0... sector L side 1 (L = last sector on side)
-
-    # If N=0, DTL defines how much of the sector should we send to data bus.
-    # If N>0, DTL is ignored. Still includes reading multiple sectors if no TC.
-
-    # If we don't find R on this track, set ND=1 in SR1 and b7=0,b6=1 in SR0, then end.
-
-    # If CRC error in ID field, DE=1 in SR1. If CRC error in Data Field also DD=1 in SR2.
-    # Also b7=0,b6=1 in SR0, then end.
-
-    # If SK=0 and we read Deleted Data Address Mark, set CM=1 in SR2 then end.
-    # If SK=1 FDC skips the deleted sector and reads next sector, not even check CRC.
-
-    # For CHRN in result phase, see table on page 435 in UPD765.pdf. Based on MT and EOT.
-
-    # Mark interrupt pending
-    add 1, 0, [fdc_interrupt_pending]
-    # TODO raise interrupt here
-    # TODO set up next state
-
-    jz  0, fdc_data_write_done
-
-fdc_data_write_exec_read_deleted_data:
-    # Execute read deleted data
-    # TODO
-
-    # Mark interrupt pending
-    add 1, 0, [fdc_interrupt_pending]
-    # TODO raise interrupt here
-    # TODO set up next state
-
-    jz  0, fdc_data_write_done
-
-fdc_data_write_exec_write_data:
-    # Execute write data
-    # TODO
-
-    # Mark interrupt pending
-    add 1, 0, [fdc_interrupt_pending]
-    # TODO raise interrupt here
-    # TODO set up next state
-
-    jz  0, fdc_data_write_done
-
-fdc_data_write_exec_write_deleted_data:
-    # Execute write deleted data
-    # TODO
-
-    # Mark interrupt pending
-    add 1, 0, [fdc_interrupt_pending]
-    # TODO raise interrupt here
-    # TODO set up next state
-
-    jz  0, fdc_data_write_done
-
-fdc_data_write_exec_read_track:
-    # Execute read track
-    # TODO
-
-    # Mark interrupt pending
-    add 1, 0, [fdc_interrupt_pending]
-    # TODO raise interrupt here
-    # TODO set up next state
-
-    jz  0, fdc_data_write_done
-
-fdc_data_write_exec_read_id:
-    # Execute read id; prepare defaults for ST0
-    mul [fdc_cmd_head], 0b00000100, [fdc_cmd_st0]
-    add [fdc_cmd_unit_selected], [fdc_cmd_st0], [fdc_cmd_st0]
-
-    # Is the unit connected?
-    add fdc_config_connected_units, [fdc_cmd_unit_selected], [ip + 1]
-    jz  [0], fdc_data_write_exec_read_id_no_floppy
-
-    # Is a floppy inserted?
-    add fdc_config_inserted_units, [fdc_cmd_unit_selected], [ip + 1]
-    jz  [0], fdc_data_write_exec_read_id_no_floppy
-
-    # Is the motor running?
-    add fdc_dor_enable_motor_units, [fdc_cmd_unit_selected], [ip + 1]
-    jz  [0], fdc_data_write_exec_read_id_no_floppy
-
-    # Floppy is accessible; respond with ST0 (see above) ST1 ST2 C H R N
-    add 0, 0, [fdc_cmd_st1]
-    add 0, 0, [fdc_cmd_st2]
-
-    # For C H R N we return the head that was requested, current track, some random sector
-    # and 512 as the default number of bytes per sector
-    add fdc_present_cylinder_units, [fdc_cmd_unit_selected], [ip + 1]
-    add [0], 0, [fdc_cmd_cylinder]
-    add fdc_present_sector_units, [fdc_cmd_unit_selected], [ip + 1]
-    add [0], 0, [fdc_cmd_sector]
-    add 512, 0, [fdc_cmd_bytes]
-
-    # Increase the reported sector so we report a different one each time
-    add [fdc_cmd_sector], 1, [fdc_cmd_sector]
-
-    # TODO track 0 has a different number of sectors
-    add fdc_medium_sectors_units, [fdc_cmd_unit_selected], [ip + 1]
-    lt  [0], [fdc_cmd_sector], [rb + tmp]
-    jz  [rb + tmp], fdc_data_write_exec_read_id_after_sector
-    add 0, 0, [fdc_cmd_sector]
-
-fdc_data_write_exec_read_id_after_sector:
-    add fdc_present_sector_units, [fdc_cmd_unit_selected], [ip + 3]
-    add [fdc_cmd_sector], 0, [0]
-
-    jz  0, fdc_data_write_exec_read_id_terminated
-
-fdc_data_write_exec_read_id_no_floppy:
-    # Floppy is not accessible, set up ST0 (not ready, abnormal termination),
-    # ST1 (missing address mark, no data), ST2
-    add 0b01001000, [fdc_cmd_st0], [fdc_cmd_st0]
-    add 0b00000101, 0, [fdc_cmd_st1]
-    add 0, 0, [fdc_cmd_st2]
-
-    # Return requested head, zero out track and sector, use default bytes
-    add 0, 0, [fdc_cmd_cylinder]
-    add 0, 0, [fdc_cmd_sector]
-    add 512, 0, [fdc_cmd_bytes]
-
-fdc_data_write_exec_read_id_terminated:
-    # Next state is read ST0
-    add 1, 0, [fdc_cmd_result_phase]
-    add fdc_data_read_st0, 0, [fdc_cmd_state]
-
-    # Raise INT 0e = IRQ6
-    add 1, 0, [fdc_interrupt_pending]
-    add 0x0e, 0, [rb - 1]
-    arb -1
-    call interrupt
-
-    jz  0, fdc_data_write_done
-
-fdc_data_write_exec_format_track:
+fsm_w_format_track_d:
     # Save D (data pattern to be written to a sector)
     add [rb + value], 0, [fdc_cmd_data_pattern]
 
+    # Next state is read ST0
+    add 1, 0, [fdc_cmd_result_phase]
+    add fsm_r_st0, 0, [fdc_cmd_state]
+
     # Execute format track
-    # TODO
+    call fdc_exec_format_track
+    jz  0, fsm_w_done
 
-    # Mark interrupt pending
-    add 1, 0, [fdc_interrupt_pending]
-    # TODO raise interrupt here
+##########
+# Specify states: SRT/HUT, HLT/ND
 
-    # Next state is read ST0
-    add 1, 0, [fdc_cmd_result_phase]
-    add fdc_data_read_st0, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+fsm_w_srt_hut:
+    # Next state is write HLT ND
+    add fsm_w_hlt_nd, 0, [fdc_cmd_state]
+    jz  0, fsm_w_done
 
-fdc_data_write_exec_scan_equal:
-    # Execute scan equal
-    # TODO
+fsm_w_hlt_nd:
+    # Save the HLT ND byte
+    add [rb + value], 0, [fdc_cmd_hlt_nd]
 
-    # Mark interrupt pending
-    add 1, 0, [fdc_interrupt_pending]
-    # TODO raise interrupt here
-    # TODO set up next state
-
-    jz  0, fdc_data_write_done
-
-fdc_data_write_exec_scan_low_or_equal:
-    # Execute scan low or equal
-    # TODO
-
-    # Mark interrupt pending
-    add 1, 0, [fdc_interrupt_pending]
-    # TODO raise interrupt here
-    # TODO set up next state
-
-    jz  0, fdc_data_write_done
-
-fdc_data_write_exec_scan_high_or_equal:
-    # Execute scan high or equal
-    # TODO
-
-    # Mark interrupt pending
-    add 1, 0, [fdc_interrupt_pending]
-    # TODO raise interrupt here
-    # TODO set up next state
-
-    jz  0, fdc_data_write_done
-
-fdc_data_write_exec_recalibrate:
-    # Execute recalibrate
-    mul [fdc_cmd_head], 0b00000100, [fdc_cmd_st0]
-    add [fdc_cmd_unit_selected], [fdc_cmd_st0], [fdc_cmd_st0]
-
-    # Is a floppy inserted?
-    add fdc_config_inserted_units, [fdc_cmd_unit_selected], [ip + 1]
-    jnz [0], fdc_data_write_exec_recalibrate_have_floppy
-
-    # Floppy is not inserted, set up ST0 (not ready, seek end, abnormal termination)
-    add 0b01101000, [fdc_cmd_st0], [fdc_cmd_st0]
-    jz  0, fdc_data_write_exec_recalibrate_terminated
-
-fdc_data_write_exec_recalibrate_have_floppy:
-    # Floppy is inserted, retract the head to track 0
-    add fdc_present_cylinder_units, [fdc_cmd_unit_selected], [ip + 3]
-    add 0, 0, [0]
-
-    # TODO set floppy busy with seek in MSR, it is cleared by sense interrupt
-    # TODO clear floppy busy in MSR when sense interrupt
-
-    # Set up STO to report a successful seek (seek end)
-    add 0b00010000, [fdc_cmd_st0], [fdc_cmd_st0]
-
-fdc_data_write_exec_recalibrate_terminated:
     # Next state is idle
     add 0, 0, [fdc_cmd_state]
 
-    # Raise INT 0e = IRQ6, since the recalibration is finished
-    add 1, 0, [fdc_interrupt_pending]
-    add 0x0e, 0, [rb - 1]
-    arb -1
-    call interrupt
-
-    jz  0, fdc_data_write_done
-
-fdc_data_write_exec_sense_interrupt_status:
-    # Execute sense interrupt status; invalid command if interrupt is not pending
-    jz  [fdc_interrupt_pending], fdc_data_write_invalid
-
-    # ST0 bits 0, 5, 6, 7 as well as PCN are set up by a previous seek or recalibrate command
-    # If another command was executed, it also should set ST0 accordingly
-
-    # Next state is read ST0
-    add 1, 0, [fdc_cmd_result_phase]
-    add fdc_data_read_st0, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
-
-fdc_data_write_exec_specify:
     # Execute specify
-    # We ignore all the timings, but verify that ND (bit 0) is zero for DMA mode
-    add bits, [rb + value], [ip + 1]
-    jnz [0], fdc_data_write_exec_specify_non_dma
+    call fdc_exec_specify
+    jz  0, fsm_w_done
 
-    # Next state is idle
-    add 0, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+##########
+# Seek state: NCN
 
-fdc_data_write_exec_specify_non_dma:
-    add fdc_error_non_dma, 0, [rb - 1]
-    arb -1
-    call report_error
-
-fdc_data_write_exec_sense_drive_status:
-    # Execute sense drive status
-    # TODO
-
-    # Next state is read ST3
-    add 1, 0, [fdc_cmd_result_phase]
-    add fdc_data_read_st3, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
-
-fdc_data_write_exec_seek:
+fsm_w_ncn:
     # Save NCN (next cylinder number)
     add [rb + value], 0, [fdc_cmd_cylinder]
 
     # Execute seek
-    # TODO
-
-    # TODO handle units that are not present/no floppy, see docs what to do then
-    # TODO during seek compare PCN with fdc_cmd_cylinder which is the target cylinder
-
-    # TODO interrupt
-    # TODO set floppy busy with seek in MSR, it is cleared by sense interrupt
-    # TODO clear floppy busy in MSR when sense interrupt
-    # TODO during command phase of seek fdc is in busy state (in MSR), during execution it's not
+    call fdc_exec_seek
 
     # Next state is idle
     add 0, 0, [fdc_cmd_state]
-    jz  0, fdc_data_write_done
+    jz  0, fsm_w_done
 
-fdc_data_write_invalid:
+##########
+# Invalid state
+
+fsm_w_invalid:
     # Whatever the command code was, set it to zero
     add 0, 0, [fdc_cmd_code]
 
@@ -664,9 +490,9 @@ fdc_data_write_invalid:
 
     # Next state is read ST0
     add 1, 0, [fdc_cmd_result_phase]
-    add fdc_data_read_st0, 0, [fdc_cmd_state]
+    add fsm_r_st0, 0, [fdc_cmd_state]
 
-fdc_data_write_done:
+fsm_w_done:
     arb 2
     ret 2
 .ENDFRAME
@@ -681,10 +507,10 @@ fdc_data_read:
     out '_'
 
     # Is the FDC processing a command?
-    jz  [fdc_cmd_state], fdc_data_read_invalid
+    jz  [fdc_cmd_state], fsm_r_invalid
 
     # Yes, is this the result phase?
-    jz  [fdc_cmd_result_phase], fdc_data_read_invalid
+    jz  [fdc_cmd_result_phase], fsm_r_invalid
 
     # Any interrupt is cleared
     add 0, 0, [fdc_interrupt_pending]
@@ -695,91 +521,91 @@ fdc_data_read:
 ##########
 # ST0, ST1, ST2, ST3 states
 
-fdc_data_read_st0:
+fsm_r_st0:
     # Is this the invalid command?
-    jz  [fdc_cmd_code], fdc_data_read_invalid
+    jz  [fdc_cmd_code], fsm_r_invalid
 
     # Read ST0
     add [fdc_cmd_st0], 0, [rb + value]
 
     # Is this the sense interrupt status command?
     eq  [fdc_cmd_code], 0b01000, [rb + tmp]
-    jnz [rb + tmp], fdc_data_read_st0_sense_interrupt_status
+    jnz [rb + tmp], fsm_r_st0_sense_interrupt_status
 
     # No, default next state is read ST1
-    add fdc_data_read_st1, 0, [fdc_cmd_state]
-    jz  0, fdc_data_read_done
+    add fsm_r_st1, 0, [fdc_cmd_state]
+    jz  0, fsm_r_done
 
-fdc_data_read_st0_sense_interrupt_status:
+fsm_r_st0_sense_interrupt_status:
     # Sense interrupt status command, next state is read PCN
-    add fdc_data_read_pcn, 0, [fdc_cmd_state]
-    jz  0, fdc_data_read_done
+    add fsm_r_pcn, 0, [fdc_cmd_state]
+    jz  0, fsm_r_done
 
-fdc_data_read_st1:
+fsm_r_st1:
     # Read ST1
     add [fdc_cmd_st1], 0, [rb + value]
 
     # Next state is read ST2
-    add fdc_data_read_st2, 0, [fdc_cmd_state]
-    jz  0, fdc_data_read_done
+    add fsm_r_st2, 0, [fdc_cmd_state]
+    jz  0, fsm_r_done
 
-fdc_data_read_st2:
+fsm_r_st2:
     # Read ST2
     add [fdc_cmd_st2], 0, [rb + value]
 
     # Next state is read C
-    add fdc_data_read_c, 0, [fdc_cmd_state]
-    jz  0, fdc_data_read_done
+    add fsm_r_c, 0, [fdc_cmd_state]
+    jz  0, fsm_r_done
 
-fdc_data_read_st3:
+fsm_r_st3:
     # Read ST3
     add [fdc_cmd_st3], 0, [rb + value]
 
     # Next state is idle
     add 0, 0, [fdc_cmd_result_phase]
     add 0, 0, [fdc_cmd_state]
-    jz  0, fdc_data_read_done
+    jz  0, fsm_r_done
 
 ##########
 # C, H, R, N states
 
-fdc_data_read_c:
+fsm_r_c:
     # Read C (cylinder)
     add [fdc_cmd_cylinder], 0, [rb + value]
 
     # Next state is read H
-    add fdc_data_read_h, 0, [fdc_cmd_state]
-    jz  0, fdc_data_read_done
+    add fsm_r_h, 0, [fdc_cmd_state]
+    jz  0, fsm_r_done
 
-fdc_data_read_h:
+fsm_r_h:
     # Read H (head)
     add [fdc_cmd_head], 0, [rb + value]
 
     # Next state is read R
-    add fdc_data_read_r, 0, [fdc_cmd_state]
-    jz  0, fdc_data_read_done
+    add fsm_r_r, 0, [fdc_cmd_state]
+    jz  0, fsm_r_done
 
-fdc_data_read_r:
+fsm_r_r:
     # Read R (record, sector number)
     add [fdc_cmd_sector], 0, [rb + value]
 
     # Next state is read N
-    add fdc_data_read_n, 0, [fdc_cmd_state]
-    jz  0, fdc_data_read_done
+    add fsm_r_n, 0, [fdc_cmd_state]
+    jz  0, fsm_r_done
 
-fdc_data_read_n:
-    # Read N (number of bytes)
-    add [fdc_cmd_bytes], 0, [rb + value]
+fsm_r_n:
+    # Read N (number of bytes per sector), fixed to 512, which is N=0x02
+    add 0x02, 0, [rb + value]
 
     # Next state is idle
     add 0, 0, [fdc_cmd_result_phase]
     add 0, 0, [fdc_cmd_state]
-    jz  0, fdc_data_read_done
+    jz  0, fsm_r_done
 
 ##########
 # Misc other states
 
-fdc_data_read_pcn:
+fsm_r_pcn:
     # Read PCN (present cylinder number, position of the head)
     # Determine which unit was used by last command from bit 0 of ST0 (US0)
     mul [fdc_cmd_st0], 8, [rb + tmp]
@@ -790,9 +616,9 @@ fdc_data_read_pcn:
     # Next state is idle
     add 0, 0, [fdc_cmd_result_phase]
     add 0, 0, [fdc_cmd_state]
-    jz  0, fdc_data_read_done
+    jz  0, fsm_r_done
 
-fdc_data_read_invalid:
+fsm_r_invalid:
     # Invalid command, either unexpected read or unexpected write
     add 0, 0, [fdc_cmd_code]
 
@@ -804,7 +630,7 @@ fdc_data_read_invalid:
     add 0, 0, [fdc_cmd_result_phase]
     add 0, 0, [fdc_cmd_state]
 
-fdc_data_read_done:
+fsm_r_done:
     # TODO remove
     add [rb + value], 0, [rb - 1]
     add 2, 0, [rb - 2]
@@ -841,14 +667,15 @@ fdc_cmd_head:
     db  0
 fdc_cmd_sector:
     db  0
-fdc_cmd_bytes:
-    db  0
 
 fdc_cmd_end_of_track:
     db  0
 fdc_cmd_gap_length:
     db  0
 fdc_cmd_data_length_or_step:
+    db  0
+
+fdc_cmd_hlt_nd:
     db  0
 
 fdc_cmd_sectors_per_cylinder:

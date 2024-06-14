@@ -37,8 +37,6 @@
 # TODO relative seek: set the MT bit to 1, to seek up set MFM bit, to seek down clear MFM bit
 
 # TODO read track does not support multitrack, it just reads one side
-# TODO bytes per sector: 02 = 512 bytes per sector
-
 # TODO after the execution phase, interrupt will occur
 
 ##########

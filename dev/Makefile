@@ -13,8 +13,8 @@ build: build-prep $(BINDIR)/libdev.a
 build-prep:
 	mkdir -p "$(BINDIR)" "$(OBJDIR)"
 
-DEV_OBJS = dma_8237a.o fdc_config.o fdc_control.o fdc_drives.o fdc_fsm.o fdc_init.o \
-	pit_8253.o pit_8253_ch0.o pit_8253_ch2.o ppi_8255a.o
+DEV_OBJS = dma_8237a.o fdc_commands.o fdc_config.o fdc_control.o fdc_drives.o fdc_fsm.o \
+	fdc_init.o pit_8253.o pit_8253_ch0.o pit_8253_ch2.o ppi_8255a.o
 
 $(BINDIR)/libdev.a: $(DEV_OBJS:%.o=$(OBJDIR)/%.o)
 	$(run-intcode-ar)
