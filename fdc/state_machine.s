@@ -5,8 +5,6 @@
 .EXPORT fdc_cmd_result_phase
 
 .EXPORT fdc_cmd_multi_track
-.EXPORT fdc_cmd_mfm
-.EXPORT fdc_cmd_skip_deleted
 .EXPORT fdc_cmd_unit_selected
 
 .EXPORT fdc_cmd_cylinder
@@ -94,15 +92,13 @@ fsm_w_idle:
     mul [rb + value], 8, [rb + tmp]
     add bits, [rb + tmp], [rb + value_bits]
 
-    # Save MT, MF, SK
+    # Save MT, ignore SK since there are no deleted records
     add [rb + value_bits], 7, [ip + 1]
     add [0], 0, [fdc_cmd_multi_track]
 
+    # Require MF=1 since we don't support 8" floppies
     add [rb + value_bits], 6, [ip + 1]
-    add [0], 0, [fdc_cmd_mfm]
-
-    add [rb + value_bits], 5, [ip + 1]
-    add [0], 0, [fdc_cmd_skip_deleted]
+    jz  [0], fsm_w_invalid
 
     # Read bottom 5 bits as the command code
     add [rb + value_bits], 4, [ip + 1]
@@ -653,10 +649,6 @@ fdc_cmd_code:
     db  0
 
 fdc_cmd_multi_track:
-    db  0
-fdc_cmd_mfm:
-    db  0
-fdc_cmd_skip_deleted:
     db  0
 fdc_cmd_unit_selected:
     db  0

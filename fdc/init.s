@@ -28,20 +28,13 @@
 
 # TODO fdc should not work while fdc_dor_reset == 0
 # TODO fdc should not read/write data or seek etc while the motor is off fdc_dor_enable_motor_unit0/1 and if it is not selected in dor
-# TODO fdc should complain about fdc_dor_enable_dma 
 # TODO set equipment check bit in ST0 if FDD is not connected?
 
 # TODO The bottom 2 bits of DSR match CCR, and setting one of them sets the other.
-# TODO Require MF=1, don't support read/write deleted data, ignore SK since there is never deleted data, only support 1.44" floppies
-# TODO Read ID probably is simple, since there are never bad sectors
 # TODO relative seek: set the MT bit to 1, to seek up set MFM bit, to seek down clear MFM bit
-
 # TODO read track does not support multitrack, it just reads one side
-# TODO after the execution phase, interrupt will occur
 
 # TODO command support for multitrack operations
-# TODO commands should validate that FM/MFM encoding matches the disk type
-# TODO command support for skip deleted data
 
 ##########
 fdc_ports:

@@ -31,8 +31,6 @@
 
 # From fdc_fsm.s
 .IMPORT fdc_cmd_multi_track
-.IMPORT fdc_cmd_mfm
-.IMPORT fdc_cmd_skip_deleted
 .IMPORT fdc_cmd_unit_selected
 
 .IMPORT fdc_cmd_cylinder
@@ -98,22 +96,12 @@ fdc_exec_read_data:
 ##########
 fdc_exec_read_deleted_data:
 .FRAME
-    # TODO implement read deleted data
-
-#    # Raise INT 0e = IRQ6
-#    add 1, 0, [fdc_interrupt_pending]
-#    add 0x0e, 0, [rb - 1]
-#    arb -1
-#    call interrupt
-#
-#    ret 0
-
     add fdc_exec_read_deleted_data_error, 0, [rb - 1]
     arb -1
     call report_error
 
 fdc_exec_read_deleted_data_error:
-    db  "fdc: read deleted data command ", "is not implemented", 0
+    db  "fdc: read deleted data command ", "is not supported", 0
 .ENDFRAME
 
 ##########
@@ -140,22 +128,12 @@ fdc_exec_write_data_error:
 ##########
 fdc_exec_write_deleted_data:
 .FRAME
-    # TODO implement write deleted data
-
-#    # Raise INT 0e = IRQ6
-#    add 1, 0, [fdc_interrupt_pending]
-#    add 0x0e, 0, [rb - 1]
-#    arb -1
-#    call interrupt
-#
-#    ret 0
-
     add fdc_exec_write_deleted_data_error, 0, [rb - 1]
     arb -1
     call report_error
 
 fdc_exec_write_deleted_data_error:
-    db  "fdc: write deleted data command ","is not implemented", 0
+    db  "fdc: write deleted data command ","is not supported", 0
 .ENDFRAME
 
 ##########
