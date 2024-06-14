@@ -300,7 +300,7 @@ fsm_w_r:
     jz  0, fsm_w_done
 
 fsm_w_n:
-    # Number of bytes per sector must be 512, which is N=0x02
+    # Number of bytes per sector must be 512 (N=0x02)
     eq  [rb + value], 0x02, [rb + tmp]
     jz  [rb + tmp], fsm_w_invalid
 
@@ -408,7 +408,7 @@ fsm_w_dtl_stp_to_exec_scan_high_or_equal:
 # Format track states: N, SC, GPL, D
 
 fsm_w_format_track_n:
-    # Number of bytes per sector must be 512, which is N=0x02
+    # Number of bytes per sector must be 512 (N=0x02)
     eq  [rb + value], 0x02, [rb + tmp]
     jz  [rb + tmp], fsm_w_invalid
 
@@ -429,7 +429,7 @@ fsm_w_format_track_gpl:
     # TODO how is this used, do we need to save it? maybe just verify it is correct for this floppy type?
     add [rb + value], 0, [fdc_cmd_gap_length]
 
-    # Format track command, next state is write D + execute format track
+    # Format track command, next state is write D
     add fsm_w_format_track_d, 0, [fdc_cmd_state]
     jz  0, fsm_w_done
 
@@ -594,7 +594,7 @@ fsm_r_r:
     jz  0, fsm_r_done
 
 fsm_r_n:
-    # Read N (number of bytes per sector), fixed to 512, which is N=0x02
+    # Read N (number of bytes per sector), fixed to 512 (N=0x02)
     add 0x02, 0, [rb + value]
 
     # Next state is idle

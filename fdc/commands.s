@@ -58,14 +58,10 @@
 # From util/bits.s
 .IMPORT bits
 
-# From util/nibbles.s
-.IMPORT nibbles
-
 ##########
 fdc_exec_read_data:
 .FRAME
-    # Execute read data
-    # TODO
+    # TODO implement read data
 
     # Read sectors on current track, throw data away until sector number matches R
     # (reads ID Address Marks and ID fields). Then put the data to bus.
@@ -90,9 +86,11 @@ fdc_exec_read_data:
 
     # For CHRN in result phase, see table on page 435 in UPD765.pdf. Based on MT and EOT.
 
-    # Mark interrupt pending
-    add 1, 0, [fdc_interrupt_pending]
-    # TODO raise interrupt here
+#    # Raise INT 0e = IRQ6
+#    add 1, 0, [fdc_interrupt_pending]
+#    add 0x0e, 0, [rb - 1]
+#    arb -1
+#    call interrupt
 
     ret 0
 .ENDFRAME
@@ -100,61 +98,93 @@ fdc_exec_read_data:
 ##########
 fdc_exec_read_deleted_data:
 .FRAME
-    # Execute read deleted data
-    # TODO
+    # TODO implement read deleted data
 
-    # Mark interrupt pending
-    add 1, 0, [fdc_interrupt_pending]
-    # TODO raise interrupt here
+#    # Raise INT 0e = IRQ6
+#    add 1, 0, [fdc_interrupt_pending]
+#    add 0x0e, 0, [rb - 1]
+#    arb -1
+#    call interrupt
+#
+#    ret 0
 
-    ret 0
+    add fdc_exec_read_deleted_data_error, 0, [rb - 1]
+    arb -1
+    call report_error
+
+fdc_exec_read_deleted_data_error:
+    db  "fdc: read deleted data command ", "is not implemented", 0
 .ENDFRAME
 
 ##########
 fdc_exec_write_data:
 .FRAME
-    # Execute write data
-    # TODO
+    # TODO implement write data
 
-    # Mark interrupt pending
-    add 1, 0, [fdc_interrupt_pending]
-    # TODO raise interrupt here
+#    # Raise INT 0e = IRQ6
+#    add 1, 0, [fdc_interrupt_pending]
+#    add 0x0e, 0, [rb - 1]
+#    arb -1
+#    call interrupt
+#
+#    ret 0
 
-    ret 0
+    add fdc_exec_write_data_error, 0, [rb - 1]
+    arb -1
+    call report_error
+
+fdc_exec_write_data_error:
+    db  "fdc: write data command ","is not implemented", 0
 .ENDFRAME
 
 ##########
 fdc_exec_write_deleted_data:
 .FRAME
-    # Execute write deleted data
-    # TODO
+    # TODO implement write deleted data
 
-    # Mark interrupt pending
-    add 1, 0, [fdc_interrupt_pending]
-    # TODO raise interrupt here
+#    # Raise INT 0e = IRQ6
+#    add 1, 0, [fdc_interrupt_pending]
+#    add 0x0e, 0, [rb - 1]
+#    arb -1
+#    call interrupt
+#
+#    ret 0
 
-    ret 0
+    add fdc_exec_write_deleted_data_error, 0, [rb - 1]
+    arb -1
+    call report_error
+
+fdc_exec_write_deleted_data_error:
+    db  "fdc: write deleted data command ","is not implemented", 0
 .ENDFRAME
 
 ##########
 fdc_exec_read_track:
 .FRAME
-    # Execute read track
-    # TODO
+    # TODO implement read track
 
-    # Mark interrupt pending
-    add 1, 0, [fdc_interrupt_pending]
-    # TODO raise interrupt here
+#    # Raise INT 0e = IRQ6
+#    add 1, 0, [fdc_interrupt_pending]
+#    add 0x0e, 0, [rb - 1]
+#    arb -1
+#    call interrupt
+#
+#    ret 0
 
-    ret 0
+    add fdc_exec_read_track_error, 0, [rb - 1]
+    arb -1
+    call report_error
+
+fdc_exec_read_track_error:
+    db  "fdc: read track command ","is not implemented", 0
 .ENDFRAME
 
 ##########
 fdc_exec_read_id:
-.FRAME tmp
-    arb -1
+.FRAME tmp, sector_count
+    arb -2
 
-    # Execute read id; prepare defaults for ST0
+    # Prepare base value for ST0
     mul [fdc_cmd_head], 0b00000100, [fdc_cmd_st0]
     add [fdc_cmd_unit_selected], [fdc_cmd_st0], [fdc_cmd_st0]
 
@@ -174,22 +204,30 @@ fdc_exec_read_id:
     add 0, 0, [fdc_cmd_st1]
     add 0, 0, [fdc_cmd_st2]
 
-    # For C H R N we return the head that was requested, current track, some random sector
+    # For C H R N keep the head that was requested, report current cylinder
     add fdc_present_cylinder_units, [fdc_cmd_unit_selected], [ip + 1]
     add [0], 0, [fdc_cmd_cylinder]
+
+    # Report a different sector than what we reported last time
     add fdc_present_sector_units, [fdc_cmd_unit_selected], [ip + 1]
-    add [0], 0, [fdc_cmd_sector]
+    add [0], 1, [fdc_cmd_sector]
 
-    # Increase the reported sector so we report a different one each time
-    add [fdc_cmd_sector], 1, [fdc_cmd_sector]
+    # How many total sectors are on this cylinder?
+    # Cylinder 0 has 26 sectors, other cylinders depend on media type
+    add 26, 0, [rb + sector_count]
+    jz  [fdc_cmd_cylinder], fdc_exec_read_id_after_sector_count
 
-    # TODO track 0 has a different number of sectors
     add fdc_medium_sectors_units, [fdc_cmd_unit_selected], [ip + 1]
-    lt  [0], [fdc_cmd_sector], [rb + tmp]
-    jz  [rb + tmp], fdc_exec_read_id_after_sector
+    add [0], 0, [rb + sector_count]
+
+fdc_exec_read_id_after_sector_count:
+    # Wrap around reported sector to 0 if we overflow
+    eq  [fdc_cmd_sector], [rb + sector_count], [rb + tmp]
+    jz  [rb + tmp], fdc_exec_read_id_after_sector_wraparound
     add 0, 0, [fdc_cmd_sector]
 
-fdc_exec_read_id_after_sector:
+fdc_exec_read_id_after_sector_wraparound:
+    # Save new present sector
     add fdc_present_sector_units, [fdc_cmd_unit_selected], [ip + 3]
     add [fdc_cmd_sector], 0, [0]
 
@@ -202,7 +240,7 @@ fdc_exec_read_id_no_floppy:
     add 0b00000101, 0, [fdc_cmd_st1]
     add 0, 0, [fdc_cmd_st2]
 
-    # Return requested head, zero out track and sector
+    # Return requested head, zero out cylinder and sector
     add 0, 0, [fdc_cmd_cylinder]
     add 0, 0, [fdc_cmd_sector]
 
@@ -213,79 +251,114 @@ fdc_exec_read_id_terminated:
     arb -1
     call interrupt
 
-    arb 1
+    arb 2
     ret 0
 .ENDFRAME
 
 ##########
 fdc_exec_format_track:
 .FRAME
-    # Execute format track
-    # TODO
+    # TODO implement format track
 
-    # Mark interrupt pending
-    add 1, 0, [fdc_interrupt_pending]
-    # TODO raise interrupt here
+#    # Raise INT 0e = IRQ6
+#    add 1, 0, [fdc_interrupt_pending]
+#    add 0x0e, 0, [rb - 1]
+#    arb -1
+#    call interrupt
+#
+#    ret 0
 
-    ret 0
+    add fdc_exec_format_track_error, 0, [rb - 1]
+    arb -1
+    call report_error
+
+fdc_exec_format_track_error:
+    db  "fdc: format track command ","is not implemented", 0
 .ENDFRAME
 
 ##########
 fdc_exec_scan_equal:
 .FRAME
-    # Execute scan equal
-    # TODO
+    # TODO implement scan equal
 
-    # Mark interrupt pending
-    add 1, 0, [fdc_interrupt_pending]
-    # TODO raise interrupt here
+#    # Raise INT 0e = IRQ6
+#    add 1, 0, [fdc_interrupt_pending]
+#    add 0x0e, 0, [rb - 1]
+#    arb -1
+#    call interrupt
+#
+#    ret 0
 
-    ret 0
+    add fdc_exec_scan_equal_error, 0, [rb - 1]
+    arb -1
+    call report_error
+
+fdc_exec_scan_equal_error:
+    db  "fdc: scan equal command ","is not implemented", 0
 .ENDFRAME
 
 ##########
 fdc_exec_scan_low_or_equal:
 .FRAME
-    # Execute scan low or equal
-    # TODO
+    # TODO implement scan low or equal
 
-    # Mark interrupt pending
-    add 1, 0, [fdc_interrupt_pending]
-    # TODO raise interrupt here
+#    # Raise INT 0e = IRQ6
+#    add 1, 0, [fdc_interrupt_pending]
+#    add 0x0e, 0, [rb - 1]
+#    arb -1
+#    call interrupt
+#
+#    ret 0
 
-    ret 0
+    add fdc_exec_scan_low_or_equal_error, 0, [rb - 1]
+    arb -1
+    call report_error
+
+fdc_exec_scan_low_or_equal_error:
+    db  "fdc: scan low or equal command ","is not implemented", 0
 .ENDFRAME
 
 ##########
 fdc_exec_scan_high_or_equal:
 .FRAME
-    # Execute scan high or equal
-    # TODO
+    # TODO implement scan high or equal
 
-    # Mark interrupt pending
-    add 1, 0, [fdc_interrupt_pending]
-    # TODO raise interrupt here
+#    # Raise INT 0e = IRQ6
+#    add 1, 0, [fdc_interrupt_pending]
+#    add 0x0e, 0, [rb - 1]
+#    arb -1
+#    call interrupt
+#
+#    ret 0
 
-    ret 0
+    add fdc_exec_scan_high_or_equal_error, 0, [rb - 1]
+    arb -1
+    call report_error
+
+fdc_exec_scan_high_or_equal_error:
+    db  "fdc: scan high or equal command ","is not implemented", 0
 .ENDFRAME
 
 ##########
 fdc_exec_recalibrate:
 .FRAME
-    # Execute recalibrate
+    # Prepare base value for ST0
     mul [fdc_cmd_head], 0b00000100, [fdc_cmd_st0]
     add [fdc_cmd_unit_selected], [fdc_cmd_st0], [fdc_cmd_st0]
 
+    # Is the unit connected?
+    add fdc_config_connected_units, [fdc_cmd_unit_selected], [ip + 1]
+    jz  [0], fdc_exec_recalibrate_no_floppy
+
     # Is a floppy inserted?
     add fdc_config_inserted_units, [fdc_cmd_unit_selected], [ip + 1]
-    jnz [0], fdc_exec_recalibrate_have_floppy
+    jz  [0], fdc_exec_recalibrate_no_floppy
 
-    # Floppy is not inserted, set up ST0 (not ready, seek end, abnormal termination)
-    add 0b01101000, [fdc_cmd_st0], [fdc_cmd_st0]
-    jz  0, fdc_exec_recalibrate_terminated
+    # Is the motor running?
+    add fdc_dor_enable_motor_units, [fdc_cmd_unit_selected], [ip + 1]
+    jz  [0], fdc_exec_recalibrate_no_floppy
 
-fdc_exec_recalibrate_have_floppy:
-    # Floppy is inserted, retract the head to track 0
+    # Floppy is accessible, retract the head to cylinder 0
     add fdc_present_cylinder_units, [fdc_cmd_unit_selected], [ip + 3]
     add 0, 0, [0]
 
@@ -294,6 +367,12 @@ fdc_exec_recalibrate_have_floppy:
 
     # Set up STO to report a successful seek (seek end)
     add 0b00010000, [fdc_cmd_st0], [fdc_cmd_st0]
+
+    jz  0, fdc_exec_recalibrate_terminated
+
+fdc_exec_recalibrate_no_floppy:
+    # Floppy is not inserted, set up ST0 (not ready, seek end, abnormal termination)
+    add 0b01101000, [fdc_cmd_st0], [fdc_cmd_st0]
 
 fdc_exec_recalibrate_terminated:
     # Raise INT 0e = IRQ6
@@ -323,27 +402,42 @@ fdc_exec_specify_non_dma:
 ##########
 fdc_exec_sense_drive_status:
 .FRAME
-    # Execute sense drive status
-    # TODO
+    # TODO implement sense drive status
+    #ret 0
 
-    ret 0
+    add fdc_exec_sense_drive_status_error, 0, [rb - 1]
+    arb -1
+    call report_error
+
+fdc_exec_sense_drive_status_error:
+    db  "fdc: sense drive status command ","is not implemented", 0
 .ENDFRAME
 
 ##########
 fdc_exec_seek:
 .FRAME
-    # Execute seek
-    # TODO
+    # TODO implement seek
 
     # TODO handle units that are not present/no floppy, see docs what to do then
     # TODO during seek compare PCN with fdc_cmd_cylinder which is the target cylinder
-
-    # TODO interrupt
     # TODO set floppy busy with seek in MSR, it is cleared by sense interrupt
     # TODO clear floppy busy in MSR when sense interrupt
     # TODO during command phase of seek fdc is in busy state (in MSR), during execution it's not
 
-    ret 0
+#    # Raise INT 0e = IRQ6
+#    add 1, 0, [fdc_interrupt_pending]
+#    add 0x0e, 0, [rb - 1]
+#    arb -1
+#    call interrupt
+#
+#    ret 0
+
+    add fdc_exec_seek_error, 0, [rb - 1]
+    arb -1
+    call report_error
+
+fdc_exec_seek_error:
+    db  "fdc: seek command ","is not implemented", 0
 .ENDFRAME
 
 .EOF
