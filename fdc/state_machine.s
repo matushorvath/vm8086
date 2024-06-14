@@ -96,13 +96,13 @@ fsm_w_idle:
 
     # Save MT, MF, SK
     add [rb + value_bits], 7, [ip + 1]
-    add [0], 0, [fdc_cmd_multi_track] # TODO execute multitrack operation
+    add [0], 0, [fdc_cmd_multi_track]
 
     add [rb + value_bits], 6, [ip + 1]
-    add [0], 0, [fdc_cmd_mfm] # TODO validate that FM/MFM encoding matches the disk type
+    add [0], 0, [fdc_cmd_mfm]
 
     add [rb + value_bits], 5, [ip + 1]
-    add [0], 0, [fdc_cmd_skip_deleted] # TODO execute support for skip deleted data
+    add [0], 0, [fdc_cmd_skip_deleted]
 
     # Read bottom 5 bits as the command code
     add [rb + value_bits], 4, [ip + 1]

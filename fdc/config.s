@@ -18,7 +18,7 @@ fdc_config_connected_unit3:
 # What type of floppy is inserted?
 fdc_config_inserted_units:
 fdc_config_inserted_unit0:
-    db  25                              # 25 = 3.5" 1.44MB; TODO make this configurable
+    db  25                              # 25 = 3.5" 1.44MB
 fdc_config_inserted_unit1:
     db  0
 fdc_config_inserted_unit2:

@@ -39,6 +39,10 @@
 # TODO read track does not support multitrack, it just reads one side
 # TODO after the execution phase, interrupt will occur
 
+# TODO command support for multitrack operations
+# TODO commands should validate that FM/MFM encoding matches the disk type
+# TODO command support for skip deleted data
+
 ##########
 fdc_ports:
     db  0xf2, 0x03, 0, fdc_dor_write                        # Digital Output Register
