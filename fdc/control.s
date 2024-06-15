@@ -31,15 +31,15 @@ fdc_dor_write:
 .FRAME addr, value; value_bits, tmp
     arb -2
 
-    out 'A' # TODO remove
-    out 'w'
-    out '_'
-    add [rb + value], 0, [rb - 1]
-    add 2, 0, [rb - 2]
-    add 8, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-    out ' '
+#    out 'A' # TODO fdcm remove
+#    out 'w'
+#    out '_'
+#    add [rb + value], 0, [rb - 1]
+#    add 2, 0, [rb - 2]
+#    add 8, 0, [rb - 3]
+#    arb -3
+#    call print_num_radix
+#    out ' '
 
     # Convert value to bits
     mul [rb + value], 8, [rb + tmp]
@@ -84,9 +84,9 @@ fdc_status_read:
 .FRAME addr; value, tmp
     arb -2
 
-    out 'S' # TODO remove
-    out 'r'
-    out '_'
+#    out 'S' # TODO fdcm remove
+#    out 'r'
+#    out '_'
 
     # Controller is busy in non-idle command state
     # Bit 4 CB  - Controller is busy reading or writing
@@ -108,13 +108,13 @@ fdc_status_read:
     # Bit 7 RQM - data register is ready for data transfer
     add [rb + value], 0b10000000, [rb + value]
 
-    # TODO remove
-    add [rb + value], 0, [rb - 1]
-    add 2, 0, [rb - 2]
-    add 8, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-    out ' '
+#    # TODO fdcm remove
+#    add [rb + value], 0, [rb - 1]
+#    add 2, 0, [rb - 2]
+#    add 8, 0, [rb - 3]
+#    arb -3
+#    call print_num_radix
+#    out ' '
 
     arb 2
     ret 1
@@ -126,15 +126,15 @@ fdc_control_write:
     # TODO this is I think used to detect floppy type
     # if yes, we need to return errors (when reading?) unless the speed is set correctly
 
-    out 'C' # TODO remove
-    out 'w'
-    out '_'
-    add [rb + value], 0, [rb - 1]
-    add 2, 0, [rb - 2]
-    add 8, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-    out ' '
+#    out 'C' # TODO fdcm remove
+#    out 'w'
+#    out '_'
+#    add [rb + value], 0, [rb - 1]
+#    add 2, 0, [rb - 2]
+#    add 8, 0, [rb - 3]
+#    arb -3
+#    call print_num_radix
+#    out ' '
 
     # Bits 7-2 Reserved
     # Bits 2-0 Diskette Data Rate (00 500000, 01 300000, 10 250000, 11 125000)
@@ -147,9 +147,9 @@ fdc_dir_read:
 .FRAME addr; value
     arb -1
 
-    out 'A' # TODO remove
-    out 'r'
-    out ' '
+#    out 'A' # TODO fdcm remove
+#    out 'r'
+#    out ' '
 
     # The only bit related to floppy operation is bit 7 - diskette change
     # We don't support changing the diskette, so return all zeros
@@ -176,8 +176,8 @@ fdc_d765ac_reset:
     arb -1
     call interrupt
 
-    out 'R' # TODO remove
-    out ' '
+#    out 'R' # TODO fdcm remove
+#    out ' '
 
     ret 0
 .ENDFRAME

@@ -57,22 +57,22 @@ fdc_data_write:
 .FRAME addr, value; value_bits, tmp
     arb -2
 
-    # TODO remove
-    jnz [fdc_cmd_state], TODO_fsm_w_skip_nl
-    out 10
-
-TODO_fsm_w_skip_nl:
-    out 'D'
-    out 'w'
-    out '_'
-
-    add [rb + value], 0, [rb - 1]
-    add 2, 0, [rb - 2]
-    add 8, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-
-    out ' '
+#    # TODO fdcm remove
+#    jnz [fdc_cmd_state], TODO_fsm_w_skip_nl
+#    out 10
+#
+#TODO_fsm_w_skip_nl:
+#    out 'D'
+#    out 'w'
+#    out '_'
+#
+#    add [rb + value], 0, [rb - 1]
+#    add 2, 0, [rb - 2]
+#    add 8, 0, [rb - 3]
+#    arb -3
+#    call print_num_radix
+#
+#    out ' '
 
     # Is the FDC processing a command?
     jz  [fdc_cmd_state], fsm_w_idle
@@ -502,9 +502,9 @@ fdc_data_read:
 .FRAME addr; value, tmp
     arb -2
 
-    out 'D' # TODO remove
-    out 'r'
-    out '_'
+#    out 'D' # TODO fdcm remove
+#    out 'r'
+#    out '_'
 
     # Is the FDC processing a command?
     jz  [fdc_cmd_state], fsm_r_invalid
@@ -631,13 +631,13 @@ fsm_r_invalid:
     add 0, 0, [fdc_cmd_state]
 
 fsm_r_done:
-    # TODO remove
-    add [rb + value], 0, [rb - 1]
-    add 2, 0, [rb - 2]
-    add 8, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-    out ' '
+#    # TODO fdcm remove
+#    add [rb + value], 0, [rb - 1]
+#    add 2, 0, [rb - 2]
+#    add 8, 0, [rb - 3]
+#    arb -3
+#    call print_num_radix
+#    out ' '
 
     arb 2
     ret 1

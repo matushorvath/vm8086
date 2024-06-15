@@ -69,10 +69,10 @@ dma_receive_data:
 .FRAME channel, src_addr, count; dst_addr, index, tmp
     arb -3
 
-    # TODO remove
-    out 'd'
-    out 'D'
-    out ' '
+#    # TODO fdcm remove
+#    out 'd'
+#    out 'D'
+#    out ' '
 
     # TODO range check channel
 
@@ -100,17 +100,18 @@ dma_receive_data:
     add [0], [rb + dst_addr], [rb + dst_addr]
     add [mem], [rb + dst_addr], [rb + dst_addr]
 
-    out 10
-    out 10
-    out 'X'
-    out 'X'
-    out 'X'
-    out 10
-
-    add [rb + src_addr], 0, [rb - 1]
-    arb -1
-    call print_num_16
-    out 10
+#    # TODO fdcm
+#    out 10
+#    out 10
+#    out 'X'
+#    out 'X'
+#    out 'X'
+#    out 10
+#
+#    add [rb + src_addr], 0, [rb - 1]
+#    arb -1
+#    call print_num_16
+#    out 10
 
     add 0, 0, [rb + index]
 
@@ -121,12 +122,12 @@ dma_receive_data_loop:
     add [rb + dst_addr], [rb + index], [ip + 3]
     add [0], 0, [0]
 
-    # TODO remove
-    add [rb + src_addr], [rb + index], [ip + 1]
-    add [0], 0, [rb - 1]
-    arb -1
-    call print_num_16
-    out ' '
+#    # TODO fdcm remove
+#    add [rb + src_addr], [rb + index], [ip + 1]
+#    add [0], 0, [rb - 1]
+#    arb -1
+#    call print_num_16
+#    out ' '
 
     # Increase index
     # TODO handle wraparound for dst_addr, it wraps around 0xffff and then adds the shifted page
@@ -148,13 +149,13 @@ dma_mode_write:
 .FRAME addr, value; value_x8, channel, transfer_type, dma_mode, tmp
     arb -5
 
-    # TODO remove
-    out 'd'
-    out 'M'
-    add [rb + value], 0, [rb - 1]
-    arb -1
-    call print_num_2
-    out ' '
+#    # TODO fdcm remove
+#    out 'd'
+#    out 'M'
+#    add [rb + value], 0, [rb - 1]
+#    arb -1
+#    call print_num_2
+#    out ' '
 
     # Set DMA mode
     mul [rb + value], 8, [rb + value_x8]
@@ -236,10 +237,10 @@ dma_status_read:
 ##########
 dma_master_reset_write:
 .FRAME addr, value;
-    # TODO remove
-    out 'd'
-    out 'R'
-    out ' '
+#    # TODO fdcm remove
+#    out 'd'
+#    out 'R'
+#    out ' '
 
     # Set the flip-flop to access the low byte
     add 0, 0, [dma_flip_flop]
@@ -352,15 +353,15 @@ dma_address_ch2_write:
 .FRAME addr, value; tmp
     arb -1
 
-    # TODO remove
-    out 'd'
-    out 'A'
-    out '2'
-    out '_'
-    add [rb + value], 0, [rb - 1]
-    arb -1
-    call print_num_16
-    out '_'
+#    # TODO fdcm remove
+#    out 'd'
+#    out 'A'
+#    out '2'
+#    out '_'
+#    add [rb + value], 0, [rb - 1]
+#    arb -1
+#    call print_num_16
+#    out '_'
 
     # Clear the register if we are writing the lo byte
     mul [dma_address_ch2], [dma_flip_flop], [dma_address_ch2]
@@ -374,11 +375,11 @@ dma_address_ch2_write:
     add [dma_address_ch2], [rb + value], [dma_address_ch2]
     eq  [dma_flip_flop], 0, [dma_flip_flop]
 
-    # TODO remove
-    add [dma_address_ch2], 0, [rb - 1]
-    arb -1
-    call print_num_16
-    out ' '
+#    # TODO fdcm remove
+#    add [dma_address_ch2], 0, [rb - 1]
+#    arb -1
+#    call print_num_16
+#    out ' '
 
     arb 1
     ret 2
@@ -431,15 +432,15 @@ dma_count_ch2_write:
 .FRAME addr, value; tmp
     arb -1
 
-    # TODO remove
-    out 'd'
-    out 'C'
-    out '2'
-    out '_'
-    add [rb + value], 0, [rb - 1]
-    arb -1
-    call print_num_16
-    out '_'
+#    # TODO fdcm remove
+#    out 'd'
+#    out 'C'
+#    out '2'
+#    out '_'
+#    add [rb + value], 0, [rb - 1]
+#    arb -1
+#    call print_num_16
+#    out '_'
 
     # Clear the register if we are writing the lo byte
     mul [dma_count_ch2], [dma_flip_flop], [dma_count_ch2]
@@ -453,11 +454,11 @@ dma_count_ch2_write:
     add [dma_count_ch2], [rb + value], [dma_count_ch2]
     eq  [dma_flip_flop], 0, [dma_flip_flop]
 
-    # TODO remove
-    add [dma_count_ch2], 0, [rb - 1]
-    arb -1
-    call print_num_16
-    out ' '
+#    # TODO fdcm remove
+#    add [dma_count_ch2], 0, [rb - 1]
+#    arb -1
+#    call print_num_16
+#    out ' '
 
     arb 1
     ret 2
@@ -527,15 +528,15 @@ dma_page_ch1_write:
 ##########
 dma_page_ch2_write:
 .FRAME addr, value;
-    # TODO remove
-    out 'd'
-    out 'P'
-    out '2'
-    out '_'
-    add [rb + value], 0, [rb - 1]
-    arb -1
-    call print_num_2
-    out ' '
+#    # TODO fdcm remove
+#    out 'd'
+#    out 'P'
+#    out '2'
+#    out '_'
+#    add [rb + value], 0, [rb - 1]
+#    arb -1
+#    call print_num_2
+#    out ' '
 
     add [rb + value], 0, [dma_page_ch2]
     ret 2
