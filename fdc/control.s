@@ -165,8 +165,8 @@ fdc_d765ac_reset:
     # TODO reset D765AC registers to zero, but don't touch the DOR,
     # also don't touch SRT HUT HLT in Specify command
 
-    # After reset both units have changed ready status, so sense interrupt status
-    # returns ST0 with bits 6 and 7 set
+    # After reset both units have changed ready status, following sense interrupt status
+    # will return ST0 with bits 6 and 7 set
     add 0b11000000, 0, [fdc_cmd_st0]
 
     # Raise INT 0e = IRQ6 if the FDD is ready, which we assume it always is

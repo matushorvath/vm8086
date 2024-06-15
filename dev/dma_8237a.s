@@ -1,4 +1,11 @@
 .EXPORT init_dma_8237a
+.EXPORT dma_receive_data
+
+.EXPORT dma_disable_controller
+.EXPORT dma_mask_ch2
+.EXPORT dma_transfer_type_ch2
+.EXPORT dma_mode_ch2
+.EXPORT dma_count_ch2
 
 # From cpu/devices.s
 .IMPORT register_ports
@@ -6,16 +13,19 @@
 # From cpu/error.s
 # TODO .IMPORT report_error
 
+# From cpu/state.s
+.IMPORT mem
+
 # From util/bits.s
 .IMPORT bits
 
 ##########
 dma_ports:
-    db  0x02, 0x00, 0, dma_start_address_ch1_write          # start address register channel 1
+    db  0x02, 0x00, 0, dma_address_ch1_write                # start address register channel 1
     db  0x03, 0x00, 0, dma_count_ch1_write                  # count register channel 1
-    db  0x04, 0x00, 0, dma_start_address_ch2_write          # start address register channel 2
+    db  0x04, 0x00, 0, dma_address_ch2_write                # start address register channel 2
     db  0x05, 0x00, 0, dma_count_ch2_write                  # count register channel 2
-    db  0x06, 0x00, 0, dma_start_address_ch3_write          # start address register channel 3
+    db  0x06, 0x00, 0, dma_address_ch3_write                # start address register channel 3
     db  0x07, 0x00, 0, dma_count_ch3_write                  # count register channel 3
 
     db  0x08, 0x00, dma_status_read, dma_command_write      # status register, command register
@@ -48,6 +58,61 @@ init_dma_8237a:
     call register_ports
 
     ret 0
+.ENDFRAME
+
+##########
+dma_receive_data:
+.FRAME channel, src_addr, count; dst_addr, index, tmp
+    arb -3
+
+    # TODO range check channel
+
+    # Check the DMA controller
+    jnz [dma_disable_controller], dma_receive_data_drop
+
+    add dma_mask_channels, [rb + channel], [ip + 1]
+    jnz [dma_mask_channels], dma_receive_data_drop
+
+    add dma_transfer_type_channels, [rb + channel], [ip + 1]
+    eq  [0], 1, [rb + tmp]                                  # transfer type must be write (1)
+    jz  [rb + tmp], dma_receive_data_drop
+
+    # TODO support single/block/demand modes
+
+    # Decrease the DMA counter
+    add dma_count_channels, [rb + channel], [ip + 5]
+    add dma_count_channels, [rb + channel], [ip + 3]
+    add [0], [rb + count], [0]
+
+    # Determine where should we write the data
+    add dma_page_channels, [rb + channel], [ip + 1]
+    mul [0], 0xffff, [rb + dst_addr]
+    add dma_address_channels, [rb + channel], [ip + 1]
+    add [0], [rb + dst_addr], [rb + dst_addr]
+    add [mem], [rb + dst_addr], [rb + dst_addr]
+
+    add 0, 0, [rb + index]
+
+dma_receive_data_loop:
+    # Move the data
+    add [rb + src_addr], [rb + index], [ip + 5]
+    # TODO handle dma_decrement_channels
+    add [rb + dst_addr], [rb + index], [ip + 3]
+    add [0], 0, [0]
+
+    # Increase index
+    # TODO handle wraparound for dst_addr, it wraps around 0xffff and then adds the shifted page
+    add [rb + index], 1, [rb + index]
+
+    # Decrease count and loop
+    add [rb + count], -1, [rb + count]
+    jnz [rb + count], dma_receive_data_loop
+
+    # TODO handle dma_auto_init_channels (remember originally set values, reset them after count goes to 0xffff)
+
+dma_receive_data_drop:
+    arb 3
+    ret 3
 .ENDFRAME
 
 ##########
@@ -221,44 +286,44 @@ dma_mask_reset_write:
 .ENDFRAME
 
 ##########
-dma_start_address_ch1_write:
+dma_address_ch1_write:
 .FRAME addr, value;
-    # TODO
+    add [rb + value], 0, [dma_address_ch1]
     ret 2
 .ENDFRAME
 
 ##########
-dma_start_address_ch2_write:
+dma_address_ch2_write:
 .FRAME addr, value;
-    # TODO
+    add [rb + value], 0, [dma_address_ch2]
     ret 2
 .ENDFRAME
 
 ##########
-dma_start_address_ch3_write:
+dma_address_ch3_write:
 .FRAME addr, value;
-    # TODO
+    add [rb + value], 0, [dma_address_ch3]
     ret 2
 .ENDFRAME
 
 ##########
 dma_count_ch1_write:
 .FRAME addr, value;
-    # TODO
+    add [rb + value], 0, [dma_count_ch1]
     ret 2
 .ENDFRAME
 
 ##########
 dma_count_ch2_write:
 .FRAME addr, value;
-    # TODO
+    add [rb + value], 0, [dma_count_ch2]
     ret 2
 .ENDFRAME
 
 ##########
 dma_count_ch3_write:
 .FRAME addr, value;
-    # TODO
+    add [rb + value], 0, [dma_count_ch3]
     ret 2
 .ENDFRAME
 
@@ -373,6 +438,29 @@ dma_decrement_ch2:
 dma_decrement_ch3:
     db  0
 
+dma_address_channels:
+dma_address_ch0:
+    db  0
+dma_address_ch1:
+    db  0
+dma_address_ch2:
+    db  0
+dma_address_ch3:
+    db  0
+
+dma_count_channels:
+dma_count_ch0:
+    db  0
+dma_count_ch1:
+    db  0
+dma_count_ch2:
+    db  0
+dma_count_ch3:
+    db  0
+
+dma_page_channels:
+dma_page_ch0:
+    db  0
 dma_page_ch1:
     db  0
 dma_page_ch2:

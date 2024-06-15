@@ -25,6 +25,7 @@
 .IMPORT fdc_interrupt_pending
 
 # From fdc_drives.s
+.IMPORT fdc_medium_heads_units
 .IMPORT fdc_medium_sectors_units
 .IMPORT fdc_present_cylinder_units
 .IMPORT fdc_present_sector_units
@@ -53,43 +54,166 @@
 # From cpu/interrupt.s
 .IMPORT interrupt
 
+# From dev/dma_8237a.s
+.IMPORT dma_disable_controller
+.IMPORT dma_mask_ch2
+.IMPORT dma_transfer_type_ch2
+.IMPORT dma_mode_ch2
+.IMPORT dma_count_ch2
+.IMPORT dma_receive_data
+
 # From util/bits.s
 .IMPORT bits
 
 ##########
 fdc_exec_read_data:
-.FRAME
-    # TODO implement read data
+.FRAME cylinders, heads, sectors, addr, count, tmp
+    arb -6
 
-    # Read sectors on current track, throw data away until sector number matches R
-    # (reads ID Address Marks and ID fields). Then put the data to bus.
-    # After reading the sector, increment sector number and continue outputting
-    # until DMA controller sends TC (terminal count) then stop outputting data
-    # (looks like in the middle of the sector).
-    # After TC, continue reading sector and throw data away, then check CRC and
-    # finish the read data command.
+    # Prepare base value for ST0
+    mul [fdc_cmd_head], 0b00000100, [fdc_cmd_st0]
+    add [fdc_cmd_unit_selected], [fdc_cmd_st0], [fdc_cmd_st0]
 
-    # With MT read sector 1 side 0... sector L side 1 (L = last sector on side)
+    # Is the unit connected?
+    add fdc_config_connected_units, [fdc_cmd_unit_selected], [ip + 1]
+    jz  [0], fdc_exec_read_data_no_floppy
 
-    # If N=0, DTL defines how much of the sector should we send to data bus.
-    # If N>0, DTL is ignored. Still includes reading multiple sectors if no TC.
+    # Is a floppy inserted?
+    add fdc_config_inserted_units, [fdc_cmd_unit_selected], [ip + 1]
+    jz  [0], fdc_exec_read_data_no_floppy
 
-    # If we don't find R on this track, set ND=1 in SR1 and b7=0,b6=1 in SR0, then end.
+    # Is the motor running?
+    add fdc_dor_enable_motor_units, [fdc_cmd_unit_selected], [ip + 1]
+    jz  [0], fdc_exec_read_data_no_floppy
 
-    # If CRC error in ID field, DE=1 in SR1. If CRC error in Data Field also DD=1 in SR2.
-    # Also b7=0,b6=1 in SR0, then end.
+    # Floppy is accessible, load floppy parameters
+    add fdc_medium_heads_units, [fdc_cmd_unit_selected], [ip + 1]
+    add [0], 0, [rb + heads]
+    add fdc_medium_sectors_units, [fdc_cmd_unit_selected], [ip + 1]
+    add [0], 0, [rb + sectors]
 
-    # If SK=0 and we read Deleted Data Address Mark, set CM=1 in SR2 then end.
-    # If SK=1 FDC skips the deleted sector and reads next sector, not even check CRC.
+    # Cylinder number must match the cylinder we are on
+    eq  [fdc_cmd_cylinder], [fdc_present_cylinder_units], [rb + tmp]
+    jz  [rb + tmp], fdc_exec_read_data_bad_input
 
-    # For CHRN in result phase, see table on page 435 in UPD765.pdf. Based on MT and EOT.
+    # Head number must be in range
+    lt  [fdc_cmd_head], 0, [rb + tmp]
+    jnz [rb + tmp], fdc_exec_read_data_bad_input
+    lt  [fdc_cmd_head], [rb + heads], [rb + tmp]
+    jz  [rb + tmp], fdc_exec_read_data_bad_input
 
-#    # Raise INT 0e = IRQ6
-#    add 1, 0, [fdc_interrupt_pending]
-#    add 0x0e, 0, [rb - 1]
-#    arb -1
-#    call interrupt
+    # Sector number must be in range (1-based)
+    lt  [fdc_cmd_sector], 1, [rb + tmp]
+    jnz [rb + tmp], fdc_exec_read_data_bad_input
+    lt  [rb + heads], [fdc_cmd_sector], [rb + tmp]
+    jnz [rb + tmp], fdc_exec_read_data_bad_input
 
+    # Check the DMA controller
+    jnz [dma_disable_controller], fdc_exec_read_data_no_dma
+    jnz [dma_mask_ch2], fdc_exec_read_data_no_dma
+
+    eq  [dma_transfer_type_ch2], 1, [rb + tmp]              # transfer type must be write (1)
+    jz  [rb + tmp], fdc_exec_read_data_no_dma
+
+    eq  [dma_mode_ch2], 1, [rb + tmp]                       # only single mode is supported (1)
+    jz  [rb + tmp], fdc_exec_read_data_no_dma
+
+    # DMA is set up, find the data we want to read
+    # addr = ((cylinder * heads + head) * sectors + (sector - 1)) * 512
+    mul [fdc_cmd_cylinder], [rb + heads], [rb + addr]
+    add [fdc_cmd_head], [rb + addr], [rb + addr]
+    mul [rb + sectors], [rb + addr], [rb + addr]
+    add [fdc_cmd_sector], [rb + addr], [rb + addr]
+    add -1, [rb + addr], [rb + addr]
+    mul 512, [rb + addr], [rb + addr]
+
+    # Determine how much data should we read (the counter in DMA controller plus 1)
+    add [dma_count_ch2], 1, [rb + count]
+    # TODO If N=0, DTL defines how much of the sector should we send to data bus.
+    # TODO If N>0, DTL is ignored. Still includes reading multiple sectors if no TC.
+
+    # TODO for now we can read one sector both heads only
+    # boot sector read from 8088_bios: MT=1 HD=0 C=0 H=0 S=1 N=02 EOT=36 GPL=27 DTL=0xff
+    jz  [fdc_cmd_multi_track], fdc_exec_read_data_not_supported
+    eq  [rb + count], 1024, [rb + tmp]
+    jz  [rb + tmp], fdc_exec_read_data_not_supported
+
+    # TODO read multiple sectors, wraparound when reaching the last sector, until DMA sends TC
+    # TODO support EOT, finam sector number on track; stop reading after sector number equal to EOT
+    # TODO support MT: read sector 1 side 0... sector L side 1 (L = last sector on side)
+
+    # Send the data to DMA controller, channel 2
+    # TODO for now sending 1024 bytes, one sector both heads
+    add 2, 0, [rb - 1]
+    add [rb + addr], 0, [rb - 2]
+    add [rb + count], 0, [rb - 3]
+    arb -3
+    call dma_receive_data
+
+    # Respond with ST0 (see above) ST1 ST2 C H R N
+    add 0, 0, [fdc_cmd_st1]
+    add 0, 0, [fdc_cmd_st2]
+
+    # For C H R N keep the head and cylinder that was requested, report last read sector
+    # TODO see table on page 435 in UPD765.pdf, the correct values are based on MT and EOT
+    # TODO update fdc_cmd_sector if we read multiple sectors
+    add [fdc_cmd_sector], 1, [fdc_cmd_sector] # very rough fake of the actual correct result
+
+    jz  0, fdc_exec_read_data_terminated
+
+fdc_exec_read_data_not_supported:                           # TODO remove
+    add fdc_exec_read_data_error, 0, [rb - 1]
+    arb -1
+    call report_error
+
+fdc_exec_read_data_error:                                   # TODO remove
+    db  "fdc: requested read data command variant", "is not supported", 0
+
+fdc_exec_read_data_no_dma:
+    # Floppy is accessible, but the DMA controller is not ready to accept data
+    # Set up ST0 (abnormal termination), ST1, ST2; keep head, cylinder or sector
+    add 0b01000000, [fdc_cmd_st0], [fdc_cmd_st0]
+    add 0, 0, [fdc_cmd_st1]
+    add 0, 0, [fdc_cmd_st2]
+
+    jz  0, fdc_exec_read_data_terminated
+
+fdc_exec_read_data_bad_input:
+    # Floppy is accessible, but the input parameters are invalid
+    # Set up ST0 (abnormal termination), ST1 (end of cylinder, no data), ST2
+    # TODO only set ST1 bit 7 when sector is wrong
+    # TODO set up ST2 (bits 1, 4) when cylinder is wrong
+    add 0b01000000, [fdc_cmd_st0], [fdc_cmd_st0]
+    add 0b10000100, 0, [fdc_cmd_st1]
+    add 0, 0, [fdc_cmd_st2]
+
+    # Zero out cylinder, head and sector
+    add 0, 0, [fdc_cmd_cylinder]
+    add 0, 0, [fdc_cmd_head]
+    add 0, 0, [fdc_cmd_sector]
+
+fdc_exec_read_data_no_floppy:
+    # Floppy is not accessible
+    # Set up ST0 (not ready, abnormal termination), ST1 (missing address mark, no data), ST2
+    add 0b01001000, [fdc_cmd_st0], [fdc_cmd_st0]
+    add 0b00000101, 0, [fdc_cmd_st1]
+    add 0, 0, [fdc_cmd_st2]
+
+    # Zero out cylinder, head and sector
+    add 0, 0, [fdc_cmd_cylinder]
+    add 0, 0, [fdc_cmd_head]
+    add 0, 0, [fdc_cmd_sector]
+
+    jz  0, fdc_exec_read_data_terminated
+
+fdc_exec_read_data_terminated:
+    # Raise INT 0e = IRQ6
+    add 1, 0, [fdc_interrupt_pending]
+    add 0x0e, 0, [rb - 1]
+    arb -1
+    call interrupt
+
+    arb 6
     ret 0
 .ENDFRAME
 
@@ -178,6 +302,8 @@ fdc_exec_read_id:
     add fdc_dor_enable_motor_units, [fdc_cmd_unit_selected], [ip + 1]
     jz  [0], fdc_exec_read_id_no_floppy
 
+    # TODO validate C H S is in range
+
     # Floppy is accessible; respond with ST0 (see above) ST1 ST2 C H R N
     add 0, 0, [fdc_cmd_st1]
     add 0, 0, [fdc_cmd_st2]
@@ -198,6 +324,7 @@ fdc_exec_read_id:
     eq  [fdc_cmd_sector], [rb + sector_count], [rb + tmp]
     jz  [rb + tmp], fdc_exec_read_id_after_sector_wraparound
     add 0, 0, [fdc_cmd_sector]
+    # TODO this is wrong, sectors are numbered starting 1 (both the 1 and the wraparound condition)
 
 fdc_exec_read_id_after_sector_wraparound:
     # Save new present sector
@@ -213,8 +340,9 @@ fdc_exec_read_id_no_floppy:
     add 0b00000101, 0, [fdc_cmd_st1]
     add 0, 0, [fdc_cmd_st2]
 
-    # Return requested head, zero out cylinder and sector
+    # Zero out cylinder, head and sector
     add 0, 0, [fdc_cmd_cylinder]
+    add 0, 0, [fdc_cmd_head]
     add 0, 0, [fdc_cmd_sector]
 
 fdc_exec_read_id_terminated:

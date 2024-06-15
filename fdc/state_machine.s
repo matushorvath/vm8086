@@ -297,6 +297,7 @@ fsm_w_r:
 
 fsm_w_n:
     # Number of bytes per sector must be 512 (N=0x02)
+    # TODO docs mention case when N=0 and DTL is used to determine byte count
     eq  [rb + value], 0x02, [rb + tmp]
     jz  [rb + tmp], fsm_w_invalid
 

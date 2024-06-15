@@ -72,7 +72,10 @@ interrupt:
 
     # TODO remove
     eq  [rb + type], 0x13, [rb - 1]
-    jz  [rb - 1], TODO_skip
+    jz  [rb - 1], TODO_skip_print
+    jnz  [reg_ah], TODO_skip_nl
+    out 10
+TODO_skip_nl:
     out 10
     out 'i'
     out '1'
@@ -86,7 +89,7 @@ interrupt:
     arb -3
     call print_num_radix
     out ' '
-TODO_skip:
+TODO_skip_print:
 
     # Push flags, then disable TF and IF
     call pushf
