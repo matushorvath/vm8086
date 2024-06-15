@@ -12,8 +12,8 @@
 .IMPORT fdc_control_write
 
 # From fdc_drives.s
+.IMPORT fdc_medium_cylinders_units
 .IMPORT fdc_medium_heads_units
-.IMPORT fdc_medium_tracks_units
 .IMPORT fdc_medium_sectors_units
 
 # From fdc_state_machine.s
@@ -35,6 +35,9 @@
 # TODO read track does not support multitrack, it just reads one side
 
 # TODO command support for multitrack operations
+# TODO sector numbers go from 1, not 0 - at least read_id needs to be changed
+
+# TODO separate fsm_?_invalid from unsupported functionality, crash when unsupported
 
 ##########
 fdc_ports:
@@ -94,10 +97,10 @@ init_unit:
 
     # Set floppy parameters based on floppy type
     # TODO support more floppy types
+    add fdc_medium_cylinders_units, [rb + unit], [ip + 3]
+    add 80, 0, [0]
     add fdc_medium_heads_units, [rb + unit], [ip + 3]
     add 2, 0, [0]
-    add fdc_medium_tracks_units, [rb + unit], [ip + 3]
-    add 80, 0, [0]
     add fdc_medium_sectors_units, [rb + unit], [ip + 3]
     add 18, 0, [0]
 

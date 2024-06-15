@@ -12,9 +12,9 @@ config_enable_tracing:
 
 # Tracing trigger address (0 - always trace, >0 - trace after the address was reached)
 config_tracing_cs:
-    db  0xf000
+    db  0x0000      # 0xf000
 config_tracing_ip:
-    db  0xc42f
+    db  0x7c00      # 0xc42f
 
 # Make flags behave like a real 8086/8088
 config_flags_as_286:

@@ -1,4 +1,11 @@
 .EXPORT init_dma_8237a
+.EXPORT dma_receive_data
+
+.EXPORT dma_disable_controller
+.EXPORT dma_mask_ch2
+.EXPORT dma_transfer_type_ch2
+.EXPORT dma_mode_ch2
+.EXPORT dma_count_ch2
 
 # From cpu/devices.s
 .IMPORT register_ports
@@ -6,16 +13,23 @@
 # From cpu/error.s
 # TODO .IMPORT report_error
 
+# From cpu/state.s
+.IMPORT mem
+
 # From util/bits.s
 .IMPORT bits
 
+# TODO remove
+.IMPORT print_num_2
+.IMPORT print_num_16
+
 ##########
 dma_ports:
-    db  0x02, 0x00, 0, dma_start_address_ch1_write          # start address register channel 1
+    db  0x02, 0x00, 0, dma_address_ch1_write                # start address register channel 1
     db  0x03, 0x00, 0, dma_count_ch1_write                  # count register channel 1
-    db  0x04, 0x00, 0, dma_start_address_ch2_write          # start address register channel 2
+    db  0x04, 0x00, 0, dma_address_ch2_write                # start address register channel 2
     db  0x05, 0x00, 0, dma_count_ch2_write                  # count register channel 2
-    db  0x06, 0x00, 0, dma_start_address_ch3_write          # start address register channel 3
+    db  0x06, 0x00, 0, dma_address_ch3_write                # start address register channel 3
     db  0x07, 0x00, 0, dma_count_ch3_write                  # count register channel 3
 
     db  0x08, 0x00, dma_status_read, dma_command_write      # status register, command register
@@ -51,9 +65,96 @@ init_dma_8237a:
 .ENDFRAME
 
 ##########
+dma_receive_data:
+.FRAME channel, src_addr, count; dst_addr, index, tmp
+    arb -3
+
+    # TODO remove
+    out 'd'
+    out 'D'
+    out ' '
+
+    # TODO range check channel
+
+    # Check the DMA controller
+    jnz [dma_disable_controller], dma_receive_data_drop
+
+    add dma_mask_channels, [rb + channel], [ip + 1]
+    jnz [dma_mask_channels], dma_receive_data_drop
+
+    add dma_transfer_type_channels, [rb + channel], [ip + 1]
+    eq  [0], 1, [rb + tmp]                                  # transfer type must be write (1)
+    jz  [rb + tmp], dma_receive_data_drop
+
+    # TODO support single/block/demand modes
+
+    # Decrease the DMA counter
+    add dma_count_channels, [rb + channel], [ip + 5]
+    add dma_count_channels, [rb + channel], [ip + 3]
+    add [0], [rb + count], [0]
+
+    # Determine where should we write the data
+    add dma_page_channels, [rb + channel], [ip + 1]
+    mul [0], 0xffff, [rb + dst_addr]
+    add dma_address_channels, [rb + channel], [ip + 1]
+    add [0], [rb + dst_addr], [rb + dst_addr]
+    add [mem], [rb + dst_addr], [rb + dst_addr]
+
+    out 10
+    out 10
+    out 'X'
+    out 'X'
+    out 'X'
+    out 10
+
+    add [rb + src_addr], 0, [rb - 1]
+    arb -1
+    call print_num_16
+    out 10
+
+    add 0, 0, [rb + index]
+
+dma_receive_data_loop:
+    # Move the data
+    add [rb + src_addr], [rb + index], [ip + 5]
+    # TODO handle dma_decrement_channels
+    add [rb + dst_addr], [rb + index], [ip + 3]
+    add [0], 0, [0]
+
+    # TODO remove
+    add [rb + src_addr], [rb + index], [ip + 1]
+    add [0], 0, [rb - 1]
+    arb -1
+    call print_num_16
+    out ' '
+
+    # Increase index
+    # TODO handle wraparound for dst_addr, it wraps around 0xffff and then adds the shifted page
+    add [rb + index], 1, [rb + index]
+
+    # Decrease count and loop
+    add [rb + count], -1, [rb + count]
+    jnz [rb + count], dma_receive_data_loop
+
+    # TODO handle dma_auto_init_channels (remember originally set values, reset them after count goes to 0xffff)
+
+dma_receive_data_drop:
+    arb 3
+    ret 3
+.ENDFRAME
+
+##########
 dma_mode_write:
 .FRAME addr, value; value_x8, channel, transfer_type, dma_mode, tmp
     arb -5
+
+    # TODO remove
+    out 'd'
+    out 'M'
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call print_num_2
+    out ' '
 
     # Set DMA mode
     mul [rb + value], 8, [rb + value_x8]
@@ -135,6 +236,11 @@ dma_status_read:
 ##########
 dma_master_reset_write:
 .FRAME addr, value;
+    # TODO remove
+    out 'd'
+    out 'R'
+    out ' '
+
     # Set the flip-flop to access the low byte
     add 0, 0, [dma_flip_flop]
 
@@ -221,44 +327,160 @@ dma_mask_reset_write:
 .ENDFRAME
 
 ##########
-dma_start_address_ch1_write:
-.FRAME addr, value;
-    # TODO
+dma_address_ch1_write:
+.FRAME addr, value; tmp
+    arb -1
+
+    # Clear the register if we are writing the lo byte
+    mul [dma_address_ch1], [dma_flip_flop], [dma_address_ch1]
+
+    # Shift the value left by 8 if we are writing the hi byte
+    mul 0xff, [dma_flip_flop], [rb + tmp]
+    add [rb + tmp], 1, [rb + tmp]
+    mul [rb + value], [rb + tmp], [rb + value]
+
+    # Add the value to the register
+    add [dma_address_ch1], [rb + value], [dma_address_ch1]
+    eq  [dma_flip_flop], 0, [dma_flip_flop]
+
+    arb 1
     ret 2
 .ENDFRAME
 
 ##########
-dma_start_address_ch2_write:
-.FRAME addr, value;
-    # TODO
+dma_address_ch2_write:
+.FRAME addr, value; tmp
+    arb -1
+
+    # TODO remove
+    out 'd'
+    out 'A'
+    out '2'
+    out '_'
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call print_num_16
+    out '_'
+
+    # Clear the register if we are writing the lo byte
+    mul [dma_address_ch2], [dma_flip_flop], [dma_address_ch2]
+
+    # Shift the value left by 8 if we are writing the hi byte
+    mul 0xff, [dma_flip_flop], [rb + tmp]
+    add [rb + tmp], 1, [rb + tmp]
+    mul [rb + value], [rb + tmp], [rb + value]
+
+    # Add the value to the register
+    add [dma_address_ch2], [rb + value], [dma_address_ch2]
+    eq  [dma_flip_flop], 0, [dma_flip_flop]
+
+    # TODO remove
+    add [dma_address_ch2], 0, [rb - 1]
+    arb -1
+    call print_num_16
+    out ' '
+
+    arb 1
     ret 2
 .ENDFRAME
 
 ##########
-dma_start_address_ch3_write:
-.FRAME addr, value;
-    # TODO
+dma_address_ch3_write:
+.FRAME addr, value; tmp
+    arb -1
+
+    # Clear the register if we are writing the lo byte
+    mul [dma_address_ch3], [dma_flip_flop], [dma_address_ch3]
+
+    # Shift the value left by 8 if we are writing the hi byte
+    mul 0xff, [dma_flip_flop], [rb + tmp]
+    add [rb + tmp], 1, [rb + tmp]
+    mul [rb + value], [rb + tmp], [rb + value]
+
+    # Add the value to the register
+    add [dma_address_ch3], [rb + value], [dma_address_ch3]
+    eq  [dma_flip_flop], 0, [dma_flip_flop]
+
+    arb 1
     ret 2
 .ENDFRAME
 
 ##########
 dma_count_ch1_write:
-.FRAME addr, value;
-    # TODO
+.FRAME addr, value; tmp
+    arb -1
+
+    # Clear the register if we are writing the lo byte
+    mul [dma_count_ch1], [dma_flip_flop], [dma_count_ch1]
+
+    # Shift the value left by 8 if we are writing the hi byte
+    mul 0xff, [dma_flip_flop], [rb + tmp]
+    add [rb + tmp], 1, [rb + tmp]
+    mul [rb + value], [rb + tmp], [rb + value]
+
+    # Add the value to the register
+    add [dma_count_ch1], [rb + value], [dma_count_ch1]
+    eq  [dma_flip_flop], 0, [dma_flip_flop]
+
+    arb 1
     ret 2
 .ENDFRAME
 
 ##########
 dma_count_ch2_write:
-.FRAME addr, value;
-    # TODO
+.FRAME addr, value; tmp
+    arb -1
+
+    # TODO remove
+    out 'd'
+    out 'C'
+    out '2'
+    out '_'
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call print_num_16
+    out '_'
+
+    # Clear the register if we are writing the lo byte
+    mul [dma_count_ch2], [dma_flip_flop], [dma_count_ch2]
+
+    # Shift the value left by 8 if we are writing the hi byte
+    mul 0xff, [dma_flip_flop], [rb + tmp]
+    add [rb + tmp], 1, [rb + tmp]
+    mul [rb + value], [rb + tmp], [rb + value]
+
+    # Add the value to the register
+    add [dma_count_ch2], [rb + value], [dma_count_ch2]
+    eq  [dma_flip_flop], 0, [dma_flip_flop]
+
+    # TODO remove
+    add [dma_count_ch2], 0, [rb - 1]
+    arb -1
+    call print_num_16
+    out ' '
+
+    arb 1
     ret 2
 .ENDFRAME
 
 ##########
 dma_count_ch3_write:
-.FRAME addr, value;
-    # TODO
+.FRAME addr, value; tmp
+    arb -1
+
+    # Clear the register if we are writing the lo byte
+    mul [dma_count_ch3], [dma_flip_flop], [dma_count_ch3]
+
+    # Shift the value left by 8 if we are writing the hi byte
+    mul 0xff, [dma_flip_flop], [rb + tmp]
+    add [rb + tmp], 1, [rb + tmp]
+    mul [rb + value], [rb + tmp], [rb + value]
+
+    # Add the value to the register
+    add [dma_count_ch3], [rb + value], [dma_count_ch3]
+    eq  [dma_flip_flop], 0, [dma_flip_flop]
+
+    arb 1
     ret 2
 .ENDFRAME
 
@@ -305,6 +527,16 @@ dma_page_ch1_write:
 ##########
 dma_page_ch2_write:
 .FRAME addr, value;
+    # TODO remove
+    out 'd'
+    out 'P'
+    out '2'
+    out '_'
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call print_num_2
+    out ' '
+
     add [rb + value], 0, [dma_page_ch2]
     ret 2
 .ENDFRAME
@@ -373,6 +605,29 @@ dma_decrement_ch2:
 dma_decrement_ch3:
     db  0
 
+dma_address_channels:
+dma_address_ch0:
+    db  0
+dma_address_ch1:
+    db  0
+dma_address_ch2:
+    db  0
+dma_address_ch3:
+    db  0
+
+dma_count_channels:
+dma_count_ch0:
+    db  0
+dma_count_ch1:
+    db  0
+dma_count_ch2:
+    db  0
+dma_count_ch3:
+    db  0
+
+dma_page_channels:
+dma_page_ch0:
+    db  0
 dma_page_ch1:
     db  0
 dma_page_ch2:
