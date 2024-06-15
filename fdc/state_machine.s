@@ -96,10 +96,6 @@ fsm_w_idle:
     add [rb + value_bits], 7, [ip + 1]
     add [0], 0, [fdc_cmd_multi_track]
 
-    # Require MF=1 since we don't support 8" floppies
-    add [rb + value_bits], 6, [ip + 1]
-    jz  [0], fsm_w_invalid
-
     # Read bottom 5 bits as the command code
     add [rb + value_bits], 4, [ip + 1]
     mul [0], 0b00010000, [fdc_cmd_code]
@@ -118,22 +114,22 @@ fsm_w_idle:
 fsm_w_idle_table:
     db  fsm_w_invalid                                       #          00000
     db  fsm_w_invalid                                       #          00001
-    db  fsm_w_idle_to_hd_us                                 #  0 MF SK 00010: read_track
+    db  fsm_w_idle_to_hd_us_with_mf_check                   #  0 MF SK 00010: read_track
     db  fsm_w_idle_to_srt_hut                               #  0  0  0 00011: specify
     db  fsm_w_idle_to_hd_us                                 #  0  0  0 00100: sense_drive_status
-    db  fsm_w_idle_to_hd_us                                 # MT MF  0 00101: write_data
-    db  fsm_w_idle_to_hd_us                                 # MT MF SK 00110: read_data
+    db  fsm_w_idle_to_hd_us_with_mf_check                   # MT MF  0 00101: write_data
+    db  fsm_w_idle_to_hd_us_with_mf_check                   # MT MF SK 00110: read_data
     db  fsm_w_idle_to_hd_us                                 #  0  0  0 00111: recalibrate
     db  fsm_w_idle_to_exec_sense_interrupt_status           #  0  0  0 01000: sense_interrupt_status
-    db  fsm_w_idle_to_hd_us                                 # MT MF  0 01001: write_deleted_data
-    db  fsm_w_idle_to_hd_us                                 #  0 MF  0 01010: read_id
+    db  fsm_w_idle_to_hd_us_with_mf_check                   # MT MF  0 01001: write_deleted_data
+    db  fsm_w_idle_to_hd_us_with_mf_check                   #  0 MF  0 01010: read_id
     db  fsm_w_invalid                                       #          01011
-    db  fsm_w_idle_to_hd_us                                 # MT MF SK 01100: read_deleted_data
-    db  fsm_w_idle_to_hd_us                                 #  0 MF  0 01101: format_track
+    db  fsm_w_idle_to_hd_us_with_mf_check                   # MT MF SK 01100: read_deleted_data
+    db  fsm_w_idle_to_hd_us_with_mf_check                   #  0 MF  0 01101: format_track
     db  fsm_w_invalid                                       #          01110
     db  fsm_w_idle_to_hd_us                                 #  0  0  0 01111: seek
     db  fsm_w_invalid                                       #          10000
-    db  fsm_w_idle_to_hd_us                                 # MT MF SK 10001: scan_equal
+    db  fsm_w_idle_to_hd_us_with_mf_check                   # MT MF SK 10001: scan_equal
     db  fsm_w_invalid                                       #          10010
     db  fsm_w_invalid                                       #          10011
     db  fsm_w_invalid                                       #          10100
@@ -141,13 +137,20 @@ fsm_w_idle_table:
     db  fsm_w_invalid                                       #          10110
     db  fsm_w_invalid                                       #          10111
     db  fsm_w_invalid                                       #          11000
-    db  fsm_w_idle_to_hd_us                                 # MT MF SK 11001: scan_low_or_equal
+    db  fsm_w_idle_to_hd_us_with_mf_check                   # MT MF SK 11001: scan_low_or_equal
     db  fsm_w_invalid                                       #          11010
     db  fsm_w_invalid                                       #          11011
     db  fsm_w_invalid                                       #          11100
-    db  fsm_w_idle_to_hd_us                                 # MT MF SK 11101: scan_high_or_equal
+    db  fsm_w_idle_to_hd_us_with_mf_check                   # MT MF SK 11101: scan_high_or_equal
     db  fsm_w_invalid                                       #          11110
     db  fsm_w_invalid                                       #          11111
+
+fsm_w_idle_to_hd_us_with_mf_check:
+    # Require MF=1 since we don't support 8" floppies
+    add [rb + value_bits], 6, [ip + 1]
+    jz  [0], fsm_w_invalid
+
+    # fall through
 
 fsm_w_idle_to_hd_us:
     # Any interrupt is cleared
