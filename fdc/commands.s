@@ -28,6 +28,7 @@
 .IMPORT fdc_interrupt_pending
 
 # From fdc_drives.s
+.IMPORT fdc_medium_cylinders_units
 .IMPORT fdc_medium_heads_units
 .IMPORT fdc_medium_sectors_units
 .IMPORT fdc_present_cylinder_units
@@ -145,7 +146,7 @@ fdc_exec_read_data:
     # TODO If N=0, DTL defines how much of the sector should we send to data bus.
     # TODO If N>0, DTL is ignored. Still includes reading multiple sectors if no TC.
 
-    # TODO for now we can read one sector only
+    # TODO for now we can read one sector only, 512 bytes
     # boot sector read from 8088_bios: MT=1 HD=0 C=0 H=0 S=1 N=02 EOT=36 GPL=27 DTL=0xff
     jz  [fdc_cmd_multi_track], fdc_exec_read_data_not_supported
 
@@ -153,11 +154,10 @@ fdc_exec_read_data:
     jz  [rb + tmp], fdc_exec_read_data_not_supported
 
     # TODO read multiple sectors, wraparound when reaching the last sector, until DMA sends TC
-    # TODO support EOT, finam sector number on track; stop reading after sector number equal to EOT
+    # TODO support EOT, final sector number on track; stop reading after sector number equal to EOT
     # TODO support MT: read sector 1 side 0... sector L side 1 (L = last sector on side)
 
-    # Send the data to DMA controller, channel 2
-    # TODO for now sending 1024 bytes, one sector both heads
+    # Send data to the DMA controller, channel 2
     add 2, 0, [rb - 1]
     add [rb + addr], 0, [rb - 2]
     add [rb + count], 0, [rb - 3]
@@ -193,7 +193,7 @@ fdc_exec_read_data_no_dma:
     jz  0, fdc_exec_read_data_terminated
 
 fdc_exec_read_data_bad_input:
-    # Floppy is accessible, but the input parameters are invalid
+    # Floppy is accessible, but input parameters are invalid
     # Set up ST0 (abnormal termination), ST1 (end of cylinder, no data), ST2
     # TODO only set ST1 bit 7 when sector is wrong
     # TODO set up ST2 (bits 1, 4) when cylinder is wrong
@@ -251,6 +251,7 @@ fdc_exec_read_deleted_data_error:
 ##########
 fdc_exec_write_data:
 .FRAME
+    # TODO for now, return a valid "write protected" status
     # TODO implement write data
     # TODO disk activity
 
@@ -381,6 +382,7 @@ fdc_exec_read_id_terminated:
 ##########
 fdc_exec_format_track:
 .FRAME
+    # TODO for now, return a valid "write protected" status
     # TODO implement format track
     # TODO disk activity
 
@@ -493,7 +495,7 @@ fdc_exec_recalibrate:
     # TODO clear floppy busy in MSR when sense interrupt
 
     # Set up STO to report a successful seek (seek end)
-    add 0b00010000, [fdc_cmd_st0], [fdc_cmd_st0]
+    add 0b00100000, [fdc_cmd_st0], [fdc_cmd_st0]
 
     jz  0, fdc_exec_recalibrate_terminated
 
@@ -542,29 +544,78 @@ fdc_exec_sense_drive_status_error:
 
 ##########
 fdc_exec_seek:
-.FRAME
-    # TODO implement seek
+.FRAME cylinders, tmp
+    arb -2
 
-    # TODO handle units that are not present/no floppy, see docs what to do then
-    # TODO during seek compare PCN with fdc_cmd_cylinder which is the target cylinder
+    # Prepare base value for ST0
+    mul [fdc_cmd_head], 0b00000100, [fdc_cmd_st0]
+    add [fdc_cmd_unit_selected], [fdc_cmd_st0], [fdc_cmd_st0]
+
+    # Is the unit connected?
+    add fdc_config_connected_units, [fdc_cmd_unit_selected], [ip + 1]
+    jz  [0], fdc_exec_seek_no_floppy
+
+    # Is a floppy inserted?
+    add fdc_config_inserted_units, [fdc_cmd_unit_selected], [ip + 1]
+    jz  [0], fdc_exec_seek_no_floppy
+
+    # Is the motor running?
+    add fdc_dor_enable_motor_units, [fdc_cmd_unit_selected], [ip + 1]
+    jz  [0], fdc_exec_seek_no_floppy
+
+    # Floppy is accessible, load cylinder count
+    add fdc_medium_cylinders_units, [fdc_cmd_unit_selected], [ip + 1]
+    add [0], 0, [rb + cylinders]
+
+    # Requested cylinder number must be in range
+    lt  [fdc_cmd_cylinder], 0, [rb + tmp]
+    jnz [rb + tmp], fdc_exec_seek_bad_input
+    lt  [fdc_cmd_cylinder], [rb + cylinders], [rb + tmp]
+    jz  [rb + tmp], fdc_exec_seek_bad_input
+
+    # Report disk activity
+    add [fdc_cmd_unit_selected], 0, [rb - 1]
+    add 1, 0, [rb - 2]
+    arb -2
+    call fdc_activity_callback
+
+    # Set present cylinder to the requested cylinder
+    add fdc_present_cylinder_units, [fdc_cmd_unit_selected], [ip + 3]
+    add [fdc_cmd_cylinder], 0, [0]
+
     # TODO set floppy busy with seek in MSR, it is cleared by sense interrupt
     # TODO clear floppy busy in MSR when sense interrupt
-    # TODO during command phase of seek fdc is in busy state (in MSR), during execution it's not
 
-#    # Raise INT 0e = IRQ6
-#    add 1, 0, [fdc_interrupt_pending]
-#    add 0x0e, 0, [rb - 1]
-#    arb -1
-#    call interrupt
-#
-#    ret 0
+    # Set up STO to report a successful seek (seek end)
+    add 0b00100000, [fdc_cmd_st0], [fdc_cmd_st0]
 
-    add fdc_exec_seek_error, 0, [rb - 1]
+    jz  0, fdc_exec_seek_terminated
+
+fdc_exec_seek_bad_input:
+    # Floppy is accessible, but input parameters are invalid; set up ST0 (seek end, abnormal termination)
+    add 0b01100000, [fdc_cmd_st0], [fdc_cmd_st0]
+
+    jz  0, fdc_exec_seek_terminated
+
+fdc_exec_seek_no_floppy:
+    # Floppy is not inserted, set up ST0 (not ready, seek end, abnormal termination)
+    add 0b01101000, [fdc_cmd_st0], [fdc_cmd_st0]
+
+fdc_exec_seek_terminated:
+    # Raise INT 0e = IRQ6
+    add 1, 0, [fdc_interrupt_pending]
+    add 0x0e, 0, [rb - 1]
     arb -1
-    call report_error
+    call interrupt
 
-fdc_exec_seek_error:
-    db  "fdc: seek command ","is not implemented", 0
+    # Report disk activity
+    add [fdc_cmd_unit_selected], 0, [rb - 1]
+    add 0, 0, [rb - 2]
+    arb -2
+    call fdc_activity_callback
+
+    arb 2
+    ret 0
 .ENDFRAME
 
 .EOF
