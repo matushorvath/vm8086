@@ -1,4 +1,4 @@
-.EXPORT init_ports
+.EXPORT init_vm_ports
 
 # From cpu/devices.s
 .IMPORT register_ports
@@ -7,16 +7,16 @@
 .IMPORT post_status_write
 
 ##########
-ports:
+vm_ports:
     db  0x80, 0x00, 0, post_status_write                                        # POST status port
 
     db  -1, -1, -1, -1
 
 ##########
-init_ports:
+init_vm_ports:
 .FRAME
     # Register I/O ports
-    add ports, 0, [rb - 1]
+    add vm_ports, 0, [rb - 1]
     arb -1
     call register_ports
 

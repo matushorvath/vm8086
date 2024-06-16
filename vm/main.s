@@ -12,7 +12,7 @@
 .IMPORT floppy_data
 
 # From ports.s
-.IMPORT init_ports
+.IMPORT init_vm_ports
 
 # From cga/cga.s
 .IMPORT init_cga
@@ -22,6 +22,12 @@
 
 # From cpu/images.s
 .IMPORT init_images
+
+# From dev/dma.s
+.IMPORT init_dma_8237a
+
+# From dev/fdc.s
+.IMPORT init_fdc
 
 # From dev/pit_8253.s
 .IMPORT init_pit_8253
@@ -57,8 +63,10 @@ main:
 
     call init_pit_8253
     call init_ppi_8255a
+    call init_dma_8237a
     call init_cga
-    call init_ports
+    call init_fdc
+    call init_vm_ports
 
     call execute
 
@@ -66,7 +74,7 @@ main:
 .ENDFRAME
 
 ##########
-    ds  100, 0
+    ds  1000, 0
 stack:
 
 .EOF

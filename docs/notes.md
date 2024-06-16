@@ -125,3 +125,169 @@ DOS
 ===
 
 https://github.com/codercowboy/freedosbootdisks
+FDC
+===
+
+https://www.pcjs.org/machines/pcx86/ibm/hdc/
+https://www.datasheet.live/pdfviewer?url=https%3A%2F%2Fpdf.datasheet.live%2F3fe4a52f%2Fintel.com%2FP8272A.pdf
+https://en.m.wikipedia.org/wiki/Floppy-disk_controller
+https://retrocmp.de/fdd/general/floppy-formats.htm
+https://wiki.osdev.org/Floppy_Disk_Controller
+https://www.isdaman.com/alsos/hardware/fdc/floppy.htm
+
+config_tracing_cs:
+    db  0xf000
+config_tracing_ip:
+    db  0xe6f2 # int_19
+    db  0xec59 # int_13
+    db  0xc425 # int_13_fn00
+    db  0xc42f # fdc_init
+
+fdc_init:
+
+- OK timer turns off motors by writing 0x0c to DOR
+- OK fdc_dor_reset
+    - pulse bit 2 in DOR to reset (reset state if FDC)
+    - make sure it keeps DMA on
+    - then it waits for IRQ6 = INT 0E
+- OK read status register, fail if not bit 7, fail if bit 6
+- OK fdc sense interrupt status
+    - al = 0x08 -> fdc_write
+    - fdc_read -> ST0 (if carry, error)
+    - fdc_read -> current cylinder (if carry, error) PCN
+    - if ST0 has 0x0c bits set, pass
+- fdc_send_specify
+    - sends data based on int_1E
+    - I think the only interesting bit is ND, we need to check it's 0 (DMA mode)
+
+int_19
+setloc	0E6F2h
+
+<bin/vm.bios-xt.input.map.yaml yq '.symbols.fdc_dor_write.export|(.module)+(.offset)'
+
+- OK int_13_fn08 get drive params
+    - in: dl=0, drive 0
+    - out: dl, number of drives
+    - call get_drive_type
+    - call get_media_state
+    - call set_media_state
+    - looks like no use of fdc
+- int_13_fn02 read sector
+    - al=1
+    - dx=0 (head 0, drive 0)
+    - cx=1 (track 0, sector 1)
+    - es:bx target buffer (0000:7c00)
+    - out: CF=0 success
+    - OK fdc_motor_on
+    - fdc_disk_change
+    - fdc_set_rate
+    - fdc_detect_media
+        - get_drive_type (hardcoded 1.44 3.5")
+        - fdc_read_id
+            - fdc_set_rate Cw
+            - fdc_recalibrate Dw 111
+    - fdc_configure_dma
+        - dmac_mode_reg
+        - dmac_ff_reg
+        - dmac_ch2_count_reg
+        - dmac_ch2_addr_reg
+        - dmapage_ch2_reg
+        - dmac_mask_reg
+    - fdc_seek
+        - fdc_recalibrate
+    - fdc_send_cmd 0e6
+    - fdc_wait_irq
+    - fdc_get_result
+
+Booting OS...
+reset fdc fn00              i13 Aw_00001000 Aw_00001100 R Sr_10000000 Sr_10000000
+sense interrupt status      Dw_00001000 Sr_11000000 Sr_11000000 Dr_11000000 Sr_11000000 Sr_11000000 Dr_00000000 Sr_10000000
+specify                     Dw_00000011 Sr_10000000 Dw_10101111 Sr_10000000 Dw_00000010
+get drive parameters fn08   i13
+read sector fn02            i13 Aw_00011100 Cw_00000000 Sr_10000000
+recalibrate                 Dw_00000111 Sr_10000000 Dw_00000000 Sr_10000000
+Dw_00000111 Sr_10000000 Dw_00000000 Cw_00000010 Sr_10000000
+Dw_00000111 Sr_10000000 Dw_00000000 Sr_10000000
+Dw_00000111 Sr_10000000 Dw_00000000 Sr_10000000
+Dw_00000011 Sr_10000000 Dw_11011111 Sr_10000000 Dw_00000010 Sr_10000000
+Dw_00000111 Sr_10000000 Dw_00000000 Sr_10000000
+Dw_00000111 Sr_10000000 Dw_00000000 Sr_10000000
+
+(after recalibrate works)
+Booting OS...
+reset fdc fn00              i13 Aw_00001000 Aw_00001100 R Sr_10000000 Sr_10000000
+sense interrupt status      Dw_00001000 Sr_11000000 Sr_11000000 Dr_11000000 Sr_11000000 Sr_11000000 Dr_00000000 Sr_10000000
+specify                     Dw_00000011 Sr_10000000 Dw_10101111 Sr_10000000 Dw_00000010
+get drive parameters fn08   i13
+read sector fn02            i13 Aw_00011100 Cw_00000000 Sr_10000000
+recalibrate                 Dw_00000111 Sr_10000000 Dw_00000000 Sr_10000000
+sense interrupt status      Dw_00001000 Sr_11000000 Sr_11000000 looks unfinished
+Cw_00000010 Sr_11000000 Sr_11000000 Sr_11000000
+
+reset fdc fn00              i13 Aw_00011000 Aw_00011100 R Sr_11000000
+reset fdc fn00 attempt 2    Aw_00011000 Aw_00011100 R Sr_11000000
+reset fdc fn00              i13 Aw_00011000 Aw_00011100 R Sr_11000000
+reset fdc fn00 attempt 2    Aw_00011000 Aw_00011100 R Sr_11000000
+reset fdc fn00              i13 Aw_00011000 Aw_00011100 R Sr_11000000
+reset fdc fn00 attempt 2    Aw_00011000 Aw_00011100 R Sr_11000000
+                            i13
+
+(after fdc busy flag)
+Booting OS...
+reset fdc fn00              i13_00 Aw_00001000 Aw_00001100 R Sr_10000000 Sr_10000000
+sense interrupt status      Dw_00001000 Sr_11010000 Sr_11010000 Dr_11000000 Sr_11010000 Sr_11010000 Dr_00000000 Sr_10000000
+specify                     Dw_00000011 Sr_10010000 Dw_10101111 Sr_10010000 Dw_00000010
+get drive parameters fn08   i13_08
+read sector fn02            i13_02 Aw_00011100 Cw_00000000 Sr_10000000
+recalibrate                 Dw_00000111 Sr_10010000 Dw_00000000 Sr_10000000
+sense interrupt status      Dw_00001000 Sr_11010000 Dr_10000000 Sr_10000000 Sr_10000000
+read id                     Dw_01001010 Sr_10010000 Dw_00000000 (waits, probably for interrupt) Cw_00000010 Sr_11010000 Sr_11010000 Sr_11010000
+
+reset fdc fn00              i13_00 Aw_00011000 Aw_00011100 R Sr_11010000 Aw_00011000 Aw_00011100 R Sr_11010000
+                            i13_00 Aw_00011000 Aw_00011100 R Sr_11010000 Aw_00011000 Aw_00011100 R Sr_11010000
+                            i13_00 Aw_00011000 Aw_00011100 R Sr_11010000 Aw_00011000 Aw_00011100 R Sr_11010000
+                            i13_0d
+
+(after read id does IRQ6)
+Booting OS...
+reset fdc fn00              i13_00 Aw_00001000 Aw_00001100 R Sr_10000000 Sr_10000000
+sense interrupt status      Dw_00001000 Sr_11010000 Sr_11010000 Dr_11000000 Sr_11010000 Sr_11010000 Dr_00000000 Sr_10000000
+specify                     Dw_00000011 Sr_10010000 Dw_10101111 Sr_10010000 Dw_00000010
+get drive parameters fn08   i13_08
+read sector fn02            i13_02 Aw_00011100 Cw_00000000 Sr_10000000
+recalibrate                 Dw_00000111 Sr_10010000 Dw_00000000 Sr_10000000
+sense interrupt status      Dw_00001000 Sr_11010000 Dr_00010000 Sr_11010000 Dr_00000000 Sr_10000000 Sr_10000000
+read id                     Dw_01001010 Sr_10010000 Dw_00000000 Sr_11010000 Dr_00000000 Sr_11010000 Dr_00000000 Sr_11010000 Dr_00000000 Sr_11010000 Dr_00000000 Sr_11010000 Dr_00000000 Sr_11010000 Dr_00000001 Sr_11010000 Dr_1000000000 Sr_10000000 Sr_10000000
+specify                     Dw_00000011 Sr_10010000 Dw_11011111 Sr_10010000 Dw_00000010 Sr_10000000
+read data                   Dw_11100110 Sr_10010000 Dw_00000000 Sr_10010000 Dw_00000000 Sr_10010000 Dw_00000000 Sr_10010000 Dw_00000001 Sr_10010000 Dw_00000010 Sr_10010000 Dw_00100100 Sr_10010000 Dw_00011011 Sr_10010000 Dw_11111111 Sr_11010000 Dr_00000000 Sr_11010000 Dr_00000000 Sr_11010000 Dr_00000000 Sr_11010000 Dr_00000000 Sr_11010000 Dr_00000000 Sr_11010000 Dr_00000001 Sr_11010000 Dr_00000010 Sr_10000000
+
+reset fdc fn00              i13_00 Aw_00011000 Aw_00011100 R Sr_10000000 Sr_10000000
+
+FreeDOS Plan
+============
+
+tools (sorted by priority):
+ - unit tests for fdc
+    - investigate if bochs has upd765ac or something else, how compatible it is
+    - infrastructure based on test-bochs, with libdev and libfdc
+    - floppy image with a test pattern
+
+ - 8086 monitor with code listing
+    - investigate if we can get NASM lst for FreeDOS bootstrap code
+    - investigate what format does FreeDOS use for C debug info
+    - compile 8088_bios with NASM lst
+    - add a new 8086 tracing mode that outputs JSONs
+       - current 8086 address
+       - state of all registers, stack
+       - relevant memory locations (every location read/written during instruction execution?)
+    - monitor in js that parses the JSONs and .lst files (and C debug info) and displays source code and state
+
+ - logging based on config.s, multiple configurable subsystems
+    - or better, preprocessor with ifdef support and a debug version
+
+ - improve xzintbit debugging
+    - as option to export all symbols, maybe add a new section to .o with non-exported symbols (asd debug version)
+    - as option to map line number to memory address, maybe also add a new section to .o for that (asd debug version)
+    - ldmap to include all that information in map, ld to ignore new sections if present
+        - for symbols and line addresses, they need to be relocated same as exported symbols
+        - for lines, we also need to somehow know file name for the line number (perhaps an additional input to asd, same as bin2obj)

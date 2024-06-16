@@ -31,10 +31,11 @@ build-prep:
 run: build
 	$(ICVM) $(BINDIR)/$(VM_NAME)
 
-# The order of the object files matters, the BIOS binary needs to be the last object.
+# The order of the object files matters, the BIOS and floppy binaries need to be the last objects.
 
-VM_OBJS = main.o config.o ports.o $(BIOS_NAME)_address.o $(BINDIR)/libcpu.a $(BINDIR)/libcga.a \
-	$(BINDIR)/libdev.a $(BINDIR)/libutil.a $(LIBXIB) $(BIOS_NAME).o $(FLOPPY_NAME).o
+VM_OBJS = main.o config.o vm_ports.o $(BIOS_NAME)_address.o $(BINDIR)/libcpu.a $(BINDIR)/libcga.a \
+	$(BINDIR)/libdev.a $(BINDIR)/libfdc.a $(BINDIR)/libutil.a $(LIBXIB) \
+	$(BIOS_NAME).o $(FLOPPY_NAME).o
 
 $(BINDIR)/$(VM_NAME): $(VM_OBJS:%.o=$(OBJDIR)/%.o)
 	$(run-intcode-ld)

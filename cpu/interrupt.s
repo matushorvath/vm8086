@@ -70,6 +70,27 @@ interrupt:
 .FRAME type; vector
     arb -1
 
+#    # TODO fdcm remove
+#    eq  [rb + type], 0x13, [rb - 1]
+#    jz  [rb - 1], TODO_skip_print
+#    jnz  [reg_ah], TODO_skip_nl
+#    out 10
+#TODO_skip_nl:
+#    out 10
+#    out 'i'
+#    out '1'
+#    out '3'
+#    out '_'
+#    .IMPORT print_num_radix
+#    .IMPORT reg_ah
+#    add [reg_ah], 0, [rb - 1]
+#    add 16, 0, [rb - 2]
+#    add 2, 0, [rb - 3]
+#    arb -3
+#    call print_num_radix
+#    out ' '
+#TODO_skip_print:
+
     # Push flags, then disable TF and IF
     call pushf
 
