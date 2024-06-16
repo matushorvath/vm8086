@@ -16,6 +16,9 @@
 .EXPORT fdc_exec_sense_drive_status
 .EXPORT fdc_exec_seek
 
+# From a linked binary
+.IMPORT fdc_activity_callback
+
 # From fdc_config.s
 .IMPORT fdc_config_connected_units
 .IMPORT fdc_config_inserted_units
@@ -121,6 +124,12 @@ fdc_exec_read_data:
     eq  [dma_mode_ch2], 1, [rb + tmp]                       # only single mode is supported (1)
     jz  [rb + tmp], fdc_exec_read_data_no_dma
 
+    # Report disk activity
+    add [fdc_cmd_unit_selected], 0, [rb - 1]
+    add 1, 0, [rb - 2]
+    arb -2
+    call fdc_activity_callback
+
     # DMA is set up, find the data we want to read
     # addr = floppy_image + ((cylinder * heads + head) * sectors + (sector - 1)) * 512
     mul [fdc_cmd_cylinder], [rb + heads], [rb + addr]
@@ -197,6 +206,8 @@ fdc_exec_read_data_bad_input:
     add 0, 0, [fdc_cmd_head]
     add 0, 0, [fdc_cmd_sector]
 
+    jz  0, fdc_exec_read_data_terminated
+
 fdc_exec_read_data_no_floppy:
     # Floppy is not accessible
     # Set up ST0 (not ready, abnormal termination), ST1 (missing address mark, no data), ST2
@@ -209,14 +220,18 @@ fdc_exec_read_data_no_floppy:
     add 0, 0, [fdc_cmd_head]
     add 0, 0, [fdc_cmd_sector]
 
-    jz  0, fdc_exec_read_data_terminated
-
 fdc_exec_read_data_terminated:
     # Raise INT 0e = IRQ6
     add 1, 0, [fdc_interrupt_pending]
     add 0x0e, 0, [rb - 1]
     arb -1
     call interrupt
+
+    # Report disk activity
+    add [fdc_cmd_unit_selected], 0, [rb - 1]
+    add 0, 0, [rb - 2]
+    arb -2
+    call fdc_activity_callback
 
     arb 6
     ret 0
@@ -237,6 +252,7 @@ fdc_exec_read_deleted_data_error:
 fdc_exec_write_data:
 .FRAME
     # TODO implement write data
+    # TODO disk activity
 
 #    # Raise INT 0e = IRQ6
 #    add 1, 0, [fdc_interrupt_pending]
@@ -269,6 +285,7 @@ fdc_exec_write_deleted_data_error:
 fdc_exec_read_track:
 .FRAME
     # TODO implement read track
+    # TODO disk activity
 
 #    # Raise INT 0e = IRQ6
 #    add 1, 0, [fdc_interrupt_pending]
@@ -365,6 +382,7 @@ fdc_exec_read_id_terminated:
 fdc_exec_format_track:
 .FRAME
     # TODO implement format track
+    # TODO disk activity
 
 #    # Raise INT 0e = IRQ6
 #    add 1, 0, [fdc_interrupt_pending]
@@ -386,6 +404,7 @@ fdc_exec_format_track_error:
 fdc_exec_scan_equal:
 .FRAME
     # TODO implement scan equal
+    # TODO disk activity
 
 #    # Raise INT 0e = IRQ6
 #    add 1, 0, [fdc_interrupt_pending]
@@ -407,6 +426,7 @@ fdc_exec_scan_equal_error:
 fdc_exec_scan_low_or_equal:
 .FRAME
     # TODO implement scan low or equal
+    # TODO disk activity
 
 #    # Raise INT 0e = IRQ6
 #    add 1, 0, [fdc_interrupt_pending]
@@ -428,6 +448,7 @@ fdc_exec_scan_low_or_equal_error:
 fdc_exec_scan_high_or_equal:
 .FRAME
     # TODO implement scan high or equal
+    # TODO disk activity
 
 #    # Raise INT 0e = IRQ6
 #    add 1, 0, [fdc_interrupt_pending]

@@ -1,3 +1,5 @@
+.EXPORT fdc_activity_callback
+
 # From bios.o
 .IMPORT bios_count
 .IMPORT bios_header
@@ -16,6 +18,9 @@
 
 # From cga/cga.s
 .IMPORT init_cga
+
+# From cga/status.s
+.IMPORT set_disk_active
 
 # From cpu/execute.s
 .IMPORT execute
@@ -71,6 +76,16 @@ main:
     call execute
 
     ret 0
+.ENDFRAME
+
+##########
+fdc_activity_callback:
+.FRAME unit, active;
+    add [rb + active], 0, [rb - 1]
+    arb -1
+    call set_disk_active
+
+    ret 2
 .ENDFRAME
 
 ##########
