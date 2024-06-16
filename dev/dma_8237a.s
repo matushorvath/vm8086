@@ -436,7 +436,7 @@ dma_address_ch2_write_log_fdc:
     ret 0
 
 dma_address_ch2_write_log_fdc_start:
-    db  "dma ch02, write address ", 0
+    db  "dma ch02, write address 0x", 0
 .ENDFRAME
 
 ##########
@@ -521,7 +521,7 @@ dma_count_ch2_write_log_fdc:
 
     add [dma_count_ch2], 0, [rb - 1]
     arb -1
-    call print_num_16
+    call print_num
 
     out 10
     ret 0
@@ -619,7 +619,7 @@ dma_page_ch2_write_log_fdc:
     ret 0
 
 dma_page_ch2_write_log_fdc_start:
-    db  "dma ch02, write page ", 0
+    db  "dma ch02, write page 0x", 0
 .ENDFRAME
 
 ##########

@@ -291,3 +291,108 @@ tools (sorted by priority):
     - ldmap to include all that information in map, ld to ignore new sections if present
         - for symbols and line addresses, they need to be relocated same as exported symbols
         - for lines, we also need to somehow know file name for the line number (perhaps an additional input to asd, same as bin2obj)
+
+FreeDOS Boot
+============
+
+FreeDOS
+fdc dor write, value 00011100                   select A, enable A motor
+fdc status read, value 10000000                 data ready, to controller, not busy
+===== fdc state machine, new command started
+fdc data write, value 00000011 (0x03)           specify
+fdc status read, value 10010000                 data ready, busy
+fdc data write, value 10111111 (0xbf)           srt/hut
+fdc status read, value 10010000
+fdc data write, value 00000010 (0x02)           hlt/nd (dma on)
+dma ch02, write count L ff
+dma ch02, write count H 1ff                     DMA 512 bytes
+dma ch02, write address L 0
+dma ch02, write address H 600                   DMA address 0x000600
+dma ch02, write page 0
+fdc status read, value 10000000                 data ready, to controller, not busy
+===== fdc state machine, new command started
+fdc data write, value 11100110 (0xe6)           read data, MT=1
+fdc status read, value 10010000
+fdc data write, value 00000100 (0x04)           H=1
+fdc status read, value 10010000
+fdc data write, value 00000000 (0x00)           C=0
+fdc status read, value 10010000
+fdc data write, value 00000001 (0x01)           H=1
+fdc status read, value 10010000
+fdc data write, value 00000010 (0x02)           R=2
+fdc status read, value 10010000
+fdc data write, value 00000010 (0x02)           N=02->512
+fdc status read, value 10010000
+fdc data write, value 00100100 (0x24)           EOT=36 (18 * 2 sectors per cylinder)
+fdc status read, value 10010000
+fdc data write, value 00011011 (0x1b)           GPL
+fdc status read, value 10010000
+fdc data write, value 11111111 (0xff)           DTL=0xff
+dma ch02, receive data, count 512               read 512 bytes from C=0 H=1 R=2 = start at (18 + 2 - 1) * 512 = 0x2600
+fdc status read, value 11010000                 data ready, from controller, busy
+fdc data read, value 00000100 (0x04)            ST0 (head 1, unit 0, OK)
+fdc status read, value 11010000
+fdc data read, value 00000000 (0x00)            ST1
+fdc status read, value 11010000
+fdc data read, value 00000000 (0x00)            ST2
+fdc status read, value 11010000
+fdc data read, value 00000000 (0x00)            C=0
+fdc status read, value 11010000
+fdc data read, value 00000001 (0x01)            H=1
+fdc status read, value 11010000
+fdc data read, value 00000011 (0x03)            R=3
+fdc status read, value 11010000
+fdc data read, value 00000010 (0x02)            N=02->512
+fdc status read, value 10000000                 data ready, to controller, not busy
+int 13, fn 2                                    BIOS floppy read data
+fdc dor write, value 00011100                   select A, enable A motor
+fdc status read, value 10000000                 data ready, to controller, not busy
+===== fdc state machine, new command started
+fdc data write, value 00000011 (0x03)           specify
+fdc status read, value 10010000
+fdc data write, value 10111111 (0xbf)           srt/hut
+fdc status read, value 10010000
+fdc data write, value 00000010 (0x02)           hlt/nd (dma on)
+dma ch02, write count L ff
+dma ch02, write count H 1ff                     DMA 512 bytes
+dma ch02, write address L 0
+dma ch02, write address H 800                   DMA addres 0x000800
+dma ch02, write page 0
+fdc status read, value 10000000                 data ready, to controller, not busy
+===== fdc state machine, new command started
+fdc data write, value 11100110 (0xe6)           read data, MT=1
+fdc status read, value 10010000
+fdc data write, value 00000100 (0x04)           head 1
+fdc status read, value 10010000
+fdc data write, value 00000000 (0x00)           C=0
+fdc status read, value 10010000
+fdc data write, value 00000001 (0x01)           H=1
+fdc status read, value 10010000
+fdc data write, value 00000011 (0x03)           R=3
+fdc status read, value 10010000
+fdc data write, value 00000010 (0x02)           N=02->512
+fdc status read, value 10010000
+fdc data write, value 00100100 (0x24)           EOT=36
+fdc status read, value 10010000
+fdc data write, value 00011011 (0x1b)           GPT
+fdc status read, value 10010000
+fdc data write, value 11111111 (0xff)           DTL=0xff
+fdc status read, value 11010000
+fdc data read, value 10001100 (0x8c)            S0 (head 1, unit 0, not ready, OK) TODO why is the unit not ready?
+fdc status read, value 11010000
+fdc data read, value 00000101 (0x05)            S1 (missing address mark, no data) TODO why?
+fdc status read, value 11010000
+fdc data read, value 00000000 (0x00)            S2
+fdc status read, value 11010000
+fdc data read, value 00000000 (0x00)            C=0
+fdc status read, value 11010000
+fdc data read, value 00000000 (0x00)            H=0
+fdc status read, value 11010000
+fdc data read, value 00000000 (0x00)            R=0
+fdc status read, value 11010000
+fdc data read, value 00000010 (0x02)            N=02->512
+fdc status read, value 10000000
+int 13, fn 0                                    FDC reset
+fdc dor write, value 00011000
+fdc dor write, value 00011100
+fdc reset controller

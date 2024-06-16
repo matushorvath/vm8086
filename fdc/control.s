@@ -185,6 +185,11 @@ fdc_d765ac_reset:
     # TODO reset D765AC registers to zero, but don't touch the DOR,
     # also don't touch SRT HUT HLT in Specify command
 
+    # Floppy logging
+    jz  [config_log_fdc], fdc_d765ac_reset_after_log_fdc
+    call fdc_d765ac_reset_log_fdc
+
+fdc_d765ac_reset_after_log_fdc:
     # After reset both units have changed ready status, following sense interrupt status
     # will return ST0 with bits 6 and 7 set
     add 0b11000000, 0, [fdc_cmd_st0]
@@ -196,11 +201,6 @@ fdc_d765ac_reset:
     arb -1
     call interrupt
 
-    # Floppy logging
-    jz  [config_log_fdc], fdc_d765ac_reset_after_log_fdc
-    call fdc_d765ac_reset_log_fdc
-
-fdc_d765ac_reset_after_log_fdc:
     ret 0
 .ENDFRAME
 

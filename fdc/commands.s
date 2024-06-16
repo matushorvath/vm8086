@@ -108,7 +108,7 @@ fdc_exec_read_data:
     # Sector number must be in range (1-based)
     lt  [fdc_cmd_sector], 1, [rb + tmp]
     jnz [rb + tmp], fdc_exec_read_data_bad_input
-    lt  [rb + heads], [fdc_cmd_sector], [rb + tmp]
+    lt  [rb + sectors], [fdc_cmd_sector], [rb + tmp]
     jnz [rb + tmp], fdc_exec_read_data_bad_input
 
     # Check the DMA controller

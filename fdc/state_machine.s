@@ -527,7 +527,7 @@ fdc_data_write_log_fdc_have_command:
     ret 1
 
 fdc_data_write_log_fdc_new_command:
-    db  "fdc state machine, new command started", 0
+    db  "===== fdc state machine, new command started", 0
 fdc_data_write_log_fdc_start:
     db  "fdc data write, value ", 0
 fdc_data_write_log_fdc_hex:

@@ -80,9 +80,15 @@ interrupt:
 
     # Floppy logging
     jz  [config_log_fdc], interrupt_after_log_fdc
+
     eq  [rb + type], 0x13, [rb + tmp]
+    jz  [rb + tmp], interrupt_after_log_fdc_13
+    call interrupt_log_fdc_13
+
+interrupt_after_log_fdc_13:
+    eq  [rb + type], 0x0e, [rb + tmp]
     jz  [rb + tmp], interrupt_after_log_fdc
-    call interrupt_log_fdc
+    call interrupt_log_fdc_0e
 
 interrupt_after_log_fdc:
     # Push flags, then disable TF and IF
@@ -135,9 +141,9 @@ interrupt_after_log_fdc:
 .ENDFRAME
 
 ##########
-interrupt_log_fdc:
+interrupt_log_fdc_13:
 .FRAME
-    add interrupt_log_fdc_start, 0, [rb - 1]
+    add interrupt_log_fdc_13_start, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -148,8 +154,22 @@ interrupt_log_fdc:
     out 10
     ret 0
 
-interrupt_log_fdc_start:
+interrupt_log_fdc_13_start:
     db  "int 13, fn ", 0
+.ENDFRAME
+
+##########
+interrupt_log_fdc_0e:
+.FRAME
+    add interrupt_log_fdc_0e_start, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    out 10
+    ret 0
+
+interrupt_log_fdc_0e_start:
+    db  "irq 6", 0
 .ENDFRAME
 
 ##########
