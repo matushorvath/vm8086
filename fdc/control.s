@@ -6,6 +6,9 @@
 .EXPORT fdc_dor_enable_motor_units
 .EXPORT fdc_interrupt_pending
 
+# From the config file
+.IMPORT config_log_fdc
+
 # From fdc_init.s
 .IMPORT fdc_error_non_dma
 
@@ -23,24 +26,23 @@
 # From util/bits.s
 .IMPORT bits
 
-# TODO remove
-.IMPORT print_num_radix
+# From libxib.a
+.IMPORT print_str
+.IMPORT print_num_2_b
 
 ##########
 fdc_dor_write:
 .FRAME addr, value; value_bits, tmp
     arb -2
 
-#    out 'A' # TODO fdcm remove
-#    out 'w'
-#    out '_'
-#    add [rb + value], 0, [rb - 1]
-#    add 2, 0, [rb - 2]
-#    add 8, 0, [rb - 3]
-#    arb -3
-#    call print_num_radix
-#    out ' '
+    # Floppy logging
+    jz  [config_log_fdc], fdc_dor_write_after_log_fdc
 
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call fdc_dor_write_log_fdc
+
+fdc_dor_write_after_log_fdc:
     # Convert value to bits
     mul [rb + value], 8, [rb + tmp]
     add bits, [rb + tmp], [rb + value_bits]
@@ -80,13 +82,27 @@ fdc_dor_write_dma_enabled:
 .ENDFRAME
 
 ##########
+fdc_dor_write_log_fdc:
+.FRAME value;
+    add fdc_dor_write_log_fdc_start, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call print_num_2_b
+
+    out 10
+    ret 1
+
+fdc_dor_write_log_fdc_start:
+    db  "fdc dor write, value ", 0
+.ENDFRAME
+
+##########
 fdc_status_read:
 .FRAME addr; value, tmp
     arb -2
-
-#    out 'S' # TODO fdcm remove
-#    out 'r'
-#    out '_'
 
     # Controller is busy in non-idle command state
     # Bit 4 CB  - Controller is busy reading or writing
@@ -108,16 +124,34 @@ fdc_status_read:
     # Bit 7 RQM - data register is ready for data transfer
     add [rb + value], 0b10000000, [rb + value]
 
-#    # TODO fdcm remove
-#    add [rb + value], 0, [rb - 1]
-#    add 2, 0, [rb - 2]
-#    add 8, 0, [rb - 3]
-#    arb -3
-#    call print_num_radix
-#    out ' '
+    # Floppy logging
+    jz  [config_log_fdc], fdc_status_read_after_log_fdc
 
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call fdc_status_read_log_fdc
+
+fdc_status_read_after_log_fdc:
     arb 2
     ret 1
+.ENDFRAME
+
+##########
+fdc_status_read_log_fdc:
+.FRAME value;
+    add fdc_status_read_log_fdc_start, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call print_num_2_b
+
+    out 10
+    ret 1
+
+fdc_status_read_log_fdc_start:
+    db  "fdc status read, value ", 0
 .ENDFRAME
 
 ##########
@@ -125,16 +159,6 @@ fdc_control_write:
 .FRAME addr, value;
     # TODO this is I think used to detect floppy type
     # if yes, we need to return errors (when reading?) unless the speed is set correctly
-
-#    out 'C' # TODO fdcm remove
-#    out 'w'
-#    out '_'
-#    add [rb + value], 0, [rb - 1]
-#    add 2, 0, [rb - 2]
-#    add 8, 0, [rb - 3]
-#    arb -3
-#    call print_num_radix
-#    out ' '
 
     # Bits 7-2 Reserved
     # Bits 2-0 Diskette Data Rate (00 500000, 01 300000, 10 250000, 11 125000)
@@ -146,10 +170,6 @@ fdc_control_write:
 fdc_dir_read:
 .FRAME addr; value
     arb -1
-
-#    out 'A' # TODO fdcm remove
-#    out 'r'
-#    out ' '
 
     # The only bit related to floppy operation is bit 7 - diskette change
     # We don't support changing the diskette, so return all zeros
@@ -176,10 +196,26 @@ fdc_d765ac_reset:
     arb -1
     call interrupt
 
-#    out 'R' # TODO fdcm remove
-#    out ' '
+    # Floppy logging
+    jz  [config_log_fdc], fdc_d765ac_reset_after_log_fdc
+    call fdc_d765ac_reset_log_fdc
 
+fdc_d765ac_reset_after_log_fdc:
     ret 0
+.ENDFRAME
+
+##########
+fdc_d765ac_reset_log_fdc:
+.FRAME
+    add fdc_d765ac_reset_log_fdc_start, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    out 10
+    ret 0
+
+fdc_d765ac_reset_log_fdc_start:
+    db  "fdc reset controller", 0
 .ENDFRAME
 
 ##########

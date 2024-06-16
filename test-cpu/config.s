@@ -4,7 +4,7 @@
 .EXPORT config_flags_as_286
 .EXPORT config_bcd_as_bochs
 .EXPORT config_de_fault_as_286
-.EXPORT config_boot_80x25
+.EXPORT config_log_fdc
 
 # Tracing (0 - disable tracing, -1 - trace always, >0 - tracing past given address)
 config_enable_tracing:
@@ -28,8 +28,8 @@ config_bcd_as_bochs:
 config_de_fault_as_286:
     db  0
 
-# Boot in CGA 80x25 text mode
-config_boot_80x25:
-    db  1
+# Logging configuration
+config_log_fdc:
+    db  0
 
 .EOF

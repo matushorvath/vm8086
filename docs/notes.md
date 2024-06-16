@@ -282,8 +282,8 @@ tools (sorted by priority):
        - relevant memory locations (every location read/written during instruction execution?)
     - monitor in js that parses the JSONs and .lst files (and C debug info) and displays source code and state
 
- - logging based on config.s, multiple configurable subsystems
-    - or better, preprocessor with ifdef support and a debug version
+ - DONE logging based on config.s, multiple configurable subsystems
+    - or better, preprocessor with ifdef support and a debug version, don't even compile in the logging
 
  - improve xzintbit debugging
     - as option to export all symbols, maybe add a new section to .o with non-exported symbols (asd debug version)

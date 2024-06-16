@@ -4,6 +4,9 @@
 .EXPORT execute_iret
 .EXPORT interrupt
 
+# From the config file
+.IMPORT config_log_fdc
+
 # From memory.s
 .IMPORT read_b
 .IMPORT read_cs_ip_b
@@ -15,6 +18,7 @@
 .IMPORT pushf
 
 # From state.s
+.IMPORT reg_ah
 .IMPORT reg_cs
 .IMPORT reg_ip
 .IMPORT inc_ip_b
@@ -22,6 +26,10 @@
 .IMPORT flag_interrupt
 .IMPORT flag_overflow
 .IMPORT flag_trap
+
+# From libxib.a
+.IMPORT print_str
+.IMPORT print_num
 
 ##########
 execute_int3:
@@ -67,30 +75,16 @@ execute_int:
 
 ##########
 interrupt:
-.FRAME type; vector
-    arb -1
+.FRAME type; vector, tmp
+    arb -2
 
-#    # TODO fdcm remove
-#    eq  [rb + type], 0x13, [rb - 1]
-#    jz  [rb - 1], TODO_skip_print
-#    jnz  [reg_ah], TODO_skip_nl
-#    out 10
-#TODO_skip_nl:
-#    out 10
-#    out 'i'
-#    out '1'
-#    out '3'
-#    out '_'
-#    .IMPORT print_num_radix
-#    .IMPORT reg_ah
-#    add [reg_ah], 0, [rb - 1]
-#    add 16, 0, [rb - 2]
-#    add 2, 0, [rb - 3]
-#    arb -3
-#    call print_num_radix
-#    out ' '
-#TODO_skip_print:
+    # Floppy logging
+    jz  [config_log_fdc], interrupt_after_log_fdc
+    eq  [rb + type], 0x13, [rb + tmp]
+    jz  [rb + tmp], interrupt_after_log_fdc
+    call interrupt_log_fdc
 
+interrupt_after_log_fdc:
     # Push flags, then disable TF and IF
     call pushf
 
@@ -136,8 +130,26 @@ interrupt:
 
     # TODO reset/halt for triple fault
 
-    arb 1
+    arb 2
     ret 1
+.ENDFRAME
+
+##########
+interrupt_log_fdc:
+.FRAME
+    add interrupt_log_fdc_start, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [reg_ah], 0, [rb - 1]
+    arb -1
+    call print_num
+
+    out 10
+    ret 0
+
+interrupt_log_fdc_start:
+    db  "int 13, fn ", 0
 .ENDFRAME
 
 ##########
