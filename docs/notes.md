@@ -262,3 +262,32 @@ specify                     Dw_00000011 Sr_10010000 Dw_11011111 Sr_10010000 Dw_0
 read data                   Dw_11100110 Sr_10010000 Dw_00000000 Sr_10010000 Dw_00000000 Sr_10010000 Dw_00000000 Sr_10010000 Dw_00000001 Sr_10010000 Dw_00000010 Sr_10010000 Dw_00100100 Sr_10010000 Dw_00011011 Sr_10010000 Dw_11111111 Sr_11010000 Dr_00000000 Sr_11010000 Dr_00000000 Sr_11010000 Dr_00000000 Sr_11010000 Dr_00000000 Sr_11010000 Dr_00000000 Sr_11010000 Dr_00000001 Sr_11010000 Dr_00000010 Sr_10000000
 
 reset fdc fn00              i13_00 Aw_00011000 Aw_00011100 R Sr_10000000 Sr_10000000
+
+FreeDOS Plan
+============
+
+tools (sorted by priority):
+ - unit tests for fdc
+    - investigate if bochs has upd765ac or something else, how compatible it is
+    - infrastructure based on test-bochs, with libdev and libfdc
+    - floppy image with a test pattern
+
+ - 8086 monitor with code listing
+    - investigate if we can get NASM lst for FreeDOS bootstrap code
+    - investigate what format does FreeDOS use for C debug info
+    - compile 8088_bios with NASM lst
+    - add a new 8086 tracing mode that outputs JSONs
+       - current 8086 address
+       - state of all registers, stack
+       - relevant memory locations (every location read/written during instruction execution?)
+    - monitor in js that parses the JSONs and .lst files (and C debug info) and displays source code and state
+
+ - logging based on config.s, multiple configurable subsystems
+    - or better, preprocessor with ifdef support and a debug version
+
+ - improve xzintbit debugging
+    - as option to export all symbols, maybe add a new section to .o with non-exported symbols (asd debug version)
+    - as option to map line number to memory address, maybe also add a new section to .o for that (asd debug version)
+    - ldmap to include all that information in map, ld to ignore new sections if present
+        - for symbols and line addresses, they need to be relocated same as exported symbols
+        - for lines, we also need to somehow know file name for the line number (perhaps an additional input to asd, same as bin2obj)
