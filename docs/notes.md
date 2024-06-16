@@ -396,3 +396,52 @@ int 13, fn 0                                    FDC reset
 fdc dor write, value 00011000
 fdc dor write, value 00011100
 fdc reset controller
+
+pcxtbios
+========
+
+delay_keypress f000:f9b3
+
+int 16h, ah=1 check for keypress
+int 16h, ah=1 flush keyboard buffer
+
+f000:f9bb is where the int 16h happens
+
+bx starts as 3*18
+add [es:46Ch] to bx (0000:046C = 0040:006C)
+
+problem: [es:46Ch] always is 0x00ca, it's supposed to be current ticks but it never changes
+-> investigate how [es:46Ch] is updated, probably from something we don't have implemented in timer
+
+	dw	?		; 40:6C		; Ticks since midnite (lo)
+	dw	?		; 40:6E		; Ticks since midnite (hi)
+
+updated by:
+INT_8:  STI                                     ; Routine services clock tick
+also
+INT_1A: STI (but that seems to be the API to set time of day)
+
+proc	int_8	far hardware clock
+8259 chip
+
+-> we need something to trigger int 8
+that will change the ticks count and make the delay eventually expire
+
+int8 is irq 0, timer interrupt that we don't have
+
+-> workaround: in boot_basic comment out delay_keypress
+
+-----
+f000:f2b2 IN AL, DX(ec)
+f000:f2b3 TEST AL, IMMED8(a8) 08
+f000:f2b5 JZ SHORT-LABEL(74) fb
+goto 10
+
+	mov	dx, 3DAh			; Else 80x25, do the kludge
+
+@@wait: in	al, dx				; Read CGA status register
+	test	al, 00001000b			;   vertical retrace?
+	jz	@@wait				;   wait until it is
+
+-> fixed vertical retrace in cga/registers.s
+then it crashes on unsupported read data command variant

@@ -156,7 +156,7 @@ status_read_after_horizontal:
 
     # Yes, report vertical retrace
     add [rb + value], 0b00001000, [rb + value]
-    add 16, 0, [horizontal_retrace_counter]
+    add 16, 0, [vertical_retrace_counter]
 
 status_read_after_vertical:
     add [vertical_retrace_counter], -1, [vertical_retrace_counter]
