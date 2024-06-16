@@ -7,6 +7,9 @@
 .EXPORT dma_mode_ch2
 .EXPORT dma_count_ch2
 
+# From the config file
+.IMPORT config_log_fdc
+
 # From cpu/devices.s
 .IMPORT register_ports
 
@@ -19,8 +22,10 @@
 # From util/bits.s
 .IMPORT bits
 
-# TODO remove
-.IMPORT print_num_2
+# From libxib.a
+.IMPORT print_str
+.IMPORT print_num
+.IMPORT print_num_2_b
 .IMPORT print_num_16
 
 ##########
@@ -69,11 +74,16 @@ dma_receive_data:
 .FRAME channel, src_addr, count; dst_addr, index, tmp
     arb -3
 
-#    # TODO fdcm remove
-#    out 'd'
-#    out 'D'
-#    out ' '
+    # Floppy logging
+    jz  [config_log_fdc], dma_receive_data_after_log_fdc
+    eq  [rb + channel], 0x02, [rb + tmp]
+    jz  [rb + tmp], dma_receive_data_after_log_fdc
 
+    add [rb + count], 0, [rb - 1]
+    arb -1
+    call dma_receive_data_log_fdc
+
+dma_receive_data_after_log_fdc:
     # TODO range check channel
 
     # Check the DMA controller
@@ -100,19 +110,6 @@ dma_receive_data:
     add [0], [rb + dst_addr], [rb + dst_addr]
     add [mem], [rb + dst_addr], [rb + dst_addr]
 
-#    # TODO fdcm
-#    out 10
-#    out 10
-#    out 'X'
-#    out 'X'
-#    out 'X'
-#    out 10
-#
-#    add [rb + src_addr], 0, [rb - 1]
-#    arb -1
-#    call print_num_16
-#    out 10
-
     add 0, 0, [rb + index]
 
 dma_receive_data_loop:
@@ -121,13 +118,6 @@ dma_receive_data_loop:
     # TODO handle dma_decrement_channels
     add [rb + dst_addr], [rb + index], [ip + 3]
     add [0], 0, [0]
-
-#    # TODO fdcm remove
-#    add [rb + src_addr], [rb + index], [ip + 1]
-#    add [0], 0, [rb - 1]
-#    arb -1
-#    call print_num_16
-#    out ' '
 
     # Increase index
     # TODO handle wraparound for dst_addr, it wraps around 0xffff and then adds the shifted page
@@ -145,18 +135,38 @@ dma_receive_data_drop:
 .ENDFRAME
 
 ##########
+dma_receive_data_log_fdc:
+.FRAME count;
+    add dma_receive_data_log_fdc_start, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [rb + count], 0, [rb - 1]
+    arb -1
+    call print_num
+
+    out 10
+    ret 1
+
+dma_receive_data_log_fdc_start:
+    db  "dma ch02, receive data, count ", 0
+.ENDFRAME
+
+##########
 dma_mode_write:
 .FRAME addr, value; value_x8, channel, transfer_type, dma_mode, tmp
     arb -5
 
-#    # TODO fdcm remove
-#    out 'd'
-#    out 'M'
-#    add [rb + value], 0, [rb - 1]
-#    arb -1
-#    call print_num_2
-#    out ' '
+    # Floppy logging
+    jz  [config_log_fdc], dma_mode_write_after_log_fdc
+    eq  [rb + channel], 0x02, [rb + tmp]
+    jz  [rb + tmp], dma_mode_write_after_log_fdc
 
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call dma_mode_write_log_fdc
+
+dma_mode_write_after_log_fdc:
     # Set DMA mode
     mul [rb + value], 8, [rb + value_x8]
 
@@ -212,6 +222,24 @@ dma_mode_write_done:
 .ENDFRAME
 
 ##########
+dma_mode_write_log_fdc:
+.FRAME value;
+    add dma_mode_write_log_fdc_start, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call print_num_2_b
+
+    out 10
+    ret 1
+
+dma_mode_write_log_fdc_start:
+    db  "dma ch02, receive data, mode ", 0
+.ENDFRAME
+
+##########
 dma_command_write:
 .FRAME addr, value; value_x8
     arb -1
@@ -237,11 +265,11 @@ dma_status_read:
 ##########
 dma_master_reset_write:
 .FRAME addr, value;
-#    # TODO fdcm remove
-#    out 'd'
-#    out 'R'
-#    out ' '
+    # Floppy logging
+    jz  [config_log_fdc], dma_master_reset_write_after_log_fdc
+    call dma_master_reset_write_log_fdc
 
+dma_master_reset_write_after_log_fdc:
     # Set the flip-flop to access the low byte
     add 0, 0, [dma_flip_flop]
 
@@ -254,6 +282,20 @@ dma_master_reset_write:
     add 1, 0, [dma_mask_ch3]
 
     ret 2
+.ENDFRAME
+
+##########
+dma_master_reset_write_log_fdc:
+.FRAME
+    add dma_master_reset_write_log_fdc_start, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    out 10
+    ret 0
+
+dma_master_reset_write_log_fdc_start:
+    db  "dma master reset", 0
 .ENDFRAME
 
 ##########
@@ -353,16 +395,6 @@ dma_address_ch2_write:
 .FRAME addr, value; tmp
     arb -1
 
-#    # TODO fdcm remove
-#    out 'd'
-#    out 'A'
-#    out '2'
-#    out '_'
-#    add [rb + value], 0, [rb - 1]
-#    arb -1
-#    call print_num_16
-#    out '_'
-
     # Clear the register if we are writing the lo byte
     mul [dma_address_ch2], [dma_flip_flop], [dma_address_ch2]
 
@@ -373,16 +405,38 @@ dma_address_ch2_write:
 
     # Add the value to the register
     add [dma_address_ch2], [rb + value], [dma_address_ch2]
-    eq  [dma_flip_flop], 0, [dma_flip_flop]
 
-#    # TODO fdcm remove
-#    add [dma_address_ch2], 0, [rb - 1]
-#    arb -1
-#    call print_num_16
-#    out ' '
+    # Floppy logging
+    jz  [config_log_fdc], dma_address_ch2_write_after_log_fdc
+    call dma_address_ch2_write_log_fdc
+
+dma_address_ch2_write_after_log_fdc:
+    eq  [dma_flip_flop], 0, [dma_flip_flop]
 
     arb 1
     ret 2
+.ENDFRAME
+
+##########
+dma_address_ch2_write_log_fdc:
+.FRAME
+    add dma_address_ch2_write_log_fdc_start, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add dma_flip_flop_values, [dma_flip_flop], [ip + 1]
+    out [0]
+    out ' '
+
+    add [dma_address_ch2], 0, [rb - 1]
+    arb -1
+    call print_num_16
+
+    out 10
+    ret 0
+
+dma_address_ch2_write_log_fdc_start:
+    db  "dma ch02, write address ", 0
 .ENDFRAME
 
 ##########
@@ -432,16 +486,6 @@ dma_count_ch2_write:
 .FRAME addr, value; tmp
     arb -1
 
-#    # TODO fdcm remove
-#    out 'd'
-#    out 'C'
-#    out '2'
-#    out '_'
-#    add [rb + value], 0, [rb - 1]
-#    arb -1
-#    call print_num_16
-#    out '_'
-
     # Clear the register if we are writing the lo byte
     mul [dma_count_ch2], [dma_flip_flop], [dma_count_ch2]
 
@@ -452,16 +496,38 @@ dma_count_ch2_write:
 
     # Add the value to the register
     add [dma_count_ch2], [rb + value], [dma_count_ch2]
-    eq  [dma_flip_flop], 0, [dma_flip_flop]
 
-#    # TODO fdcm remove
-#    add [dma_count_ch2], 0, [rb - 1]
-#    arb -1
-#    call print_num_16
-#    out ' '
+    # Floppy logging
+    jz  [config_log_fdc], dma_count_ch2_write_after_log_fdc
+    call dma_count_ch2_write_log_fdc
+
+dma_count_ch2_write_after_log_fdc:
+    eq  [dma_flip_flop], 0, [dma_flip_flop]
 
     arb 1
     ret 2
+.ENDFRAME
+
+##########
+dma_count_ch2_write_log_fdc:
+.FRAME
+    add dma_count_ch2_write_log_fdc_start, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add dma_flip_flop_values, [dma_flip_flop], [ip + 1]
+    out [0]
+    out ' '
+
+    add [dma_count_ch2], 0, [rb - 1]
+    arb -1
+    call print_num_16
+
+    out 10
+    ret 0
+
+dma_count_ch2_write_log_fdc_start:
+    db  "dma ch02, write count ", 0
 .ENDFRAME
 
 ##########
@@ -528,18 +594,32 @@ dma_page_ch1_write:
 ##########
 dma_page_ch2_write:
 .FRAME addr, value;
-#    # TODO fdcm remove
-#    out 'd'
-#    out 'P'
-#    out '2'
-#    out '_'
-#    add [rb + value], 0, [rb - 1]
-#    arb -1
-#    call print_num_2
-#    out ' '
+    # Floppy logging
+    jz  [config_log_fdc], dma_page_ch2_write_after_log_fdc
+    call dma_page_ch2_write_log_fdc
 
+dma_page_ch2_write_after_log_fdc:
     add [rb + value], 0, [dma_page_ch2]
+
     ret 2
+.ENDFRAME
+
+##########
+dma_page_ch2_write_log_fdc:
+.FRAME
+    add dma_page_ch2_write_log_fdc_start, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [dma_page_ch2], 0, [rb - 1]
+    arb -1
+    call print_num_16
+
+    out 10
+    ret 0
+
+dma_page_ch2_write_log_fdc_start:
+    db  "dma ch02, write page ", 0
 .ENDFRAME
 
 ##########
@@ -635,5 +715,10 @@ dma_page_ch2:
     db  0
 dma_page_ch3:
     db  0
+
+# Strings used for logging the flip-flop value
+dma_flip_flop_values:
+    db  'L'
+    db  'H'
 
 .EOF

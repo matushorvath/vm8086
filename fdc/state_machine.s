@@ -18,6 +18,9 @@
 .EXPORT fdc_cmd_st2
 .EXPORT fdc_cmd_st3
 
+# From the config file
+.IMPORT config_log_fdc
+
 # From fdc_commands.s
 .IMPORT fdc_exec_read_data
 .IMPORT fdc_exec_read_deleted_data
@@ -49,31 +52,24 @@
 # From util/nibbles.s
 .IMPORT nibbles
 
-# TODO remove
-.IMPORT print_num_radix
+# From libxib.a
+.IMPORT print_str
+.IMPORT print_num_2_b
+.IMPORT print_num_16_b
 
 ##########
 fdc_data_write:
 .FRAME addr, value; value_bits, tmp
     arb -2
 
-#    # TODO fdcm remove
-#    jnz [fdc_cmd_state], TODO_fsm_w_skip_nl
-#    out 10
-#
-#TODO_fsm_w_skip_nl:
-#    out 'D'
-#    out 'w'
-#    out '_'
-#
-#    add [rb + value], 0, [rb - 1]
-#    add 2, 0, [rb - 2]
-#    add 8, 0, [rb - 3]
-#    arb -3
-#    call print_num_radix
-#
-#    out ' '
+    # Floppy logging
+    jz  [config_log_fdc], fdc_data_write_after_log_fdc
 
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call fdc_data_write_log_fdc
+
+fdc_data_write_after_log_fdc:
     # Is the FDC processing a command?
     jz  [fdc_cmd_state], fsm_w_idle
 
@@ -498,13 +494,50 @@ fsm_w_done:
 .ENDFRAME
 
 ##########
+fdc_data_write_log_fdc:
+.FRAME value;
+
+    jnz [fdc_cmd_state], fdc_data_write_log_fdc_have_command
+
+    add fdc_data_write_log_fdc_new_command, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    out 10
+
+fdc_data_write_log_fdc_have_command:
+    add fdc_data_write_log_fdc_start, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call print_num_2_b
+
+    add fdc_data_write_log_fdc_hex, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call print_num_16_b
+    out ')'
+
+    out 10
+    ret 1
+
+fdc_data_write_log_fdc_new_command:
+    db  "fdc state machine, new command started", 0
+fdc_data_write_log_fdc_start:
+    db  "fdc data write, value ", 0
+fdc_data_write_log_fdc_hex:
+    db  " (0x", 0
+.ENDFRAME
+
+##########
 fdc_data_read:
 .FRAME addr; value, tmp
     arb -2
-
-#    out 'D' # TODO fdcm remove
-#    out 'r'
-#    out '_'
 
     # Is the FDC processing a command?
     jz  [fdc_cmd_state], fsm_r_invalid
@@ -631,16 +664,45 @@ fsm_r_invalid:
     add 0, 0, [fdc_cmd_state]
 
 fsm_r_done:
-#    # TODO fdcm remove
-#    add [rb + value], 0, [rb - 1]
-#    add 2, 0, [rb - 2]
-#    add 8, 0, [rb - 3]
-#    arb -3
-#    call print_num_radix
-#    out ' '
+    # Floppy logging
+    jz  [config_log_fdc], fdc_data_read_after_log_fdc
 
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call fdc_data_read_log_fdc
+
+fdc_data_read_after_log_fdc:
     arb 2
     ret 1
+.ENDFRAME
+
+##########
+fdc_data_read_log_fdc:
+.FRAME value;
+    add fdc_data_read_log_fdc_start, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call print_num_2_b
+
+    add fdc_data_read_log_fdc_hex, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call print_num_16_b
+    out ')'
+
+    out 10
+    ret 1
+
+fdc_data_read_log_fdc_start:
+    db  "fdc data read, value ", 0
+fdc_data_read_log_fdc_hex:
+    db  " (0x", 0
 .ENDFRAME
 
 ##########
