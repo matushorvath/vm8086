@@ -96,7 +96,7 @@ fdc_dor_write_log_fdc:
     ret 1
 
 fdc_dor_write_log_fdc_start:
-    db  "fdc dor write, value ", 0
+    db  31, 31, 31, "fdc dor write, value ", 0
 .ENDFRAME
 
 ##########
@@ -151,7 +151,7 @@ fdc_status_read_log_fdc:
     ret 1
 
 fdc_status_read_log_fdc_start:
-    db  "fdc status read, value ", 0
+    db  31, 31, 31, "fdc status read, value ", 0
 .ENDFRAME
 
 ##########
@@ -215,7 +215,7 @@ fdc_d765ac_reset_log_fdc:
     ret 0
 
 fdc_d765ac_reset_log_fdc_start:
-    db  "fdc reset controller", 0
+    db  31, 31, 31, "fdc reset controller", 0
 .ENDFRAME
 
 ##########

@@ -149,7 +149,7 @@ dma_receive_data_log_fdc:
     ret 1
 
 dma_receive_data_log_fdc_start:
-    db  "dma ch02, receive data, count ", 0
+    db  31, 31, 31, "dma ch02, receive data, count ", 0
 .ENDFRAME
 
 ##########
@@ -236,7 +236,7 @@ dma_mode_write_log_fdc:
     ret 1
 
 dma_mode_write_log_fdc_start:
-    db  "dma ch02, receive data, mode ", 0
+    db  31, 31, 31, "dma ch02, receive data, mode ", 0
 .ENDFRAME
 
 ##########
@@ -295,7 +295,7 @@ dma_master_reset_write_log_fdc:
     ret 0
 
 dma_master_reset_write_log_fdc_start:
-    db  "dma master reset", 0
+    db  31, 31, 31, "dma master reset", 0
 .ENDFRAME
 
 ##########
@@ -436,7 +436,7 @@ dma_address_ch2_write_log_fdc:
     ret 0
 
 dma_address_ch2_write_log_fdc_start:
-    db  "dma ch02, write address 0x", 0
+    db  31, 31, 31, "dma ch02, write address 0x", 0
 .ENDFRAME
 
 ##########
@@ -527,7 +527,7 @@ dma_count_ch2_write_log_fdc:
     ret 0
 
 dma_count_ch2_write_log_fdc_start:
-    db  "dma ch02, write count ", 0
+    db  31, 31, 31, "dma ch02, write count ", 0
 .ENDFRAME
 
 ##########
@@ -619,7 +619,7 @@ dma_page_ch2_write_log_fdc:
     ret 0
 
 dma_page_ch2_write_log_fdc_start:
-    db  "dma ch02, write page 0x", 0
+    db  31, 31, 31, "dma ch02, write page 0x", 0
 .ENDFRAME
 
 ##########

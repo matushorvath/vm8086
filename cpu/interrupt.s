@@ -155,7 +155,7 @@ interrupt_log_fdc_13:
     ret 0
 
 interrupt_log_fdc_13_start:
-    db  "int 13, fn ", 0
+    db  31, 31, 31, "int 13, fn ", 0
 .ENDFRAME
 
 ##########
@@ -169,7 +169,7 @@ interrupt_log_fdc_0e:
     ret 0
 
 interrupt_log_fdc_0e_start:
-    db  "irq 6", 0
+    db  31, 31, 31, "irq 6", 0
 .ENDFRAME
 
 ##########

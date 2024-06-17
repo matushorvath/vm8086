@@ -1,0 +1,15 @@
+{
+    "name": "monitor",
+    "version": "1.0.0",
+    "type": "module",
+    "scripts": {
+        "test": "npm run lint",
+        "lint": "npm run eslint",
+        "eslint": "eslint ."
+    },
+    "devDependencies": {
+        "eslint": "^9.2.0"
+    },
+    "dependencies": {
+    }
+}

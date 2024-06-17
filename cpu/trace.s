@@ -19,6 +19,11 @@ print_trace:
 .FRAME seg, off, opcode, param_type, index, tmp
     arb -6
 
+    # Print the logger mark
+    out 31
+    out 31
+    out 31
+
     # Calculate segment and offset
     mul [reg_cs + 1], 0x100, [rb + seg]
     add [reg_cs + 0], [rb + seg], [rb + seg]

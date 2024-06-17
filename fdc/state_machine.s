@@ -527,9 +527,9 @@ fdc_data_write_log_fdc_have_command:
     ret 1
 
 fdc_data_write_log_fdc_new_command:
-    db  "===== fdc state machine, new command started", 0
+    db  31, 31, 31, "===== fdc state machine, new command started", 0
 fdc_data_write_log_fdc_start:
-    db  "fdc data write, value ", 0
+    db  31, 31, 31, "fdc data write, value ", 0
 fdc_data_write_log_fdc_hex:
     db  " (0x", 0
 .ENDFRAME
@@ -700,7 +700,7 @@ fdc_data_read_log_fdc:
     ret 1
 
 fdc_data_read_log_fdc_start:
-    db  "fdc data read, value ", 0
+    db  31, 31, 31, "fdc data read, value ", 0
 fdc_data_read_log_fdc_hex:
     db  " (0x", 0
 .ENDFRAME
