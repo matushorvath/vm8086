@@ -496,7 +496,6 @@ fsm_w_done:
 ##########
 fdc_data_write_log_fdc:
 .FRAME value;
-
     jnz [fdc_cmd_state], fdc_data_write_log_fdc_have_command
 
     add fdc_data_write_log_fdc_new_command, 0, [rb - 1]

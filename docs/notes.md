@@ -445,3 +445,81 @@ goto 10
 
 -> fixed vertical retrace in cga/registers.s
 then it crashes on unsupported read data command variant
+
+FreeDOS Prompt
+==============
+
+(steps to get from FreeDOS starting to boot all the way to FreeDOS A> prompt)
+
+looping this:
+
+f000:c402 RETN(c3)
+f000:c3e3 SUB REG16/MEM16, REG16(29) c1 29 cb
+f000:c3e5 SUB REG16/MEM16, REG16(29) cb 89 c1
+f000:c3e7 MOV REG16/MEM16, REG16(89) c1 83 da
+f000:c3e9 ADD/OR/ADC/SBB/AND/SUB/XOR/CMP REG16/MEM16, IMMED8(83) da 00 73 f2
+f000:c3ec JNC SHORT-LABEL(73) f2
+f000:c3e0 CALL NEAR-PROC(e8) 10 00
+f000:c3f3 MOV AL, IMMED8(b0) 00
+f000:c3f5 PUSHF(9c)
+f000:c3f6 CLI(fa)
+f000:c3f7 OUT AL, IMMED8(e6) 43
+f000:c3f9 IN AL, IMMED8(e4) 40
+f000:c3fb MOV REG8/MEM8, REG8(88) c4 e4 40
+f000:c3fd IN AL, IMMED8(e4) 40
+f000:c3ff POPF(9d)
+f000:c400 XCHG REG8, REG8/MEM8(86) c4 c3 8b
+f000:c402 RETN(c3)
+
+(not sure if above is really the loop or just something done 10+ times)
+
+other approach:
+
+looking at fdc logs, there is a fdc reset after a read that looks successful
+MF=1 H=1 C=3 J=1 S=7 N=512 EOT=36 GPT DTL=ff
+ST0=0b00000100 etc
+
+after that:
+
+int 13, fn 0
+int 13, fn 8
+int 13, fn 21
+int 13, fn 8
+int 13, fn 21
+int 13, fn 8
+int 13, fn 22
+fdc dor write, value 00011100
+int 13, fn 22
+fdc dor write, value 00011100
+int 13, fn 0
+fdc dor write, value 00011000
+fdc dor write, value 00011100
+fdc reset controller
+irq 6
+fdc status read, value 10000000
+fdc status read, value 10000000
+===== fdc state machine, new command started
+fdc data write, value 00001000 (0x08)
+fdc status read, value 11010000
+fdc status read, value 11010000
+fdc data read, value 11000000 (0xc0)
+fdc status read, value 11010000
+fdc status read, value 11010000
+fdc data read, value 00000011 (0x03)
+fdc status read, value 10000000
+
+looks like int 13 fn 22 does not work (twice, then BIOS resets fdc)
+fn 8 and fn 21 are also done multiple times, could also be wrong
+
+then there are some reads and then there is no more floppy activity
+
+good addresses to start tracing:
+1254:0005 (after FreeDOS and a lot of disk reading)
+
+maybe print CS:IP every time we load reg_cs?
+maybe print CS:IP every time hi byte of reg_ip changes by incrementing IP?
+
+1212:0000
+
+write CS: 9090:a1a1
+write CS: f0f0:e8e8

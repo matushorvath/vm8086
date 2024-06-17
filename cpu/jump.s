@@ -4,9 +4,15 @@
 .EXPORT execute_jmp_far
 .EXPORT execute_jmp_far_indirect
 
+# From the config file
+.IMPORT config_log_cs_change
+
 # From location.s
 .IMPORT read_location_w
 .IMPORT read_location_dw
+
+# From log.s
+.IMPORT log_cs_change
 
 # From memory.s
 .IMPORT read_cs_ip_b
@@ -125,6 +131,11 @@ execute_jmp_far:
     add [rb + offset_lo], 0, [reg_ip + 0]
     add [rb + offset_hi], 0, [reg_ip + 1]
 
+    # Log CS change
+    jz  [config_log_cs_change], execute_jmp_far_immediate_w_after_log_cs
+    call log_cs_change
+
+execute_jmp_far_immediate_w_after_log_cs:
     arb 4
     ret 0
 .ENDFRAME
@@ -142,6 +153,11 @@ execute_jmp_far_indirect:
     add [rb - 6], 0, [reg_cs + 0]
     add [rb - 7], 0, [reg_cs + 1]
 
+    # Log CS change
+    jz  [config_log_cs_change], execute_jmp_far_indirect_after_log_cs_change
+    call log_cs_change
+
+execute_jmp_far_indirect_after_log_cs_change:
     ret 2
 .ENDFRAME
 

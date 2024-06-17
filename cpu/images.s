@@ -12,8 +12,6 @@
 .IMPORT report_error
 
 # From state.s
-.IMPORT reg_cs
-.IMPORT reg_ip
 .IMPORT mem
 
 # From util/util.s

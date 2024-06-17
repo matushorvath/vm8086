@@ -5,7 +5,11 @@
 .EXPORT interrupt
 
 # From the config file
+.IMPORT config_log_cs_change
 .IMPORT config_log_fdc
+
+# From log.s
+.IMPORT log_cs_change
 
 # From memory.s
 .IMPORT read_b
@@ -136,6 +140,11 @@ interrupt_after_log_fdc:
 
     # TODO reset/halt for triple fault
 
+    # Log CS change
+    jz  [config_log_cs_change], execute_interrupt_after_log_cs_change
+    call log_cs_change
+
+execute_interrupt_after_log_cs_change:
     arb 2
     ret 1
 .ENDFRAME
@@ -186,6 +195,11 @@ execute_iret:
 
     call popf
 
+    # Log CS change
+    jz  [config_log_cs_change], execute_iret_after_log_cs_change
+    call log_cs_change
+
+execute_iret_after_log_cs_change:
     ret 0
 .ENDFRAME
 
