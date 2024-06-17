@@ -18,6 +18,20 @@
 // - less -f log.pipe
 // - make run | ./monitor/split 2> log.pipe
 
+import '@ungap/with-resolvers';
+
+export const writeStreamAndWait = async (stream, chunk) => {
+    const { resolve, reject, promise } = Promise.withResolvers();
+    stream.write(chunk, (error) => {
+        if (error) {
+            reject(error);
+        } else {
+            resolve();
+        }
+    });
+    return promise;
+};
+
 const STATE_OUT = Symbol();
 const STATE_1F = Symbol();
 const STATE_1F_1F = Symbol();
@@ -30,19 +44,19 @@ for await (const chunk of process.stdin) {
         switch (state) {
         case STATE_OUT:
             if (byte === 0x1F) state = STATE_1F;
-            else process.stdout.write(new Uint8Array([byte]));
+            else await writeStreamAndWait(process.stdout, new Uint8Array([byte]));
             break;
         case STATE_1F:
             if (byte === 0x1F) state = STATE_1F_1F;
-            else process.stdout.write(new Uint8Array([0x1f, byte]));
+            else await writeStreamAndWait(process.stdout, new Uint8Array([0x1f, byte]));
             break;
         case STATE_1F_1F:
             if (byte === 0x1F) state = STATE_ERR;
-            else process.stdout.write(new Uint8Array([0x1f, 0x1f, byte]));
+            else await writeStreamAndWait(process.stdout, new Uint8Array([0x1f, 0x1f, byte]));
             break;
         case STATE_ERR:
             if (byte === 0x0a) state = STATE_OUT;
-            process.stderr.write(new Uint8Array([byte]));
+            await writeStreamAndWait(process.stderr, new Uint8Array([byte]));
             break;
         }
     }
