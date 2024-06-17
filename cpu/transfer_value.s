@@ -10,17 +10,11 @@
 
 .EXPORT execute_xlat
 
-# From the config file
-.IMPORT config_log_cs_change
-
 # From location.s
 .IMPORT read_location_b
 .IMPORT read_location_w
 .IMPORT write_location_b
 .IMPORT write_location_w
-
-# From log.s
-.IMPORT log_cs_change
 
 # From memory.s
 .IMPORT read_seg_off_b
@@ -34,7 +28,6 @@
 .IMPORT reg_ax
 .IMPORT reg_bx
 .IMPORT reg_dx
-.IMPORT reg_cs
 
 ##########
 execute_mov_b:
@@ -58,6 +51,9 @@ execute_mov_b:
 ##########
 execute_mov_w:
 .FRAME lseg_src, loff_src, lseg_dst, loff_dst;
+    # This function can technically change CS, but for the sake of performance
+    # we avoid calling log_cs_change here
+
     # Read the source value
     add [rb + lseg_src], 0, [rb - 1]
     add [rb + loff_src], 0, [rb - 2]
@@ -72,18 +68,6 @@ execute_mov_w:
     arb -4
     call write_location_w
 
-    # Log CS change, if destination was reg_cs
-    jz  [config_log_cs_change], execute_mov_w_after_log_cs_change
-
-    eq  [rb + loff_dst], reg_cs, [rb - 1]
-    jz  [rb - 1], execute_mov_w_after_log_cs_change
-
-    eq  [rb + lseg_dst], 0x10000, [rb - 1]
-    jz  [rb - 1], execute_mov_w_after_log_cs_change
-
-    call log_cs_change
-
-execute_mov_w_after_log_cs_change:
     ret 4
 .ENDFRAME
 
