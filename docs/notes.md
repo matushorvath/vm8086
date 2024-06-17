@@ -523,3 +523,17 @@ maybe print CS:IP every time hi byte of reg_ip changes by incrementing IP?
 
 write CS: 9090:a1a1
 write CS: f0f0:e8e8
+
+f000:c400
+f000:c3f3 is the function that is called in a loop
+it's also called at the very beginning of boot, part of BIOS
+something related to PIT (port 40, 43)
+
+it's delay_15us/io_wait_latch
+maybe reading keyboard controller? it's waiting for F5/F8?
+could be kbc_data_read kbc_wait_write kbc_flush
+not kbd_key_fail probably, since there is no POST code
+
+or fdc_recalibrate fdc_seek fdc_motor_on fdc_reset
+or beep (beeping because boot has failed? - but I don't see that in BIOS sources)
+or int_17_fn01

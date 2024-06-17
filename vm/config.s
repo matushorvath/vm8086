@@ -16,10 +16,16 @@ config_enable_tracing:
 # Tracing trigger address (0 - always trace, >0 - trace after the address was reached)
 
 # Boot sector start
+#config_tracing_cs:
+#    db  0x0000
+#config_tracing_ip:
+#    db  0x7c00
+
+# FreeDOS boot
 config_tracing_cs:
-    db  0x0000
+    db  0xf000
 config_tracing_ip:
-    db  0x7c00
+    db  0xc400
 
 # pcxtbios, call boot_basic
 #config_tracing_cs:
