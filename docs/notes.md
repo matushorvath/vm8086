@@ -554,6 +554,12 @@ Q: Why does it not even display the F5/F8 message in bochs?
 =====
 vm8086 error: fdc: requested read data command variant is not supported (cs:ip f000:c94e)
 
+dma ch02, write count L 255
+dma ch02, write count H 1023
+dma ch02, write address 0xL e0
+dma ch02, write address 0xH 1e0
+dma ch02, write page 0x0
+...
 ===== fdc state machine, new command started
 fdc data write, value 11100110 (0xe6)
 fdc status read, value 10010000
@@ -572,3 +578,5 @@ fdc status read, value 10010000
 fdc data write, value 00011011 (0x1b)
 fdc status read, value 10010000
 fdc data write, value 11111111 (0xff)
+
+-> crash because DMA count is not 512
