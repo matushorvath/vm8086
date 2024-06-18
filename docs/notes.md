@@ -550,3 +550,25 @@ ticks_hi	equ	6Eh	; word - timer ticks - high word
 int_08
 
 Q: Why does it not even display the F5/F8 message in bochs?
+
+=====
+vm8086 error: fdc: requested read data command variant is not supported (cs:ip f000:c94e)
+
+===== fdc state machine, new command started
+fdc data write, value 11100110 (0xe6)
+fdc status read, value 10010000
+fdc data write, value 00000100 (0x04)
+fdc status read, value 10010000
+fdc data write, value 00000011 (0x03)
+fdc status read, value 10010000
+fdc data write, value 00000001 (0x01)
+fdc status read, value 10010000
+fdc data write, value 00010001 (0x11)
+fdc status read, value 10010000
+fdc data write, value 00000010 (0x02)
+fdc status read, value 10010000
+fdc data write, value 00010010 (0x12)
+fdc status read, value 10010000
+fdc data write, value 00011011 (0x1b)
+fdc status read, value 10010000
+fdc data write, value 11111111 (0xff)
