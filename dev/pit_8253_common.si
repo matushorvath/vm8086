@@ -6,6 +6,9 @@
 # From the config file
 .IMPORT config_log_pit
 
+# From cpu/interrupt.s
+.IMPORT interrupt
+
 # From util/error.s
 .IMPORT report_error
 
@@ -59,7 +62,6 @@
 #  - when dec from 1 to 0: output pulse low, keep run (if gate)
 #  - when gate lo->hi: set value to reload, run (if gate)
 
-# TODO IRQ0 is generated when channel 0 transitions low to high
 # TODO 8253 mode 3 output should come from the flip-flop
 
 ##########
@@ -119,7 +121,10 @@ pit_vm_callback_common_after_reload:
     jz  [rb + tmp], pit_vm_callback_common_done
 
 pit_vm_callback_common_int0:
-    # TODO trigger IRQ0 here (probably delay after instruction finished?)
+    # Trigger IRQ0 = INT 8
+    add 8, 0, [rb - 1]
+    arb -1
+    call interrupt
 
 pit_vm_callback_common_done:
     # Timer logging
@@ -202,7 +207,10 @@ pit_mode_command_write_common_after_aliases:
     add [rb + tmp], [rb + orig_output], [rb + tmp]
     jnz [rb + tmp], pit_mode_command_write_common_done
 
-    # TODO trigger IRQ0 here (probably delay after instruction finished?)
+    # Trigger IRQ0 = INT 8
+    add 8, 0, [rb - 1]
+    arb -1
+    call interrupt
 
     jz  0, pit_mode_command_write_common_done
 
@@ -528,7 +536,7 @@ pit_mode_command_write_log_access:
 .ENDFRAME
 
 ##########
-pit_data_write_log:                     # TODO remove
+pit_data_write_log:
 .FRAME value; tmp
     arb -1
 
@@ -559,7 +567,7 @@ pit_data_write_log_value:
 .ENDFRAME
 
 ##########
-pit_data_read_log:                      # TODO remove
+pit_data_read_log:
 .FRAME value; tmp
     arb -1
 
