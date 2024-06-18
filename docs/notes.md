@@ -537,3 +537,5 @@ not kbd_key_fail probably, since there is no POST code
 or fdc_recalibrate fdc_seek fdc_motor_on fdc_reset
 or beep (beeping because boot has failed? - but I don't see that in BIOS sources)
 or int_17_fn01
+
+the "Press F8 to trace or F5 to skip CONFIG.SYS/AUTOEXEC.BAT" line does not appear in bochs, it clears screen and displays A>
