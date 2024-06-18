@@ -3,6 +3,9 @@
 # Instead of parametrizing this code to handle both channels 0 and 2, or copy-pasting it twice,
 # we keep it in this file that is included twice in pit_8253_ch0.s and pit_8253_ch2.s.
 
+# From the config file
+.IMPORT config_log_pit
+
 # From util/error.s
 .IMPORT report_error
 
@@ -10,9 +13,9 @@
 .IMPORT bits
 
 # From libxib.a
-# TODO remove
-.IMPORT print_num_radix
 .IMPORT print_str
+.IMPORT print_num
+.IMPORT print_num_16_w
 
 # Operating modes:
 #
@@ -119,25 +122,13 @@ pit_vm_callback_common_int0:
     # TODO trigger IRQ0 here (probably delay after instruction finished?)
 
 pit_vm_callback_common_done:
-#    # TODO remove debug
-#    out 'C'
-#    out 'B'
-#    out ' '
-#    out 'C'
-#    add '0', [pit_channel], [rb + tmp]
-#    out [rb + tmp]
-#
-#    out ' '
-#    mul [pit_value_hi], 0x100, [rb - 1]
-#    add [pit_value_lo], [rb - 1], [rb - 1]
-#    add 16, 0, [rb - 2]
-#    add 4, 0, [rb - 3]
-#    arb -3
-#    call print_num_radix
-#    out 10
-#
-#    call pit_status_log
+    # Timer logging
+    jz  [config_log_pit], pit_vm_callback_common_after_log
 
+    call pit_vm_callback_log
+    call pit_status_log
+
+pit_vm_callback_common_after_log:
     arb 2
     ret 0
 .ENDFRAME
@@ -203,11 +194,6 @@ pit_mode_command_write_common_after_aliases:
     add -1, 0, [pit_latch_lo]
     add -1, 0, [pit_latch_hi]
 
-    # TODO remove log
-    #add [rb + value], 0, [rb - 1]
-    #arb -1
-    #call mode_command_write_log
-
     # Do we trigger IRQ0 for this channel?
     jz  [pit_trigger_int0], pit_mode_command_write_common_done
 
@@ -220,9 +206,6 @@ pit_mode_command_write_common_after_aliases:
 
     jz  0, pit_mode_command_write_common_done
 
-    # TODO remove debug
-    #call pit_status_log
-
 pit_mode_command_write_common_latch:
     # Don't re-latch an already latched value
     eq  [pit_value_lo], -1, [rb + tmp]
@@ -232,6 +215,16 @@ pit_mode_command_write_common_latch:
     add [pit_value_hi], 0, [pit_latch_hi]
 
 pit_mode_command_write_common_done:
+    # Timer logging
+    jz  [config_log_pit], pit_mode_command_write_common_after_log
+
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call pit_mode_command_write_log
+
+    call pit_status_log
+
+pit_mode_command_write_common_after_log:
     arb 3
     ret 1
 
@@ -248,11 +241,6 @@ pit_mode_command_write_common_bcd_error:
 pit_data_write_common:
 .FRAME addr, value; position, reload_start, reload_stop, tmp
     arb -4
-
-    # TODO remove log
-    #add [rb + value], 0, [rb - 1]
-    #arb -1
-    #call pit_data_write_log
 
     # Decide what to write based on access mode
     add pit_data_write_common_table, [pit_access], [ip + 2]
@@ -350,9 +338,16 @@ pit_data_write_common_update_value:
     add 1, 0, [pit_running]
 
 pit_data_write_common_done:
-    # TODO remove debug
-    #call pit_status_log
+    # Timer logging
+    jz  [config_log_pit], pit_data_write_common_after_log
 
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call pit_data_write_log
+
+    call pit_status_log
+
+pit_data_write_common_after_log:
     arb 4
     ret 2
 .ENDFRAME
@@ -417,13 +412,16 @@ pit_data_read_common_clear_latch:
     add -1, 0, [pit_latch_hi]
 
 pit_data_read_common_done:
-    # TODO remove log
-    #add [rb + value], 0, [rb - 1]
-    #arb -1
-    #call pit_data_read_log
+    # Timer logging
+    jz  [config_log_pit], pit_data_read_common_after_log
 
-    # TODO remove debug
-    #call pit_status_log
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call pit_data_read_log
+
+    call pit_status_log
+
+pit_data_read_common_after_log:
 
     arb 3
     ret 1
@@ -447,55 +445,86 @@ pit_set_gate_common:
 .ENDFRAME
 
 ##########
-mode_command_write_log:                 # TODO remove
-.FRAME value;
-    add mode_command_write_log_message, 0, [rb - 1]
+pit_vm_callback_log:
+.FRAME tmp
+    arb -1
+
+    add pit_vm_callback_log_channel, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add '0', [pit_channel], [rb + tmp]
+    out [rb + tmp]
+
+    add pit_vm_callback_log_value, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    mul [pit_value_hi], 0x100, [rb - 1]
+    add [pit_value_lo], [rb - 1], [rb - 1]
+    arb -1
+    call print_num_16_w
+
+    out 10
+
+    arb 1
+    ret 0
+
+pit_vm_callback_log_channel:
+    db  31, 31, 31, "pit callback: ch", 0
+pit_vm_callback_log_value:
+    db  ", value 0x", 0
+.ENDFRAME
+
+##########
+pit_mode_command_write_log:
+.FRAME value; tmp
+    arb -1
+
+    add pit_mode_command_write_log_channel, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add '0', [pit_channel], [rb + tmp]
+    out [rb + tmp]
+
+    add pit_mode_command_write_log_value, 0, [rb - 1]
     arb -1
     call print_str
 
     add [rb + value], 0, [rb - 1]
-    add 16, 0, [rb - 2]
-    add 2, 0, [rb - 3]
-    arb -3
-    call print_num_radix
+    arb -1
+    call print_num_16_w
 
-    out ' '
-    out 'C'
-    out ' '
+    add pit_mode_command_write_log_mode, 0, [rb - 1]
+    arb -1
+    call print_str
 
-    add [pit_channel], 0, [rb - 1]
-    add 16, 0, [rb - 2]
-    add 1, 0, [rb - 3]
-    arb -3
-    call print_num_radix
+    add [pit_mode], [rb - 1], [rb - 1]
+    arb -1
+    call print_num
 
-    # Log parsed values
-    out ' '
-    out 'M'
-    out ' '
+    add pit_mode_command_write_log_access, 0, [rb - 1]
+    arb -1
+    call print_str
 
-    add [pit_mode], 0, [rb - 1]
-    add 16, 0, [rb - 2]
-    add 1, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-
-    out ' '
-    out 'A'
-    out ' '
-
-    add [pit_access], 0, [rb - 1]
-    add 16, 0, [rb - 2]
-    add 1, 0, [rb - 3]
-    arb -3
-    call print_num_radix
+    add [pit_access], [rb - 1], [rb - 1]
+    arb -1
+    call print_num
 
     out 10
 
+    arb 1
     ret 1
 
-mode_command_write_log_message:
-    db  "PIT WR: MC ", 0
+pit_mode_command_write_log_channel:
+    db  31, 31, 31, "pit m/c write: ch", 0
+pit_mode_command_write_log_value:
+    db  ", value 0x", 0
+pit_mode_command_write_log_mode:
+    db  ", mode ", 0
+pit_mode_command_write_log_access:
+    db  ", access ", 0
 .ENDFRAME
 
 ##########
@@ -503,28 +532,30 @@ pit_data_write_log:                     # TODO remove
 .FRAME value; tmp
     arb -1
 
-    add pit_data_write_log_message, 0, [rb - 1]
+    add pit_data_write_log_channel, 0, [rb - 1]
     arb -1
     call print_str
 
-    out 'C'
     add '0', [pit_channel], [rb + tmp]
     out [rb + tmp]
-    out ' '
+
+    add pit_data_write_log_value, 0, [rb - 1]
+    arb -1
+    call print_str
 
     add [rb + value], 0, [rb - 1]
-    add 16, 0, [rb - 2]
-    add 2, 0, [rb - 3]
-    arb -3
-    call print_num_radix
+    arb -1
+    call print_num_16_w
 
     out 10
 
     arb 1
     ret 1
 
-pit_data_write_log_message:
-    db  "PIT WR: ", 0
+pit_data_write_log_channel:
+    db  31, 31, 31, "pit data write: ch", 0
+pit_data_write_log_value:
+    db  ", value 0x", 0
 .ENDFRAME
 
 ##########
@@ -532,85 +563,97 @@ pit_data_read_log:                      # TODO remove
 .FRAME value; tmp
     arb -1
 
-    add pit_data_read_log_message, 0, [rb - 1]
+    add pit_data_read_log_channel, 0, [rb - 1]
     arb -1
     call print_str
 
-    out 'C'
     add '0', [pit_channel], [rb + tmp]
     out [rb + tmp]
-    out ' '
+
+    add pit_data_read_log_value, 0, [rb - 1]
+    arb -1
+    call print_str
 
     add [rb + value], 0, [rb - 1]
-    add 16, 0, [rb - 2]
-    add 2, 0, [rb - 3]
-    arb -3
-    call print_num_radix
+    arb -1
+    call print_num_16_w
 
     out 10
 
     arb 1
     ret 1
 
-pit_data_read_log_message:
-    db  "PIT RD: ", 0
+pit_data_read_log_channel:
+    db  31, 31, 31, "pit data read: ch", 0
+pit_data_read_log_value:
+    db  ", value 0x", 0
 .ENDFRAME
 
 ##########
-pit_status_log:                         # TODO remove
+pit_status_log:
 .FRAME tmp
     arb -1
 
-    add pit_status_log_message, 0, [rb - 1]
+    add pit_status_log_channel, 0, [rb - 1]
     arb -1
     call print_str
 
-    out 'C'
     add '0', [pit_channel], [rb + tmp]
     out [rb + tmp]
-    out ' '
 
-    out 'V'
+    add pit_status_log_value, 0, [rb - 1]
+    arb -1
+    call print_str
+
     mul [pit_value_hi], 0x100, [rb - 1]
     add [pit_value_lo], [rb - 1], [rb - 1]
-    add 16, 0, [rb - 2]
-    add 4, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-    out ' '
+    arb -1
+    call print_num_16_w
 
-    out 'R'
+    add pit_status_log_reload, 0, [rb - 1]
+    arb -1
+    call print_str
+
     mul [pit_reload_hi], 0x100, [rb - 1]
     add [pit_reload_lo], [rb - 1], [rb - 1]
-    add 16, 0, [rb - 2]
-    add 4, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-    out ' '
+    arb -1
+    call print_num_16_w
 
-    out 'L'
+    add pit_status_log_latch, 0, [rb - 1]
+    arb -1
+    call print_str
+
     mul [pit_latch_hi], 0x100, [rb - 1]
     add [pit_latch_lo], [rb - 1], [rb - 1]
-    add 16, 0, [rb - 2]
-    add 4, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-    out ' '
+    arb -1
+    call print_num_16_w
 
-    out 'r'
+    add pit_status_log_running, 0, [rb - 1]
+    arb -1
+    call print_str
+
     add '0', [pit_running], [rb + tmp]
     out [rb + tmp]
-    out ' '
-    out 'd'
+
+    add pit_status_log_decrement, 0, [rb - 1]
+    arb -1
+    call print_str
+
     mul [pit_decrement], -1, [rb + tmp]
     add '0', [rb + tmp], [rb + tmp]
     out [rb + tmp]
-    out ' '
-    out 't'
+
+    add pit_status_log_target, 0, [rb - 1]
+    arb -1
+    call print_str
+
     add '0', [pit_target_lo], [rb + tmp]
     out [rb + tmp]
-    out ' '
-    out 'g'
+
+    add pit_status_log_gate, 0, [rb - 1]
+    arb -1
+    call print_str
+
     add '0', [pit_gate], [rb + tmp]
     out [rb + tmp]
 
@@ -619,8 +662,22 @@ pit_status_log:                         # TODO remove
     arb 1
     ret 0
 
-pit_status_log_message:
-    db  "PIT status: ", 0
+pit_status_log_channel:
+    db  31, 31, 31, "pit status: ch", 0
+pit_status_log_value:
+    db  ", value 0x", 0
+pit_status_log_reload:
+    db  ", reload 0x", 0
+pit_status_log_latch:
+    db  ", latch 0x", 0
+pit_status_log_running:
+    db  ", running ", 0
+pit_status_log_decrement:
+    db  ", decrement ", 0
+pit_status_log_target:
+    db  ", target ", 0
+pit_status_log_gate:
+    db  ", gate ", 0
 .ENDFRAME
 
 ##########

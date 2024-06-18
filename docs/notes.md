@@ -539,3 +539,14 @@ or beep (beeping because boot has failed? - but I don't see that in BIOS sources
 or int_17_fn01
 
 the "Press F8 to trace or F5 to skip CONFIG.SYS/AUTOEXEC.BAT" line does not appear in bochs, it clears screen and displays A>
+
+this probably freezes
+key = GetBiosKey(InitKernelConfig.SkipConfigSeconds);
+
+-> same issue as pcxtbios, reading address 0x46c and expecting to see a changing number from INT0
+ticks_lo	equ	6Ch	; word - timer ticks - low word
+ticks_hi	equ	6Eh	; word - timer ticks - high word
+
+int_08
+
+Q: Why does it not even display the F5/F8 message in bochs?
