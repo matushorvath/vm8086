@@ -29,6 +29,7 @@ TODO
 
 - Make sure makefiles display and delete output files when compilation fails.
 - All generated tables should be changed to avoid multiplying the input number by N
+- https://wiki.osdev.org/APM APM for poweroff, FreeDOS should support it
 
 VM:
 - nmi_mask_reg
@@ -551,7 +552,11 @@ int_08
 
 Q: Why does it not even display the F5/F8 message in bochs?
 
-=====
+kbc_data_reg	equ	60h
+kbc_status_reg	equ	64h
+
+MACHINE_HOMEBREW8088 is like MACHINE_XT, but AT keyboard controller and no DMA ch0 setup
+
 vm8086 error: fdc: requested read data command variant is not supported (cs:ip f000:c94e)
 
 dma ch02, write count L 255
