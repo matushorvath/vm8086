@@ -8,6 +8,7 @@
 
 .EXPORT config_log_cs_change
 .EXPORT config_log_fdc
+.EXPORT config_log_int
 .EXPORT config_log_pit
 
 # Tracing (0 - disable tracing, -1 - trace always, >0 - tracing past given address)
@@ -24,9 +25,9 @@ config_enable_tracing:
 
 # FreeDOS boot
 config_tracing_cs:
-    db  0xf000
+    db  0x1254
 config_tracing_ip:
-    db  0xc400
+    db  0x0005
 
 # pcxtbios, call boot_basic
 #config_tracing_cs:
@@ -54,6 +55,8 @@ config_boot_80x25:
 config_log_cs_change:
     db  0
 config_log_fdc:
+    db  0
+config_log_int:
     db  0
 config_log_pit:
     db  0

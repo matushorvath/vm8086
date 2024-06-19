@@ -7,6 +7,7 @@
 # From the config file
 .IMPORT config_log_cs_change
 .IMPORT config_log_fdc
+.IMPORT config_log_int
 
 # From log.s
 .IMPORT log_cs_change
@@ -23,6 +24,7 @@
 
 # From state.s
 .IMPORT reg_ah
+.IMPORT reg_ax
 .IMPORT reg_cs
 .IMPORT reg_ip
 .IMPORT inc_ip_b
@@ -33,7 +35,8 @@
 
 # From libxib.a
 .IMPORT print_str
-.IMPORT print_num
+.IMPORT print_num_16_b
+.IMPORT print_num_16_w
 
 ##########
 execute_int3:
@@ -82,6 +85,14 @@ interrupt:
 .FRAME type; vector, tmp
     arb -2
 
+    # Interrupt logging
+    jz  [config_log_int], interrupt_after_log_int
+
+    add [rb + type], 0, [rb - 1]
+    arb -1
+    call interrupt_log_int
+
+interrupt_after_log_int:
     # Floppy logging
     jz  [config_log_fdc], interrupt_after_log_fdc
 
@@ -150,6 +161,35 @@ execute_interrupt_after_log_cs_change:
 .ENDFRAME
 
 ##########
+interrupt_log_int:
+.FRAME type;
+    add interrupt_log_int_type, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [rb + type], 0, [rb - 1]
+    arb -1
+    call print_num_16_b
+
+    add interrupt_log_int_ax, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    mul [reg_ax + 1], 0x100, [rb - 1]
+    add [reg_ax + 0], [rb - 1], [rb - 1]
+    arb -1
+    call print_num_16_w
+
+    out 10
+    ret 1
+
+interrupt_log_int_type:
+    db  31, 31, 31, "int 0x", 0
+interrupt_log_int_ax:
+    db  ", ax=0x", 0
+.ENDFRAME
+
+##########
 interrupt_log_fdc_13:
 .FRAME
     add interrupt_log_fdc_13_start, 0, [rb - 1]
@@ -158,13 +198,13 @@ interrupt_log_fdc_13:
 
     add [reg_ah], 0, [rb - 1]
     arb -1
-    call print_num
+    call print_num_16_b
 
     out 10
     ret 0
 
 interrupt_log_fdc_13_start:
-    db  31, 31, 31, "int 13, fn ", 0
+    db  31, 31, 31, "int 0x13, fn 0x", 0
 .ENDFRAME
 
 ##########
