@@ -11,6 +11,8 @@
 .EXPORT fdc_cmd_head
 .EXPORT fdc_cmd_sector
 
+.EXPORT fdc_cmd_end_of_track
+
 .EXPORT fdc_cmd_hlt_nd
 
 .EXPORT fdc_cmd_st0
@@ -309,7 +311,6 @@ fsm_w_n:
 
 fsm_w_eot:
     # Save EOT (end of track, final sector number on a cylinder)
-    # TODO how is this used, do we need to save it?
     add [rb + value], 0, [fdc_cmd_end_of_track]
 
     # Next state is write GPL

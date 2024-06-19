@@ -42,6 +42,8 @@
 .IMPORT fdc_cmd_head
 .IMPORT fdc_cmd_sector
 
+.IMPORT fdc_cmd_end_of_track
+
 .IMPORT fdc_cmd_hlt_nd
 
 .IMPORT fdc_cmd_st0
@@ -74,8 +76,8 @@
 
 ##########
 fdc_exec_read_data:
-.FRAME cylinders, heads, sectors, addr, count, tmp
-    arb -6
+.FRAME cylinders, heads, sectors, sectors_eot, addr_c, addr_s, tmp
+    arb -7
 
     # Prepare base value for ST0
     mul [fdc_cmd_head], 0b00000100, [fdc_cmd_st0]
@@ -93,12 +95,25 @@ fdc_exec_read_data:
     add fdc_dor_enable_motor_units, [fdc_cmd_unit_selected], [ip + 1]
     jz  [0], fdc_exec_read_data_no_floppy
 
-    # Floppy is accessible, load floppy parameters
+    # Floppy is accessible, report disk activity
+    add [fdc_cmd_unit_selected], 0, [rb - 1]
+    add 1, 0, [rb - 2]
+    arb -2
+    call fdc_activity_callback
+
+    # Load floppy parameters
     add fdc_medium_heads_units, [fdc_cmd_unit_selected], [ip + 1]
     add [0], 0, [rb + heads]
     add fdc_medium_sectors_units, [fdc_cmd_unit_selected], [ip + 1]
     add [0], 0, [rb + sectors]
 
+    # Limit number of sectors to EOT from the command input
+    add [rb + sectors], 0, [rb + sectors_eot]
+    lt  [fdc_cmd_end_of_track], [rb + sectors_eot], [rb + tmp]
+    jz  [rb + tmp], fdc_exec_read_data_after_eot
+    add [fdc_cmd_end_of_track], 0, [rb + sectors_eot]
+
+fdc_exec_read_data_after_eot:
     # Cylinder number must match the cylinder we are on
     eq  [fdc_cmd_cylinder], [fdc_present_cylinder_units], [rb + tmp]
     jz  [rb + tmp], fdc_exec_read_data_bad_input
@@ -112,7 +127,7 @@ fdc_exec_read_data:
     # Sector number must be in range (1-based)
     lt  [fdc_cmd_sector], 1, [rb + tmp]
     jnz [rb + tmp], fdc_exec_read_data_bad_input
-    lt  [rb + sectors], [fdc_cmd_sector], [rb + tmp]
+    lt  [rb + sectors_eot], [fdc_cmd_sector], [rb + tmp]
     jnz [rb + tmp], fdc_exec_read_data_bad_input
 
     # Check the DMA controller
@@ -125,63 +140,73 @@ fdc_exec_read_data:
     eq  [dma_mode_ch2], 1, [rb + tmp]                       # only single mode is supported (1)
     jz  [rb + tmp], fdc_exec_read_data_no_dma
 
-    # Report disk activity
-    add [fdc_cmd_unit_selected], 0, [rb - 1]
-    add 1, 0, [rb - 2]
-    arb -2
-    call fdc_activity_callback
+    # DMA is set up, start reading at head H sector S up to end of the track/cylinder,
+    # or until the DMA controller has enough data
 
-    # DMA is set up, find the data we want to read
-    # addr = floppy_image + ((cylinder * heads + head) * sectors + (sector - 1)) * 512
-    mul [fdc_cmd_cylinder], [rb + heads], [rb + addr]
-    add [fdc_cmd_head], [rb + addr], [rb + addr]
-    mul [rb + sectors], [rb + addr], [rb + addr]
-    add [fdc_cmd_sector], [rb + addr], [rb + addr]
-    add -1, [rb + addr], [rb + addr]
-    mul 512, [rb + addr], [rb + addr]
-    add [floppy_image], [rb + addr], [rb + addr]
+    # Calculate cylinder address in intcode memory:
+    # addr_c = floppy_image + cylinder * heads * sectors * 512
+    mul [fdc_cmd_cylinder], [rb + heads], [rb + addr_c]
+    mul [rb + addr_c], [rb + sectors], [rb + addr_c]
+    mul [rb + addr_c], 512, [rb + addr_c]
+    add [floppy_image], [rb + addr_c], [rb + addr_c]
 
-    # Determine how much data should we read (the counter in DMA controller plus 1)
-    add [dma_count_ch2], 1, [rb + count]
-    # TODO If N=0, DTL defines how much of the sector should we send to data bus.
-    # TODO If N>0, DTL is ignored. Still includes reading multiple sectors if no TC.
+fdc_exec_read_data_loop:
+    # Does the DMA controller expect more data?
+    eq  [dma_count_ch2], -1, [rb + tmp]
+    jnz [rb + tmp], fdc_exec_read_data_all_data_read
 
-    # TODO for now we can read one sector only, 512 bytes
-    # boot sector read from 8088_bios: MT=1 HD=0 C=0 H=0 S=1 N=02 EOT=36 GPL=27 DTL=0xff
-    jz  [fdc_cmd_multi_track], fdc_exec_read_data_not_supported
+    # Calculate sector address in intcode memory:
+    # addr_s = addr_c + (head * sectors + sector - 1) * 512
+    mul [fdc_cmd_head], [rb + sectors], [rb + addr_s]
+    add [rb + addr_s], [fdc_cmd_sector], [rb + addr_s]
+    add [rb + addr_s], -1, [rb + addr_s]
+    mul [rb + addr_s], 512, [rb + addr_s]
+    add [rb + addr_c], [rb + addr_s], [rb + addr_s]
 
-    eq  [rb + count], 512, [rb + tmp]
-    jz  [rb + tmp], fdc_exec_read_data_not_supported
-
-    # TODO read multiple sectors, wraparound when reaching the last sector, until DMA sends TC
-    # TODO support EOT, final sector number on track; stop reading after sector number equal to EOT
-    # TODO support MT: read sector 1 side 0... sector L side 1 (L = last sector on side)
-
-    # Send data to the DMA controller, channel 2
+    # Send one sector of data to DMA controller, channel 2
+    # TODO if N=0, DTL defines how much of each sector should we send to DMA, not 512
     add 2, 0, [rb - 1]
-    add [rb + addr], 0, [rb - 2]
-    add [rb + count], 0, [rb - 3]
+    add [rb + addr_s], 0, [rb - 2]
+    add 512, 0, [rb - 3]
     arb -3
     call dma_receive_data
 
-    # Respond with ST0 (see above) ST1 ST2 C H R N
+    # Move to next sector
+    add [fdc_cmd_sector], 1, [fdc_cmd_sector]
+
+    # Did we reach end of track?
+    lt  [rb + sectors_eot], [fdc_cmd_sector], [rb + tmp]
+    jz  [rb + tmp], fdc_exec_read_data_loop
+
+    # End of track, move to sector 1
+    add 1, 0, [fdc_cmd_sector]
+
+    # Is this a multi-track operation?
+    jnz [fdc_cmd_multi_track], fdc_exec_read_data_multi_track
+
+    # Single track operation is finished, move the same head on next cylinder
+    add [fdc_cmd_cylinder], 1, [fdc_cmd_cylinder]
+    jz  0, fdc_exec_read_data_all_data_read
+
+fdc_exec_read_data_multi_track:
+    # Multi-track operation, move to next side
+    add [fdc_cmd_head], 1, [fdc_cmd_head]
+
+    # Does this side actually exist on the disk?
+    lt  [fdc_cmd_head], [rb + heads], [rb + tmp]
+    jnz [rb + tmp], fdc_exec_read_data_loop
+
+    # No, end of cylinder, move to head 0 on next cylinder
+    add 0, 0, [fdc_cmd_head]
+    add [fdc_cmd_cylinder], 1, [fdc_cmd_cylinder]
+
+fdc_exec_read_data_all_data_read:
+    # The DMA controller does not want more data, or there is no more data available
+    # Respond with ST0 (see above) ST1 ST2, and C H R N that was set up above
     add 0, 0, [fdc_cmd_st1]
     add 0, 0, [fdc_cmd_st2]
 
-    # For C H R N keep the head and cylinder that was requested, report last read sector
-    # TODO see table on page 435 in UPD765.pdf, the correct values are based on MT and EOT
-    # TODO update fdc_cmd_sector if we read multiple sectors
-    add [fdc_cmd_sector], 1, [fdc_cmd_sector] # very rough fake of the actual correct result
-
     jz  0, fdc_exec_read_data_terminated
-
-fdc_exec_read_data_not_supported:                           # TODO remove
-    add fdc_exec_read_data_error, 0, [rb - 1]
-    arb -1
-    call report_error
-
-fdc_exec_read_data_error:                                   # TODO remove
-    db  "fdc: requested read data command variant ", "is not supported", 0
 
 fdc_exec_read_data_no_dma:
     # Floppy is accessible, but the DMA controller is not ready to accept data
@@ -233,7 +258,7 @@ fdc_exec_read_data_terminated:
     arb -2
     call fdc_activity_callback
 
-    arb 6
+    arb 7
     ret 0
 .ENDFRAME
 
