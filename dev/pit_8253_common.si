@@ -127,13 +127,14 @@ pit_vm_callback_common_int0:
     call interrupt
 
 pit_vm_callback_common_done:
-    # Timer logging
-    jz  [config_log_pit], pit_vm_callback_common_after_log
-
-    call pit_vm_callback_log
-    call pit_status_log
-
-pit_vm_callback_common_after_log:
+#    # Timer logging
+#    # TODO enable this, but only log when the output changes
+#    jz  [config_log_pit], pit_vm_callback_common_after_log
+#
+#    call pit_vm_callback_log
+#    call pit_status_log
+#
+#pit_vm_callback_common_after_log:
     arb 2
     ret 0
 .ENDFRAME
@@ -200,17 +201,25 @@ pit_mode_command_write_common_after_aliases:
     add -1, 0, [pit_latch_hi]
 
     # Do we trigger IRQ0 for this channel?
-    jz  [pit_trigger_int0], pit_mode_command_write_common_done
+    jz  [pit_trigger_int0], pit_mode_command_write_common_log
 
     # If output goes hi from lo, trigger IRQ0
     eq  [pit_output], 0, [rb + tmp]
     add [rb + tmp], [rb + orig_output], [rb + tmp]
-    jnz [rb + tmp], pit_mode_command_write_common_done
+    jnz [rb + tmp], pit_mode_command_write_common_log
 
     # Trigger IRQ0 = INT 8
     add 8, 0, [rb - 1]
     arb -1
     call interrupt
+
+pit_mode_command_write_common_log:
+    # Timer logging
+    jz  [config_log_pit], pit_mode_command_write_common_done
+
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call pit_mode_command_write_log
 
     jz  0, pit_mode_command_write_common_done
 
@@ -223,16 +232,6 @@ pit_mode_command_write_common_latch:
     add [pit_value_hi], 0, [pit_latch_hi]
 
 pit_mode_command_write_common_done:
-    # Timer logging
-    jz  [config_log_pit], pit_mode_command_write_common_after_log
-
-    add [rb + value], 0, [rb - 1]
-    arb -1
-    call pit_mode_command_write_log
-
-    call pit_status_log
-
-pit_mode_command_write_common_after_log:
     arb 3
     ret 1
 
@@ -353,8 +352,6 @@ pit_data_write_common_done:
     arb -1
     call pit_data_write_log
 
-    call pit_status_log
-
 pit_data_write_common_after_log:
     arb 4
     ret 2
@@ -420,14 +417,13 @@ pit_data_read_common_clear_latch:
     add -1, 0, [pit_latch_hi]
 
 pit_data_read_common_done:
-    # Timer logging
-    jz  [config_log_pit], pit_data_read_common_after_log
-
-    add [rb + value], 0, [rb - 1]
-    arb -1
-    call pit_data_read_log
-
-    call pit_status_log
+#    # Timer logging
+#    # TODO we don't log reads for now, it's too much data
+#    jz  [config_log_pit], pit_data_read_common_after_log
+#
+#    add [rb + value], 0, [rb - 1]
+#    arb -1
+#    call pit_data_read_log
 
 pit_data_read_common_after_log:
 
@@ -508,7 +504,7 @@ pit_mode_command_write_log:
     arb -1
     call print_str
 
-    add [pit_mode], [rb - 1], [rb - 1]
+    add [pit_mode], 0, [rb - 1]
     arb -1
     call print_num
 
@@ -516,11 +512,13 @@ pit_mode_command_write_log:
     arb -1
     call print_str
 
-    add [pit_access], [rb - 1], [rb - 1]
+    add [pit_access], 0, [rb - 1]
     arb -1
     call print_num
 
     out 10
+
+    call pit_status_log
 
     arb 1
     ret 1
@@ -557,6 +555,8 @@ pit_data_write_log:
 
     out 10
 
+    call pit_status_log
+
     arb 1
     ret 1
 
@@ -587,6 +587,8 @@ pit_data_read_log:
     call print_num_16_w
 
     out 10
+
+    call pit_status_log
 
     arb 1
     ret 1
@@ -631,11 +633,25 @@ pit_status_log:
     arb -1
     call print_str
 
+    eq  [pit_latch_lo], -1, [rb + tmp]
+    jnz [rb + tmp], pit_status_log_latch_clear
+
+    out '0'
+    out 'x'
+
     mul [pit_latch_hi], 0x100, [rb - 1]
     add [pit_latch_lo], [rb - 1], [rb - 1]
     arb -1
     call print_num_16_w
 
+    jz  0, pit_status_log_after_latch
+
+pit_status_log_latch_clear:
+    add pit_status_log_clear, 0, [rb - 1]
+    arb -1
+    call print_str
+
+pit_status_log_after_latch:
     add pit_status_log_running, 0, [rb - 1]
     arb -1
     call print_str
@@ -677,7 +693,7 @@ pit_status_log_value:
 pit_status_log_reload:
     db  ", reload 0x", 0
 pit_status_log_latch:
-    db  ", latch 0x", 0
+    db  ", latch ", 0
 pit_status_log_running:
     db  ", running ", 0
 pit_status_log_decrement:
@@ -686,6 +702,8 @@ pit_status_log_target:
     db  ", target ", 0
 pit_status_log_gate:
     db  ", gate ", 0
+pit_status_log_clear:
+    db  "(clear)", 0
 .ENDFRAME
 
 ##########
