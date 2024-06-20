@@ -37,7 +37,7 @@
 #    data: out 0x12 = 15ms
 #    enables DRAM refresh
 # We just ignore this channel, don't even set up the callbacks.
-# This is what later computers do anyway.
+# This is what more recent computers do anyway.
 #
 # Channel 2:
 #  - mode: B6h - 10 11 011 0: lo+hi byte, mode 3
@@ -81,7 +81,7 @@ pit_vm_callback:
 
     add 1, 0, [rb + continue]
 
-    # Run the timer every N instructions
+    # Run the timer every 256 instructions
     jnz [vm_callback_counter], pit_vm_callback_decrement
     add 0x100, 0, [vm_callback_counter]
 

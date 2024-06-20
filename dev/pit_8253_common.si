@@ -62,6 +62,26 @@
 #  - when dec from 1 to 0: output pulse low, keep run (if gate)
 #  - when gate lo->hi: set value to reload, run (if gate)
 
+# The real PIT receives impulses at 14.31818 MHz/12 = 1.1931816666 MHz
+# This means there is one PIT pulse every 1/1.1931816666 MHz = every 0.00000084s = every 0.84µs
+# Channel 0 is initialized with 0x0000, so it fires IRQ0 every 0x10000 pulses
+# This means IRQ0 fires every 0x10000/1.1931816666 MHz = every 0.055s = every 55ms
+# There are 1/55ms = 18.2 IRQ0 per second, the BIOS expects IRQ0 18 times per second
+#
+# The real 8088 executes around 0.33 MIPS at 4.77 MHz
+# An average instruction takes 1/0.33 MIPS = 0.000003s = 3µs
+# One PIT pulse occurs 3µs/0.84µs times per instruction = 3.6 times per instruction
+# One IRQ0 occurs every 55ms/3µs = every 183333 instructions
+#
+# Actually processing a PIT pulse 3.6 per each instruction would destroy the performance,
+# so instead we optimize PIT, trading off timer precision to performance
+#
+# The emulated PIT receives a pulse every 64 instructions
+# This means PIT pulses occur 64 * 3.6 = 230 times less often than on a real IBM PC
+# To compensate, we decrement the PIT counters by a 256 times larger value
+# In other words, we just decrement the high byte of the counter, ignoring the low byte
+# The ratio of timer triggers to number of instructions executed stays rougly the same
+
 # TODO 8253 mode 3 output should come from the flip-flop
 
 ##########

@@ -33,8 +33,6 @@ TODO
 
 VM:
 - nmi_mask_reg
-- ppi_cwd_reg
-- DMAC (8237) dmac_ch0_count_reg
 - PIC (8259) pic1_reg0
 - keyboard controller (8242) ppi_pb_reg; also read ppi_pb_reg
 
@@ -64,15 +62,12 @@ BIOS
 ====
 
 https://github.com/skiselev/8088_bios.git
-make -C vm clean
-BIOS_LOAD_ADDRESS=fc000 BIOS_BIN=~/intcode/8088_bios/binaries/bios-xt.bin make && ~/intcode/xzintbit/vms/c/ic bin/vm.input
 
 listing:
 set(CMAKE_ASM_NASM_FLAGS "-O9 -l $(basename $@).lst")
 ./build/CMakeFiles/bios-xt.bin.dir/src/bios.asm.lst
 
 https://glabios.org/
-BIOS_BIN=~/intcode/GLABIOS_0.2.5_8X.ROM make (does not work yet)
 
 https://github.com/virtualxt/pcxtbios
 chmod a+x make_linux.sh
@@ -81,9 +76,7 @@ compile toolsrc using fbc -lang qb file.bas
 move the compiled tools to ./linux
 eproms/2764/pcxtbios.rom at 0xfe000 is mandatory, the rest is optional
 
-make -C vm clean
-BIOS_LOAD_ADDRESS=fe000 BIOS_BIN=~/intcode/pcxtbios/eproms/2764/pcxtbios.rom make && ~/intcode/xzintbit/vms/c/ic bin/vm.input
-
+pcxtbios + BASIC:
 make -C vm clean
 cat ~/intcode/pcxtbios/eproms/2764/basicfc.rom ~/intcode/pcxtbios/eproms/2764/pcxtbios.rom > bios.tmp
 BIOS_LOAD_ADDRESS=fc000 BIOS_BIN=$(pwd)/bios.tmp make && ~/intcode/xzintbit/vms/c/ic bin/vm.input
@@ -122,12 +115,8 @@ read
 ppi_cwd_reg	63h: 8255 PPI control word register
 0b10011001
 
-DOS
-===
-
-https://github.com/codercowboy/freedosbootdisks
-FDC
-===
+Floppy Disk Controller
+======================
 
 https://www.pcjs.org/machines/pcx86/ibm/hdc/
 https://www.datasheet.live/pdfviewer?url=https%3A%2F%2Fpdf.datasheet.live%2F3fe4a52f%2Fintel.com%2FP8272A.pdf
@@ -144,128 +133,12 @@ config_tracing_ip:
     db  0xc425 # int_13_fn00
     db  0xc42f # fdc_init
 
-fdc_init:
-
-- OK timer turns off motors by writing 0x0c to DOR
-- OK fdc_dor_reset
-    - pulse bit 2 in DOR to reset (reset state if FDC)
-    - make sure it keeps DMA on
-    - then it waits for IRQ6 = INT 0E
-- OK read status register, fail if not bit 7, fail if bit 6
-- OK fdc sense interrupt status
-    - al = 0x08 -> fdc_write
-    - fdc_read -> ST0 (if carry, error)
-    - fdc_read -> current cylinder (if carry, error) PCN
-    - if ST0 has 0x0c bits set, pass
-- fdc_send_specify
-    - sends data based on int_1E
-    - I think the only interesting bit is ND, we need to check it's 0 (DMA mode)
-
-int_19
-setloc	0E6F2h
-
 <bin/vm.bios-xt.input.map.yaml yq '.symbols.fdc_dor_write.export|(.module)+(.offset)'
-
-- OK int_13_fn08 get drive params
-    - in: dl=0, drive 0
-    - out: dl, number of drives
-    - call get_drive_type
-    - call get_media_state
-    - call set_media_state
-    - looks like no use of fdc
-- int_13_fn02 read sector
-    - al=1
-    - dx=0 (head 0, drive 0)
-    - cx=1 (track 0, sector 1)
-    - es:bx target buffer (0000:7c00)
-    - out: CF=0 success
-    - OK fdc_motor_on
-    - fdc_disk_change
-    - fdc_set_rate
-    - fdc_detect_media
-        - get_drive_type (hardcoded 1.44 3.5")
-        - fdc_read_id
-            - fdc_set_rate Cw
-            - fdc_recalibrate Dw 111
-    - fdc_configure_dma
-        - dmac_mode_reg
-        - dmac_ff_reg
-        - dmac_ch2_count_reg
-        - dmac_ch2_addr_reg
-        - dmapage_ch2_reg
-        - dmac_mask_reg
-    - fdc_seek
-        - fdc_recalibrate
-    - fdc_send_cmd 0e6
-    - fdc_wait_irq
-    - fdc_get_result
-
-Booting OS...
-reset fdc fn00              i13 Aw_00001000 Aw_00001100 R Sr_10000000 Sr_10000000
-sense interrupt status      Dw_00001000 Sr_11000000 Sr_11000000 Dr_11000000 Sr_11000000 Sr_11000000 Dr_00000000 Sr_10000000
-specify                     Dw_00000011 Sr_10000000 Dw_10101111 Sr_10000000 Dw_00000010
-get drive parameters fn08   i13
-read sector fn02            i13 Aw_00011100 Cw_00000000 Sr_10000000
-recalibrate                 Dw_00000111 Sr_10000000 Dw_00000000 Sr_10000000
-Dw_00000111 Sr_10000000 Dw_00000000 Cw_00000010 Sr_10000000
-Dw_00000111 Sr_10000000 Dw_00000000 Sr_10000000
-Dw_00000111 Sr_10000000 Dw_00000000 Sr_10000000
-Dw_00000011 Sr_10000000 Dw_11011111 Sr_10000000 Dw_00000010 Sr_10000000
-Dw_00000111 Sr_10000000 Dw_00000000 Sr_10000000
-Dw_00000111 Sr_10000000 Dw_00000000 Sr_10000000
-
-(after recalibrate works)
-Booting OS...
-reset fdc fn00              i13 Aw_00001000 Aw_00001100 R Sr_10000000 Sr_10000000
-sense interrupt status      Dw_00001000 Sr_11000000 Sr_11000000 Dr_11000000 Sr_11000000 Sr_11000000 Dr_00000000 Sr_10000000
-specify                     Dw_00000011 Sr_10000000 Dw_10101111 Sr_10000000 Dw_00000010
-get drive parameters fn08   i13
-read sector fn02            i13 Aw_00011100 Cw_00000000 Sr_10000000
-recalibrate                 Dw_00000111 Sr_10000000 Dw_00000000 Sr_10000000
-sense interrupt status      Dw_00001000 Sr_11000000 Sr_11000000 looks unfinished
-Cw_00000010 Sr_11000000 Sr_11000000 Sr_11000000
-
-reset fdc fn00              i13 Aw_00011000 Aw_00011100 R Sr_11000000
-reset fdc fn00 attempt 2    Aw_00011000 Aw_00011100 R Sr_11000000
-reset fdc fn00              i13 Aw_00011000 Aw_00011100 R Sr_11000000
-reset fdc fn00 attempt 2    Aw_00011000 Aw_00011100 R Sr_11000000
-reset fdc fn00              i13 Aw_00011000 Aw_00011100 R Sr_11000000
-reset fdc fn00 attempt 2    Aw_00011000 Aw_00011100 R Sr_11000000
-                            i13
-
-(after fdc busy flag)
-Booting OS...
-reset fdc fn00              i13_00 Aw_00001000 Aw_00001100 R Sr_10000000 Sr_10000000
-sense interrupt status      Dw_00001000 Sr_11010000 Sr_11010000 Dr_11000000 Sr_11010000 Sr_11010000 Dr_00000000 Sr_10000000
-specify                     Dw_00000011 Sr_10010000 Dw_10101111 Sr_10010000 Dw_00000010
-get drive parameters fn08   i13_08
-read sector fn02            i13_02 Aw_00011100 Cw_00000000 Sr_10000000
-recalibrate                 Dw_00000111 Sr_10010000 Dw_00000000 Sr_10000000
-sense interrupt status      Dw_00001000 Sr_11010000 Dr_10000000 Sr_10000000 Sr_10000000
-read id                     Dw_01001010 Sr_10010000 Dw_00000000 (waits, probably for interrupt) Cw_00000010 Sr_11010000 Sr_11010000 Sr_11010000
-
-reset fdc fn00              i13_00 Aw_00011000 Aw_00011100 R Sr_11010000 Aw_00011000 Aw_00011100 R Sr_11010000
-                            i13_00 Aw_00011000 Aw_00011100 R Sr_11010000 Aw_00011000 Aw_00011100 R Sr_11010000
-                            i13_00 Aw_00011000 Aw_00011100 R Sr_11010000 Aw_00011000 Aw_00011100 R Sr_11010000
-                            i13_0d
-
-(after read id does IRQ6)
-Booting OS...
-reset fdc fn00              i13_00 Aw_00001000 Aw_00001100 R Sr_10000000 Sr_10000000
-sense interrupt status      Dw_00001000 Sr_11010000 Sr_11010000 Dr_11000000 Sr_11010000 Sr_11010000 Dr_00000000 Sr_10000000
-specify                     Dw_00000011 Sr_10010000 Dw_10101111 Sr_10010000 Dw_00000010
-get drive parameters fn08   i13_08
-read sector fn02            i13_02 Aw_00011100 Cw_00000000 Sr_10000000
-recalibrate                 Dw_00000111 Sr_10010000 Dw_00000000 Sr_10000000
-sense interrupt status      Dw_00001000 Sr_11010000 Dr_00010000 Sr_11010000 Dr_00000000 Sr_10000000 Sr_10000000
-read id                     Dw_01001010 Sr_10010000 Dw_00000000 Sr_11010000 Dr_00000000 Sr_11010000 Dr_00000000 Sr_11010000 Dr_00000000 Sr_11010000 Dr_00000000 Sr_11010000 Dr_00000000 Sr_11010000 Dr_00000001 Sr_11010000 Dr_1000000000 Sr_10000000 Sr_10000000
-specify                     Dw_00000011 Sr_10010000 Dw_11011111 Sr_10010000 Dw_00000010 Sr_10000000
-read data                   Dw_11100110 Sr_10010000 Dw_00000000 Sr_10010000 Dw_00000000 Sr_10010000 Dw_00000000 Sr_10010000 Dw_00000001 Sr_10010000 Dw_00000010 Sr_10010000 Dw_00100100 Sr_10010000 Dw_00011011 Sr_10010000 Dw_11111111 Sr_11010000 Dr_00000000 Sr_11010000 Dr_00000000 Sr_11010000 Dr_00000000 Sr_11010000 Dr_00000000 Sr_11010000 Dr_00000000 Sr_11010000 Dr_00000001 Sr_11010000 Dr_00000010 Sr_10000000
-
-reset fdc fn00              i13_00 Aw_00011000 Aw_00011100 R Sr_10000000 Sr_10000000
 
 FreeDOS Plan
 ============
+
+https://github.com/codercowboy/freedosbootdisks
 
 tools (sorted by priority):
  - unit tests for fdc
@@ -431,21 +304,6 @@ that will change the ticks count and make the delay eventually expire
 int8 is irq 0, timer interrupt that we don't have
 
 -> workaround: in boot_basic comment out delay_keypress
-
------
-f000:f2b2 IN AL, DX(ec)
-f000:f2b3 TEST AL, IMMED8(a8) 08
-f000:f2b5 JZ SHORT-LABEL(74) fb
-goto 10
-
-	mov	dx, 3DAh			; Else 80x25, do the kludge
-
-@@wait: in	al, dx				; Read CGA status register
-	test	al, 00001000b			;   vertical retrace?
-	jz	@@wait				;   wait until it is
-
--> fixed vertical retrace in cga/registers.s
-then it crashes on unsupported read data command variant
 
 FreeDOS Prompt
 ==============
