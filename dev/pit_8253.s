@@ -81,9 +81,9 @@ pit_vm_callback:
 
     add 1, 0, [rb + continue]
 
-    # Run the timer every 256 instructions
+    # Run the timer every 64 instructions
     jnz [vm_callback_counter], pit_vm_callback_decrement
-    add 0x100, 0, [vm_callback_counter]
+    add 64, 0, [vm_callback_counter]
 
     call pit_vm_callback_ch0
     call pit_vm_callback_ch2

@@ -13,9 +13,13 @@
 
 # Tracing (0 - disable tracing, -1 - trace always, >0 - tracing past given address)
 config_enable_tracing:
-    db  0
+    db  1
 
 # Tracing trigger address (0 - always trace, >0 - trace after the address was reached)
+config_tracing_cs:
+    db  0
+config_tracing_ip:
+    db  0
 
 # Boot sector start
 #config_tracing_cs:
@@ -24,10 +28,10 @@ config_enable_tracing:
 #    db  0x7c00
 
 # FreeDOS boot
-config_tracing_cs:
-    db  0x1254
-config_tracing_ip:
-    db  0x0005
+#config_tracing_cs:
+#    db  0x1254
+#config_tracing_ip:
+#    db  0x0005
 
 # pcxtbios, call boot_basic
 #config_tracing_cs:
@@ -57,8 +61,8 @@ config_log_cs_change:
 config_log_fdc:
     db  0
 config_log_int:
-    db  0
+    db  1
 config_log_pit:
-    db  0
+    db  1
 
 .EOF

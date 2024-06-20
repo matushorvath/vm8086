@@ -82,12 +82,16 @@
 # In other words, we just decrement the high byte of the counter, ignoring the low byte
 # The ratio of timer triggers to number of instructions executed stays rougly the same
 
-# TODO 8253 mode 3 output should come from the flip-flop
+# TODO 8253 mode 3 output should come from the flip-flop; it's the same IRQ0 frequency though
 
 ##########
 pit_vm_callback_common:
 .FRAME orig_output, tmp                         # returns continue
     arb -2
+
+    # We are keeping the lo byte of the value untouched, just decrementing the hi byte
+    # This is to compensate for triggering this callback less often than the real hardware
+    # See design notes at the beginning of this file for more details
 
     # Is the channel running?
     jz  [pit_running], pit_vm_callback_common_done
@@ -95,14 +99,8 @@ pit_vm_callback_common:
 
     add [pit_output], 0, [rb + orig_output]
 
-    # Decrement the value
-    add [pit_value_lo], [pit_decrement], [pit_value_lo]
-
-    lt  [pit_value_lo], 0, [rb + tmp]
-    jz  [rb + tmp], pit_vm_callback_common_after_dec
-
-    add [pit_value_lo], 0x100, [pit_value_lo]
-    add [pit_value_hi], -1, [pit_value_hi]
+    # Decrement the high byte of the value only
+    add [pit_value_hi], [pit_decrement], [pit_value_hi]
 
     lt  [pit_value_hi], 0, [rb + tmp]
     jz  [rb + tmp], pit_vm_callback_common_after_dec
@@ -110,12 +108,10 @@ pit_vm_callback_common:
     add [pit_value_hi], 0x100, [pit_value_hi]
 
 pit_vm_callback_common_after_dec:
-    # Check if we reached the target value
+    # Check if we have reached zero
     jnz [pit_value_hi], pit_vm_callback_common_done
-    eq  [pit_value_lo], [pit_target_lo], [rb + tmp]
-    jz  [rb + tmp], pit_vm_callback_common_done
 
-    # Target reached; set output high
+    # Zero reached; set output high
     add 1, 0, [pit_output]
 
     # Is this mode 2 or 3?
@@ -124,8 +120,7 @@ pit_vm_callback_common_after_dec:
     eq  [rb + tmp], 3, [rb + tmp]
     jz  [rb + tmp], pit_vm_callback_common_after_reload
 
-    # Yes, reload value
-    add [pit_reload_lo], 0, [pit_value_lo]
+    # Yes, reload hi byte of the value
     add [pit_reload_hi], 0, [pit_value_hi]
 
 pit_vm_callback_common_after_reload:
@@ -203,9 +198,6 @@ pit_mode_command_write_common_after_aliases:
     add 0, 0, [pit_read_hi_byte_next]
     add 0, 0, [pit_write_hi_byte_next]
     add 0, 0, [pit_running]
-
-    # Target value is 1 in mode 2, 0 otherwise
-    eq  [pit_mode], 2, [pit_target_lo]
 
     # Decrement by 2 in mode 3, by 1 otherwise
     eq  [pit_mode], 3, [pit_decrement]
@@ -359,7 +351,7 @@ pit_data_write_common_after_reload_start:
     jz  0, pit_data_write_common_done
 
 pit_data_write_common_update_value:
-    # Yes, set reload to value, start the timer
+    # Yes, copy reload to value, start the timer
     add [pit_reload_lo], 0, [pit_value_lo]
     add [pit_reload_hi], 0, [pit_value_hi]
     add 1, 0, [pit_running]
@@ -687,13 +679,6 @@ pit_status_log_after_latch:
     add '0', [rb + tmp], [rb + tmp]
     out [rb + tmp]
 
-    add pit_status_log_target, 0, [rb - 1]
-    arb -1
-    call print_str
-
-    add '0', [pit_target_lo], [rb + tmp]
-    out [rb + tmp]
-
     add pit_status_log_gate, 0, [rb - 1]
     arb -1
     call print_str
@@ -718,8 +703,6 @@ pit_status_log_running:
     db  ", running ", 0
 pit_status_log_decrement:
     db  ", decrement ", 0
-pit_status_log_target:
-    db  ", target ", 0
 pit_status_log_gate:
     db  ", gate ", 0
 pit_status_log_clear:
@@ -759,10 +742,8 @@ pit_read_hi_byte_next:
 pit_write_hi_byte_next:
     db  0
 
-# These values depend on mode, we precalculate them to speed up vm callback
+# This value depends on mode, we precalculate it to speed up vm callback
 pit_decrement:
     db  -1
-pit_target_lo:
-    db  0
 
 .EOI
