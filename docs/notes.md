@@ -738,3 +738,32 @@ Interrupts
 https://wiki.osdev.org/8259_PIC
 http://www.brokenthorn.com/Resources/OSDevPic.html
 https://helppc.netcore2k.net/hardware/8259
+
+Broken FreeDOS Boot
+===================
+
+Boot freedos with bochs 298de90                             8088 OK
+PIT logging bb2f957                                         8088 OK, pcxt OK (no hard disks detected -> read data command variant is not supported)
+INT0 generation from PIT d38b71e                            8088 OK, pcxt opcode error: ip 4 oc 0
+Document current crash 686a0d0                              8088 OK, pcxt opcode error: ip 4 oc 0
+Update crash analysis 7d1abe8                               8088 OK
+Add some notes 8582a10                                      8088 OK
+New disk reading algorithm acd96c0                          8088 OK
+Interrupt logging 4737cdd                                   8088 OK
+Make timer logging more useful 608da33                      8088 OK
+Design a more performant PIT 79904b4                        8088 OK
+Initial version of PIC f27acbb                              (PIC bug)
+Fix ICW1 handling 9db2440                                   8088 freezes on POST 06
+
+---
+rebase last 2
+
+Design a more performant PIT 79904b4                        8088 OK
+Initial implementation of PIC 8259A 1a10eed                 8088 OK
+(+stash with PIT changes, freezes on POST 06)
+
+pcxtbios started crashing when IRQ0 was enabled
+probably it's not expecting IRQ0 when IF=0
+
+with IRQ0 disabled, pcxtbios loads extremely slowly, lots of disk operations (blinking FDD LED)
+not sure if it even loads in the end
