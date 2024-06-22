@@ -1,17 +1,13 @@
 .EXPORT fdc_activity_callback
 
 # From bios.o
-.IMPORT bios_count
-.IMPORT bios_header
-.IMPORT bios_data
+.IMPORT bios_image
 
 # From bios_address.template
 .IMPORT bios_address
 
 # From floppy.o
-.IMPORT floppy_count
-.IMPORT floppy_header
-.IMPORT floppy_data
+.IMPORT floppy_image
 
 # From ports.s
 .IMPORT init_vm_ports
@@ -60,13 +56,10 @@
 main:
 .FRAME
     add [bios_address], 0, [rb - 1]
-    add [bios_count], 0, [rb - 2]
-    add bios_header, 0, [rb - 3]
-    add bios_data, 0, [rb - 4]
-    add [floppy_count], 0, [rb - 5]
-    add floppy_header, 0, [rb - 6]
-    add floppy_data, 0, [rb - 7]
-    arb -7
+    add bios_image, 0, [rb - 2]
+    add 1474560, 0, [rb - 3]
+    add floppy_image, 0, [rb - 4]
+    arb -4
     call init_images
 
     call init_pic_8259a

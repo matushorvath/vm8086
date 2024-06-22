@@ -11,9 +11,7 @@
 .IMPORT init_shutdown_port
 
 # From test_cga.o
-.IMPORT cga_test_count
-.IMPORT cga_test_header
-.IMPORT cga_test_data
+.IMPORT cga_test_image
 
 ##########
 # Entry point
@@ -30,10 +28,8 @@
 main:
 .FRAME
     add 0xf0000, 0, [rb - 1]
-    add [cga_test_count], 0, [rb - 2]
-    add cga_test_header, 0, [rb - 3]
-    add cga_test_data, 0, [rb - 4]
-    arb -4
+    add cga_test_image, 0, [rb - 2]
+    arb -2
     call init_rom_image
 
     call init_cga

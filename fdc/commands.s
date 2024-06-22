@@ -58,7 +58,7 @@
 .IMPORT report_error
 
 # From cpu/images.s
-.IMPORT floppy_image
+.IMPORT floppy
 
 # From cpu/interrupt.s
 .IMPORT interrupt
@@ -144,11 +144,11 @@ fdc_exec_read_data_after_eot:
     # or until the DMA controller has enough data
 
     # Calculate cylinder address in intcode memory:
-    # addr_c = floppy_image + cylinder * heads * sectors * 512
+    # addr_c = floppy + cylinder * heads * sectors * 512
     mul [fdc_cmd_cylinder], [rb + heads], [rb + addr_c]
     mul [rb + addr_c], [rb + sectors], [rb + addr_c]
     mul [rb + addr_c], 512, [rb + addr_c]
-    add [floppy_image], [rb + addr_c], [rb + addr_c]
+    add [floppy], [rb + addr_c], [rb + addr_c]
 
 fdc_exec_read_data_loop:
     # Does the DMA controller expect more data?
