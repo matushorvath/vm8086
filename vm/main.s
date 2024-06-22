@@ -34,6 +34,9 @@
 # From dev/fdc.s
 .IMPORT init_fdc
 
+# From dev/pic_8259a.s
+.IMPORT init_pic_8259a
+
 # From dev/pit_8253.s
 .IMPORT init_pit_8253
 
@@ -66,6 +69,7 @@ main:
     arb -7
     call init_images
 
+    call init_pic_8259a
     call init_pit_8253
     call init_ppi_8255a
     call init_dma_8237a

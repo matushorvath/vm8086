@@ -731,3 +731,10 @@ debug points:
     - are we maybe getting too many IRQs so we spend all time handling IRQ0?
     - are we getting IRQs in the middle of processing another IRQ?
  - f000:cb32 "fdc reset controller" - what happens before that, why is it resetting the fdc?
+
+Interrupts
+==========
+
+https://wiki.osdev.org/8259_PIC
+http://www.brokenthorn.com/Resources/OSDevPic.html
+https://helppc.netcore2k.net/hardware/8259
