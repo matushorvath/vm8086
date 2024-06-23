@@ -37,6 +37,16 @@
 # From trace.s
 .IMPORT print_trace
 
+# TODO handling of IRQs:
+#
+# Repeat, LOCK and segment override prefixes are considered "part of" the instructions they prefix;
+# no interrupt is recognized between execution of a prefix and an instruction.
+#
+# A MOV (move) to segment register instruction and a POP segment register instruction are treated similarly:
+# no interrupt is recognized until after the following instruction.
+#
+# repeated string instructions, where an interrupt request is recognized in the middle of an instruction
+
 ##########
 execute:
 .FRAME tmp, op, tracing_triggered

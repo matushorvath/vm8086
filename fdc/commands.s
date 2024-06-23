@@ -63,6 +63,9 @@
 # From cpu/interrupt.s
 .IMPORT interrupt
 
+# From cpu/state.s
+.IMPORT flag_interrupt
+
 # From dev/dma_8237a.s
 .IMPORT dma_disable_controller
 .IMPORT dma_mask_ch2
@@ -247,11 +250,14 @@ fdc_exec_read_data_no_floppy:
 
 fdc_exec_read_data_terminated:
     # Raise INT 0e = IRQ6
+    jz  [flag_interrupt], fdc_exec_read_data_after_irq  # TODO move to IRQ infra
+
     add 1, 0, [fdc_interrupt_pending]
     add 0x0e, 0, [rb - 1]
     arb -1
     call interrupt
 
+fdc_exec_read_data_after_irq:
     # Report disk activity
     add [fdc_cmd_unit_selected], 0, [rb - 1]
     add 0, 0, [rb - 2]
@@ -395,11 +401,14 @@ fdc_exec_read_id_no_floppy:
 
 fdc_exec_read_id_terminated:
     # Raise INT 0e = IRQ6
+    jz  [flag_interrupt], fdc_exec_read_id_after_irq  # TODO move to IRQ infra
+
     add 1, 0, [fdc_interrupt_pending]
     add 0x0e, 0, [rb - 1]
     arb -1
     call interrupt
 
+fdc_exec_read_id_after_irq:
     arb 2
     ret 0
 .ENDFRAME
@@ -530,11 +539,14 @@ fdc_exec_recalibrate_no_floppy:
 
 fdc_exec_recalibrate_terminated:
     # Raise INT 0e = IRQ6
+    jz  [flag_interrupt], fdc_exec_recalibrate_after_irq  # TODO move to IRQ infra
+
     add 1, 0, [fdc_interrupt_pending]
     add 0x0e, 0, [rb - 1]
     arb -1
     call interrupt
 
+fdc_exec_recalibrate_after_irq:
     ret 0
 .ENDFRAME
 
@@ -628,11 +640,14 @@ fdc_exec_seek_no_floppy:
 
 fdc_exec_seek_terminated:
     # Raise INT 0e = IRQ6
+    jz  [flag_interrupt], fdc_exec_seek_after_irq  # TODO move to IRQ infra
+
     add 1, 0, [fdc_interrupt_pending]
     add 0x0e, 0, [rb - 1]
     arb -1
     call interrupt
 
+fdc_exec_seek_after_irq:
     # Report disk activity
     add [fdc_cmd_unit_selected], 0, [rb - 1]
     add 0, 0, [rb - 2]

@@ -774,3 +774,5 @@ after fixing image load (so it does not leave numbers > 255 in memory), now pcxt
 TODO
  - analyze why pcxtbios does does not boot FreeDOS (find which commit did it - disable IRQ0 while checking)
  - analyze why 8088_bios crashes when booting FreeDOS with new PIT; might be because of unexpected IRQ0? but it is not masked...
+
+if we check for IF in floppy code, it stops booting - clearly IF=0 but it is expected the IRQ will happen once IF=1, but we throw it away

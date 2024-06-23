@@ -226,9 +226,9 @@ pit_mode_command_write_common_after_aliases:
     add [rb + tmp], [rb + orig_output], [rb + tmp]
     jnz [rb + tmp], pit_mode_command_write_common_log
 
+    # Trigger IRQ0 = INT 8
     jz  [flag_interrupt], pit_mode_command_write_common_log  # TODO move to IRQ infra
 
-    # Trigger IRQ0 = INT 8
     add 8, 0, [rb - 1]
     arb -1
     call interrupt
