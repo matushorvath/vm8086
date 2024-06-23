@@ -71,7 +71,7 @@ init_dma_8237a:
 
 ##########
 dma_receive_data:
-.FRAME channel, src_addr, count; dst_addr, index, tmp
+.FRAME channel, src_addr, count; dst_addr, dst_delta, tmp
     arb -3
 
     # Floppy logging
@@ -87,49 +87,60 @@ dma_receive_data_after_log_fdc:
     # TODO range check channel
 
     # Check the DMA controller
-    jnz [dma_disable_controller], dma_receive_data_drop
+    jnz [dma_disable_controller], dma_receive_data_disabled
 
     add dma_mask_channels, [rb + channel], [ip + 1]
-    jnz [dma_mask_channels], dma_receive_data_drop
+    jnz [dma_mask_channels], dma_receive_data_disabled
 
     add dma_transfer_type_channels, [rb + channel], [ip + 1]
     eq  [0], 1, [rb + tmp]                                  # transfer type must be write (1)
-    jz  [rb + tmp], dma_receive_data_drop
+    jz  [rb + tmp], dma_receive_data_disabled
 
     # TODO support single/block/demand modes
 
-    # Decrease the DMA counter
-    add dma_count_channels, [rb + channel], [ip + 5]
-    add dma_count_channels, [rb + channel], [ip + 3]
-    add [0], [rb + count], [0]
+    # Decrement the destination address if requested
+    add dma_decrement_channels, [rb + channel], [ip + 1]
+    mul [0], -2, [rb + dst_delta]
+    add [rb + dst_delta], 1, [rb + dst_delta]
 
-    # Determine where should we write the data
+    # Determine where we should write the data
     add dma_page_channels, [rb + channel], [ip + 1]
     mul [0], 0xffff, [rb + dst_addr]
     add dma_address_channels, [rb + channel], [ip + 1]
     add [0], [rb + dst_addr], [rb + dst_addr]
     add [mem], [rb + dst_addr], [rb + dst_addr]
 
-    add 0, 0, [rb + index]
+    # Move min(count, dma_count_*+1) bytes of data
+    add dma_count_channels, [rb + channel], [ip + 1]
+    add [0], 1, [rb + tmp]
+    lt  [rb + tmp], [rb + count], [rb + tmp]
+    jz  [rb + tmp], dma_receive_data_loop
+
+    add dma_count_channels, [rb + channel], [ip + 1]
+    add [0], 1, [rb + count]
 
 dma_receive_data_loop:
     # Move the data
-    add [rb + src_addr], [rb + index], [ip + 5]
-    # TODO handle dma_decrement_channels
-    add [rb + dst_addr], [rb + index], [ip + 3]
+    add [rb + src_addr], 0, [ip + 5]
+    add [rb + dst_addr], 0, [ip + 3]
     add [0], 0, [0]
 
-    # Increase index
-    # TODO handle wraparound for dst_addr, it wraps around 0xffff and then adds the shifted page
-    add [rb + index], 1, [rb + index]
+    # Increment source address, increment/decrement destination address
+    # TODO handle wraparound for dst_addr, it wraps around 0xffff and then adds the page
+    add [rb + src_addr], 1, [rb + src_addr]
+    add [rb + dst_addr], [rb + dst_delta], [rb + dst_addr]
 
     # Decrease count and loop
     add [rb + count], -1, [rb + count]
     jnz [rb + count], dma_receive_data_loop
 
-    # TODO handle dma_auto_init_channels (remember originally set values, reset them after count goes to 0xffff)
+    # Update DMA counter, set it to 1 less than count
+    add dma_count_channels, [rb + channel], [ip + 3]
+    add [rb + count], -1, [0]
 
-dma_receive_data_drop:
+    # TODO handle dma_auto_init_channels (remember originally set values, reset them after dma_count_ch* goes to -1)
+
+dma_receive_data_disabled:
     arb 3
     ret 3
 .ENDFRAME
@@ -149,7 +160,7 @@ dma_receive_data_log_fdc:
     ret 1
 
 dma_receive_data_log_fdc_start:
-    db  "dma ch02, receive data, count ", 0
+    db  31, 31, 31, "dma ch02, receive data, count ", 0
 .ENDFRAME
 
 ##########
@@ -236,7 +247,7 @@ dma_mode_write_log_fdc:
     ret 1
 
 dma_mode_write_log_fdc_start:
-    db  "dma ch02, receive data, mode ", 0
+    db  31, 31, 31, "dma ch02, receive data, mode ", 0
 .ENDFRAME
 
 ##########
@@ -295,7 +306,7 @@ dma_master_reset_write_log_fdc:
     ret 0
 
 dma_master_reset_write_log_fdc_start:
-    db  "dma master reset", 0
+    db  31, 31, 31, "dma master reset", 0
 .ENDFRAME
 
 ##########
@@ -436,7 +447,7 @@ dma_address_ch2_write_log_fdc:
     ret 0
 
 dma_address_ch2_write_log_fdc_start:
-    db  "dma ch02, write address ", 0
+    db  31, 31, 31, "dma ch02, write address 0x", 0
 .ENDFRAME
 
 ##########
@@ -521,13 +532,13 @@ dma_count_ch2_write_log_fdc:
 
     add [dma_count_ch2], 0, [rb - 1]
     arb -1
-    call print_num_16
+    call print_num
 
     out 10
     ret 0
 
 dma_count_ch2_write_log_fdc_start:
-    db  "dma ch02, write count ", 0
+    db  31, 31, 31, "dma ch02, write count ", 0
 .ENDFRAME
 
 ##########
@@ -619,7 +630,7 @@ dma_page_ch2_write_log_fdc:
     ret 0
 
 dma_page_ch2_write_log_fdc_start:
-    db  "dma ch02, write page ", 0
+    db  31, 31, 31, "dma ch02, write page 0x", 0
 .ENDFRAME
 
 ##########

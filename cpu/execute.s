@@ -33,9 +33,14 @@
 .IMPORT reg_ds
 .IMPORT reg_ss
 .IMPORT inc_ip_b
+.IMPORT flag_interrupt
 
 # From trace.s
 .IMPORT print_trace
+
+# From dev/pic_8259a_execute.s
+.IMPORT irq_execute
+.IMPORT irq_need_to_execute
 
 ##########
 execute:
@@ -87,6 +92,15 @@ execute_tracing_done:
     add 0, 0, [rep_prefix]
 
 execute_prefix_done:
+    # Process IRQs one is scheduled, the IF flag is set and there are no pending prefixes
+    # TODO also don't process IRQs if the last instruction was a MOV/POP to segment register
+    jz  [irq_need_to_execute], execute_irq_done
+    jz  [flag_interrupt], execute_irq_done
+    jnz [prefix_valid], execute_irq_done
+
+    call irq_execute
+
+execute_irq_done:
     # Call the callback if enabled
     jz  [config_vm_callback], execute_callback_done
 

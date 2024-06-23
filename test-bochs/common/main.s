@@ -1,3 +1,6 @@
+.EXPORT irq_execute
+.EXPORT irq_need_to_execute
+
 # From cpu/devices.s
 .IMPORT register_devices
 
@@ -8,9 +11,7 @@
 .IMPORT init_rom_image
 
 # From the binary.o
-.IMPORT binary_count
-.IMPORT binary_header
-.IMPORT binary_data
+.IMPORT binary_image
 
 ##########
 # Entry point
@@ -27,10 +28,8 @@
 main:
 .FRAME
     add 0xca000, 0, [rb - 1]
-    add [binary_count], 0, [rb - 2]
-    add binary_header, 0, [rb - 3]
-    add binary_data, 0, [rb - 4]
-    arb -4
+    add binary_image, 0, [rb - 2]
+    arb -2
     call init_rom_image
 
     call register_devices
@@ -38,6 +37,13 @@ main:
 
     ret 0
 .ENDFRAME
+
+##########
+# Fake implementation of an IRQ controller
+irq_need_to_execute:
+    db  0
+irq_execute:
+    db  0
 
 ##########
     ds  100, 0

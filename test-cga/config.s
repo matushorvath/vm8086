@@ -6,6 +6,9 @@
 .EXPORT config_bcd_as_bochs
 .EXPORT config_de_fault_as_286
 .EXPORT config_boot_80x25
+
+.EXPORT config_log_cs_change
+.EXPORT config_log_int
 .EXPORT config_log_fdc
 
 # Tracing (0 - disable tracing, -1 - trace always, >0 - tracing past given address)
@@ -39,7 +42,11 @@ config_boot_80x25:
     db  1
 
 # Logging configuration
+config_log_cs_change:
+    db  0
 config_log_fdc:
+    db  0
+config_log_int:
     db  0
 
 .EOF

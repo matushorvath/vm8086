@@ -17,11 +17,11 @@
 .IMPORT fdc_cmd_result_phase
 .IMPORT fdc_cmd_st0
 
+# From pic_8259a_execute.s
+.IMPORT interrupt_request
+
 # From cpu/error.s
 .IMPORT report_error
-
-# From cpu/interrupt.s
-.IMPORT interrupt
 
 # From util/bits.s
 .IMPORT bits
@@ -96,7 +96,7 @@ fdc_dor_write_log_fdc:
     ret 1
 
 fdc_dor_write_log_fdc_start:
-    db  "fdc dor write, value ", 0
+    db  31, 31, 31, "fdc dor write, value ", 0
 .ENDFRAME
 
 ##########
@@ -151,7 +151,7 @@ fdc_status_read_log_fdc:
     ret 1
 
 fdc_status_read_log_fdc_start:
-    db  "fdc status read, value ", 0
+    db  31, 31, 31, "fdc status read, value ", 0
 .ENDFRAME
 
 ##########
@@ -185,22 +185,24 @@ fdc_d765ac_reset:
     # TODO reset D765AC registers to zero, but don't touch the DOR,
     # also don't touch SRT HUT HLT in Specify command
 
-    # After reset both units have changed ready status, following sense interrupt status
-    # will return ST0 with bits 6 and 7 set
-    add 0b11000000, 0, [fdc_cmd_st0]
-
-    # Raise INT 0e = IRQ6 if the FDD is ready, which we assume it always is
-    # TODO if the motor is off, is the FDD ready? also, the FDD may not be present
-    add 1, 0, [fdc_interrupt_pending]
-    add 0x0e, 0, [rb - 1]
-    arb -1
-    call interrupt
-
     # Floppy logging
     jz  [config_log_fdc], fdc_d765ac_reset_after_log_fdc
     call fdc_d765ac_reset_log_fdc
 
 fdc_d765ac_reset_after_log_fdc:
+    # After reset both units have changed ready status, following sense interrupt status
+    # will return ST0 with bits 6 and 7 set
+    add 0b11000000, 0, [fdc_cmd_st0]
+
+    # Trigger IRQ6 if the FDD is ready, which we assume it always is
+    # TODO if the motor is off, is the FDD ready? also, the FDD may not be present
+    add 1, 0, [fdc_interrupt_pending]
+
+    add 6, 0, [rb - 1]
+    arb -1
+    call interrupt_request
+
+fdc_d765ac_reset_done:
     ret 0
 .ENDFRAME
 
@@ -215,7 +217,7 @@ fdc_d765ac_reset_log_fdc:
     ret 0
 
 fdc_d765ac_reset_log_fdc_start:
-    db  "fdc reset controller", 0
+    db  31, 31, 31, "fdc reset controller", 0
 .ENDFRAME
 
 ##########

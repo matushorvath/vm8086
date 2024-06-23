@@ -11,6 +11,8 @@
 .EXPORT fdc_cmd_head
 .EXPORT fdc_cmd_sector
 
+.EXPORT fdc_cmd_end_of_track
+
 .EXPORT fdc_cmd_hlt_nd
 
 .EXPORT fdc_cmd_st0
@@ -309,7 +311,6 @@ fsm_w_n:
 
 fsm_w_eot:
     # Save EOT (end of track, final sector number on a cylinder)
-    # TODO how is this used, do we need to save it?
     add [rb + value], 0, [fdc_cmd_end_of_track]
 
     # Next state is write GPL
@@ -496,7 +497,6 @@ fsm_w_done:
 ##########
 fdc_data_write_log_fdc:
 .FRAME value;
-
     jnz [fdc_cmd_state], fdc_data_write_log_fdc_have_command
 
     add fdc_data_write_log_fdc_new_command, 0, [rb - 1]
@@ -527,9 +527,9 @@ fdc_data_write_log_fdc_have_command:
     ret 1
 
 fdc_data_write_log_fdc_new_command:
-    db  "fdc state machine, new command started", 0
+    db  31, 31, 31, "===== fdc state machine, new command started", 0
 fdc_data_write_log_fdc_start:
-    db  "fdc data write, value ", 0
+    db  31, 31, 31, "fdc data write, value ", 0
 fdc_data_write_log_fdc_hex:
     db  " (0x", 0
 .ENDFRAME
@@ -700,7 +700,7 @@ fdc_data_read_log_fdc:
     ret 1
 
 fdc_data_read_log_fdc_start:
-    db  "fdc data read, value ", 0
+    db  31, 31, 31, "fdc data read, value ", 0
 fdc_data_read_log_fdc_hex:
     db  " (0x", 0
 .ENDFRAME

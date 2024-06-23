@@ -51,6 +51,9 @@ execute_mov_b:
 ##########
 execute_mov_w:
 .FRAME lseg_src, loff_src, lseg_dst, loff_dst;
+    # This function can technically change CS, but for the sake of performance
+    # we avoid calling log_cs_change here
+
     # Read the source value
     add [rb + lseg_src], 0, [rb - 1]
     add [rb + loff_src], 0, [rb - 2]

@@ -1,0 +1,12 @@
+# bochs -q -f bochsrc.freedos
+
+romimage: file=$BXSHARE/BIOS-bochs-legacy
+vga: extension=none
+
+display_library: term
+
+floppya: 1_44="../../freedosbootdisks/bootdisks/freedos.boot.disk.1.4MB.img", status=inserted
+boot: floppy
+
+display_library: sdl2
+#sound: driver=dummy

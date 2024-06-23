@@ -8,9 +8,15 @@
 .EXPORT execute_ret_far_zero
 .EXPORT execute_ret_far_immediate_w
 
+# From the config file
+.IMPORT config_log_cs_change
+
 # From location.s
 .IMPORT read_location_w
 .IMPORT read_location_dw
+
+# From log.s
+.IMPORT log_cs_change
 
 # From memory.s
 .IMPORT read_cs_ip_w
@@ -128,6 +134,11 @@ execute_call_far:
     add [rb + offset_lo], 0, [reg_ip + 0]
     add [rb + offset_hi], 0, [reg_ip + 1]
 
+    # Log CS change
+    jz  [config_log_cs_change], execute_call_far_after_log_cs_change
+    call log_cs_change
+
+execute_call_far_after_log_cs_change:
     arb 4
     ret 0
 .ENDFRAME
@@ -167,6 +178,11 @@ execute_call_far_indirect:
     add [rb + cs_lo], 0, [reg_cs + 0]
     add [rb + cs_hi], 0, [reg_cs + 1]
 
+    # Log CS change
+    jz  [config_log_cs_change], execute_call_far_indirect_after_log_cs
+    call log_cs_change
+
+execute_call_far_indirect_after_log_cs:
     arb 4
     ret 2
 .ENDFRAME
@@ -233,6 +249,11 @@ execute_ret_far_zero:
     add [rb - 2], 0, [reg_cs + 0]
     add [rb - 3], 0, [reg_cs + 1]
 
+    # Log CS change
+    jz  [config_log_cs_change], execute_ret_far_zero_after_log_cs_change
+    call log_cs_change
+
+execute_ret_far_zero_after_log_cs_change:
     ret 0
 .ENDFRAME
 
@@ -275,6 +296,11 @@ execute_ret_far_immediate_w_after_carry_lo:
     add [reg_sp + 1], -0x100, [reg_sp + 1]
 
 execute_ret_far_immediate_w_after_carry_hi:
+    # Log CS change
+    jz  [config_log_cs_change], execute_ret_far_immediate_w_after_log_cs
+    call log_cs_change
+
+execute_ret_far_immediate_w_after_log_cs:
     arb 3
     ret 0
 .ENDFRAME

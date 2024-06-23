@@ -16,6 +16,9 @@
 .EXPORT fdc_exec_sense_drive_status
 .EXPORT fdc_exec_seek
 
+# From a linked binary
+.IMPORT fdc_activity_callback
+
 # From fdc_config.s
 .IMPORT fdc_config_connected_units
 .IMPORT fdc_config_inserted_units
@@ -25,6 +28,7 @@
 .IMPORT fdc_interrupt_pending
 
 # From fdc_drives.s
+.IMPORT fdc_medium_cylinders_units
 .IMPORT fdc_medium_heads_units
 .IMPORT fdc_medium_sectors_units
 .IMPORT fdc_present_cylinder_units
@@ -38,6 +42,8 @@
 .IMPORT fdc_cmd_head
 .IMPORT fdc_cmd_sector
 
+.IMPORT fdc_cmd_end_of_track
+
 .IMPORT fdc_cmd_hlt_nd
 
 .IMPORT fdc_cmd_st0
@@ -48,14 +54,14 @@
 # From fdc_init.s
 .IMPORT fdc_error_non_dma
 
+# From pic_8259a_execute.s
+.IMPORT interrupt_request
+
 # From cpu/error.s
 .IMPORT report_error
 
 # From cpu/images.s
-.IMPORT floppy_image
-
-# From cpu/interrupt.s
-.IMPORT interrupt
+.IMPORT floppy
 
 # From dev/dma_8237a.s
 .IMPORT dma_disable_controller
@@ -70,8 +76,8 @@
 
 ##########
 fdc_exec_read_data:
-.FRAME cylinders, heads, sectors, addr, count, tmp
-    arb -6
+.FRAME cylinders, heads, sectors, sectors_eot, addr_c, addr_s, tmp
+    arb -7
 
     # Prepare base value for ST0
     mul [fdc_cmd_head], 0b00000100, [fdc_cmd_st0]
@@ -89,12 +95,25 @@ fdc_exec_read_data:
     add fdc_dor_enable_motor_units, [fdc_cmd_unit_selected], [ip + 1]
     jz  [0], fdc_exec_read_data_no_floppy
 
-    # Floppy is accessible, load floppy parameters
+    # Floppy is accessible, report disk activity
+    add [fdc_cmd_unit_selected], 0, [rb - 1]
+    add 1, 0, [rb - 2]
+    arb -2
+    call fdc_activity_callback
+
+    # Load floppy parameters
     add fdc_medium_heads_units, [fdc_cmd_unit_selected], [ip + 1]
     add [0], 0, [rb + heads]
     add fdc_medium_sectors_units, [fdc_cmd_unit_selected], [ip + 1]
     add [0], 0, [rb + sectors]
 
+    # Limit number of sectors to EOT from the command input
+    add [rb + sectors], 0, [rb + sectors_eot]
+    lt  [fdc_cmd_end_of_track], [rb + sectors_eot], [rb + tmp]
+    jz  [rb + tmp], fdc_exec_read_data_after_eot
+    add [fdc_cmd_end_of_track], 0, [rb + sectors_eot]
+
+fdc_exec_read_data_after_eot:
     # Cylinder number must match the cylinder we are on
     eq  [fdc_cmd_cylinder], [fdc_present_cylinder_units], [rb + tmp]
     jz  [rb + tmp], fdc_exec_read_data_bad_input
@@ -108,7 +127,7 @@ fdc_exec_read_data:
     # Sector number must be in range (1-based)
     lt  [fdc_cmd_sector], 1, [rb + tmp]
     jnz [rb + tmp], fdc_exec_read_data_bad_input
-    lt  [rb + heads], [fdc_cmd_sector], [rb + tmp]
+    lt  [rb + sectors_eot], [fdc_cmd_sector], [rb + tmp]
     jnz [rb + tmp], fdc_exec_read_data_bad_input
 
     # Check the DMA controller
@@ -121,58 +140,73 @@ fdc_exec_read_data:
     eq  [dma_mode_ch2], 1, [rb + tmp]                       # only single mode is supported (1)
     jz  [rb + tmp], fdc_exec_read_data_no_dma
 
-    # DMA is set up, find the data we want to read
-    # addr = floppy_image + ((cylinder * heads + head) * sectors + (sector - 1)) * 512
-    mul [fdc_cmd_cylinder], [rb + heads], [rb + addr]
-    add [fdc_cmd_head], [rb + addr], [rb + addr]
-    mul [rb + sectors], [rb + addr], [rb + addr]
-    add [fdc_cmd_sector], [rb + addr], [rb + addr]
-    add -1, [rb + addr], [rb + addr]
-    mul 512, [rb + addr], [rb + addr]
-    add [floppy_image], [rb + addr], [rb + addr]
+    # DMA is set up, start reading at head H sector S up to end of the track/cylinder,
+    # or until the DMA controller has enough data
 
-    # Determine how much data should we read (the counter in DMA controller plus 1)
-    add [dma_count_ch2], 1, [rb + count]
-    # TODO If N=0, DTL defines how much of the sector should we send to data bus.
-    # TODO If N>0, DTL is ignored. Still includes reading multiple sectors if no TC.
+    # Calculate cylinder address in intcode memory:
+    # addr_c = floppy + cylinder * heads * sectors * 512
+    mul [fdc_cmd_cylinder], [rb + heads], [rb + addr_c]
+    mul [rb + addr_c], [rb + sectors], [rb + addr_c]
+    mul [rb + addr_c], 512, [rb + addr_c]
+    add [floppy], [rb + addr_c], [rb + addr_c]
 
-    # TODO for now we can read one sector only
-    # boot sector read from 8088_bios: MT=1 HD=0 C=0 H=0 S=1 N=02 EOT=36 GPL=27 DTL=0xff
-    jz  [fdc_cmd_multi_track], fdc_exec_read_data_not_supported
+fdc_exec_read_data_loop:
+    # Does the DMA controller expect more data?
+    eq  [dma_count_ch2], -1, [rb + tmp]
+    jnz [rb + tmp], fdc_exec_read_data_all_data_read
 
-    eq  [rb + count], 512, [rb + tmp]
-    jz  [rb + tmp], fdc_exec_read_data_not_supported
+    # Calculate sector address in intcode memory:
+    # addr_s = addr_c + (head * sectors + sector - 1) * 512
+    mul [fdc_cmd_head], [rb + sectors], [rb + addr_s]
+    add [rb + addr_s], [fdc_cmd_sector], [rb + addr_s]
+    add [rb + addr_s], -1, [rb + addr_s]
+    mul [rb + addr_s], 512, [rb + addr_s]
+    add [rb + addr_c], [rb + addr_s], [rb + addr_s]
 
-    # TODO read multiple sectors, wraparound when reaching the last sector, until DMA sends TC
-    # TODO support EOT, finam sector number on track; stop reading after sector number equal to EOT
-    # TODO support MT: read sector 1 side 0... sector L side 1 (L = last sector on side)
-
-    # Send the data to DMA controller, channel 2
-    # TODO for now sending 1024 bytes, one sector both heads
+    # Send one sector of data to DMA controller, channel 2
+    # TODO if N=0, DTL defines how much of each sector should we send to DMA, not 512
     add 2, 0, [rb - 1]
-    add [rb + addr], 0, [rb - 2]
-    add [rb + count], 0, [rb - 3]
+    add [rb + addr_s], 0, [rb - 2]
+    add 512, 0, [rb - 3]
     arb -3
     call dma_receive_data
 
-    # Respond with ST0 (see above) ST1 ST2 C H R N
+    # Move to next sector
+    add [fdc_cmd_sector], 1, [fdc_cmd_sector]
+
+    # Did we reach end of track?
+    lt  [rb + sectors_eot], [fdc_cmd_sector], [rb + tmp]
+    jz  [rb + tmp], fdc_exec_read_data_loop
+
+    # End of track, move to sector 1
+    add 1, 0, [fdc_cmd_sector]
+
+    # Is this a multi-track operation?
+    jnz [fdc_cmd_multi_track], fdc_exec_read_data_multi_track
+
+    # Single track operation is finished, move the same head on next cylinder
+    add [fdc_cmd_cylinder], 1, [fdc_cmd_cylinder]
+    jz  0, fdc_exec_read_data_all_data_read
+
+fdc_exec_read_data_multi_track:
+    # Multi-track operation, move to next side
+    add [fdc_cmd_head], 1, [fdc_cmd_head]
+
+    # Does this side actually exist on the disk?
+    lt  [fdc_cmd_head], [rb + heads], [rb + tmp]
+    jnz [rb + tmp], fdc_exec_read_data_loop
+
+    # No, end of cylinder, move to head 0 on next cylinder
+    add 0, 0, [fdc_cmd_head]
+    add [fdc_cmd_cylinder], 1, [fdc_cmd_cylinder]
+
+fdc_exec_read_data_all_data_read:
+    # The DMA controller does not want more data, or there is no more data available
+    # Respond with ST0 (see above) ST1 ST2, and C H R N that was set up above
     add 0, 0, [fdc_cmd_st1]
     add 0, 0, [fdc_cmd_st2]
 
-    # For C H R N keep the head and cylinder that was requested, report last read sector
-    # TODO see table on page 435 in UPD765.pdf, the correct values are based on MT and EOT
-    # TODO update fdc_cmd_sector if we read multiple sectors
-    add [fdc_cmd_sector], 1, [fdc_cmd_sector] # very rough fake of the actual correct result
-
     jz  0, fdc_exec_read_data_terminated
-
-fdc_exec_read_data_not_supported:                           # TODO remove
-    add fdc_exec_read_data_error, 0, [rb - 1]
-    arb -1
-    call report_error
-
-fdc_exec_read_data_error:                                   # TODO remove
-    db  "fdc: requested read data command variant ", "is not supported", 0
 
 fdc_exec_read_data_no_dma:
     # Floppy is accessible, but the DMA controller is not ready to accept data
@@ -184,7 +218,7 @@ fdc_exec_read_data_no_dma:
     jz  0, fdc_exec_read_data_terminated
 
 fdc_exec_read_data_bad_input:
-    # Floppy is accessible, but the input parameters are invalid
+    # Floppy is accessible, but input parameters are invalid
     # Set up ST0 (abnormal termination), ST1 (end of cylinder, no data), ST2
     # TODO only set ST1 bit 7 when sector is wrong
     # TODO set up ST2 (bits 1, 4) when cylinder is wrong
@@ -196,6 +230,8 @@ fdc_exec_read_data_bad_input:
     add 0, 0, [fdc_cmd_cylinder]
     add 0, 0, [fdc_cmd_head]
     add 0, 0, [fdc_cmd_sector]
+
+    jz  0, fdc_exec_read_data_terminated
 
 fdc_exec_read_data_no_floppy:
     # Floppy is not accessible
@@ -209,16 +245,22 @@ fdc_exec_read_data_no_floppy:
     add 0, 0, [fdc_cmd_head]
     add 0, 0, [fdc_cmd_sector]
 
-    jz  0, fdc_exec_read_data_terminated
-
 fdc_exec_read_data_terminated:
-    # Raise INT 0e = IRQ6
+    # Trigger IRQ6
     add 1, 0, [fdc_interrupt_pending]
-    add 0x0e, 0, [rb - 1]
-    arb -1
-    call interrupt
 
-    arb 6
+    add 6, 0, [rb - 1]
+    arb -1
+    call interrupt_request
+
+fdc_exec_read_data_after_irq:
+    # Report disk activity
+    add [fdc_cmd_unit_selected], 0, [rb - 1]
+    add 0, 0, [rb - 2]
+    arb -2
+    call fdc_activity_callback
+
+    arb 7
     ret 0
 .ENDFRAME
 
@@ -236,13 +278,16 @@ fdc_exec_read_deleted_data_error:
 ##########
 fdc_exec_write_data:
 .FRAME
+    # TODO for now, return a valid "write protected" status
     # TODO implement write data
+    # TODO disk activity
 
-#    # Raise INT 0e = IRQ6
+#    # Trigger IRQ6
 #    add 1, 0, [fdc_interrupt_pending]
-#    add 0x0e, 0, [rb - 1]
+#
+#    add 6, 0, [rb - 1]
 #    arb -1
-#    call interrupt
+#    call interrupt_request
 #
 #    ret 0
 
@@ -269,12 +314,14 @@ fdc_exec_write_deleted_data_error:
 fdc_exec_read_track:
 .FRAME
     # TODO implement read track
+    # TODO disk activity
 
-#    # Raise INT 0e = IRQ6
+#    # Trigger IRQ6
 #    add 1, 0, [fdc_interrupt_pending]
-#    add 0x0e, 0, [rb - 1]
+#
+#    add 6, 0, [rb - 1]
 #    arb -1
-#    call interrupt
+#    call interrupt_request
 #
 #    ret 0
 
@@ -351,12 +398,14 @@ fdc_exec_read_id_no_floppy:
     add 0, 0, [fdc_cmd_sector]
 
 fdc_exec_read_id_terminated:
-    # Raise INT 0e = IRQ6
+    # Trigger IRQ6
     add 1, 0, [fdc_interrupt_pending]
-    add 0x0e, 0, [rb - 1]
-    arb -1
-    call interrupt
 
+    add 6, 0, [rb - 1]
+    arb -1
+    call interrupt_request
+
+fdc_exec_read_id_after_irq:
     arb 2
     ret 0
 .ENDFRAME
@@ -364,13 +413,16 @@ fdc_exec_read_id_terminated:
 ##########
 fdc_exec_format_track:
 .FRAME
+    # TODO for now, return a valid "write protected" status
     # TODO implement format track
+    # TODO disk activity
 
-#    # Raise INT 0e = IRQ6
+#    # Trigger IRQ6
 #    add 1, 0, [fdc_interrupt_pending]
-#    add 0x0e, 0, [rb - 1]
+#
+#    add 6, 0, [rb - 1]
 #    arb -1
-#    call interrupt
+#    call interrupt_request
 #
 #    ret 0
 
@@ -386,12 +438,14 @@ fdc_exec_format_track_error:
 fdc_exec_scan_equal:
 .FRAME
     # TODO implement scan equal
+    # TODO disk activity
 
-#    # Raise INT 0e = IRQ6
+#    # Trigger IRQ6
 #    add 1, 0, [fdc_interrupt_pending]
-#    add 0x0e, 0, [rb - 1]
+#
+#    add 6, 0, [rb - 1]
 #    arb -1
-#    call interrupt
+#    call interrupt_request
 #
 #    ret 0
 
@@ -407,12 +461,14 @@ fdc_exec_scan_equal_error:
 fdc_exec_scan_low_or_equal:
 .FRAME
     # TODO implement scan low or equal
+    # TODO disk activity
 
-#    # Raise INT 0e = IRQ6
+#    # Trigger IRQ6
 #    add 1, 0, [fdc_interrupt_pending]
-#    add 0x0e, 0, [rb - 1]
+#
+#    add 6, 0, [rb - 1]
 #    arb -1
-#    call interrupt
+#    call interrupt_request
 #
 #    ret 0
 
@@ -428,12 +484,14 @@ fdc_exec_scan_low_or_equal_error:
 fdc_exec_scan_high_or_equal:
 .FRAME
     # TODO implement scan high or equal
+    # TODO disk activity
 
-#    # Raise INT 0e = IRQ6
+#    # Trigger IRQ6
 #    add 1, 0, [fdc_interrupt_pending]
-#    add 0x0e, 0, [rb - 1]
+#
+#    add 6, 0, [rb - 1]
 #    arb -1
-#    call interrupt
+#    call interrupt_request
 #
 #    ret 0
 
@@ -472,7 +530,7 @@ fdc_exec_recalibrate:
     # TODO clear floppy busy in MSR when sense interrupt
 
     # Set up STO to report a successful seek (seek end)
-    add 0b00010000, [fdc_cmd_st0], [fdc_cmd_st0]
+    add 0b00100000, [fdc_cmd_st0], [fdc_cmd_st0]
 
     jz  0, fdc_exec_recalibrate_terminated
 
@@ -481,12 +539,15 @@ fdc_exec_recalibrate_no_floppy:
     add 0b01101000, [fdc_cmd_st0], [fdc_cmd_st0]
 
 fdc_exec_recalibrate_terminated:
-    # Raise INT 0e = IRQ6
+    # Trigger IRQ6
     add 1, 0, [fdc_interrupt_pending]
-    add 0x0e, 0, [rb - 1]
-    arb -1
-    call interrupt
 
+    add 6, 0, [rb - 1]
+    arb -1
+    call interrupt_request
+
+
+fdc_exec_recalibrate_after_irq:
     ret 0
 .ENDFRAME
 
@@ -521,29 +582,80 @@ fdc_exec_sense_drive_status_error:
 
 ##########
 fdc_exec_seek:
-.FRAME
-    # TODO implement seek
+.FRAME cylinders, tmp
+    arb -2
 
-    # TODO handle units that are not present/no floppy, see docs what to do then
-    # TODO during seek compare PCN with fdc_cmd_cylinder which is the target cylinder
+    # Prepare base value for ST0
+    mul [fdc_cmd_head], 0b00000100, [fdc_cmd_st0]
+    add [fdc_cmd_unit_selected], [fdc_cmd_st0], [fdc_cmd_st0]
+
+    # Is the unit connected?
+    add fdc_config_connected_units, [fdc_cmd_unit_selected], [ip + 1]
+    jz  [0], fdc_exec_seek_no_floppy
+
+    # Is a floppy inserted?
+    add fdc_config_inserted_units, [fdc_cmd_unit_selected], [ip + 1]
+    jz  [0], fdc_exec_seek_no_floppy
+
+    # Is the motor running?
+    add fdc_dor_enable_motor_units, [fdc_cmd_unit_selected], [ip + 1]
+    jz  [0], fdc_exec_seek_no_floppy
+
+    # Floppy is accessible, load cylinder count
+    add fdc_medium_cylinders_units, [fdc_cmd_unit_selected], [ip + 1]
+    add [0], 0, [rb + cylinders]
+
+    # Requested cylinder number must be in range
+    lt  [fdc_cmd_cylinder], 0, [rb + tmp]
+    jnz [rb + tmp], fdc_exec_seek_bad_input
+    lt  [fdc_cmd_cylinder], [rb + cylinders], [rb + tmp]
+    jz  [rb + tmp], fdc_exec_seek_bad_input
+
+    # Report disk activity
+    add [fdc_cmd_unit_selected], 0, [rb - 1]
+    add 1, 0, [rb - 2]
+    arb -2
+    call fdc_activity_callback
+
+    # Set present cylinder to the requested cylinder
+    add fdc_present_cylinder_units, [fdc_cmd_unit_selected], [ip + 3]
+    add [fdc_cmd_cylinder], 0, [0]
+
     # TODO set floppy busy with seek in MSR, it is cleared by sense interrupt
     # TODO clear floppy busy in MSR when sense interrupt
-    # TODO during command phase of seek fdc is in busy state (in MSR), during execution it's not
 
-#    # Raise INT 0e = IRQ6
-#    add 1, 0, [fdc_interrupt_pending]
-#    add 0x0e, 0, [rb - 1]
-#    arb -1
-#    call interrupt
-#
-#    ret 0
+    # Set up STO to report a successful seek (seek end)
+    add 0b00100000, [fdc_cmd_st0], [fdc_cmd_st0]
 
-    add fdc_exec_seek_error, 0, [rb - 1]
+    jz  0, fdc_exec_seek_terminated
+
+fdc_exec_seek_bad_input:
+    # Floppy is accessible, but input parameters are invalid; set up ST0 (seek end, abnormal termination)
+    add 0b01100000, [fdc_cmd_st0], [fdc_cmd_st0]
+
+    jz  0, fdc_exec_seek_terminated
+
+fdc_exec_seek_no_floppy:
+    # Floppy is not inserted, set up ST0 (not ready, seek end, abnormal termination)
+    add 0b01101000, [fdc_cmd_st0], [fdc_cmd_st0]
+
+fdc_exec_seek_terminated:
+    # Trigger IRQ6
+    add 1, 0, [fdc_interrupt_pending]
+
+    add 6, 0, [rb - 1]
     arb -1
-    call report_error
+    call interrupt_request
 
-fdc_exec_seek_error:
-    db  "fdc: seek command ","is not implemented", 0
+fdc_exec_seek_after_irq:
+    # Report disk activity
+    add [fdc_cmd_unit_selected], 0, [rb - 1]
+    add 0, 0, [rb - 2]
+    arb -2
+    call fdc_activity_callback
+
+    arb 2
+    ret 0
 .ENDFRAME
 
 .EOF

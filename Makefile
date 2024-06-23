@@ -5,6 +5,7 @@ BINDIR ?= bin
 OBJDIR ?= obj
 
 SRCDIRS = cga cpu dev fdc util test-cga vm
+TOOLSDIR = monitor
 TESTDIRS = test-bochs test-cpu
 
 # Build VM
@@ -19,6 +20,14 @@ $(SRCDIRS):
 run: build
 	make -C vm run
 
+# Build tools
+.PHONY: build-tools
+build-tools: $(TOOLSDIR)
+
+.PHONY: $(TOOLSDIR)
+$(TOOLSDIR):
+	make -C $@
+
 # Build tests
 BUILD_TESTS_TARGETS = $(addprefix build-,$(TESTDIRS))
 
@@ -30,7 +39,7 @@ $(BUILD_TESTS_TARGETS):
 	make -C $(patsubst build-%,%,$@) build
 
 .PHONY: build-all
-build-all: build build-tests
+build-all: build build-tools build-tests
 
 # Run tests
 .PHONY: test
@@ -51,7 +60,7 @@ $(TESTDIRS): build
 	make -C $@ test
 
 # Clean
-CLEAN_TARGETS = $(addprefix clean-,$(SRCDIRS) $(TESTDIRS))
+CLEAN_TARGETS = $(addprefix clean-,$(SRCDIRS) $(TOOLSDIR) $(TESTDIRS))
 
 .PHONY: clean
 clean: $(CLEAN_TARGETS)
