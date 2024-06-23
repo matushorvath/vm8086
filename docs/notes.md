@@ -767,3 +767,10 @@ probably it's not expecting IRQ0 when IF=0
 
 with IRQ0 disabled, pcxtbios loads extremely slowly, lots of disk operations (blinking FDD LED)
 not sure if it even loads in the end
+
+after fixing image load (so it does not leave numbers > 255 in memory), now pcxtbios runs potentially forever (since there is no IRQ0 vector yet)
+
+---
+TODO
+ - analyze why pcxtbios does does not boot FreeDOS (find which commit did it - disable IRQ0 while checking)
+ - analyze why 8088_bios crashes when booting FreeDOS with new PIT; might be because of unexpected IRQ0? but it is not masked...
