@@ -10,6 +10,9 @@
 .EXPORT pushf
 .EXPORT popf
 
+# From execute.s
+.IMPORT irq_delay_execution
+
 # From flags.s
 .IMPORT pack_flags_lo
 .IMPORT pack_flags_hi
@@ -77,6 +80,10 @@ execute_pop_w:
     add [rb + value_hi], 0, [rb - 4]
     arb -4
     call write_location_w
+
+    # Delay IRQ processing after this instruction
+    # Strictly speaking this should only be done when changing a segment register
+    add 1, 0, [irq_delay_execution]
 
     arb 2
     ret 2

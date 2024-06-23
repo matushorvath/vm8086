@@ -3,8 +3,10 @@
 .EXPORT execute_esc
 .EXPORT execute_hlt
 .EXPORT invalid_opcode
+
 .EXPORT halt
 .EXPORT exec_ip
+.EXPORT irq_delay_execution
 
 # From the config file
 .IMPORT config_enable_tracing
@@ -93,14 +95,17 @@ execute_tracing_done:
 
 execute_prefix_done:
     # Process IRQs one is scheduled, the IF flag is set and there are no pending prefixes
-    # TODO also don't process IRQs if the last instruction was a MOV/POP to segment register
     jz  [irq_need_to_execute], execute_irq_done
     jz  [flag_interrupt], execute_irq_done
+    jnz [irq_delay_execution], execute_irq_done
     jnz [prefix_valid], execute_irq_done
 
     call irq_execute
 
 execute_irq_done:
+    # If we skipped IRQ processing, we can do it before next instruction
+    add 0, 0, [irq_delay_execution]
+
     # Call the callback if enabled
     jz  [config_vm_callback], execute_callback_done
 
@@ -212,8 +217,11 @@ invalid_opcode_message:
 ##########
 halt:                                   # set this to non-zero to halt the VM
     db  0
+
 exec_ip:                                # IP where the currently executed instruction started
     db  0
     db  0
 
+irq_delay_execution:                    # flag to delay IRQ execution by one cycle (used after updating a segment register)
+    db  0
 .EOF

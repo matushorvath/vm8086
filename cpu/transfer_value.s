@@ -10,6 +10,9 @@
 
 .EXPORT execute_xlat
 
+# From execute.s
+.IMPORT irq_delay_execution
+
 # From location.s
 .IMPORT read_location_b
 .IMPORT read_location_w
@@ -67,6 +70,10 @@ execute_mov_w:
     add [rb - 5], 0, [rb - 4]                               # read_location_w().hi -> param4
     arb -4
     call write_location_w
+
+    # Delay IRQ processing after this instruction
+    # Strictly speaking this should only be done when changing a segment register
+    add 1, 0, [irq_delay_execution]
 
     ret 4
 .ENDFRAME
