@@ -315,8 +315,8 @@ const loadMetadata = async () => {
         return undefined;
     }
 
-    return options.variant.map(async variant =>
-        [variant, JSON.parse(await fsp.readFile(path.join(TESTS_DIR, variant, 'metadata.json'), 'utf8'))]);
+    return Object.fromEntries(await Promise.all(options.variant.map(async variant =>
+        [variant, JSON.parse(await fsp.readFile(path.join(TESTS_DIR, variant, 'metadata.json'), 'utf8'))])));
 };
 
 const byteToOpcodesKey = (byte) => byte.toString(16).toUpperCase().padStart(2, '0');
