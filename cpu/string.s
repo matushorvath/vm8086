@@ -177,7 +177,7 @@ execute_string_loop:
     add [reg_cx + 0], [reg_cx + 1], [rb + tmp]
     jz  [rb + tmp], execute_string_done
 
-    # TODO process pending interrupts
+    # TODO process pending IRQs
 
     call dec_cx
 

@@ -6,11 +6,8 @@
 # From the config file
 .IMPORT config_log_pit
 
-# From cpu/interrupt.s
-.IMPORT interrupt
-
-# From cpu/state.s
-.IMPORT flag_interrupt
+# From pic_8259a_execute.s
+.IMPORT interrupt_request
 
 # From util/error.s
 .IMPORT report_error
@@ -140,12 +137,10 @@ pit_vm_callback_common_after_reload:
     jz  [rb + tmp], pit_vm_callback_common_done
 
 pit_vm_callback_common_int0:
-    # Trigger IRQ0 = INT 8
-    jz  [flag_interrupt], pit_vm_callback_common_done  # TODO move to IRQ infra
-
-    add 8, 0, [rb - 1]
+    # Trigger IRQ0
+    add 0, 0, [rb - 1]
     arb -1
-    call interrupt
+    call interrupt_request
 
 pit_vm_callback_common_done:
 #    # Timer logging
@@ -226,12 +221,10 @@ pit_mode_command_write_common_after_aliases:
     add [rb + tmp], [rb + orig_output], [rb + tmp]
     jnz [rb + tmp], pit_mode_command_write_common_log
 
-    # Trigger IRQ0 = INT 8
-    jz  [flag_interrupt], pit_mode_command_write_common_log  # TODO move to IRQ infra
-
-    add 8, 0, [rb - 1]
+    # Trigger IRQ0
+    add 0, 0, [rb - 1]
     arb -1
-    call interrupt
+    call interrupt_request
 
 pit_mode_command_write_common_log:
     # Timer logging

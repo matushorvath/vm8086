@@ -29,11 +29,6 @@
 # From util/shr.s
 .IMPORT shr
 
-# TODO implement EOI:
-# - reset pic_in_service_irq for this irq
-# - find next lowest in service and set pic_lowest_irq_in_service, or set to 0xff if nothing in service
-# - call schedule_interrupt_requests since pic_lowest_irq_in_service changed
-
 ##########
 pic_ports:
     db  0x20, 0x00, pic_status_read, pic_command_write      # Command/Status
@@ -141,7 +136,33 @@ pic_command_write_ocw2_not_supported:
 
 pic_command_write_ocw2_non_specific_eoi:
     # Non-specific end of interrupt
-    # TODO
+
+    # Is there an interrupt currently being processed?
+    lt  [pic_lowest_irq_in_service], 8, [rb + tmp]
+    jz  [rb + tmp], pic_command_write_done
+
+    # Yes, we are processing IRQ pic_lowest_irq_in_service
+    # Reset the "in service" flag for that IRQ
+    add pic_in_service_irqs, [pic_lowest_irq_in_service], [ip + 3]
+    add 0, 0, [0]
+
+    # Find next lowest "in service" IRQ and set pic_lowest_irq_in_service
+    # (set to 8 if no interrupt is in service)
+    add -1, 0, [pic_lowest_irq_in_service]
+
+pic_command_write_ocw2_ns_eoi_loop:
+    add [pic_lowest_irq_in_service], 1, [pic_lowest_irq_in_service]
+
+    eq  [pic_lowest_irq_in_service], 8, [rb + tmp]
+    jnz [rb + tmp], pic_command_write_ocw2_ns_eoi_after_loop
+
+    add pic_in_service_irqs, [pic_lowest_irq_in_service], [ip + 1]
+    jz  [0], pic_command_write_ocw2_ns_eoi_loop
+
+pic_command_write_ocw2_ns_eoi_after_loop:
+    # Schedule which request will be executed next
+    call schedule_interrupt_requests
+
     jz  0, pic_command_write_done
 
 pic_command_write_ocw3:
@@ -415,7 +436,7 @@ pic_read_in_service:
     db  0
 
 pic_lowest_irq_in_service:
-    db  0
+    db  0x8         # default value is larger than any real IRQ number
 
 pic_request_irqs:
     ds  8, 0

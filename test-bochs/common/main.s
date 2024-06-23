@@ -1,3 +1,6 @@
+.EXPORT irq_execute
+.EXPORT irq_need_to_execute
+
 # From cpu/devices.s
 .IMPORT register_devices
 
@@ -34,6 +37,13 @@ main:
 
     ret 0
 .ENDFRAME
+
+##########
+# Fake implementation of an IRQ controller
+irq_need_to_execute:
+    db  0
+irq_execute:
+    db  0
 
 ##########
     ds  100, 0

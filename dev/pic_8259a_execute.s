@@ -1,9 +1,8 @@
 .EXPORT interrupt_request
 .EXPORT schedule_interrupt_requests
-.EXPORT execute_interrupt_request
 
-.EXPORT pic_have_irq_to_execute
-.EXPORT pic_irq_number_to_execute
+.EXPORT irq_execute
+.EXPORT irq_need_to_execute
 
 # From the config file
 .IMPORT config_log_pic
@@ -54,7 +53,7 @@ schedule_interrupt_requests:
     # This function pre-calculates which IRQ should be the next one to execute
     # This allows us to have very simple and fast logic in the execute function of the cpu
 
-    add 0, 0, [pic_have_irq_to_execute]
+    add 0, 0, [irq_need_to_execute]
 
     add -1, 0, [rb + number]
 
@@ -73,8 +72,8 @@ decide_interrupts_loop:
     jz  [rb + tmp], decide_interrupts_done
 
     # Not executing a request of same or higher priority, so this is the next IRQ to execute
-    add 1, 0, [pic_have_irq_to_execute]
-    add [rb + number], 0, [pic_irq_number_to_execute]
+    add 1, 0, [irq_need_to_execute]
+    add [rb + number], 0, [irq_number_to_execute]
 
 decide_interrupts_done:
     arb 2
@@ -82,22 +81,22 @@ decide_interrupts_done:
 .ENDFRAME
 
 ##########
-execute_interrupt_request:
+irq_execute:
 .FRAME
     arb -1
 
     # Execute interrupt request that was pre-decided in schedule_interrupt_requests
-    # Assumption: pic_have_irq_to_execute is 1, pic_irq_number_to_execute has a valid IRQ number
+    # Assumption: irq_need_to_execute is 1, irq_number_to_execute has a valid IRQ number
 
     # Mark the IRQ as in service and no longer requested
-    add pic_request_irqs, [pic_irq_number_to_execute], [ip + 3]
+    add pic_request_irqs, [irq_number_to_execute], [ip + 3]
     add 0, 0, [0]
-    add pic_in_service_irqs, [pic_irq_number_to_execute], [ip + 3]
+    add pic_in_service_irqs, [irq_number_to_execute], [ip + 3]
     add 1, 0, [0]
-    add [pic_irq_number_to_execute], 0, [pic_lowest_irq_in_service]
+    add [irq_number_to_execute], 0, [pic_lowest_irq_in_service]
 
     # Execute the interrupt
-    add 8, [pic_irq_number_to_execute], [rb - 1]
+    add 8, [irq_number_to_execute], [rb - 1]
     arb -1
     call interrupt
 
@@ -109,10 +108,10 @@ execute_interrupt_request:
 .ENDFRAME
 
 ##########
-pic_have_irq_to_execute:
+irq_need_to_execute:
     db  0
 
-pic_irq_number_to_execute:
+irq_number_to_execute:
     db  0
 
 .EOF

@@ -24,13 +24,9 @@
 # From state.s
 .IMPORT flag_carry
 .IMPORT flag_parity
-.IMPORT flag_auxiliary_carry
 .IMPORT flag_zero
 .IMPORT flag_sign
 .IMPORT flag_overflow
-.IMPORT flag_interrupt
-.IMPORT flag_direction
-.IMPORT flag_trap
 .IMPORT inc_ip_b
 
 ##########

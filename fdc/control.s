@@ -17,14 +17,11 @@
 .IMPORT fdc_cmd_result_phase
 .IMPORT fdc_cmd_st0
 
+# From pic_8259a_execute.s
+.IMPORT interrupt_request
+
 # From cpu/error.s
 .IMPORT report_error
-
-# From cpu/interrupt.s
-.IMPORT interrupt
-
-# From cpu/state.s
-.IMPORT flag_interrupt
 
 # From util/bits.s
 .IMPORT bits
@@ -197,14 +194,13 @@ fdc_d765ac_reset_after_log_fdc:
     # will return ST0 with bits 6 and 7 set
     add 0b11000000, 0, [fdc_cmd_st0]
 
-    # Raise INT 0e = IRQ6 if the FDD is ready, which we assume it always is
+    # Trigger IRQ6 if the FDD is ready, which we assume it always is
     # TODO if the motor is off, is the FDD ready? also, the FDD may not be present
-    jz  [flag_interrupt], fdc_d765ac_reset_done  # TODO move to IRQ infra
-
     add 1, 0, [fdc_interrupt_pending]
-    add 0x0e, 0, [rb - 1]
+
+    add 6, 0, [rb - 1]
     arb -1
-    call interrupt
+    call interrupt_request
 
 fdc_d765ac_reset_done:
     ret 0

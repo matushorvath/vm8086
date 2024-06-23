@@ -1,3 +1,6 @@
+.EXPORT irq_execute
+.EXPORT irq_need_to_execute
+
 # From cpu/execute.s
 .IMPORT execute
 
@@ -27,6 +30,13 @@ main:
 
     ret 0
 .ENDFRAME
+
+##########
+# Fake implementation of an IRQ controller
+irq_need_to_execute:
+    db  0
+irq_execute:
+    db  0
 
 ##########
     ds  100, 0

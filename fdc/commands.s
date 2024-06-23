@@ -54,17 +54,14 @@
 # From fdc_init.s
 .IMPORT fdc_error_non_dma
 
+# From pic_8259a_execute.s
+.IMPORT interrupt_request
+
 # From cpu/error.s
 .IMPORT report_error
 
 # From cpu/images.s
 .IMPORT floppy
-
-# From cpu/interrupt.s
-.IMPORT interrupt
-
-# From cpu/state.s
-.IMPORT flag_interrupt
 
 # From dev/dma_8237a.s
 .IMPORT dma_disable_controller
@@ -249,13 +246,12 @@ fdc_exec_read_data_no_floppy:
     add 0, 0, [fdc_cmd_sector]
 
 fdc_exec_read_data_terminated:
-    # Raise INT 0e = IRQ6
-    jz  [flag_interrupt], fdc_exec_read_data_after_irq  # TODO move to IRQ infra
-
+    # Trigger IRQ6
     add 1, 0, [fdc_interrupt_pending]
-    add 0x0e, 0, [rb - 1]
+
+    add 6, 0, [rb - 1]
     arb -1
-    call interrupt
+    call interrupt_request
 
 fdc_exec_read_data_after_irq:
     # Report disk activity
@@ -286,11 +282,12 @@ fdc_exec_write_data:
     # TODO implement write data
     # TODO disk activity
 
-#    # Raise INT 0e = IRQ6
+#    # Trigger IRQ6
 #    add 1, 0, [fdc_interrupt_pending]
-#    add 0x0e, 0, [rb - 1]
+#
+#    add 6, 0, [rb - 1]
 #    arb -1
-#    call interrupt
+#    call interrupt_request
 #
 #    ret 0
 
@@ -319,11 +316,12 @@ fdc_exec_read_track:
     # TODO implement read track
     # TODO disk activity
 
-#    # Raise INT 0e = IRQ6
+#    # Trigger IRQ6
 #    add 1, 0, [fdc_interrupt_pending]
-#    add 0x0e, 0, [rb - 1]
+#
+#    add 6, 0, [rb - 1]
 #    arb -1
-#    call interrupt
+#    call interrupt_request
 #
 #    ret 0
 
@@ -400,13 +398,12 @@ fdc_exec_read_id_no_floppy:
     add 0, 0, [fdc_cmd_sector]
 
 fdc_exec_read_id_terminated:
-    # Raise INT 0e = IRQ6
-    jz  [flag_interrupt], fdc_exec_read_id_after_irq  # TODO move to IRQ infra
-
+    # Trigger IRQ6
     add 1, 0, [fdc_interrupt_pending]
-    add 0x0e, 0, [rb - 1]
+
+    add 6, 0, [rb - 1]
     arb -1
-    call interrupt
+    call interrupt_request
 
 fdc_exec_read_id_after_irq:
     arb 2
@@ -420,11 +417,12 @@ fdc_exec_format_track:
     # TODO implement format track
     # TODO disk activity
 
-#    # Raise INT 0e = IRQ6
+#    # Trigger IRQ6
 #    add 1, 0, [fdc_interrupt_pending]
-#    add 0x0e, 0, [rb - 1]
+#
+#    add 6, 0, [rb - 1]
 #    arb -1
-#    call interrupt
+#    call interrupt_request
 #
 #    ret 0
 
@@ -442,11 +440,12 @@ fdc_exec_scan_equal:
     # TODO implement scan equal
     # TODO disk activity
 
-#    # Raise INT 0e = IRQ6
+#    # Trigger IRQ6
 #    add 1, 0, [fdc_interrupt_pending]
-#    add 0x0e, 0, [rb - 1]
+#
+#    add 6, 0, [rb - 1]
 #    arb -1
-#    call interrupt
+#    call interrupt_request
 #
 #    ret 0
 
@@ -464,11 +463,12 @@ fdc_exec_scan_low_or_equal:
     # TODO implement scan low or equal
     # TODO disk activity
 
-#    # Raise INT 0e = IRQ6
+#    # Trigger IRQ6
 #    add 1, 0, [fdc_interrupt_pending]
-#    add 0x0e, 0, [rb - 1]
+#
+#    add 6, 0, [rb - 1]
 #    arb -1
-#    call interrupt
+#    call interrupt_request
 #
 #    ret 0
 
@@ -486,11 +486,12 @@ fdc_exec_scan_high_or_equal:
     # TODO implement scan high or equal
     # TODO disk activity
 
-#    # Raise INT 0e = IRQ6
+#    # Trigger IRQ6
 #    add 1, 0, [fdc_interrupt_pending]
-#    add 0x0e, 0, [rb - 1]
+#
+#    add 6, 0, [rb - 1]
 #    arb -1
-#    call interrupt
+#    call interrupt_request
 #
 #    ret 0
 
@@ -538,13 +539,13 @@ fdc_exec_recalibrate_no_floppy:
     add 0b01101000, [fdc_cmd_st0], [fdc_cmd_st0]
 
 fdc_exec_recalibrate_terminated:
-    # Raise INT 0e = IRQ6
-    jz  [flag_interrupt], fdc_exec_recalibrate_after_irq  # TODO move to IRQ infra
-
+    # Trigger IRQ6
     add 1, 0, [fdc_interrupt_pending]
-    add 0x0e, 0, [rb - 1]
+
+    add 6, 0, [rb - 1]
     arb -1
-    call interrupt
+    call interrupt_request
+
 
 fdc_exec_recalibrate_after_irq:
     ret 0
@@ -639,13 +640,12 @@ fdc_exec_seek_no_floppy:
     add 0b01101000, [fdc_cmd_st0], [fdc_cmd_st0]
 
 fdc_exec_seek_terminated:
-    # Raise INT 0e = IRQ6
-    jz  [flag_interrupt], fdc_exec_seek_after_irq  # TODO move to IRQ infra
-
+    # Trigger IRQ6
     add 1, 0, [fdc_interrupt_pending]
-    add 0x0e, 0, [rb - 1]
+
+    add 6, 0, [rb - 1]
     arb -1
-    call interrupt
+    call interrupt_request
 
 fdc_exec_seek_after_irq:
     # Report disk activity
