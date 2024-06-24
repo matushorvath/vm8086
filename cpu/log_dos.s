@@ -293,7 +293,39 @@ log_dos_21_force_duplicate_handle_dst_msg:
 log_dos_21_exec_program:
 .FRAME
     # 4B EXEC load and execute program
+    add log_dos_21_exec_program_name_msg, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    # Find the file name in 8086 memory and print it (ignoring the wraparound)
+    # dsh1-dsh0 dsl1-dsl0
+    #      dxh1-dxh0 dxl1-dxl0
+    mul [reg_ds + 1], 0x10, [rb - 1]
+    add [reg_dx + 1], [rb - 1], [rb - 1]
+    mul [rb - 1], 0x10, [rb - 1]
+    add [reg_ds + 0], [rb - 1], [rb - 1]
+    mul [rb - 1], 0x10, [rb - 1]
+    add [reg_dx + 0], [rb - 1], [rb - 1]
+    add [mem], [rb - 1], [rb - 1]
+    arb -1
+    call print_str
+
+    add log_dos_21_exec_program_subfunction_msg, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [reg_al], 0, [rb - 1]
+    arb -1
+    call print_num
+
+    # TODO parameter block
+
     ret 0
+
+log_dos_21_exec_program_name_msg:
+    db  ", name ", 0
+log_dos_21_exec_program_subfunction_msg:
+    db  ", subfunction ", 0
 .ENDFRAME
 
 ##########
