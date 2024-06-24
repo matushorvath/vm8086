@@ -184,7 +184,7 @@ fdc_exec_read_data_loop:
     # Is this a multi-track operation?
     jnz [fdc_cmd_multi_track], fdc_exec_read_data_multi_track
 
-    # Single track operation is finished, move the same head on next cylinder
+    # Single track operation is finished, move to the same head on next cylinder
     add [fdc_cmd_cylinder], 1, [fdc_cmd_cylinder]
     jz  0, fdc_exec_read_data_all_data_read
 

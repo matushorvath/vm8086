@@ -23,6 +23,12 @@ config_tracing_cs:
 config_tracing_ip:
     db  0
 
+# FreeDOS COMMAND.COM
+#config_tracing_cs:
+#    db  0x1000
+#config_tracing_ip:
+#    db  0x0000
+
 # Boot sector start
 #config_tracing_cs:
 #    db  0x0000
