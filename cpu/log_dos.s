@@ -1,9 +1,6 @@
 .EXPORT log_dos_21_call
 .EXPORT log_dos_21_iret
 
-# From log.s
-.IMPORT log_start
-
 # From state.s
 .IMPORT reg_ax
 .IMPORT reg_al
@@ -19,6 +16,9 @@
 .IMPORT flag_carry
 .IMPORT mem
 
+# From util/log.s
+.IMPORT log_start
+
 # From libxib.a
 .IMPORT print_str
 .IMPORT print_num
@@ -27,12 +27,12 @@
 .IMPORT print_num_16_w
 .IMPORT print_num_radix
 
-# TODO print AL on iret, it has the result code
-
 ##########
 log_dos_21_call:
 .FRAME description, log_handler, tmp
     arb -3
+
+    # TODO print where was the int 21h called (we have that saved in interrupt.s)
 
     call log_start
 

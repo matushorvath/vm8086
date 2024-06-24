@@ -1,42 +1,13 @@
-.EXPORT log_start
 .EXPORT log_cs_change
 
 # From state.s
 .IMPORT reg_cs
-.IMPORT reg_ip
+
+# From util/log.s
+.IMPORT log_start
 
 # From libxib.a
 .IMPORT print_str
-.IMPORT print_num_16_w
-
-# TODO use log_start for all logging
-
-##########
-log_start:
-.FRAME
-    out 31
-    out 31
-    out 31
-
-    out '('
-
-    mul [reg_cs + 1], 0x100, [rb - 1]
-    add [reg_cs + 0], [rb - 1], [rb - 1]
-    arb -1
-    call print_num_16_w
-
-    out ':'
-
-    mul [reg_ip + 1], 0x100, [rb - 1]
-    add [reg_ip + 0], [rb - 1], [rb - 1]
-    arb -1
-    call print_num_16_w
-
-    out ')'
-    out ' '
-
-    ret 0
-.ENDFRAME
 
 ##########
 log_cs_change:

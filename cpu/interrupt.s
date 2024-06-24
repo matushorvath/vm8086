@@ -10,7 +10,7 @@
 .IMPORT config_log_fdc
 .IMPORT config_log_int
 
-# From log.s
+# From log_cs_change.s
 .IMPORT log_cs_change
 
 # From log_dos.s
@@ -37,6 +37,9 @@
 .IMPORT flag_interrupt
 .IMPORT flag_overflow
 .IMPORT flag_trap
+
+# From util/log.s
+.IMPORT log_start
 
 # From libxib.a
 .IMPORT print_str
@@ -184,6 +187,8 @@ execute_interrupt_after_log_cs_change:
 ##########
 interrupt_log_int:
 .FRAME type;
+    call log_start
+
     add interrupt_log_int_type, 0, [rb - 1]
     arb -1
     call print_str
@@ -205,7 +210,7 @@ interrupt_log_int:
     ret 1
 
 interrupt_log_int_type:
-    db  31, 31, 31, "int 0x", 0
+    db  "int 0x", 0
 interrupt_log_int_ax:
     db  ", ax=0x", 0
 .ENDFRAME
@@ -213,6 +218,8 @@ interrupt_log_int_ax:
 ##########
 interrupt_log_fdc_13:
 .FRAME
+    call log_start
+
     add interrupt_log_fdc_13_start, 0, [rb - 1]
     arb -1
     call print_str
@@ -225,12 +232,14 @@ interrupt_log_fdc_13:
     ret 0
 
 interrupt_log_fdc_13_start:
-    db  31, 31, 31, "int 0x13, fn 0x", 0
+    db  "int 0x13, fn 0x", 0
 .ENDFRAME
 
 ##########
 interrupt_log_fdc_0e:
 .FRAME
+    call log_start
+
     add interrupt_log_fdc_0e_start, 0, [rb - 1]
     arb -1
     call print_str
@@ -239,7 +248,7 @@ interrupt_log_fdc_0e:
     ret 0
 
 interrupt_log_fdc_0e_start:
-    db  31, 31, 31, "irq 6", 0
+    db  "irq 6", 0
 .ENDFRAME
 
 ##########
