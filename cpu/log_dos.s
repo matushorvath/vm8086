@@ -1,25 +1,40 @@
-.EXPORT log_dos_21
+.EXPORT log_dos_21_call
+.EXPORT log_dos_21_iret
 
 # From log.s
 .IMPORT log_start
 
 # From state.s
+.IMPORT reg_ax
+.IMPORT reg_al
 .IMPORT reg_ah
+.IMPORT reg_cx
+.IMPORT reg_cl
+.IMPORT reg_ch
+.IMPORT reg_dx
 .IMPORT reg_dl
+.IMPORT reg_dh
+.IMPORT reg_ds
+.IMPORT mem
 
 # From libxib.a
 .IMPORT print_str
 .IMPORT print_num
+.IMPORT print_num_2_b
 .IMPORT print_num_16_b
+.IMPORT print_num_16_w
+.IMPORT print_num_radix
+
+# TODO print AL on iret, it has the result code
 
 ##########
-log_dos_21:
+log_dos_21_call:
 .FRAME description, log_handler, tmp
     arb -3
 
     call log_start
 
-    add log_dos_21_start_msg, 0, [rb - 1]
+    add log_dos_21_call_start_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -33,13 +48,13 @@ log_dos_21:
     # Do we have a function description?
     add dos_21_description_unknown, 0, [rb + description]
     lt  [reg_ah], DOS_21_FUNCTION_COUNT, [rb + tmp]
-    jz  [rb + tmp], log_dos_21_print_description
+    jz  [rb + tmp], log_dos_21_call_print_description
 
     # Yes, find description in the table
     mul [reg_ah], DOS_21_DESCRIPTION_LENGTH, [rb + description]
     add dos_21_descriptions, [rb + description], [rb + description]
 
-log_dos_21_print_description:
+log_dos_21_call_print_description:
     # Print description
     add [rb + description], 0, [rb - 1]
     arb -1
@@ -49,18 +64,18 @@ log_dos_21_print_description:
     add dos_21_log_handlers, [reg_ah], [ip + 1]
     add [0], 0, [rb + log_handler]
 
-    jz  [rb + log_handler], log_dos_21_done
+    jz  [rb + log_handler], log_dos_21_call_done
 
     # Yes, output the function-specific log
     call [rb + log_handler]
 
-log_dos_21_done:
+log_dos_21_call_done:
     out 10
 
     arb 3
     ret 0
 
-log_dos_21_start_msg:
+log_dos_21_call_start_msg:
     db  "dos call: int 21h fn ", 0
 .ENDFRAME
 
@@ -83,16 +98,35 @@ log_dos_21_select_disk_msg:
 .ENDFRAME
 
 ##########
-log_dos_21_set_disk_addr:
-.FRAME
-    # 1A Set disk transfer address
-    ret 0
-.ENDFRAME
-
-##########
 log_dos_21_set_date:
 .FRAME
     # 2B Set date
+    out ','
+    out ' '
+
+    mul [reg_cx + 1], 0x100, [rb - 1]
+    add [reg_cx + 0], [rb - 1], [rb - 1]
+    add 10, 0, [rb - 2]
+    add 4, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
+    out '-'
+
+    add [reg_dh], 0, [rb - 1]
+    add 10, 0, [rb - 2]
+    add 2, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
+    out '-'
+
+    add [reg_dl], 0, [rb - 1]
+    add 10, 0, [rb - 2]
+    add 2, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
     ret 0
 .ENDFRAME
 
@@ -100,6 +134,39 @@ log_dos_21_set_date:
 log_dos_21_set_time:
 .FRAME
     # 2D Set time
+    out ','
+    out ' '
+
+    add [reg_ch], 0, [rb - 1]
+    add 10, 0, [rb - 2]
+    add 2, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
+    out ':'
+
+    add [reg_cl], 0, [rb - 1]
+    add 10, 0, [rb - 2]
+    add 2, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
+    out ':'
+
+    add [reg_dh], 0, [rb - 1]
+    add 10, 0, [rb - 2]
+    add 2, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
+    out '.'
+
+    add [reg_dl], 0, [rb - 1]
+    add 10, 0, [rb - 2]
+    add 2, 0, [rb - 3]
+    arb -3
+    call print_num_radix
+
     ret 0
 .ENDFRAME
 
@@ -107,7 +174,38 @@ log_dos_21_set_time:
 log_dos_21_open_file_handle:
 .FRAME
     # 3D Open file using handle
+    add log_dos_21_open_file_handle_name_msg, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    # Find the file name in 8086 memory and print it (ignoring the wraparound)
+    # dsh1-dsh0 dsl1-dsl0
+    #      dxh1-dxh0 dxl1-dxl0
+    mul [reg_ds + 1], 0x10, [rb - 1]
+    add [reg_dx + 1], [rb - 1], [rb - 1]
+    mul [rb - 1], 0x10, [rb - 1]
+    add [reg_ds + 0], [rb - 1], [rb - 1]
+    mul [rb - 1], 0x10, [rb - 1]
+    add [reg_dx + 0], [rb - 1], [rb - 1]
+    add [mem], [rb - 1], [rb - 1]
+    arb -1
+    call print_str
+
+    # Print the access mode
+    add log_dos_21_open_file_handle_access_msg, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [reg_al], 0, [rb - 1]
+    arb -1
+    call print_num_2_b
+
     ret 0
+
+log_dos_21_open_file_handle_name_msg:
+    db  ", name ", 0
+log_dos_21_open_file_handle_access_msg:
+    db  ", access ", 0
 .ENDFRAME
 
 ##########
@@ -143,6 +241,27 @@ log_dos_21_exec_program:
 .FRAME
     # 4B EXEC load and execute program
     ret 0
+.ENDFRAME
+
+##########
+log_dos_21_iret:
+.FRAME
+    call log_start
+
+    add log_dos_21_iret_msg, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    mul [reg_ax + 1], 0x100, [rb - 1]
+    add [reg_ax + 0], [rb - 1], [rb - 1]
+    arb -1
+    call print_num_16_w
+
+    out 10
+    ret 0
+
+log_dos_21_iret_msg:
+    db  "dos iret: ax=0x", 0
 .ENDFRAME
 
 ##########
@@ -295,7 +414,7 @@ dos_21_log_handlers:
     db  0                                                               # 17 Rename file using FCB
     db  0                                                               # 18 DOS dummy function (CP/M)
     db  0                                                               # 19 Get current default drive
-    db  log_dos_21_set_disk_addr                                        # 1A Set disk transfer address
+    db  0                                                               # 1A Set disk transfer address
     db  0                                                               # 1B Get allocation table information
     db  0                                                               # 1C Get allocation table info for specific device
     db  0                                                               # 1D DOS dummy function (CP/M)

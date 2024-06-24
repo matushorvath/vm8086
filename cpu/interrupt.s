@@ -14,7 +14,8 @@
 .IMPORT log_cs_change
 
 # From log_dos.s
-.IMPORT log_dos_21
+.IMPORT log_dos_21_call
+.IMPORT log_dos_21_iret
 
 # From memory.s
 .IMPORT read_b
@@ -111,11 +112,19 @@ interrupt_after_log_fdc_13:
 
 interrupt_after_log_fdc:
     # DOS function logging
-    jz  [config_log_dos], interrupt_after_log_fdc
+    jz  [config_log_dos], interrupt_after_log_dos
 
+    # Is this the DOS function call?
     eq  [rb + type], 0x21, [rb + tmp]
     jz  [rb + tmp], interrupt_after_log_dos
-    call log_dos_21
+
+    # Save CS:IP that called DOS, so we can also log the return
+    add [reg_cs + 0], 0, [dos_21_cs + 0]
+    add [reg_cs + 1], 0, [dos_21_cs + 1]
+    add [reg_ip + 0], 0, [dos_21_ip + 0]
+    add [reg_ip + 1], 0, [dos_21_ip + 1]
+
+    call log_dos_21_call
 
 interrupt_after_log_dos:
     # Push flags, then disable TF and IF
@@ -236,7 +245,7 @@ interrupt_log_fdc_0e_start:
 ##########
 execute_iret:
 .FRAME
-    # Pop IP, CS and flags
+    # Pop IP and CS
     call pop_w
     add [rb - 2], 0, [reg_ip + 0]
     add [rb - 3], 0, [reg_ip + 1]
@@ -245,6 +254,28 @@ execute_iret:
     add [rb - 2], 0, [reg_cs + 0]
     add [rb - 3], 0, [reg_cs + 1]
 
+    # DOS function logging
+    jz  [config_log_dos], execute_iret_after_log_fdc
+
+    # Only log if we are returning back from where DOS was called
+    eq  [reg_ip + 0], [dos_21_ip + 0], [rb - 1]
+    jz  [rb - 1], execute_iret_after_log_fdc
+    eq  [reg_ip + 1], [dos_21_ip + 1], [rb - 1]
+    jz  [rb - 1], execute_iret_after_log_fdc
+    eq  [reg_cs + 0], [dos_21_cs + 0], [rb - 1]
+    jz  [rb - 1], execute_iret_after_log_fdc
+    eq  [reg_cs + 1], [dos_21_cs + 1], [rb - 1]
+    jz  [rb - 1], execute_iret_after_log_fdc
+
+    add -1, 0, [dos_21_ip + 0]
+    add -1, 0, [dos_21_ip + 1]
+    add -1, 0, [dos_21_cs + 0]
+    add -1, 0, [dos_21_cs + 1]
+
+    call log_dos_21_iret
+
+execute_iret_after_log_fdc:
+    # Pop flags
     call popf
 
     # Log CS change
@@ -254,5 +285,13 @@ execute_iret:
 execute_iret_after_log_cs_change:
     ret 0
 .ENDFRAME
+
+##########
+dos_21_cs:
+    db  -1
+    db  -1
+dos_21_ip:
+    db  -1
+    db  -1
 
 .EOF
