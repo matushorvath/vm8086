@@ -546,7 +546,6 @@ fdc_exec_recalibrate_terminated:
     arb -1
     call interrupt_request
 
-
 fdc_exec_recalibrate_after_irq:
     ret 0
 .ENDFRAME

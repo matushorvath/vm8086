@@ -7,6 +7,7 @@
 .EXPORT config_boot_80x25
 
 .EXPORT config_log_cs_change
+.EXPORT config_log_dos
 .EXPORT config_log_fdc
 .EXPORT config_log_int
 .EXPORT config_log_pic
@@ -58,6 +59,8 @@ config_boot_80x25:
 
 # Logging configuration
 config_log_cs_change:
+    db  0
+config_log_dos:
     db  0
 config_log_fdc:
     db  0
