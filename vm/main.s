@@ -15,14 +15,17 @@
 # From cga/cga.s
 .IMPORT init_cga
 
-# From cga/status.s
-.IMPORT set_disk_active
+# From cpu/devices.s
+.IMPORT register_region
 
 # From cpu/execute.s
 .IMPORT execute
 
 # From cpu/images.s
 .IMPORT init_images
+
+# From cga/status.s
+.IMPORT set_disk_active
 
 # From dev/dma.s
 .IMPORT init_dma_8237a
@@ -39,8 +42,6 @@
 # From dev/ppi_8255a.s
 .IMPORT init_ppi_8255a
 
-# TODO make the BIOS read-only by registering a NOP write handler
-
 ##########
 # Entry point
     arb stack
@@ -55,6 +56,7 @@
 ##########
 main:
 .FRAME
+    # Initialize the ROM and floppy images
     add [bios_address], 0, [rb - 1]
     add bios_image, 0, [rb - 2]
     add 1474560, 0, [rb - 3]
@@ -62,6 +64,15 @@ main:
     arb -4
     call init_images
 
+    # Make the ROM read-only
+    add [bios_address], 0, [rb - 1]
+    add 0x100000, 0, [rb - 2]
+    add 0, 0, [rb - 3]
+    add write_rom, 0, [rb - 4]
+    arb -4
+    call register_region
+
+    # Initialize devices
     call init_pic_8259a
     call init_pit_8253
     call init_ppi_8255a
@@ -70,9 +81,22 @@ main:
     call init_fdc
     call init_vm_ports
 
+    # Start the CPU
     call execute
 
     ret 0
+.ENDFRAME
+
+##########
+write_rom:
+.FRAME addr, value; write_through
+    arb -1
+
+    # Silently throw away the data, the ROM is read only
+    add 0, 0, [rb + write_through]
+
+    arb 1
+    ret 2
 .ENDFRAME
 
 ##########

@@ -71,8 +71,8 @@ init_dma_8237a:
 
 ##########
 dma_receive_data:
-.FRAME channel, src_addr, count; dst_addr, dst_delta, tmp
-    arb -3
+.FRAME channel, src_addr, count; dst_addr, dst_delta, index, tmp
+    arb -4
 
     # Floppy logging
     jz  [config_log_fdc], dma_receive_data_after_log_fdc
@@ -84,8 +84,6 @@ dma_receive_data:
     call dma_receive_data_log_fdc
 
 dma_receive_data_after_log_fdc:
-    # TODO range check channel
-
     # Check the DMA controller
     jnz [dma_disable_controller], dma_receive_data_disabled
 
@@ -105,19 +103,22 @@ dma_receive_data_after_log_fdc:
 
     # Determine where we should write the data
     add dma_page_channels, [rb + channel], [ip + 1]
-    mul [0], 0xffff, [rb + dst_addr]
+    mul [0], 0x10000, [rb + dst_addr]
     add dma_address_channels, [rb + channel], [ip + 1]
     add [0], [rb + dst_addr], [rb + dst_addr]
     add [mem], [rb + dst_addr], [rb + dst_addr]
 
-    # Move min(count, dma_count_*+1) bytes of data
+    # Calculate how much data to move, count = min(count, dma_count_*+1)
     add dma_count_channels, [rb + channel], [ip + 1]
     add [0], 1, [rb + tmp]
     lt  [rb + tmp], [rb + count], [rb + tmp]
-    jz  [rb + tmp], dma_receive_data_loop
+    jz  [rb + tmp], dma_receive_data_move
 
     add dma_count_channels, [rb + channel], [ip + 1]
     add [0], 1, [rb + count]
+
+dma_receive_data_move:
+    add [rb + count], 0, [rb + index]
 
 dma_receive_data_loop:
     # Move the data
@@ -126,22 +127,31 @@ dma_receive_data_loop:
     add [0], 0, [0]
 
     # Increment source address, increment/decrement destination address
-    # TODO handle wraparound for dst_addr, it wraps around 0xffff and then adds the page
+    # TODO handle wraparound for dst_addr, it wraps around 0x10000 and then adds the page
     add [rb + src_addr], 1, [rb + src_addr]
     add [rb + dst_addr], [rb + dst_delta], [rb + dst_addr]
 
-    # Decrease count and loop
-    add [rb + count], -1, [rb + count]
-    jnz [rb + count], dma_receive_data_loop
+    # Decrease index and loop
+    add [rb + index], -1, [rb + index]
+    jnz [rb + index], dma_receive_data_loop
 
-    # Update DMA counter, set it to 1 less than count
+    # Update the DMA counter, decrease it by count
+    mul [rb + count], -1, [rb + tmp]
+    add dma_count_channels, [rb + channel], [ip + 5]
     add dma_count_channels, [rb + channel], [ip + 3]
-    add [rb + count], -1, [0]
+    add [0], [rb + tmp], [0]
+
+    # Update destination address, increase/decrease it by count
+    # TODO wraparound the address, make sure it stays between 0x0000 and 0x10000
+    mul [rb + count], [rb + dst_delta], [rb + tmp]
+    add dma_address_channels, [rb + channel], [ip + 5]
+    add dma_address_channels, [rb + channel], [ip + 3]
+    add [0], [rb + tmp], [0]
 
     # TODO handle dma_auto_init_channels (remember originally set values, reset them after dma_count_ch* goes to -1)
 
 dma_receive_data_disabled:
-    arb 3
+    arb 4
     ret 3
 .ENDFRAME
 

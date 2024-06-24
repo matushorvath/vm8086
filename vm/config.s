@@ -7,6 +7,7 @@
 .EXPORT config_boot_80x25
 
 .EXPORT config_log_cs_change
+.EXPORT config_log_dos
 .EXPORT config_log_fdc
 .EXPORT config_log_int
 .EXPORT config_log_pic
@@ -21,6 +22,12 @@ config_tracing_cs:
     db  0
 config_tracing_ip:
     db  0
+
+# FreeDOS COMMAND.COM
+#config_tracing_cs:
+#    db  0x1000
+#config_tracing_ip:
+#    db  0x0000
 
 # Boot sector start
 #config_tracing_cs:
@@ -58,6 +65,8 @@ config_boot_80x25:
 
 # Logging configuration
 config_log_cs_change:
+    db  0
+config_log_dos:
     db  0
 config_log_fdc:
     db  0
