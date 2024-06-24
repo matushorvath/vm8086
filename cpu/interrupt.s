@@ -14,7 +14,7 @@
 .IMPORT log_cs_change
 
 # From log_dos.s
-.IMPORT log_dos_function_21
+.IMPORT log_dos_21
 
 # From memory.s
 .IMPORT read_b
@@ -115,7 +115,7 @@ interrupt_after_log_fdc:
 
     eq  [rb + type], 0x21, [rb + tmp]
     jz  [rb + tmp], interrupt_after_log_dos
-    call log_dos_function_21
+    call log_dos_21
 
 interrupt_after_log_dos:
     # Push flags, then disable TF and IF
