@@ -258,10 +258,6 @@ Press F8 to trace or F5 to skip CONFIG.SYS/AUTOEXEC.BAT
 -> crashing after EXEC A:\COMMAND.COM
 in DOS log, search EXEC
 
-TODO:
-- maybe BUG: I think the fdc code always reads 512 bytes max, even when more is requested based on DMA receiving only 512 bytes always
-- maybe BUG: is page in FDC read supposed to be 0x00?
-
 (1000:0000) CS changed
 (20ce:0006) CS changed
 
@@ -312,3 +308,23 @@ TODO:
 1000:01f4 INC/DEC/CALL NEAR/CALL FAR/JMP NEAR/JMP FAR/PUSH REG16/MEM16(ff) 3b df 74
 
 (I don't know how it jumps from 20ce: back to 1000:)
+
+addr 20ce6:
+
+lo   0xe6
+hi   0x0c
+page 0x02
+
+9216=0x2400
+18 sectors - track - TODO is it trying to actually do a "read track" fdc command? because we don't have that
+
+at 105e0 cnt 9215+1 = up to 129e0
+129e0 9215
+14de0 9215
+171e0 3071
+
+14944 411
+
+TODO:
+ - higher level floppy logging (read CHS+count -> target buffer)
+ - maybe BUG: I think the fdc code always reads 512 bytes max, even when more is requested (DMA never receives more than 512 bytes)
