@@ -30,6 +30,7 @@ TODO
 - Make sure makefiles display and delete output files when compilation fails.
 - All generated tables should be changed to avoid multiplying the input number by N
 - https://wiki.osdev.org/APM APM for poweroff, FreeDOS should support it
+- higher level floppy logging (read CHS+count -> target buffer)
 
 VM:
 - nmi_mask_reg
@@ -261,70 +262,4 @@ in DOS log, search EXEC
 (1000:0000) CS changed
 (20ce:0006) CS changed
 
-1000:0000 has valid code
-
-1000:0000 MOV CX, IMMED16(b9) 61 4f
-1000:0003 MOV SI, IMMED16(be) c0 9e
-1000:0006 MOV REG16/MEM16, REG16(89) f7 1e a9
-1000:0008 PUSH DS(1e)
-1000:0009 TEST AX, IMMED16(a9) b5 80
-1000:000c MOV REG16/MEM16, SEGREG(8c) c8 05 05
-1000:000e ADD AX, IMMED16(05) 05 00
-1000:0011 MOV SEGREG, REG16/MEM16(8e) d8 05 e9
-1000:0013 ADD AX, IMMED16(05) e9 06
-1000:0016 MOV SEGREG, REG16/MEM16(8e) c0 fd f3
-1000:0018 STD(fd)
-1000:0019 REPZ(f3)
-1000:001a MOVS DEST-STR16, SRC-STR16(a5)
-1000:001b CLD(fc)
-1000:001c CS:(2e)
-1000:001d ADD/OR/ADC/SBB/AND/SUB/XOR/CMP REG8/MEM8, IMMED8(80) 6c 12 10 73
-1000:0021 JNC SHORT-LABEL(73) e7
-1000:0023 XCHG AX, DX(92)
-1000:0024 SCAS DEST-STR16(af)
-1000:0025 LODS SRC-STR16(ad)
-1000:0026 PUSH CS(0e)
-1000:0027 PUSH CS(0e)
-1000:0028 PUSH CS(0e)
-1000:0029 PUSH ES(06)
-1000:002a POP DS(1f)
-1000:002b POP ES(07)
-1000:002c PUSH SS(16)
-1000:002d MOV BP, IMMED16(bd) 06 00
-1000:0030 MOV BX, IMMED16(bb) 5f 80
-1000:0033 PUSH BP(55)
-1000:0034 RETF(cb)
-(20ce:0006) CS changed
-
-20ce:0006 only has 00 bytes until 20ce:01ec:
-
-20ce:01e8 ADD REG8/MEM8, REG8(00) 00 00 00
-20ce:01ea ADD REG8/MEM8, REG8(00) 00 ff 00
-20ce:01ec INC/DEC/CALL NEAR/CALL FAR/JMP NEAR/JMP FAR/PUSH REG16/MEM16(ff) 00 f0 0f
-20ce:01ee LOCK(f0)
-20ce:01ef (invalid)(0f)
-1000:01f0 MOV REG16, REG16/MEM16(8b) d7 8b de
-1000:01f2 MOV REG16, REG16/MEM16(8b) de ff 3b
-1000:01f4 INC/DEC/CALL NEAR/CALL FAR/JMP NEAR/JMP FAR/PUSH REG16/MEM16(ff) 3b df 74
-
-(I don't know how it jumps from 20ce: back to 1000:)
-
-addr 20ce6:
-
-lo   0xe6
-hi   0x0c
-page 0x02
-
-9216=0x2400
-18 sectors - track - TODO is it trying to actually do a "read track" fdc command? because we don't have that
-
-at 105e0 cnt 9215+1 = up to 129e0
-129e0 9215
-14de0 9215
-171e0 3071
-
-14944 411
-
-TODO:
- - higher level floppy logging (read CHS+count -> target buffer)
- - maybe BUG: I think the fdc code always reads 512 bytes max, even when more is requested (DMA never receives more than 512 bytes)
+20ce:0006 only has 00 bytes until 20ce:01ec

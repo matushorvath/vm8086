@@ -13,14 +13,14 @@
 # From cpu/devices.s
 .IMPORT register_ports
 
-# From cpu/error.s
-# TODO .IMPORT report_error
-
 # From cpu/state.s
 .IMPORT mem
 
 # From util/bits.s
 .IMPORT bits
+
+# From util/log.s
+.IMPORT log_start
 
 # From libxib.a
 .IMPORT print_str
@@ -158,6 +158,8 @@ dma_receive_data_disabled:
 ##########
 dma_receive_data_log_fdc:
 .FRAME count;
+    call log_start
+
     add dma_receive_data_log_fdc_start, 0, [rb - 1]
     arb -1
     call print_str
@@ -170,7 +172,7 @@ dma_receive_data_log_fdc:
     ret 1
 
 dma_receive_data_log_fdc_start:
-    db  31, 31, 31, "dma ch02, receive data, count ", 0
+    db  "dma ch02, receive data, count ", 0
 .ENDFRAME
 
 ##########
@@ -245,6 +247,8 @@ dma_mode_write_done:
 ##########
 dma_mode_write_log_fdc:
 .FRAME value;
+    call log_start
+
     add dma_mode_write_log_fdc_start, 0, [rb - 1]
     arb -1
     call print_str
@@ -257,7 +261,7 @@ dma_mode_write_log_fdc:
     ret 1
 
 dma_mode_write_log_fdc_start:
-    db  31, 31, 31, "dma ch02, receive data, mode ", 0
+    db  "dma ch02, receive data, mode ", 0
 .ENDFRAME
 
 ##########
@@ -308,6 +312,8 @@ dma_master_reset_write_after_log_fdc:
 ##########
 dma_master_reset_write_log_fdc:
 .FRAME
+    call log_start
+
     add dma_master_reset_write_log_fdc_start, 0, [rb - 1]
     arb -1
     call print_str
@@ -316,7 +322,7 @@ dma_master_reset_write_log_fdc:
     ret 0
 
 dma_master_reset_write_log_fdc_start:
-    db  31, 31, 31, "dma master reset", 0
+    db  "dma master reset", 0
 .ENDFRAME
 
 ##########
@@ -441,6 +447,8 @@ dma_address_ch2_write_after_log_fdc:
 ##########
 dma_address_ch2_write_log_fdc:
 .FRAME
+    call log_start
+
     add dma_address_ch2_write_log_fdc_start, 0, [rb - 1]
     arb -1
     call print_str
@@ -457,7 +465,7 @@ dma_address_ch2_write_log_fdc:
     ret 0
 
 dma_address_ch2_write_log_fdc_start:
-    db  31, 31, 31, "dma ch02, write address 0x", 0
+    db  "dma ch02, write address 0x", 0
 .ENDFRAME
 
 ##########
@@ -532,6 +540,8 @@ dma_count_ch2_write_after_log_fdc:
 ##########
 dma_count_ch2_write_log_fdc:
 .FRAME
+    call log_start
+
     add dma_count_ch2_write_log_fdc_start, 0, [rb - 1]
     arb -1
     call print_str
@@ -548,7 +558,7 @@ dma_count_ch2_write_log_fdc:
     ret 0
 
 dma_count_ch2_write_log_fdc_start:
-    db  31, 31, 31, "dma ch02, write count ", 0
+    db  "dma ch02, write count ", 0
 .ENDFRAME
 
 ##########
@@ -628,6 +638,8 @@ dma_page_ch2_write_after_log_fdc:
 ##########
 dma_page_ch2_write_log_fdc:
 .FRAME
+    call log_start
+
     add dma_page_ch2_write_log_fdc_start, 0, [rb - 1]
     arb -1
     call print_str
@@ -640,7 +652,7 @@ dma_page_ch2_write_log_fdc:
     ret 0
 
 dma_page_ch2_write_log_fdc_start:
-    db  31, 31, 31, "dma ch02, write page 0x", 0
+    db  "dma ch02, write page 0x", 0
 .ENDFRAME
 
 ##########

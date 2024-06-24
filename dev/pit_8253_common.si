@@ -15,6 +15,9 @@
 # From util/bits.s
 .IMPORT bits
 
+# From util/log.s
+.IMPORT log_start
+
 # From libxib.a
 .IMPORT print_str
 .IMPORT print_num
@@ -472,6 +475,8 @@ pit_vm_callback_log:
 .FRAME tmp
     arb -1
 
+    call log_start
+
     add pit_vm_callback_log_channel, 0, [rb - 1]
     arb -1
     call print_str
@@ -494,7 +499,7 @@ pit_vm_callback_log:
     ret 0
 
 pit_vm_callback_log_channel:
-    db  31, 31, 31, "pit callback: ch", 0
+    db  "pit callback: ch", 0
 pit_vm_callback_log_value:
     db  ", value 0x", 0
 .ENDFRAME
@@ -503,6 +508,8 @@ pit_vm_callback_log_value:
 pit_mode_command_write_log:
 .FRAME value; tmp
     arb -1
+
+    call log_start
 
     add pit_mode_command_write_log_channel, 0, [rb - 1]
     arb -1
@@ -543,7 +550,7 @@ pit_mode_command_write_log:
     ret 1
 
 pit_mode_command_write_log_channel:
-    db  31, 31, 31, "pit m/c write: ch", 0
+    db  "pit m/c write: ch", 0
 pit_mode_command_write_log_value:
     db  ", value 0x", 0
 pit_mode_command_write_log_mode:
@@ -556,6 +563,8 @@ pit_mode_command_write_log_access:
 pit_mode_command_write_latch_log:
 .FRAME tmp
     arb -1
+
+    call log_start
 
     add pit_mode_command_write_latch_log_channel, 0, [rb - 1]
     arb -1
@@ -588,7 +597,7 @@ pit_mode_command_write_latch_log:
     ret 0
 
 pit_mode_command_write_latch_log_channel:
-    db  31, 31, 31, "pit m/c latch: ch", 0
+    db  "pit m/c latch: ch", 0
 pit_mode_command_write_latch_log_value:
     db  ", value 0x", 0
 pit_mode_command_write_latch_log_latch:
@@ -599,6 +608,8 @@ pit_mode_command_write_latch_log_latch:
 pit_data_write_log:
 .FRAME value; tmp
     arb -1
+
+    call log_start
 
     add pit_data_write_log_channel, 0, [rb - 1]
     arb -1
@@ -623,7 +634,7 @@ pit_data_write_log:
     ret 1
 
 pit_data_write_log_channel:
-    db  31, 31, 31, "pit data write: ch", 0
+    db  "pit data write: ch", 0
 pit_data_write_log_value:
     db  ", value 0x", 0
 .ENDFRAME
@@ -632,6 +643,8 @@ pit_data_write_log_value:
 pit_data_read_log:
 .FRAME value; tmp
     arb -1
+
+    call log_start
 
     add pit_data_read_log_channel, 0, [rb - 1]
     arb -1
@@ -654,7 +667,7 @@ pit_data_read_log:
     ret 1
 
 pit_data_read_log_channel:
-    db  31, 31, 31, "pit data read: ch", 0
+    db  "pit data read: ch", 0
 pit_data_read_log_value:
     db  ", value 0x", 0
 .ENDFRAME
@@ -663,6 +676,8 @@ pit_data_read_log_value:
 pit_status_log:
 .FRAME tmp
     arb -1
+
+    call log_start
 
     add pit_status_log_channel, 0, [rb - 1]
     arb -1
@@ -740,7 +755,7 @@ pit_status_log_after_latch:
     ret 0
 
 pit_status_log_channel:
-    db  31, 31, 31, "pit status: ch", 0
+    db  "pit status: ch", 0
 pit_status_log_value:
     db  ", value 0x", 0
 pit_status_log_reload:
