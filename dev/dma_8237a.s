@@ -13,9 +13,6 @@
 # From cpu/devices.s
 .IMPORT register_ports
 
-# From cpu/error.s
-# TODO .IMPORT report_error
-
 # From cpu/state.s
 .IMPORT mem
 
