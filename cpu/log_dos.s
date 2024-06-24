@@ -8,6 +8,7 @@
 .IMPORT reg_ax
 .IMPORT reg_al
 .IMPORT reg_ah
+.IMPORT reg_bx
 .IMPORT reg_cx
 .IMPORT reg_cl
 .IMPORT reg_ch
@@ -15,6 +16,7 @@
 .IMPORT reg_dl
 .IMPORT reg_dh
 .IMPORT reg_ds
+.IMPORT flag_carry
 .IMPORT mem
 
 # From libxib.a
@@ -212,28 +214,79 @@ log_dos_21_open_file_handle_access_msg:
 log_dos_21_close_file_handle:
 .FRAME
     # 3E Close file using handle
+    add log_dos_21_close_file_handle_msg, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    mul [reg_bx + 1], 0x100, [rb - 1]
+    add [reg_bx + 0], [rb - 1], [rb - 1]
+    arb -1
+    call print_num_16_w
+
     ret 0
+
+log_dos_21_close_file_handle_msg:
+    db  ", handle 0x", 0
 .ENDFRAME
 
 ##########
 log_dos_21_read_file_handle:
 .FRAME
     # 3F Read file or device using handle
+    add log_dos_21_read_file_handle_msg, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    mul [reg_bx + 1], 0x100, [rb - 1]
+    add [reg_bx + 0], [rb - 1], [rb - 1]
+    arb -1
+    call print_num_16_w
+
+    add log_dos_21_read_file_handle_bytes_msg, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    mul [reg_cx + 1], 0x100, [rb - 1]
+    add [reg_cx + 0], [rb - 1], [rb - 1]
+    arb -1
+    call print_num
+
     ret 0
+
+log_dos_21_read_file_handle_msg:
+    db  ", handle 0x", 0
+log_dos_21_read_file_handle_bytes_msg:
+    db  ", bytes ", 0
 .ENDFRAME
 
 ##########
 log_dos_21_force_duplicate_handle:
 .FRAME
     # 46 Force duplicate file handle
-    ret 0
-.ENDFRAME
+    add log_dos_21_force_duplicate_handle_src_msg, 0, [rb - 1]
+    arb -1
+    call print_str
 
-##########
-log_dos_21_allocate_memory:
-.FRAME
-    # 48 Allocate memory blocks
+    mul [reg_bx + 1], 0x100, [rb - 1]
+    add [reg_bx + 0], [rb - 1], [rb - 1]
+    arb -1
+    call print_num_16_w
+
+    add log_dos_21_force_duplicate_handle_dst_msg, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    mul [reg_cx + 1], 0x100, [rb - 1]
+    add [reg_cx + 0], [rb - 1], [rb - 1]
+    arb -1
+    call print_num_16_w
+
     ret 0
+
+log_dos_21_force_duplicate_handle_src_msg:
+    db  ", src handle 0x", 0
+log_dos_21_force_duplicate_handle_dst_msg:
+    db  ", dst handle 0x", 0
 .ENDFRAME
 
 ##########
@@ -248,7 +301,7 @@ log_dos_21_iret:
 .FRAME
     call log_start
 
-    add log_dos_21_iret_msg, 0, [rb - 1]
+    add log_dos_21_iret_ax_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -257,11 +310,20 @@ log_dos_21_iret:
     arb -1
     call print_num_16_w
 
+    add log_dos_21_iret_cf_msg, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add '0', [flag_carry], [rb - 1]
+    out [rb - 1]
+
     out 10
     ret 0
 
-log_dos_21_iret_msg:
+log_dos_21_iret_ax_msg:
     db  "dos iret: ax=0x", 0
+log_dos_21_iret_cf_msg:
+    db  ", cf=", 0
 .ENDFRAME
 
 ##########
@@ -463,7 +525,7 @@ dos_21_log_handlers:
     db  0                                                               # 45 Duplicate file handle
     db  log_dos_21_force_duplicate_handle                               # 46 Force duplicate file handle
     db  0                                                               # 47 Get current directory
-    db  log_dos_21_allocate_memory                                      # 48 Allocate memory blocks
+    db  0                                                               # 48 Allocate memory blocks
     db  0                                                               # 49 Free allocated memory blocks
     db  0                                                               # 4A Modify allocated memory blocks
     db  log_dos_21_exec_program                                         # 4B EXEC load and execute program
