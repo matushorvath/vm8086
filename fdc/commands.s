@@ -86,8 +86,8 @@
 
 ##########
 fdc_exec_read_data:
-.FRAME heads, sectors, sectors_eot, dma_count, addr_c, addr_s, tmp
-    arb -7
+.FRAME heads, sectors, dma_count, addr_c, addr_s, tmp
+    arb -6
 
     add [dma_count_ch2], 0, [rb + dma_count]
 
@@ -119,13 +119,6 @@ fdc_exec_read_data:
     add fdc_medium_sectors_units, [fdc_cmd_unit_selected], [ip + 1]
     add [0], 0, [rb + sectors]
 
-    # Limit number of sectors to EOT from the command input
-    add [rb + sectors], 0, [rb + sectors_eot]
-    lt  [fdc_cmd_end_of_track], [rb + sectors_eot], [rb + tmp]
-    jz  [rb + tmp], fdc_exec_read_data_after_eot
-    add [fdc_cmd_end_of_track], 0, [rb + sectors_eot]
-
-fdc_exec_read_data_after_eot:
     # Cylinder number must match the cylinder we are on
     eq  [fdc_cmd_cylinder], [fdc_present_cylinder_units], [rb + tmp]
     jz  [rb + tmp], fdc_exec_read_data_bad_input
@@ -139,7 +132,7 @@ fdc_exec_read_data_after_eot:
     # Sector number must be in range (1-based)
     lt  [fdc_cmd_sector], 1, [rb + tmp]
     jnz [rb + tmp], fdc_exec_read_data_bad_input
-    lt  [rb + sectors_eot], [fdc_cmd_sector], [rb + tmp]
+    lt  [rb + sectors], [fdc_cmd_sector], [rb + tmp]
     jnz [rb + tmp], fdc_exec_read_data_bad_input
 
     # Check the DMA controller
@@ -187,7 +180,7 @@ fdc_exec_read_data_loop:
     add [fdc_cmd_sector], 1, [fdc_cmd_sector]
 
     # Did we reach end of track?
-    lt  [rb + sectors_eot], [fdc_cmd_sector], [rb + tmp]
+    lt  [rb + sectors], [fdc_cmd_sector], [rb + tmp]
     jz  [rb + tmp], fdc_exec_read_data_loop
 
     # End of track, move to sector 1
@@ -302,7 +295,7 @@ fdc_exec_read_data_after_irq:
     arb -2
     call fdc_activity_callback
 
-    arb 7
+    arb 6
     ret 0
 .ENDFRAME
 
