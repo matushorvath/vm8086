@@ -38,7 +38,7 @@ fdc_dor_write:
 .FRAME addr, value; value_bits, tmp
     arb -2
 
-    # Floppy logging
+    # Floppy controller logging
     jz  [config_log_fdc], fdc_dor_write_after_log_fdc
 
     add [rb + value], 0, [rb - 1]
@@ -129,7 +129,7 @@ fdc_status_read:
     # Bit 7 RQM - data register is ready for data transfer
     add [rb + value], 0b10000000, [rb + value]
 
-    # Floppy logging
+    # Floppy controller logging
     jz  [config_log_fdc], fdc_status_read_after_log_fdc
 
     add [rb + value], 0, [rb - 1]
@@ -192,7 +192,7 @@ fdc_d765ac_reset:
     # TODO reset D765AC registers to zero, but don't touch the DOR,
     # also don't touch SRT HUT HLT in Specify command
 
-    # Floppy logging
+    # Floppy controller logging
     jz  [config_log_fdc], fdc_d765ac_reset_after_log_fdc
     call fdc_d765ac_reset_log_fdc
 

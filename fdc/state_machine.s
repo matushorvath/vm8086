@@ -67,7 +67,7 @@ fdc_data_write:
 .FRAME addr, value; value_bits, tmp
     arb -2
 
-    # Floppy logging
+    # Floppy controller logging
     jz  [config_log_fdc], fdc_data_write_after_log_fdc
 
     add [rb + value], 0, [rb - 1]
@@ -671,7 +671,7 @@ fsm_r_invalid:
     add 0, 0, [fdc_cmd_state]
 
 fsm_r_done:
-    # Floppy logging
+    # Floppy controller logging
     jz  [config_log_fdc], fdc_data_read_after_log_fdc
 
     add [rb + value], 0, [rb - 1]

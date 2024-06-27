@@ -74,7 +74,7 @@ dma_receive_data:
 .FRAME channel, src_addr, count; dst_addr, dst_delta, index, tmp
     arb -4
 
-    # Floppy logging
+    # Floppy controller logging
     jz  [config_log_fdc], dma_receive_data_after_log_fdc
     eq  [rb + channel], 0x02, [rb + tmp]
     jz  [rb + tmp], dma_receive_data_after_log_fdc
@@ -180,7 +180,7 @@ dma_mode_write:
 .FRAME addr, value; value_x8, channel, transfer_type, dma_mode, tmp
     arb -5
 
-    # Floppy logging
+    # Floppy controller logging
     jz  [config_log_fdc], dma_mode_write_after_log_fdc
     eq  [rb + channel], 0x02, [rb + tmp]
     jz  [rb + tmp], dma_mode_write_after_log_fdc
@@ -290,7 +290,7 @@ dma_status_read:
 ##########
 dma_master_reset_write:
 .FRAME addr, value;
-    # Floppy logging
+    # Floppy controller logging
     jz  [config_log_fdc], dma_master_reset_write_after_log_fdc
     call dma_master_reset_write_log_fdc
 
@@ -433,7 +433,7 @@ dma_address_ch2_write:
     # Add the value to the register
     add [dma_address_ch2], [rb + value], [dma_address_ch2]
 
-    # Floppy logging
+    # Floppy controller logging
     jz  [config_log_fdc], dma_address_ch2_write_after_log_fdc
     call dma_address_ch2_write_log_fdc
 
@@ -526,7 +526,7 @@ dma_count_ch2_write:
     # Add the value to the register
     add [dma_count_ch2], [rb + value], [dma_count_ch2]
 
-    # Floppy logging
+    # Floppy controller logging
     jz  [config_log_fdc], dma_count_ch2_write_after_log_fdc
     call dma_count_ch2_write_log_fdc
 
@@ -625,7 +625,7 @@ dma_page_ch1_write:
 ##########
 dma_page_ch2_write:
 .FRAME addr, value;
-    # Floppy logging
+    # Floppy controller logging
     jz  [config_log_fdc], dma_page_ch2_write_after_log_fdc
     call dma_page_ch2_write_log_fdc
 

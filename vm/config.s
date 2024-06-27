@@ -9,6 +9,7 @@
 .EXPORT config_log_cs_change
 .EXPORT config_log_dos
 .EXPORT config_log_fdc
+.EXPORT config_log_fdd
 .EXPORT config_log_int
 .EXPORT config_log_pic
 .EXPORT config_log_pit
@@ -69,6 +70,8 @@ config_log_cs_change:
 config_log_dos:
     db  0
 config_log_fdc:
+    db  0
+config_log_fdd:
     db  0
 config_log_int:
     db  0

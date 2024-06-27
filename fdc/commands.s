@@ -16,6 +16,9 @@
 .EXPORT fdc_exec_sense_drive_status
 .EXPORT fdc_exec_seek
 
+# From the config file
+.IMPORT config_log_fdd
+
 # From a linked binary
 .IMPORT fdc_activity_callback
 
@@ -74,10 +77,19 @@
 # From util/bits.s
 .IMPORT bits
 
+# From util/log.s
+.IMPORT log_start
+
+# From libxib.a
+.IMPORT print_str
+.IMPORT print_num
+
 ##########
 fdc_exec_read_data:
-.FRAME cylinders, heads, sectors, sectors_eot, addr_c, addr_s, tmp
+.FRAME heads, sectors, sectors_eot, dma_count, addr_c, addr_s, tmp
     arb -7
+
+    add [dma_count_ch2], 0, [rb + dma_count]
 
     # Prepare base value for ST0
     mul [fdc_cmd_head], 0b00000100, [fdc_cmd_st0]
@@ -206,6 +218,13 @@ fdc_exec_read_data_all_data_read:
     add 0, 0, [fdc_cmd_st1]
     add 0, 0, [fdc_cmd_st2]
 
+    # Floppy disk logging
+    jz  [config_log_fdd], fdc_exec_read_data_terminated
+
+    add [rb + dma_count], 0, [rb - 1]
+    arb -1
+    call fdc_exec_read_data_log
+
     jz  0, fdc_exec_read_data_terminated
 
 fdc_exec_read_data_no_dma:
@@ -214,6 +233,13 @@ fdc_exec_read_data_no_dma:
     add 0b01000000, [fdc_cmd_st0], [fdc_cmd_st0]
     add 0, 0, [fdc_cmd_st1]
     add 0, 0, [fdc_cmd_st2]
+
+    # Floppy disk logging
+    jz  [config_log_fdd], fdc_exec_read_data_terminated
+
+    add [rb + dma_count], 0, [rb - 1]
+    arb -1
+    call fdc_exec_read_data_log
 
     jz  0, fdc_exec_read_data_terminated
 
@@ -226,6 +252,14 @@ fdc_exec_read_data_bad_input:
     add 0b10000100, 0, [fdc_cmd_st1]
     add 0, 0, [fdc_cmd_st2]
 
+    # Floppy disk logging
+    jz  [config_log_fdd], fdc_exec_read_data_bad_input_after_log
+
+    add [rb + dma_count], 0, [rb - 1]
+    arb -1
+    call fdc_exec_read_data_log
+
+fdc_exec_read_data_bad_input_after_log:
     # Zero out cylinder, head and sector
     add 0, 0, [fdc_cmd_cylinder]
     add 0, 0, [fdc_cmd_head]
@@ -240,6 +274,14 @@ fdc_exec_read_data_no_floppy:
     add 0b00000101, 0, [fdc_cmd_st1]
     add 0, 0, [fdc_cmd_st2]
 
+    # Floppy disk logging
+    jz  [config_log_fdd], fdc_exec_read_data_no_floppy_after_log
+
+    add [rb + dma_count], 0, [rb - 1]
+    arb -1
+    call fdc_exec_read_data_log
+
+fdc_exec_read_data_no_floppy_after_log:
     # Zero out cylinder, head and sector
     add 0, 0, [fdc_cmd_cylinder]
     add 0, 0, [fdc_cmd_head]
@@ -262,6 +304,86 @@ fdc_exec_read_data_after_irq:
 
     arb 7
     ret 0
+.ENDFRAME
+
+##########
+fdc_exec_read_data_log:
+.FRAME dma_count; tmp
+    arb -1
+
+    call log_start
+
+    add fdc_exec_read_data_log_start, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    lt  [fdc_cmd_st0], 64, [rb + tmp]
+    add fdc_exec_read_data_log_result, [rb + tmp], [ip + 1]
+    add [0], 0, [rb - 1]
+    arb -1
+    call print_str
+
+    out ' '
+    out 'C'
+    add [fdc_cmd_cylinder], 0, [rb - 1]
+    arb -1
+    call print_num
+
+    out ' '
+    out 'H'
+    add [fdc_cmd_head], 0, [rb - 1]
+    arb -1
+    call print_num
+
+    out ' '
+    out 'S'
+    add [fdc_cmd_sector], 0, [rb - 1]
+    arb -1
+    call print_num
+
+    jz  [fdc_cmd_multi_track], fdc_exec_read_data_log_no_mt
+
+    add fdc_exec_read_data_log_mt, 0, [rb - 1]
+    arb -1
+    call print_str
+
+fdc_exec_read_data_log_no_mt:
+    add fdc_exec_read_data_log_cnt_f, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [rb + dma_count], 1, [rb - 1]
+    arb -1
+    call print_num
+
+    add fdc_exec_read_data_log_cnt_t, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [dma_count_ch2], 1, [rb - 1]
+    arb -1
+    call print_num
+
+    out 10
+
+    arb 1
+    ret 1
+
+fdc_exec_read_data_log_start:
+    db  "fdd read data: ", 0
+fdc_exec_read_data_log_mt:
+    db  ", multi-track", 0
+fdc_exec_read_data_log_cnt_f:
+    db  ", bytes ", 0
+fdc_exec_read_data_log_cnt_t:
+    db  " -> ", 0
+fdc_exec_read_data_log_result:
+    db  fdc_exec_read_data_log_failure
+    db  fdc_exec_read_data_log_success
+fdc_exec_read_data_log_failure:
+    db  "FAILURE", 0
+fdc_exec_read_data_log_success:
+    db  "SUCCESS", 0
 .ENDFRAME
 
 ##########
