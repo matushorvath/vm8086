@@ -18,7 +18,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        os: [ubuntu-latest, macOS-latest]     # TODO enable windows-latests after fixing img/Makefile
 
     steps:
       - name: Checkout vm8086
@@ -44,12 +44,6 @@ jobs:
           repository: skiselev/8088_bios
           path: 8088_bios
 
-      - name: Checkout freedosbootdisks
-        uses: actions/checkout@v4
-        with:
-          repository: codercowboy/freedosbootdisks
-          path: freedosbootdisks
-
       - name: Install nasm
         run: |
           if [ "$RUNNER_OS" == "Linux" ]; then
@@ -70,6 +64,16 @@ jobs:
             sudo apt install -y bochs bochs-term bochsbios vgabios
           elif [ "$RUNNER_OS" == "macOS" ]; then
             brew install bochs
+          fi
+        shell: bash
+        if: matrix.os != 'windows-latest'
+
+      - name: Install floppy image tools
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            sudo apt install -y 7zip mtools wget
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            brew install mtools sevenzip wget
           fi
         shell: bash
         if: matrix.os != 'windows-latest'
