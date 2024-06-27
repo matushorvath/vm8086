@@ -2,6 +2,7 @@
 /img/*.7z
 /img/*.img
 /img/*.xz
+/img/*.zip
 /img/NC
 /monitor/node_modules
 /obj

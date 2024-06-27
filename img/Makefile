@@ -4,10 +4,10 @@
 build: freedos msdos
 
 .PHONY: freedos
-freedos: freedos.img freedos-nc.img #freedos-av.img
+freedos: freedos.img freedos-nc.img freedos-av.img
 
 .PHONY: msdos
-msdos: msdos.img msdos-nc.img #msdos-av.img
+msdos: msdos.img msdos-nc.img msdos-av.img
 
 # https://github.com/codercowboy/freedosbootdisks
 freedos.img.xz:
@@ -27,6 +27,10 @@ msdos.img: msdos.7z
 nc.7z:
 	wget 'https://vetusware.com/output/obxyytfl/Norton%20Commander%203.0%20(1989).7z' -O $@
 
+# https://dosgames.com/game/arcade-volleyball/
+av.zip:
+	wget 'https://dosgames.com/files/av.zip' -O $@
+
 %-nc.img: %.img nc.7z autoexec-nc.bat nc.ini
 	rm -rf NC
 	mkdir -p NC
@@ -37,10 +41,19 @@ nc.7z:
 	mcopy -D o -i $@ autoexec-nc.bat ::AUTOEXEC.BAT
 	mcopy -D o -i $@ nc.ini ::NC/NC.INI
 
+%-av.img: %.img av.zip autoexec-av.bat
+	rm -rf AV
+	mkdir -p AV
+	7zz -y x av.zip -oAV
+	cp $< $@
+	mcopy -D o -i $@ AV ::AV
+	rm -rf AV
+	mcopy -D o -i $@ autoexec-av.bat ::AUTOEXEC.BAT
+
 .PHONY: clean
 clean:
 	rm -rf *.img NC
 
 .PHONY: very-clean
 very-clean: clean
-	rm -rf *.7z *.xz
+	rm -rf *.7z *.xz *.zip
