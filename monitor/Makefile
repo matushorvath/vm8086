@@ -8,4 +8,7 @@ build-js:
 
 .PHONY: clean
 clean:
+
+.PHONY: very-clean
+very-clean: clean
 	rm -rf node_modules

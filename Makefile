@@ -4,7 +4,7 @@ include intcode.mk
 BINDIR ?= bin
 OBJDIR ?= obj
 
-SRCDIRS = cga cpu dev fdc util test-cga vm
+SRCDIRS = cga cpu dev fdc img util test-cga vm
 TOOLSDIR = monitor
 TESTDIRS = test-bochs test-cpu
 
@@ -69,3 +69,12 @@ clean: $(CLEAN_TARGETS)
 .PHONY: $(CLEAN_TARGETS)
 $(CLEAN_TARGETS):
 	make -C $(patsubst clean-%,%,$@) clean
+
+VERY_CLEAN_TARGETS = very-clean-img very-clean-monitor
+
+.PHONY: very-clean
+very-clean: clean $(VERY_CLEAN_TARGETS)
+
+.PHONY: $(VERY_CLEAN_TARGETS)
+$(VERY_CLEAN_TARGETS):
+	make -C $(patsubst very-clean-%,%,$@) very-clean

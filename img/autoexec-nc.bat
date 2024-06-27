@@ -1,0 +1,3 @@
+@ECHO OFF
+
+A:\NC\NC.EXE

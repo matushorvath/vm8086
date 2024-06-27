@@ -5,7 +5,7 @@ vga: extension=none
 
 display_library: term
 
-floppya: 1_44="../img/freedos.img", status=inserted
+floppya: 1_44="../img/freedos-nc.img", status=inserted
 boot: floppy
 
 display_library: sdl2
