@@ -1,11 +1,11 @@
-# bochs -q -f bochsrc.freedos
+# bochs -q -f bochsrc.freedos-nc
 
 romimage: file=$BXSHARE/BIOS-bochs-legacy
 vga: extension=none
 
 display_library: term
 
-floppya: 1_44="../img/freedos-nc.img", status=inserted
+floppya: 1_44="../../freedos-nc.img", status=inserted
 boot: floppy
 
 display_library: sdl2

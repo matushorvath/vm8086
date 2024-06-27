@@ -14,7 +14,7 @@ build: $(SRCDIRS)
 
 .PHONY: $(SRCDIRS)
 $(SRCDIRS):
-	make -C $@
+	make -C $@ build
 
 .PHONY: run
 run: build
