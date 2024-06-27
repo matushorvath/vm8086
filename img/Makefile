@@ -4,10 +4,10 @@
 build: freedos msdos
 
 .PHONY: freedos
-freedos: freedos.img freedos-nc.img freedos-av.img
+freedos: freedos.img freedos-nc.img freedos-av.img freedos-prince.img
 
 .PHONY: msdos
-msdos: msdos.img msdos-nc.img msdos-av.img
+msdos: msdos.img msdos-nc.img msdos-av.img msdos-prince.img
 
 # https://github.com/codercowboy/freedosbootdisks
 freedos.img.xz:
@@ -31,12 +31,16 @@ nc.7z:
 av.zip:
 	wget 'https://d1.myabandonware.com/t/9a940346-4a81-4a7a-b160-64562bdfc499/Arcade-Volleyball_DOS_EN.zip' -O $@
 
+# https://www.myabandonware.com/game/arcade-volleyball-1on
+prince.zip:
+	wget 'https://d1.myabandonware.com/t/efeb5e68-9ad4-4179-9479-ebd86f0c68da/Prince-of-Persia_DOS_EN_v14.zip' -O $@
+
 %-nc.img: %.img nc.7z autoexec-nc.bat nc.ini
 	rm -rf NC
 	mkdir -p NC
 	7zz -y x nc.7z -oNC
 	cp $< $@
-	mcopy -D o -i $@ NC ::NC
+	mcopy -D o -s -i $@ NC ::NC
 	rm -rf NC
 	mcopy -D o -i $@ autoexec-nc.bat ::AUTOEXEC.BAT
 	mcopy -D o -i $@ nc.ini ::NC/NC.INI
@@ -46,13 +50,23 @@ av.zip:
 	mkdir -p AV
 	7zz -y x av.zip -oAV
 	cp $< $@
-	mcopy -D o -i $@ AV ::AV
+	mcopy -D o -s -i $@ AV ::AV
 	rm -rf AV
 	mcopy -D o -i $@ autoexec-av.bat ::AUTOEXEC.BAT
 
+%-prince.img: %.img prince.zip autoexec-prince.bat
+	rm -rf PRINCE PRINCE.tmp
+	mkdir -p PRINCE.tmp
+	7zz -y x prince.zip -oPRINCE.tmp
+	mv PRINCE.tmp/PoP1_4 PRINCE
+	cp $< $@
+	mcopy -D o -s -i $@ PRINCE ::PRINCE
+	rm -rf PRINCE PRINCE.tmp
+	mcopy -D o -i $@ autoexec-prince.bat ::AUTOEXEC.BAT
+
 .PHONY: clean
 clean:
-	rm -rf *.img NC
+	rm -rf *.img AV NC PRINCE PRINCE.tmp
 
 .PHONY: very-clean
 very-clean: clean

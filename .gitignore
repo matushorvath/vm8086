@@ -3,7 +3,9 @@
 /img/*.img
 /img/*.xz
 /img/*.zip
+/img/AV
 /img/NC
+/img/PRINCE
 /monitor/node_modules
 /obj
 /test-bochs/*/bin
