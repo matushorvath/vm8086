@@ -263,3 +263,37 @@ in DOS log, search EXEC
 (20ce:0006) CS changed
 
 20ce:0006 only has 00 bytes until 20ce:01ec
+
+Keyboard
+========
+
+https://en.wikipedia.org/wiki/ANSI_escape_code
+
+type 0Ft
+
+ESC SP F:
+    ACS6 Announce Code Structure 6
+    S7C1T Send 7-bit C1 Control Character to the Host
+    Makes the function keys send ESC + letter instead of 8-bit C1 codes.
+ESC SP G:
+    ACS7 Announce Code Structure 7
+    S8C1T Send 8-bit C1 Control Character to the Host
+    Makes the function keys send 8-bit C1 codes.
+
+Terminal input sequences
+
+non-blocking input options:
+ - modify ICVM
+    - address 0: arb 0 will enable extensions, write IC version to address 0 for one cycle only
+    - add a FEATURE instruction, param feature_id, returns version, 0=feature unsupported
+       - perhaps feature id = instruction opcode? return also for standard instructions?
+    - other options:
+       - jnz 0, 0
+       - jz [0], [0]
+       - eq 0, 1, [2] write to address 3
+    - add non-blocking IN instruction
+       - return e.g. -1 if no character available
+    - don't forget that instructions < 100
+ - pre-filter: read stdin, respond to reads on stdout
+    - needs to be synchronous, only generate on stdout if there is a request, avoid buffering - can that be done?
+ - think about fallbacks - running with standard ICVM (disable keyboard?), running without filter (how to even detect that?)
