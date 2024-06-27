@@ -11,7 +11,11 @@ else
 	BIOS_ADDRESS ?= fc000
 endif
 
-FLOPPY_BIN ?= $(abspath $(VMDIR)/../freedosbootdisks/bootdisks/freedos.boot.disk.1.4MB.img)
+ifeq ($(FLOPPY),nc)
+	FLOPPY_BIN ?= $(abspath $(VMDIR)/../freedos.nc.img)
+else
+	FLOPPY_BIN ?= $(abspath $(VMDIR)/../freedosbootdisks/bootdisks/freedos.boot.disk.1.4MB.img)
+endif
 
 BINDIR ?= $(VMDIR)/bin
 OBJDIR ?= $(VMDIR)/obj/vm
