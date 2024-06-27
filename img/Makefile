@@ -27,9 +27,9 @@ msdos.img: msdos.7z
 nc.7z:
 	wget 'https://vetusware.com/output/obxyytfl/Norton%20Commander%203.0%20(1989).7z' -O $@
 
-# https://dosgames.com/game/arcade-volleyball/
+# https://www.myabandonware.com/game/arcade-volleyball-1on
 av.zip:
-	wget 'https://dosgames.com/files/av.zip' -O $@
+	wget 'https://d1.myabandonware.com/t/9a940346-4a81-4a7a-b160-64562bdfc499/Arcade-Volleyball_DOS_EN.zip' -O $@
 
 %-nc.img: %.img nc.7z autoexec-nc.bat nc.ini
 	rm -rf NC
