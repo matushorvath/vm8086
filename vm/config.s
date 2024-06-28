@@ -7,6 +7,8 @@
 .EXPORT config_boot_80x25
 .EXPORT config_color_mode
 
+.EXPORT config_log_cga_debug
+.EXPORT config_log_cga_trace
 .EXPORT config_log_cs_change
 .EXPORT config_log_dos
 .EXPORT config_log_fdc
@@ -70,6 +72,10 @@ config_color_mode:
     db  1
 
 # Logging configuration
+config_log_cga_debug:
+    db  1
+config_log_cga_trace:
+    db  0
 config_log_cs_change:
     db  0
 config_log_dos:
