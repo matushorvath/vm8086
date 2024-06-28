@@ -48,6 +48,8 @@ write_memory_text:
 .FRAME addr, value; row, col, col_x8, char, attr, addr_lo, addr_hi, tmp
     arb -8
 
+    # TODO don't draw if mode_enable_output is 0; redraw whole screen after enabling output
+
     # Is this inside the screen area?
     # TODO use start address of the screen buffer
     lt  [rb + addr], [screen_page_size], [rb + tmp]
