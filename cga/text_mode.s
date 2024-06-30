@@ -63,7 +63,7 @@ write_memory_text:
     add [rb - 3], 0, [rb + addr_lo]
     add [rb - 4], 0, [rb + addr_hi]
 
-    # Divide the address 80 or 160, depending on screen row size. We first divide by either
+    # Divide the address by 80 or 160, depending on screen row size. We first divide by either
     # 2^4 or 2^5 using shift operations, then use the div5/mod5 tables to divide by 5.
     #
     # 0 1 2 3 4 5 6 7   0 1 2 3 4 5 6 7

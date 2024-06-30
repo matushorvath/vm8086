@@ -153,6 +153,7 @@ color_control_write:
     add bits, [rb + tmp], [rb + value_bits]
 
     # Store selected color
+    # TODO use color_selected
     add [rb + value_bits], 3, [ip + 1]
     add [0], 0, [color_selected]
     mul [color_selected], 2, [color_selected]

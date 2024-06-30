@@ -73,7 +73,7 @@ config_color_mode:
 
 # Logging configuration
 config_log_cga_debug:
-    db  1
+    db  0
 config_log_cga_trace:
     db  0
 config_log_cs_change:
