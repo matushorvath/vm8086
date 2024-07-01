@@ -17,6 +17,12 @@
 ##########
 reset_screen:
 .FRAME
+    # Clear the terminal
+    out 0x1b
+    out '['
+    out '2'
+    out 'J'
+
     # Set screen parameters based on register values
     jz  [mode_graphics], reset_screen_text
 
