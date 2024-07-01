@@ -1,4 +1,9 @@
 # apt install 7zip mtools wget
+#
+# download:
+#  - https://vetusware.com/download/Norton%20Commander%203.0%203.0 -> nc.7z
+#  = https://www.myabandonware.com/game/arcade-volleyball-1on -> av.zip
+#  - https://www.myabandonware.com/game/prince-of-persia-pd -> prince.zip
 
 .PHONY: build-all
 build-all: freedos msdos
@@ -25,19 +30,6 @@ msdos.7z:
 
 msdos.img: msdos.7z
 	7zz -y e $< -r Disk1.img -so > $@
-
-# https://vetusware.com/download/Norton%20Commander%203.0%203.0
-# TODO the URL expires after a few minutes, fix the download
-nc.7z:
-	wget 'https://vetusware.com/output/obxyytfl/Norton%20Commander%203.0%20(1989).7z' -O $@
-
-# https://www.myabandonware.com/game/arcade-volleyball-1on
-av.zip:
-	wget 'https://d1.myabandonware.com/t/9a940346-4a81-4a7a-b160-64562bdfc499/Arcade-Volleyball_DOS_EN.zip' -O $@
-
-# https://www.myabandonware.com/game/prince-of-persia-pd
-prince.zip:
-	wget 'https://d1.myabandonware.com/t/c63d21af-617b-49dc-8790-2c0111674002/Prince-of-Persia_DOS_EN_v10.zip' -O $@
 
 %-nc.img: %.img nc.7z autoexec-nc.bat nc.ini
 	rm -rf NC
