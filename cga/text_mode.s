@@ -1,18 +1,13 @@
 .EXPORT write_memory_text
 
-# From the config file
-.IMPORT config_color_mode
-
 # From cp437.s
 .IMPORT cp437_0
 .IMPORT cp437_1
 .IMPORT cp437_2
 
 # From text_palette.s
-.IMPORT palette_4b_text_fg
-.IMPORT palette_4b_text_bg_ptr
-.IMPORT palette_24b_text_fg
-.IMPORT palette_24b_text_bg_ptr
+.IMPORT palette_text_fg
+.IMPORT palette_text_bg_ptr
 
 # From screen.s
 .IMPORT screen_page_size
@@ -160,30 +155,7 @@ write_memory_text_print:
     out 0x1b
     out '['
 
-    # Should we use 24-bit terminal colors?
-    jnz [config_color_mode], write_memory_text_24b
-
-    # No, use 4-bit terminal colors
-    add nibble_0, [rb + attr], [ip + 1]
-    add [0], palette_4b_text_fg, [ip + 1]
-    add [0], 0, [rb - 1]
-    arb -1
-    call printb
-
-    out ';'
-
-    add nibble_1, [rb + attr], [ip + 1]
-    add [0], [palette_4b_text_bg_ptr], [ip + 1]
-    add [0], 0, [rb - 1]
-    arb -1
-    call printb
-
-    out 'm'
-
-    jz  0, write_memory_text_after_color
-
-write_memory_text_24b:
-    # Use 24-bit terminal colors
+    # Set foreground and background color
     out '3'
     out '8'
     out ';'
@@ -193,19 +165,19 @@ write_memory_text_24b:
     add nibble_0, [rb + attr], [ip + 1]
     mul [0], 3, [rb + tmp]
 
-    add palette_24b_text_fg + 0, [rb + tmp], [ip + 1]
+    add palette_text_fg + 0, [rb + tmp], [ip + 1]
     add [0], 0, [rb - 1]
     arb -1
     call printb
     out ';'
 
-    add palette_24b_text_fg + 1, [rb + tmp], [ip + 1]
+    add palette_text_fg + 1, [rb + tmp], [ip + 1]
     add [0], 0, [rb - 1]
     arb -1
     call printb
     out ';'
 
-    add palette_24b_text_fg + 2, [rb + tmp], [ip + 1]
+    add palette_text_fg + 2, [rb + tmp], [ip + 1]
     add [0], 0, [rb - 1]
     arb -1
     call printb
@@ -220,21 +192,21 @@ write_memory_text_24b:
     add nibble_1, [rb + attr], [ip + 1]
     mul [0], 3, [rb + tmp]
 
-    add [palette_24b_text_bg_ptr], [rb + tmp], [ip + 1]
+    add [palette_text_bg_ptr], [rb + tmp], [ip + 1]
     add [0], 0, [rb - 1]
     arb -1
     call printb
     out ';'
 
     add [rb + tmp], 1, [rb + tmp]
-    add [palette_24b_text_bg_ptr], [rb + tmp], [ip + 1]
+    add [palette_text_bg_ptr], [rb + tmp], [ip + 1]
     add [0], 0, [rb - 1]
     arb -1
     call printb
     out ';'
 
     add [rb + tmp], 1, [rb + tmp]
-    add [palette_24b_text_bg_ptr], [rb + tmp], [ip + 1]
+    add [palette_text_bg_ptr], [rb + tmp], [ip + 1]
     add [0], 0, [rb - 1]
     arb -1
     call printb
