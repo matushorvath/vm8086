@@ -57,6 +57,12 @@ init_cga:
     # Reset the screen
     call reset_screen
 
+    # Clear the terminal
+    out 0x1b
+    out '['
+    out '2'
+    out 'J'
+
     ret 0
 .ENDFRAME
 
