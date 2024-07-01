@@ -1,6 +1,13 @@
-/obj
 /bin
+/img/*.7z
+/img/*.img
+/img/*.xz
+/img/*.zip
+/img/AV
+/img/NC
+/img/PRINCE
 /monitor/node_modules
+/obj
 /test-bochs/*/bin
 /test-bochs/*/obj
 /test-bochs/*/res

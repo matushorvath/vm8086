@@ -297,3 +297,12 @@ non-blocking input options:
  - pre-filter: read stdin, respond to reads on stdout
     - needs to be synchronous, only generate on stdout if there is a request, avoid buffering - can that be done?
  - think about fallbacks - running with standard ICVM (disable keyboard?), running without filter (how to even detect that?)
+
+GLaBIOS
+=======
+
+f000:e0c2 end of BIOS checksum
+f000:e0e9 PIT test LOOP	INIT_PIT1_TEST
+it keeps looping forever
+because it's trying to test PIT channel 1 and we don't have it
+if DRAM_REFRESH <= 0 it will instead use channel 0

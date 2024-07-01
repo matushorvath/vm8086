@@ -101,7 +101,7 @@ interrupt:
     call interrupt_log_int
 
 interrupt_after_log_int:
-    # Floppy logging
+    # Floppy controller logging
     jz  [config_log_fdc], interrupt_after_log_fdc
 
     eq  [rb + type], 0x13, [rb + tmp]

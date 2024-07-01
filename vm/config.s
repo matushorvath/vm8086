@@ -5,10 +5,14 @@
 .EXPORT config_bcd_as_bochs
 .EXPORT config_de_fault_as_286
 .EXPORT config_boot_80x25
+.EXPORT config_color_mode
 
+.EXPORT config_log_cga_debug
+.EXPORT config_log_cga_trace
 .EXPORT config_log_cs_change
 .EXPORT config_log_dos
 .EXPORT config_log_fdc
+.EXPORT config_log_fdd
 .EXPORT config_log_int
 .EXPORT config_log_pic
 .EXPORT config_log_pit
@@ -63,12 +67,22 @@ config_de_fault_as_286:
 config_boot_80x25:
     db  1
 
+# Terminal color setting mechanism: 0 = 4-bit colors, 1=24-bit colors
+config_color_mode:
+    db  1
+
 # Logging configuration
+config_log_cga_debug:
+    db  0
+config_log_cga_trace:
+    db  0
 config_log_cs_change:
     db  0
 config_log_dos:
     db  0
 config_log_fdc:
+    db  0
+config_log_fdd:
     db  0
 config_log_int:
     db  0

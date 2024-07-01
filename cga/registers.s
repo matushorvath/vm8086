@@ -18,21 +18,40 @@
 .EXPORT color_bright
 .EXPORT color_palette
 
+# From the config file
+.IMPORT config_log_cga_debug
+.IMPORT config_log_cga_trace
+
+# From log.s
+.IMPORT mc6845_address_read_log
+.IMPORT mc6845_address_write_log
+
+.IMPORT mc6845_data_read_log
+.IMPORT mc6845_data_write_log
+
+.IMPORT mode_control_write_log
+.IMPORT color_control_write_log
+.IMPORT status_read_log
+
 # From screen.s
 .IMPORT reset_screen
 
 # From util/bits.s
 .IMPORT bits
 
-# From libxib.a
-.IMPORT print_num_radix
-.IMPORT print_str
-
 ##########
 mc6845_address_read:
 .FRAME port; value                      # returns value
     arb -1
 
+    # CGA logging
+    jz  [config_log_cga_trace], mc6845_address_read_after_log
+
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call mc6845_address_read_log
+
+mc6845_address_read_after_log:
     arb 1
     ret 1
 .ENDFRAME
@@ -40,6 +59,14 @@ mc6845_address_read:
 ##########
 mc6845_address_write:
 .FRAME addr, value;
+    # CGA logging
+    jz  [config_log_cga_trace], mc6845_address_write_after_log
+
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call mc6845_address_write_log
+
+mc6845_address_write_after_log:
     ret 2
 .ENDFRAME
 
@@ -48,6 +75,14 @@ mc6845_data_read:
 .FRAME port; value                      # returns value
     arb -1
 
+    # CGA logging
+    jz  [config_log_cga_trace], mc6845_data_read_after_log
+
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call mc6845_data_read_log
+
+mc6845_data_read_after_log:
     arb 1
     ret 1
 .ENDFRAME
@@ -55,6 +90,14 @@ mc6845_data_read:
 ##########
 mc6845_data_write:
 .FRAME addr, value;
+    # CGA logging
+    jz  [config_log_cga_trace], mc6845_data_write_after_log
+
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call mc6845_data_write_log
+
+mc6845_data_write_after_log:
     ret 2
 .ENDFRAME
 
@@ -88,6 +131,14 @@ mode_control_write:
 
     call reset_screen
 
+    # CGA logging
+    jz  [config_log_cga_debug], mode_control_write_after_log
+
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call mode_control_write_log
+
+mode_control_write_after_log:
     arb 2
     ret 2
 .ENDFRAME
@@ -102,6 +153,7 @@ color_control_write:
     add bits, [rb + tmp], [rb + value_bits]
 
     # Store selected color
+    # TODO use color_selected
     add [rb + value_bits], 3, [ip + 1]
     add [0], 0, [color_selected]
     mul [color_selected], 2, [color_selected]
@@ -126,6 +178,14 @@ color_control_write:
 
     call reset_screen
 
+    # CGA logging
+    jz  [config_log_cga_debug], color_control_write_after_log
+
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call color_control_write_log
+
+color_control_write_after_log:
     arb 2
     ret 2
 .ENDFRAME
@@ -161,131 +221,16 @@ status_read_after_horizontal:
 status_read_after_vertical:
     add [vertical_retrace_counter], -1, [vertical_retrace_counter]
 
+    # CGA logging
+    jz  [config_log_cga_trace], status_read_after_log
+
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call status_read_log
+
+status_read_after_log:
     arb 1
     ret 1
-.ENDFRAME
-
-##########
-dump_cga_state:                         # TODO remove
-.FRAME
-    add dump_cga_state_separator, 0, [rb - 1]
-    arb -1
-    call print_str
-
-    add dump_cga_state_high_res_text, 0, [rb - 1]
-    arb -1
-    call print_str
-
-    add [mode_high_res_text], 0, [rb - 1]
-    add 10, 0, [rb - 2]
-    add 0, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-
-    add dump_cga_state_graphics, 0, [rb - 1]
-    arb -1
-    call print_str
-
-    add [mode_graphics], 0, [rb - 1]
-    add 10, 0, [rb - 2]
-    add 0, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-
-    add dump_cga_state_back_and_white, 0, [rb - 1]
-    arb -1
-    call print_str
-
-    add [mode_back_and_white], 0, [rb - 1]
-    add 10, 0, [rb - 2]
-    add 0, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-
-    add dump_cga_state_enable_output, 0, [rb - 1]
-    arb -1
-    call print_str
-
-    add [mode_enable_output], 0, [rb - 1]
-    add 10, 0, [rb - 2]
-    add 0, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-
-    add dump_cga_state_high_res_graphics, 0, [rb - 1]
-    arb -1
-    call print_str
-
-    add [mode_high_res_graphics], 0, [rb - 1]
-    add 10, 0, [rb - 2]
-    add 0, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-
-    add dump_cga_state_blinking, 0, [rb - 1]
-    arb -1
-    call print_str
-
-    add [mode_not_blinking], 0, [rb - 1]
-    add 10, 0, [rb - 2]
-    add 0, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-
-    add dump_cga_state_color_selected, 0, [rb - 1]
-    arb -1
-    call print_str
-
-    add [color_selected], 0, [rb - 1]
-    add 10, 0, [rb - 2]
-    add 0, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-
-    add dump_cga_state_bright, 0, [rb - 1]
-    arb -1
-    call print_str
-
-    add [color_bright], 0, [rb - 1]
-    add 10, 0, [rb - 2]
-    add 0, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-
-    add dump_cga_state_palette, 0, [rb - 1]
-    arb -1
-    call print_str
-
-    add [color_palette], 0, [rb - 1]
-    add 10, 0, [rb - 2]
-    add 0, 0, [rb - 3]
-    arb -3
-    call print_num_radix
-
-    out 10
-
-    ret 0
-
-dump_cga_state_separator:
-    db  "----------", 0
-dump_cga_state_high_res_text:
-    db  10, "high res text: ", 0
-dump_cga_state_graphics:
-    db  10, "graphics: ", 0
-dump_cga_state_back_and_white:
-    db  10, "black and white: ", 0
-dump_cga_state_enable_output:
-    db  10, "enable output: ", 0
-dump_cga_state_high_res_graphics:
-    db  10, "high res graphics: ", 0
-dump_cga_state_blinking:
-    db  10, "blinking: ", 0
-dump_cga_state_color_selected:
-    db  10, "selected: ", 0
-dump_cga_state_bright:
-    db  10, "bright: ", 0
-dump_cga_state_palette:
-    db  10, "palette: ", 0
 .ENDFRAME
 
 ##########

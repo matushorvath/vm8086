@@ -44,12 +44,6 @@ jobs:
           repository: skiselev/8088_bios
           path: 8088_bios
 
-      - name: Checkout freedosbootdisks
-        uses: actions/checkout@v4
-        with:
-          repository: codercowboy/freedosbootdisks
-          path: freedosbootdisks
-
       - name: Install nasm
         run: |
           if [ "$RUNNER_OS" == "Linux" ]; then
