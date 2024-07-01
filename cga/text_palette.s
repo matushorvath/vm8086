@@ -10,12 +10,12 @@
 reinitialize_text_palette:
 .FRAME
     # Select background palette
-    add reinitialize_palette_data, [mode_not_blinking], [ip + 1]
+    add reinitialize_text_palette_data, [mode_not_blinking], [ip + 1]
     add [0], 0, [palette_text_bg_ptr]
 
     ret 0
 
-reinitialize_palette_data:
+reinitialize_text_palette_data:
     db  palette_text_bg_blink
     db  palette_text_bg_light
 .ENDFRAME
@@ -25,7 +25,7 @@ palette_text_bg_ptr:
     db  palette_text_bg_light
 
 ##########
-# 24-bit color palettes; may not be supported by all terminals, but the colors are exact
+# 24-bit color palettes
 
 palette_text_fg:
 palette_text_bg_light:

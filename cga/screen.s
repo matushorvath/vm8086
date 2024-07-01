@@ -2,6 +2,9 @@
 .EXPORT screen_page_size
 .EXPORT screen_row_size_160
 
+# From graphics_palette.s
+.IMPORT reinitialize_graphics_palette
+
 # From text_palette.s
 .IMPORT reinitialize_text_palette
 
@@ -13,6 +16,9 @@
 
 # From status.s
 .IMPORT redraw_vm_status
+
+# From util/error.s
+.IMPORT report_error
 
 ##########
 reset_screen:
@@ -32,6 +38,12 @@ reset_screen:
     # Page size is 200 rows * 80 bytes per row = 16000 bytes
     add 16000, 0, [screen_page_size]
 
+    # TODO no support for 640x200 yet
+    jnz [mode_high_res_graphics], reset_screen_hires_not_supported
+
+    # Initialize the palette for low resolution graphics mode
+    call reinitialize_graphics_palette
+
     jz  0, reset_screen_redraw_memory
 
 reset_screen_text:
@@ -42,7 +54,7 @@ reset_screen_text:
     add [mode_high_res_text], 1, [screen_page_size]
     mul [screen_page_size], 2000, [screen_page_size]
 
-    # Palette for background
+    # Initialize the palette for text mode
     call reinitialize_text_palette
 
 reset_screen_redraw_memory:
@@ -56,6 +68,14 @@ reset_screen_redraw_vm_status:
     call redraw_vm_status
 
     ret 0
+
+reset_screen_hires_not_supported:
+    add reset_screen_hires_not_supported_msg, 0, [rb - 1]
+    arb -1
+    call report_error
+
+reset_screen_hires_not_supported_msg:
+    db  "cga: high res graphics is not supported", 0
 .ENDFRAME
 
 ##########
