@@ -129,6 +129,7 @@ mode_control_write:
     add [rb + value_bits], 5, [ip + 1]
     add [0], 0, [mode_not_blinking]
 
+    # TODO don't reset the terminal unless it's needed, it breaks nc in pcxtbios
     call reset_screen
 
     # CGA logging
@@ -176,6 +177,7 @@ color_control_write:
     add [rb + value_bits], 5, [ip + 1]
     add [0], 0, [color_palette]
 
+    # TODO don't reset the terminal unless it's needed, it breaks nc in pcxtbios
     call reset_screen
 
     # CGA logging
