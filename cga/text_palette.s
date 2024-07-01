@@ -1,4 +1,4 @@
-.EXPORT reinitialize_palette
+.EXPORT reinitialize_text_palette
 
 .EXPORT palette_4b_text_fg
 .EXPORT palette_4b_text_bg_ptr
@@ -12,7 +12,7 @@
 .IMPORT mode_not_blinking
 
 ##########
-reinitialize_palette:
+reinitialize_text_palette:
 .FRAME
     # Select background palette based on CGA mode and terminal features
     jnz [config_color_mode], reinitialize_palette_24b

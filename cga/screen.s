@@ -2,8 +2,8 @@
 .EXPORT screen_page_size
 .EXPORT screen_row_size_160
 
-# From palette.s
-.IMPORT reinitialize_palette
+# From text_palette.s
+.IMPORT reinitialize_text_palette
 
 # From registers.s
 .IMPORT mode_high_res_text
@@ -43,7 +43,7 @@ reset_screen_text:
     mul [screen_page_size], 2000, [screen_page_size]
 
     # Palette for background
-    call reinitialize_palette
+    call reinitialize_text_palette
 
 reset_screen_redraw_memory:
     # Don't redraw the memory if output is disabled

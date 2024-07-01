@@ -8,7 +8,7 @@
 .IMPORT cp437_1
 .IMPORT cp437_2
 
-# From palette.s
+# From text_palette.s
 .IMPORT palette_4b_text_fg
 .IMPORT palette_4b_text_bg_ptr
 .IMPORT palette_24b_text_fg
