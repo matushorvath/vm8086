@@ -23,6 +23,7 @@ freedos.img.xz:
 
 freedos.img: freedos.img.xz
 	xz -dkf $<
+	mdeltree -i $@ FSEVEN~1
 
 # https://winworldpc.com/product/ms-dos/331
 msdos.7z:
