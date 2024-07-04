@@ -10,7 +10,9 @@
 .IMPORT write_location_b
 
 # From util/bits.s
-.IMPORT bits
+.IMPORT bits_ng
+.IMPORT bit_0
+.IMPORT bit_7
 
 # From util/parity.s
 .IMPORT parity
@@ -31,16 +33,16 @@
 .IMPORT flag_overflow
 
 ##########
-.FRAME lseg, loff; val, val_bits, count, tmp
+.FRAME lseg, loff; val, count, tmp
     # Function with multiple entry points
 
 execute_shl_1_b:
-    arb -4
+    arb -3
     add 1, 0, [rb + count]
     jz  0, execute_shl_b
 
 execute_shl_cl_b:
-    arb -4
+    arb -3
     add [reg_cl], 0, [rb + count]
 
 execute_shl_b:
@@ -60,10 +62,6 @@ execute_shl_b:
     # If we are shifting by 0, use a simplified algorithm
     jz  [rb + count], execute_shl_b_zero
 
-    # Expand val to bits
-    mul [rb + val], 8, [rb + tmp]
-    add bits, [rb + tmp], [rb + val_bits]
-
     # If we are shifting by 8, use a simplified algorithm
     eq  [rb + count], 8, [rb + tmp]
     jnz [rb + tmp], execute_shl_b_eight
@@ -71,7 +69,10 @@ execute_shl_b:
     # Carry flag is the last bit shifted out
     mul [rb + count], -1, [rb + tmp]
     add 8, [rb + tmp], [rb + tmp]
-    add [rb + val_bits], [rb + tmp], [ip + 1]
+
+    # Get tmp-th bit of val
+    add bits_ng, [rb + tmp], [ip + 1]
+    add [0], [rb + val], [ip + 1]
     add [0], 0, [flag_carry]
 
     # Find shifted value in the shl table
@@ -102,7 +103,7 @@ execute_shl_b_zero:
 
 execute_shl_b_eight:
     # If we are shifting by 8, zero the value and use fixed flags except for CF
-    add [rb + val_bits], 0, [ip + 1]
+    add bit_0, [rb + val], [ip + 1]
     add [0], 0, [flag_carry]
 
     eq  [flag_carry], 1, [flag_overflow]
@@ -133,21 +134,21 @@ execute_shl_b_store:
     call write_location_b
 
 execute_shl_b_done:
-    arb 4
+    arb 3
     ret 2
 .ENDFRAME
 
 ##########
-.FRAME lseg, loff; val, val_bits, count, tmp
+.FRAME lseg, loff; val, count, tmp
     # Function with multiple entry points
 
 execute_shr_1_b:
-    arb -4
+    arb -3
     add 1, 0, [rb + count]
     jz  0, execute_shr_b
 
 execute_shr_cl_b:
-    arb -4
+    arb -3
     add [reg_cl], 0, [rb + count]
 
 execute_shr_b:
@@ -167,10 +168,6 @@ execute_shr_b:
     # If we are shifting by 0, use a simplified algorithm
     jz  [rb + count], execute_shr_b_zero
 
-    # Expand val to bits
-    mul [rb + val], 8, [rb + tmp]
-    add bits, [rb + tmp], [rb + val_bits]
-
     # If we are shifting by 8, use a simplified algorithm
     eq  [rb + count], 8, [rb + tmp]
     jnz [rb + tmp], execute_shr_b_eight
@@ -181,7 +178,10 @@ execute_shr_b:
 
     # Carry flag is the last bit shifted out
     add [rb + count], -1, [rb + tmp]
-    add [rb + val_bits], [rb + tmp], [ip + 1]
+
+    # Get tmp-th bit of val
+    add bits_ng, [rb + tmp], [ip + 1]
+    add [0], [rb + val], [ip + 1]
     add [0], 0, [flag_carry]
 
     # Find shifted value in the shr table
@@ -208,7 +208,7 @@ execute_shr_b_zero:
 
 execute_shr_b_eight:
     # If we are shifting by 8, zero the value and use fixed flags except for CF
-    add [rb + val_bits], 7, [ip + 1]
+    add bit_7, [rb + val], [ip + 1]
     add [0], 0, [flag_carry]
 
     eq  [flag_carry], 1, [flag_overflow]
@@ -239,21 +239,21 @@ execute_shr_b_store:
     call write_location_b
 
 execute_shr_b_done:
-    arb 4
+    arb 3
     ret 2
 .ENDFRAME
 
 ##########
-.FRAME lseg, loff; val, val_bits, count, tmp
+.FRAME lseg, loff; val, count, tmp
     # Function with multiple entry points
 
 execute_sar_1_b:
-    arb -4
+    arb -3
     add 1, 0, [rb + count]
     jz  0, execute_sar_b
 
 execute_sar_cl_b:
-    arb -4
+    arb -3
     add [reg_cl], 0, [rb + count]
 
 execute_sar_b:
@@ -276,17 +276,16 @@ execute_sar_b:
     lt  [rb + count], 9, [rb + tmp]
     jz  [rb + tmp], execute_sar_b_many
 
-    # Expand val to bits
-    mul [rb + val], 8, [rb + tmp]
-    add bits, [rb + tmp], [rb + val_bits]
-
     # If we are shifting by 8, use a simplified algorithm
     eq  [rb + count], 8, [rb + tmp]
     jnz [rb + tmp], execute_sar_b_eight
 
     # Carry flag is the last bit shifted out
     add [rb + count], -1, [rb + tmp]
-    add [rb + val_bits], [rb + tmp], [ip + 1]
+
+    # Get tmp-th bit of val
+    add bits_ng, [rb + tmp], [ip + 1]
+    add [0], [rb + val], [ip + 1]
     add [0], 0, [flag_carry]
 
     # Find shifted value in the sar table
@@ -320,7 +319,7 @@ execute_sar_b_zero:
 
 execute_sar_b_eight:
     # If we are shifting by 8, sign-fill the value and use fixed flags except for CF
-    add [rb + val_bits], 7, [ip + 1]
+    add bit_7, [rb + val], [ip + 1]
     add [0], 0, [flag_carry]
 
     add 0, 0, [flag_overflow]
@@ -349,7 +348,7 @@ execute_sar_b_store:
     call write_location_b
 
 execute_sar_b_done:
-    arb 4
+    arb 3
     ret 2
 .ENDFRAME
 
