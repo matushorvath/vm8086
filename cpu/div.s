@@ -20,7 +20,7 @@
 .IMPORT read_location_w
 
 # From util/bits.s
-.IMPORT bits
+.IMPORT bit_7
 
 # From prefix.s
 .IMPORT rep_prefix
@@ -424,8 +424,8 @@ execute_idiv_w_done:
 
 ##########
 divide:
-.FRAME byte, dvd3, dvd2, dvd1, dvd0, dvr; res, mod, bit, dvd_bits, dvr_neg, tmp                    # returns res, mod
-    arb -6
+.FRAME byte, dvd3, dvd2, dvd1, dvd0, dvr; res, mod, bit, bit_table, dvd_byte, dvr_neg, tmp          # returns res, mod
+    arb -7
 
     add 0, 0, [rb + res]
     add 0, 0, [rb + mod]
@@ -436,19 +436,20 @@ divide:
 divide_byte_loop:
     add [rb + byte], -1, [rb + byte]
 
-    # Convert byte-th byte of the dividend to bits
+    # Get byte-th byte of the dividend
     add dvd0, [rb + byte], [ip + 1]
-    mul [rb + 0], 8, [rb + tmp]
-    add bits, [rb + tmp], [rb + dvd_bits]
+    add [rb + 0], 0, [rb + dvd_byte]    # yes, [rb + 0] is correct
 
     add 8, 0, [rb + bit]
+    add bit_7, 0x100, [rb + bit_table]
 
 divide_bit_loop:
     add [rb + bit], -1, [rb + bit]
+    add [rb + bit_table], -0x100, [rb + bit_table]
 
     # Move one additional bit from dvd to mod
     mul [rb + mod], 2, [rb + mod]
-    add [rb + dvd_bits], [rb + bit], [ip + 1]
+    add [rb + bit_table], [rb + dvd_byte], [ip + 1]
     add [0], [rb + mod], [rb + mod]
 
     # Make space for one additional bit in the result
@@ -477,7 +478,7 @@ divide_does_not_go_in:
     jnz [rb + byte], divide_byte_loop
 
 divide_done:
-    arb 6
+    arb 7
     ret 6
 .ENDFRAME
 
