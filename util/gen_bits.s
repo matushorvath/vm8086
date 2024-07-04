@@ -1,195 +1,107 @@
 # Utility to generate bits.s
 
-.IMPORT print_num
-.IMPORT print_num_radix
-.IMPORT print_str
+# From generator.s
+.IMPORT gen_number_times
+.IMPORT pow_2
 
+.IMPORT gen_number_max
+.IMPORT gen_number_count
+
+# From libxib.a
+.IMPORT print_str
+.IMPORT print_num
+
+##########
     arb stack
 
-    add header, 0, [rb - 1]
+    add file_header, 0, [rb - 1]
     arb -1
     call print_str
 
-b7_loop:
-    b6_loop:
-        b5_loop:
-            b4_loop:
-                b3_loop:
-                    b2_loop:
-                        b1_loop:
-                            b0_loop:
-                                # Print line start
-                                add line_start, 0, [rb - 1]
-                                arb -1
-                                call print_str
+    add 0, 0, [bit_index]
 
-                                # Print the bits like '0, 0, 0, 0, 0, 0, 0, 0'
-                                add [b0], 0, [rb - 1]
-                                arb -1
-                                call print_num
+bit_loop:
+    # Bit header
+    add bit_header, 0, [rb - 1]
+    arb -1
+    call print_str
 
-                                out ','
-                                out ' '
+    add [bit_index], 0, [rb - 1]
+    arb -1
+    call print_num
+    out ':'
 
-                                add [b1], 0, [rb - 1]
-                                arb -1
-                                call print_num
+    # Calculate number of periods and period length
+    mul [bit_index], -1, [rb - 1]
+    add [rb - 1], 8, [rb - 1]
+    arb -1
+    call pow_2
+    add [rb - 3], 0, [period_index]
 
-                                out ','
-                                out ' '
+    add [bit_index], 0, [rb - 1]
+    arb -1
+    call pow_2
+    add [rb - 3], 0, [period_length]
 
-                                add [b2], 0, [rb - 1]
-                                arb -1
-                                call print_num
+    # Intialize the number loop
+    add 0, 0, [value]
+    add 0, 0, [gen_number_count]
 
-                                out ','
-                                out ' '
+period_loop:
+    # Generate one period of numbers
+    add [value], 0, [rb - 1]
+    add 2, 0, [rb - 2]
+    add 1, 0, [rb - 3]
+    add number_prefix, 0, [rb - 4]
+    add [period_length], 0, [rb - 5]
+    arb -5
+    call gen_number_times
 
-                                add [b3], 0, [rb - 1]
-                                arb -1
-                                call print_num
+    # value = !value
+    eq  [value], 0, [value]
 
-                                out ','
-                                out ' '
+    add [period_index], -1, [period_index]
+    jnz [period_index], period_loop
 
-                                add [b4], 0, [rb - 1]
-                                arb -1
-                                call print_num
+    # Loop to next bit
+    add [bit_index], 1, [bit_index]
+    eq  [bit_index], 8, [tmp]
+    jz  [tmp], bit_loop
 
-                                out ','
-                                out ' '
-
-                                add [b5], 0, [rb - 1]
-                                arb -1
-                                call print_num
-
-                                out ','
-                                out ' '
-
-                                add [b6], 0, [rb - 1]
-                                arb -1
-                                call print_num
-
-                                out ','
-                                out ' '
-
-                                add [b7], 0, [rb - 1]
-                                arb -1
-                                call print_num
-
-                                # Print line end
-                                add line_end, 0, [rb - 1]
-                                arb -1
-                                call print_str
-
-                                # Calculate the number
-                                add [b7], 0, [number]
-                                mul [number], 2, [number]
-                                add [b6], [number], [number]
-                                mul [number], 2, [number]
-                                add [b5], [number], [number]
-                                mul [number], 2, [number]
-                                add [b4], [number], [number]
-                                mul [number], 2, [number]
-                                add [b3], [number], [number]
-                                mul [number], 2, [number]
-                                add [b2], [number], [number]
-                                mul [number], 2, [number]
-                                add [b1], [number], [number]
-                                mul [number], 2, [number]
-                                add [b0], [number], [number]
-
-                                # Pad with zero if needed
-                                lt  [number], 0x10, [tmp]
-                                jz  [tmp], skip_padding
-
-                                out '0'
-
-                            skip_padding:
-                                # Print the number
-                                add [number], 0, [rb - 1]
-                                add 16, 0, [rb - 2]
-                                add 0, 0, [rb - 3]
-                                arb -3
-                                call print_num_radix
-
-                                out 10
-
-                                add [b0], 1, [b0]
-                                eq  [b0], 2, [tmp]
-                                jz  [tmp], b0_loop
-                                add 0, 0, [b0]
-
-                            add [b1], 1, [b1]
-                            eq  [b1], 2, [tmp]
-                            jz  [tmp], b1_loop
-                            add 0, 0, [b1]
-
-                        add [b2], 1, [b2]
-                        eq  [b2], 2, [tmp]
-                        jz  [tmp], b2_loop
-                        add 0, 0, [b2]
-
-                    add [b3], 1, [b3]
-                    eq  [b3], 2, [tmp]
-                    jz  [tmp], b3_loop
-                    add 0, 0, [b3]
-
-                add [b4], 1, [b4]
-                eq  [b4], 2, [tmp]
-                jz  [tmp], b4_loop
-                add 0, 0, [b4]
-
-            add [b5], 1, [b5]
-            eq  [b5], 2, [tmp]
-            jz  [tmp], b5_loop
-            add 0, 0, [b5]
-
-        add [b6], 1, [b6]
-        eq  [b6], 2, [tmp]
-        jz  [tmp], b6_loop
-        add 0, 0, [b6]
-
-    add [b7], 1, [b7]
-    eq  [b7], 2, [tmp]
-    jz  [tmp], b7_loop
-    add 0, 0, [b7]
-
-    add footer, 0, [rb - 1]
+    # Finish the file
+    add file_footer, 0, [rb - 1]
     arb -1
     call print_str
 
     hlt
 
-number:
+##########
+bit_index:
     db  0
-b0:
+period_index:
     db  0
-b1:
+period_length:
     db  0
-b2:
-    db  0
-b3:
-    db  0
-b4:
-    db  0
-b5:
-    db  0
-b6:
-    db  0
-b7:
+value:
     db  0
 tmp:
     db  0
 
-header:
-    db  ".EXPORT bits", 10, 10, "# Generated using gen_bits.s", 10, 10, "bits:", 10, 0
-line_start:
-    db  "    db  ", 0
-line_end:
-    db  "          # 0x", 0
-footer:
-    db  10, ".EOF", 10, 0
+file_header:
+    db  ".EXPORT bits", 10, ".EXPORT bit_0", 10, ".EXPORT bit_1", 10, ".EXPORT bit_2", 10, ".EXPORT bit_3"
+    db  10, ".EXPORT bit_4", 10, ".EXPORT bit_5", 10, ".EXPORT bit_6", 10, ".EXPORT bit_7"
+    db  10, 10, "# Generated using gen_bits.s", 10, 10
+    db  "bits:", 10, "    db  bit_0", 10, "    db  bit_1", 10, "    db  bit_2", 10, "    db  bit_3"
+    db  10, "    db  bit_4", 10, "    db  bit_5", 10, "    db  bit_6", 10, "    db  bit_7", 0
+
+bit_header:
+    db  10, 10, "bit_", 0
+
+number_prefix:
+    db  "", 0
+
+file_footer:
+    db  10, 10, ".EOF", 10, 0
 
     ds  100, 0
 stack:

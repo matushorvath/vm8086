@@ -10,7 +10,7 @@
 .IMPORT write_location_b
 
 # From util/bits.s
-.IMPORT bits_ng
+.IMPORT bits
 .IMPORT bit_0
 .IMPORT bit_7
 
@@ -71,7 +71,7 @@ execute_shl_b:
     add 8, [rb + tmp], [rb + tmp]
 
     # Get tmp-th bit of val
-    add bits_ng, [rb + tmp], [ip + 1]
+    add bits, [rb + tmp], [ip + 1]
     add [0], [rb + val], [ip + 1]
     add [0], 0, [flag_carry]
 
@@ -180,7 +180,7 @@ execute_shr_b:
     add [rb + count], -1, [rb + tmp]
 
     # Get tmp-th bit of val
-    add bits_ng, [rb + tmp], [ip + 1]
+    add bits, [rb + tmp], [ip + 1]
     add [0], [rb + val], [ip + 1]
     add [0], 0, [flag_carry]
 
@@ -284,7 +284,7 @@ execute_sar_b:
     add [rb + count], -1, [rb + tmp]
 
     # Get tmp-th bit of val
-    add bits_ng, [rb + tmp], [ip + 1]
+    add bits, [rb + tmp], [ip + 1]
     add [0], [rb + val], [ip + 1]
     add [0], 0, [flag_carry]
 

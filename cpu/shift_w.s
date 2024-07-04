@@ -10,7 +10,7 @@
 .IMPORT write_location_w
 
 # From util/bits.s
-.IMPORT bits_ng
+.IMPORT bits
 .IMPORT bit_0
 .IMPORT bit_7
 
@@ -78,7 +78,7 @@ execute_shl_w:
     add 8, [rb + tmp], [rb + spill]
 
     # Get spill-th bit of val_hi
-    add bits_ng, [rb + spill], [ip + 1]
+    add bits, [rb + spill], [ip + 1]
     add [0], [rb + val_hi], [ip + 1]
     add [0], 0, [flag_carry]
 
@@ -111,7 +111,7 @@ execute_shl_w_8_to_15:
     add 8, [rb + tmp], [rb + spill]
 
     # Get spill-th bit of val_lo
-    add bits_ng, [rb + spill], [ip + 1]
+    add bits, [rb + spill], [ip + 1]
     add [0], [rb + val_lo], [ip + 1]
     add [0], 0, [flag_carry]
 
@@ -245,7 +245,7 @@ execute_shr_w:
     add [rb + count], -1, [rb + tmp]
 
     # Get tmp-th bit of val_lo
-    add bits_ng, [rb + tmp], [ip + 1]
+    add bits, [rb + tmp], [ip + 1]
     add [0], [rb + val_lo], [ip + 1]
     add [0], 0, [flag_carry]
 
@@ -280,7 +280,7 @@ execute_shr_w_8_to_15:
     add [rb + count], -1, [rb + tmp]
 
     # Get tmp-th bit of val_hi
-    add bits_ng, [rb + tmp], [ip + 1]
+    add bits, [rb + tmp], [ip + 1]
     add [0], [rb + val_hi], [ip + 1]
     add [0], 0, [flag_carry]
 
@@ -409,7 +409,7 @@ execute_sar_w:
     add [rb + count], -1, [rb + tmp]
 
     # Get tmp-th bit of val_lo
-    add bits_ng, [rb + tmp], [ip + 1]
+    add bits, [rb + tmp], [ip + 1]
     add [0], [rb + val_lo], [ip + 1]
     add [0], 0, [flag_carry]
 
@@ -449,7 +449,7 @@ execute_sar_w_8_to_15:
     add [rb + count], -1, [rb + tmp]
 
     # Get tmp-th bit of val_hi
-    add bits_ng, [rb + tmp], [ip + 1]
+    add bits, [rb + tmp], [ip + 1]
     add [0], [rb + val_hi], [ip + 1]
     add [0], 0, [flag_carry]
 
