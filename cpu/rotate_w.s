@@ -12,8 +12,12 @@
 .IMPORT write_location_w
 
 # From util/bits.s
-.IMPORT bits
 .IMPORT bit_0
+.IMPORT bit_1
+.IMPORT bit_2
+.IMPORT bit_3
+.IMPORT bit_4
+.IMPORT bit_5
 .IMPORT bit_6
 .IMPORT bit_7
 
@@ -505,32 +509,32 @@ execute_ror_w_done:
 .ENDFRAME
 
 ##########
-.FRAME lseg, loff; table, overflow_algorithm, val_lo, val_hi, valx8_lo, valx8_hi, count, tmp
+.FRAME lseg, loff; table, overflow_algorithm, input_lo, input_hi, output_lo, output_hi, valx8_lo, valx8_hi, count, tmp
     # Function with multiple entry points
 
 execute_rcl_1_w:
-    arb -8
+    arb -10
     add 1, 0, [rb + count]
     add execute_rcl_w_table, 0, [rb + table]
     add execute_rcl_w_flags, 0, [rb + overflow_algorithm]
     jz  0, execute_rcl_rcr_w
 
 execute_rcl_cl_w:
-    arb -8
+    arb -10
     add [reg_cl], 0, [rb + count]
     add execute_rcl_w_table, 0, [rb + table]
     add execute_rcl_w_flags, 0, [rb + overflow_algorithm]
     jz  0, execute_rcl_rcr_w
 
 execute_rcr_1_w:
-    arb -8
+    arb -10
     add 1, 0, [rb + count]
     add execute_rcr_w_table, 0, [rb + table]
     add execute_rcr_w_flags, 0, [rb + overflow_algorithm]
     jz  0, execute_rcl_rcr_w
 
 execute_rcr_cl_w:
-    arb -8
+    arb -10
     add [reg_cl], 0, [rb + count]
     add execute_rcr_w_table, 0, [rb + table]
     add execute_rcr_w_flags, 0, [rb + overflow_algorithm]
@@ -548,9 +552,9 @@ execute_rcl_rcr_w:
     add [rb + loff], 0, [rb - 2]
     arb -2
     call read_location_w
-    add [rb - 4], 0, [rb + val_lo]
+    add [rb - 4], 0, [rb + input_lo]
     mul [rb - 4], 8, [rb + valx8_lo]
-    add [rb - 5], 0, [rb + val_hi]
+    add [rb - 5], 0, [rb + input_hi]
     mul [rb - 5], 8, [rb + valx8_hi]
 
     # Jump to the label that handles this case
@@ -598,12 +602,12 @@ execute_rcr_w_table:
 execute_rcl_w_by_1:
     add shr + 7, [rb + valx8_lo], [ip + 5]
     add shl + 1, [rb + valx8_hi], [ip + 2]
-    add [0], [0], [rb + val_hi]
+    add [0], [0], [rb + output_hi]
 
     add shl + 1, [rb + valx8_lo], [ip + 1]
-    add [0], [flag_carry], [rb + val_lo]
+    add [0], [flag_carry], [rb + output_lo]
 
-    add bits + 7, [rb + valx8_hi], [ip + 1]
+    add bit_7, [rb + input_hi], [ip + 1]
     add [0], 0, [flag_carry]
 
     jz  0, [rb + overflow_algorithm]
@@ -611,16 +615,16 @@ execute_rcl_w_by_1:
 execute_rcl_w_by_2:
     add shr + 6, [rb + valx8_lo], [ip + 5]
     add shl + 2, [rb + valx8_hi], [ip + 2]
-    add [0], [0], [rb + val_hi]
+    add [0], [0], [rb + output_hi]
 
     add shr + 7, [rb + valx8_hi], [ip + 5]
     add shl + 2, [rb + valx8_lo], [ip + 2]
-    add [0], [0], [rb + val_lo]
+    add [0], [0], [rb + output_lo]
 
     mul [flag_carry], 0x02, [rb + tmp]
-    add [rb + val_lo], [rb + tmp], [rb + val_lo]
+    add [rb + output_lo], [rb + tmp], [rb + output_lo]
 
-    add bits + 6, [rb + valx8_hi], [ip + 1]
+    add bit_6, [rb + input_hi], [ip + 1]
     add [0], 0, [flag_carry]
 
     jz  0, [rb + overflow_algorithm]
@@ -628,16 +632,16 @@ execute_rcl_w_by_2:
 execute_rcl_w_by_3:
     add shr + 5, [rb + valx8_lo], [ip + 5]
     add shl + 3, [rb + valx8_hi], [ip + 2]
-    add [0], [0], [rb + val_hi]
+    add [0], [0], [rb + output_hi]
 
     add shr + 6, [rb + valx8_hi], [ip + 5]
     add shl + 3, [rb + valx8_lo], [ip + 2]
-    add [0], [0], [rb + val_lo]
+    add [0], [0], [rb + output_lo]
 
     mul [flag_carry], 0x04, [rb + tmp]
-    add [rb + val_lo], [rb + tmp], [rb + val_lo]
+    add [rb + output_lo], [rb + tmp], [rb + output_lo]
 
-    add bits + 5, [rb + valx8_hi], [ip + 1]
+    add bit_5, [rb + input_hi], [ip + 1]
     add [0], 0, [flag_carry]
 
     jz  0, [rb + overflow_algorithm]
@@ -645,16 +649,16 @@ execute_rcl_w_by_3:
 execute_rcl_w_by_4:
     add shr + 4, [rb + valx8_lo], [ip + 5]
     add shl + 4, [rb + valx8_hi], [ip + 2]
-    add [0], [0], [rb + val_hi]
+    add [0], [0], [rb + output_hi]
 
     add shr + 5, [rb + valx8_hi], [ip + 5]
     add shl + 4, [rb + valx8_lo], [ip + 2]
-    add [0], [0], [rb + val_lo]
+    add [0], [0], [rb + output_lo]
 
     mul [flag_carry], 0x08, [rb + tmp]
-    add [rb + val_lo], [rb + tmp], [rb + val_lo]
+    add [rb + output_lo], [rb + tmp], [rb + output_lo]
 
-    add bits + 4, [rb + valx8_hi], [ip + 1]
+    add bit_4, [rb + input_hi], [ip + 1]
     add [0], 0, [flag_carry]
 
     jz  0, [rb + overflow_algorithm]
@@ -662,16 +666,16 @@ execute_rcl_w_by_4:
 execute_rcl_w_by_5:
     add shr + 3, [rb + valx8_lo], [ip + 5]
     add shl + 5, [rb + valx8_hi], [ip + 2]
-    add [0], [0], [rb + val_hi]
+    add [0], [0], [rb + output_hi]
 
     add shr + 4, [rb + valx8_hi], [ip + 5]
     add shl + 5, [rb + valx8_lo], [ip + 2]
-    add [0], [0], [rb + val_lo]
+    add [0], [0], [rb + output_lo]
 
     mul [flag_carry], 0x10, [rb + tmp]
-    add [rb + val_lo], [rb + tmp], [rb + val_lo]
+    add [rb + output_lo], [rb + tmp], [rb + output_lo]
 
-    add bits + 3, [rb + valx8_hi], [ip + 1]
+    add bit_3, [rb + input_hi], [ip + 1]
     add [0], 0, [flag_carry]
 
     jz  0, [rb + overflow_algorithm]
@@ -679,16 +683,16 @@ execute_rcl_w_by_5:
 execute_rcl_w_by_6:
     add shr + 2, [rb + valx8_lo], [ip + 5]
     add shl + 6, [rb + valx8_hi], [ip + 2]
-    add [0], [0], [rb + val_hi]
+    add [0], [0], [rb + output_hi]
 
     add shr + 3, [rb + valx8_hi], [ip + 5]
     add shl + 6, [rb + valx8_lo], [ip + 2]
-    add [0], [0], [rb + val_lo]
+    add [0], [0], [rb + output_lo]
 
     mul [flag_carry], 0x20, [rb + tmp]
-    add [rb + val_lo], [rb + tmp], [rb + val_lo]
+    add [rb + output_lo], [rb + tmp], [rb + output_lo]
 
-    add bits + 2, [rb + valx8_hi], [ip + 1]
+    add bit_2, [rb + input_hi], [ip + 1]
     add [0], 0, [flag_carry]
 
     jz  0, [rb + overflow_algorithm]
@@ -696,39 +700,39 @@ execute_rcl_w_by_6:
 execute_rcl_w_by_7:
     add shr + 1, [rb + valx8_lo], [ip + 5]
     add shl + 7, [rb + valx8_hi], [ip + 2]
-    add [0], [0], [rb + val_hi]
+    add [0], [0], [rb + output_hi]
 
     add shr + 2, [rb + valx8_hi], [ip + 5]
     add shl + 7, [rb + valx8_lo], [ip + 2]
-    add [0], [0], [rb + val_lo]
+    add [0], [0], [rb + output_lo]
 
     mul [flag_carry], 0x40, [rb + tmp]
-    add [rb + val_lo], [rb + tmp], [rb + val_lo]
+    add [rb + output_lo], [rb + tmp], [rb + output_lo]
 
-    add bits + 1, [rb + valx8_hi], [ip + 1]
+    add bit_1, [rb + input_hi], [ip + 1]
     add [0], 0, [flag_carry]
 
     jz  0, [rb + overflow_algorithm]
 
 execute_rcl_w_by_8:
-    add [rb + val_lo], 0, [rb + val_hi]
+    add [rb + input_lo], 0, [rb + output_hi]
 
     mul [flag_carry], 0x80, [rb + tmp]
     add shr + 1, [rb + valx8_hi], [ip + 1]
-    add [0], [rb + tmp], [rb + val_lo]
+    add [0], [rb + tmp], [rb + output_lo]
 
-    add bits + 0, [rb + valx8_hi], [ip + 1]
+    add bit_0, [rb + input_hi], [ip + 1]
     add [0], 0, [flag_carry]
 
     jz  0, [rb + overflow_algorithm]
 
 execute_rcl_w_by_9:
-    add [rb + val_hi], 0, [rb + val_lo]
+    add [rb + input_hi], 0, [rb + output_lo]
 
     add shl + 1, [rb + valx8_lo], [ip + 1]
-    add [0], [flag_carry], [rb + val_hi]
+    add [0], [flag_carry], [rb + output_hi]
 
-    add bits + 7, [rb + valx8_lo], [ip + 1]
+    add bit_7, [rb + input_lo], [ip + 1]
     add [0], 0, [flag_carry]
 
     jz  0, [rb + overflow_algorithm]
@@ -736,16 +740,16 @@ execute_rcl_w_by_9:
 execute_rcl_w_by_a:
     add shr + 7, [rb + valx8_lo], [ip + 5]
     add shl + 1, [rb + valx8_hi], [ip + 2]
-    add [0], [0], [rb + val_lo]
+    add [0], [0], [rb + output_lo]
 
     add shr + 7, [rb + valx8_hi], [ip + 5]
     add shl + 2, [rb + valx8_lo], [ip + 2]
-    add [0], [0], [rb + val_hi]
+    add [0], [0], [rb + output_hi]
 
     mul [flag_carry], 0x02, [rb + tmp]
-    add [rb + val_hi], [rb + tmp], [rb + val_hi]
+    add [rb + output_hi], [rb + tmp], [rb + output_hi]
 
-    add bits + 6, [rb + valx8_lo], [ip + 1]
+    add bit_6, [rb + input_lo], [ip + 1]
     add [0], 0, [flag_carry]
 
     jz  0, [rb + overflow_algorithm]
@@ -753,16 +757,16 @@ execute_rcl_w_by_a:
 execute_rcl_w_by_b:
     add shr + 6, [rb + valx8_lo], [ip + 5]
     add shl + 2, [rb + valx8_hi], [ip + 2]
-    add [0], [0], [rb + val_lo]
+    add [0], [0], [rb + output_lo]
 
     add shr + 6, [rb + valx8_hi], [ip + 5]
     add shl + 3, [rb + valx8_lo], [ip + 2]
-    add [0], [0], [rb + val_hi]
+    add [0], [0], [rb + output_hi]
 
     mul [flag_carry], 0x04, [rb + tmp]
-    add [rb + val_hi], [rb + tmp], [rb + val_hi]
+    add [rb + output_hi], [rb + tmp], [rb + output_hi]
 
-    add bits + 5, [rb + valx8_lo], [ip + 1]
+    add bit_5, [rb + input_lo], [ip + 1]
     add [0], 0, [flag_carry]
 
     jz  0, [rb + overflow_algorithm]
@@ -770,16 +774,16 @@ execute_rcl_w_by_b:
 execute_rcl_w_by_c:
     add shr + 5, [rb + valx8_lo], [ip + 5]
     add shl + 3, [rb + valx8_hi], [ip + 2]
-    add [0], [0], [rb + val_lo]
+    add [0], [0], [rb + output_lo]
 
     add shr + 5, [rb + valx8_hi], [ip + 5]
     add shl + 4, [rb + valx8_lo], [ip + 2]
-    add [0], [0], [rb + val_hi]
+    add [0], [0], [rb + output_hi]
 
     mul [flag_carry], 0x08, [rb + tmp]
-    add [rb + val_hi], [rb + tmp], [rb + val_hi]
+    add [rb + output_hi], [rb + tmp], [rb + output_hi]
 
-    add bits + 4, [rb + valx8_lo], [ip + 1]
+    add bit_4, [rb + input_lo], [ip + 1]
     add [0], 0, [flag_carry]
 
     jz  0, [rb + overflow_algorithm]
@@ -787,16 +791,16 @@ execute_rcl_w_by_c:
 execute_rcl_w_by_d:
     add shr + 4, [rb + valx8_lo], [ip + 5]
     add shl + 4, [rb + valx8_hi], [ip + 2]
-    add [0], [0], [rb + val_lo]
+    add [0], [0], [rb + output_lo]
 
     add shr + 4, [rb + valx8_hi], [ip + 5]
     add shl + 5, [rb + valx8_lo], [ip + 2]
-    add [0], [0], [rb + val_hi]
+    add [0], [0], [rb + output_hi]
 
     mul [flag_carry], 0x10, [rb + tmp]
-    add [rb + val_hi], [rb + tmp], [rb + val_hi]
+    add [rb + output_hi], [rb + tmp], [rb + output_hi]
 
-    add bits + 3, [rb + valx8_lo], [ip + 1]
+    add bit_3, [rb + input_lo], [ip + 1]
     add [0], 0, [flag_carry]
 
     jz  0, [rb + overflow_algorithm]
@@ -804,16 +808,16 @@ execute_rcl_w_by_d:
 execute_rcl_w_by_e:
     add shr + 3, [rb + valx8_lo], [ip + 5]
     add shl + 5, [rb + valx8_hi], [ip + 2]
-    add [0], [0], [rb + val_lo]
+    add [0], [0], [rb + output_lo]
 
     add shr + 3, [rb + valx8_hi], [ip + 5]
     add shl + 6, [rb + valx8_lo], [ip + 2]
-    add [0], [0], [rb + val_hi]
+    add [0], [0], [rb + output_hi]
 
     mul [flag_carry], 0x20, [rb + tmp]
-    add [rb + val_hi], [rb + tmp], [rb + val_hi]
+    add [rb + output_hi], [rb + tmp], [rb + output_hi]
 
-    add bits + 2, [rb + valx8_lo], [ip + 1]
+    add bit_2, [rb + input_lo], [ip + 1]
     add [0], 0, [flag_carry]
 
     jz  0, [rb + overflow_algorithm]
@@ -821,16 +825,16 @@ execute_rcl_w_by_e:
 execute_rcl_w_by_f:
     add shr + 2, [rb + valx8_lo], [ip + 5]
     add shl + 6, [rb + valx8_hi], [ip + 2]
-    add [0], [0], [rb + val_lo]
+    add [0], [0], [rb + output_lo]
 
     add shr + 2, [rb + valx8_hi], [ip + 5]
     add shl + 7, [rb + valx8_lo], [ip + 2]
-    add [0], [0], [rb + val_hi]
+    add [0], [0], [rb + output_hi]
 
     mul [flag_carry], 0x40, [rb + tmp]
-    add [rb + val_hi], [rb + tmp], [rb + val_hi]
+    add [rb + output_hi], [rb + tmp], [rb + output_hi]
 
-    add bits + 1, [rb + valx8_lo], [ip + 1]
+    add bit_1, [rb + input_lo], [ip + 1]
     add [0], 0, [flag_carry]
 
     jz  0, [rb + overflow_algorithm]
@@ -838,20 +842,20 @@ execute_rcl_w_by_f:
 execute_rcl_w_by_10:
     add shr + 1, [rb + valx8_lo], [ip + 5]
     add shl + 7, [rb + valx8_hi], [ip + 2]
-    add [0], [0], [rb + val_lo]
+    add [0], [0], [rb + output_lo]
 
     mul [flag_carry], 0x80, [rb + tmp]
     add shr + 1, [rb + valx8_hi], [ip + 1]
-    add [0], [rb + tmp], [rb + val_hi]
+    add [0], [rb + tmp], [rb + output_hi]
 
-    add bits + 0, [rb + valx8_lo], [ip + 1]
+    add bit_0, [rb + input_lo], [ip + 1]
     add [0], 0, [flag_carry]
 
     jz  0, [rb + overflow_algorithm]
 
 execute_rcl_w_flags:
     # Update flags for rcl
-    add bit_7, [rb + val_hi], [ip + 1]
+    add bit_7, [rb + output_hi], [ip + 1]
     eq  [0], [flag_carry], [flag_overflow]
     eq  [flag_overflow], 0, [flag_overflow]
 
@@ -859,8 +863,8 @@ execute_rcl_w_flags:
 
 execute_rcr_w_flags:
     # Update flags for rcr
-    add bit_6, [rb + val_hi], [ip + 5]
-    add bit_7, [rb + val_hi], [ip + 2]
+    add bit_6, [rb + output_hi], [ip + 5]
+    add bit_7, [rb + output_hi], [ip + 2]
     eq  [0], [0], [flag_overflow]
     eq  [flag_overflow], 0, [flag_overflow]
 
@@ -868,13 +872,13 @@ execute_rcl_rcr_w_store:
     # Write the rotated value
     add [rb + lseg], 0, [rb - 1]
     add [rb + loff], 0, [rb - 2]
-    add [rb + val_lo], 0, [rb - 3]
-    add [rb + val_hi], 0, [rb - 4]
+    add [rb + output_lo], 0, [rb - 3]
+    add [rb + output_hi], 0, [rb - 4]
     arb -4
     call write_location_w
 
 execute_rcl_rcr_w_done:
-    arb 8
+    arb 10
     ret 2
 .ENDFRAME
 
