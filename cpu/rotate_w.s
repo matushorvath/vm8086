@@ -13,6 +13,9 @@
 
 # From util/bits.s
 .IMPORT bits
+.IMPORT bit_0
+.IMPORT bit_6
+.IMPORT bit_7
 
 # From util/mod17.s
 .IMPORT mod17
@@ -246,13 +249,10 @@ execute_rol_w_by_f:
 
 execute_rol_w_flags:
     # Update flags
-    mul [rb + val_lo], 8, [rb + valx8_lo]
-    mul [rb + val_hi], 8, [rb + valx8_hi]
-
-    add bits + 0, [rb + valx8_lo], [ip + 1]
+    add bit_0, [rb + val_lo], [ip + 1]
     add [0], 0, [flag_carry]
 
-    add bits + 7, [rb + valx8_hi], [ip + 1]
+    add bit_7, [rb + val_hi], [ip + 1]
     eq  [0], [flag_carry], [flag_overflow]
     eq  [flag_overflow], 0, [flag_overflow]
 
@@ -484,12 +484,10 @@ execute_ror_w_by_f:
 
 execute_ror_w_flags:
     # Update flags
-    mul [rb + val_hi], 8, [rb + valx8_hi]
-
-    add bits + 7, [rb + valx8_hi], [ip + 1]
+    add bit_7, [rb + val_hi], [ip + 1]
     add [0], 0, [flag_carry]
 
-    add bits + 6, [rb + valx8_hi], [ip + 1]
+    add bit_6, [rb + val_hi], [ip + 1]
     eq  [0], [flag_carry], [flag_overflow]
     eq  [flag_overflow], 0, [flag_overflow]
 
@@ -853,9 +851,7 @@ execute_rcl_w_by_10:
 
 execute_rcl_w_flags:
     # Update flags for rcl
-    mul [rb + val_hi], 8, [rb + valx8_hi]
-
-    add bits + 7, [rb + valx8_hi], [ip + 1]
+    add bit_7, [rb + val_hi], [ip + 1]
     eq  [0], [flag_carry], [flag_overflow]
     eq  [flag_overflow], 0, [flag_overflow]
 
@@ -863,10 +859,8 @@ execute_rcl_w_flags:
 
 execute_rcr_w_flags:
     # Update flags for rcr
-    mul [rb + val_hi], 8, [rb + valx8_hi]
-
-    add bits + 6, [rb + valx8_hi], [ip + 5]
-    add bits + 7, [rb + valx8_hi], [ip + 2]
+    add bit_6, [rb + val_hi], [ip + 5]
+    add bit_7, [rb + val_hi], [ip + 2]
     eq  [0], [0], [flag_overflow]
     eq  [flag_overflow], 0, [flag_overflow]
 

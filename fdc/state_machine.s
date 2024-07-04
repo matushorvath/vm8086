@@ -49,7 +49,12 @@
 .IMPORT fdc_present_cylinder_units
 
 # From util/bits.s
-.IMPORT bits
+.IMPORT bit_0
+.IMPORT bit_1
+.IMPORT bit_2
+.IMPORT bit_4
+.IMPORT bit_6
+.IMPORT bit_7
 
 # From util/log.s
 .IMPORT log_start
@@ -64,8 +69,8 @@
 
 ##########
 fdc_data_write:
-.FRAME addr, value; value_bits, tmp
-    arb -2
+.FRAME addr, value; tmp
+    arb -1
 
     # Floppy controller logging
     jz  [config_log_fdc], fdc_data_write_after_log_fdc
@@ -90,15 +95,12 @@ fdc_data_write_after_log_fdc:
 fsm_w_idle:
     # Parse the first byte of a new command
     # MT MF SK CMD_CODE(5)
-    mul [rb + value], 8, [rb + tmp]
-    add bits, [rb + tmp], [rb + value_bits]
-
     # Save MT, ignore SK since there are no deleted records
-    add [rb + value_bits], 7, [ip + 1]
+    add bit_7, [rb + value], [ip + 1]
     add [0], 0, [fdc_cmd_multi_track]
 
     # Read bottom 5 bits as the command code
-    add [rb + value_bits], 4, [ip + 1]
+    add bit_4, [rb + value], [ip + 1]
     mul [0], 0b00010000, [fdc_cmd_code]
 
     mul [rb + value], 2, [rb + tmp]
@@ -148,7 +150,7 @@ fsm_w_idle_table:
 
 fsm_w_idle_to_hd_us_with_mf_check:
     # Require MF=1 since we don't support 8" floppies
-    add [rb + value_bits], 6, [ip + 1]
+    add bit_6, [rb + value], [ip + 1]
     jz  [0], fsm_w_invalid
 
     # fall through
@@ -188,16 +190,13 @@ fsm_w_hd_us:
     # Parse head and unit select information
     # X X X X X HD US(2)
 
-    mul [rb + value], 8, [rb + tmp]
-    add bits, [rb + tmp], [rb + value_bits]
-
     # Save HD and US
-    add [rb + value_bits], 2, [ip + 1]
+    add bit_2, [rb + value], [ip + 1]
     add [0], 0, [fdc_cmd_head]
 
-    add [rb + value_bits], 1, [ip + 1]
+    add bit_1, [rb + value], [ip + 1]
     mul [0], 0x00000010, [fdc_cmd_unit_selected]
-    add [rb + value_bits], 0, [ip + 1]
+    add bit_0, [rb + value], [ip + 1]
     add [0], [fdc_cmd_unit_selected], [fdc_cmd_unit_selected]
 
     # Handle the state transition
@@ -493,7 +492,7 @@ fsm_w_invalid:
     add fsm_r_st0, 0, [fdc_cmd_state]
 
 fsm_w_done:
-    arb 2
+    arb 1
     ret 2
 .ENDFRAME
 
@@ -648,8 +647,7 @@ fsm_r_n:
 fsm_r_pcn:
     # Read PCN (present cylinder number, position of the head)
     # Determine which unit was used by last command from bit 0 of ST0 (US0)
-    mul [fdc_cmd_st0], 8, [rb + tmp]
-    add bits, [rb + tmp], [ip + 1]
+    add bit_0, [fdc_cmd_st0], [ip + 1]
     add [0], fdc_present_cylinder_units, [ip + 1]
     add [0], 0, [rb + value]
 
