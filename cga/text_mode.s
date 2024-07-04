@@ -26,7 +26,7 @@
 .IMPORT mem
 
 # From util/bits.s
-.IMPORT bits
+.IMPORT bit_0
 
 # From util/mod5.s
 .IMPORT div5
@@ -110,16 +110,11 @@ write_memory_text_calc_160:
     add [rb + addr], [rb + tmp], [rb + col]
 
 write_memory_text_after_calc:
-    # Each screen location occupies two bytes, so divide col by 2
-    mul [rb + col], 8, [rb + col_x8]
-    add shr + 1, [rb + col_x8], [ip + 1]
-    add [0], 0, [rb + col]
-
-    # Is this the character or the attribute?
-    add bits, [rb + col_x8], [ip + 1]
+    # Is this the character or the attributes?
+    add bit_0, [rb + col], [ip + 1]
     jz  [0], write_memory_text_get_attr
 
-    # This are the attributes, load the character from video memory
+    # These are the attributes, load the character from video memory
     add [rb + value], 0, [rb + attr]
 
     add [mem], [rb + addr], [rb + tmp]
@@ -137,6 +132,11 @@ write_memory_text_get_attr:
     add [0], 0, [rb + attr]
 
 write_memory_text_print:
+    # Each screen location occupies two bytes, so divide col by 2
+    mul [rb + col], 8, [rb + col_x8]
+    add shr + 1, [rb + col_x8], [ip + 1]
+    add [0], 0, [rb + col]
+
     # Set cursor position
     out 0x1b
     out '['
