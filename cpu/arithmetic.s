@@ -10,7 +10,7 @@
 .IMPORT write_location_w
 
 # From util/nibbles.s
-.IMPORT nibbles
+.IMPORT nibble_0
 
 # From util/parity.s
 .IMPORT parity
@@ -51,8 +51,7 @@ execute_neg_b_zero:
     add [0], 0, [flag_parity]
 
     # Set auxiliary carry flag if low-order half-byte of val != 0
-    mul [rb + val], 2, [rb + tmp]
-    add nibbles, [rb + tmp], [ip + 1]
+    add nibble_0, [rb + val], [ip + 1]
     add [0], 0, [rb + tmp]
 
     eq  [rb + tmp], 0, [flag_auxiliary_carry]
@@ -110,8 +109,7 @@ execute_neg_b_zero_hi:
     add [0], 0, [flag_parity]
 
     # Set auxiliary carry flag if low-order half-byte of val != 0
-    mul [rb + val_lo], 2, [rb + tmp]
-    add nibbles, [rb + tmp], [ip + 1]
+    add nibble_0, [rb + val_lo], [ip + 1]
     add [0], 0, [rb + tmp]
 
     eq  [rb + tmp], 0, [flag_auxiliary_carry]

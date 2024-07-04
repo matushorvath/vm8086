@@ -32,7 +32,8 @@
 .IMPORT div5
 
 # From util/nibbles.s
-.IMPORT nibbles
+.IMPORT nibble_0
+.IMPORT nibble_1
 
 # From util/shr.s
 .IMPORT shr
@@ -160,13 +161,11 @@ write_memory_text_print:
     out 0x1b
     out '['
 
-    mul [rb + attr], 2, [rb + attr]
-
     # Should we use 24-bit terminal colors?
     jnz [config_color_mode], write_memory_text_24b
 
     # No, use 4-bit terminal colors
-    add nibbles + 0, [rb + attr], [ip + 1]
+    add nibble_0, [rb + attr], [ip + 1]
     add [0], palette_4b_text_fg, [ip + 1]
     add [0], 0, [rb - 1]
     arb -1
@@ -174,7 +173,7 @@ write_memory_text_print:
 
     out ';'
 
-    add nibbles + 1, [rb + attr], [ip + 1]
+    add nibble_1, [rb + attr], [ip + 1]
     add [0], [palette_4b_text_bg_ptr], [ip + 1]
     add [0], 0, [rb - 1]
     arb -1
@@ -192,7 +191,7 @@ write_memory_text_24b:
     out '2'
     out ';'
 
-    add nibbles + 0, [rb + attr], [ip + 1]
+    add nibble_0, [rb + attr], [ip + 1]
     mul [0], 3, [rb + tmp]
 
     add palette_24b_text_fg + 0, [rb + tmp], [ip + 1]
@@ -219,7 +218,7 @@ write_memory_text_24b:
     out '2'
     out ';'
 
-    add nibbles + 1, [rb + attr], [ip + 1]
+    add nibble_1, [rb + attr], [ip + 1]
     mul [0], 3, [rb + tmp]
 
     add [palette_24b_text_bg_ptr], [rb + tmp], [ip + 1]

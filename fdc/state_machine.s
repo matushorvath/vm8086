@@ -60,7 +60,7 @@
 .IMPORT log_start
 
 # From util/nibbles.s
-.IMPORT nibbles
+.IMPORT nibble_0
 
 # From libxib.a
 .IMPORT print_str
@@ -103,8 +103,7 @@ fsm_w_idle:
     add bit_4, [rb + value], [ip + 1]
     mul [0], 0b00010000, [fdc_cmd_code]
 
-    mul [rb + value], 2, [rb + tmp]
-    add nibbles, [rb + tmp], [ip + 1]
+    add nibble_0, [rb + value], [ip + 1]
     add [0], [fdc_cmd_code], [fdc_cmd_code]
 
     # We are now in command phase

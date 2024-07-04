@@ -17,7 +17,7 @@
 .IMPORT write_location_w
 
 # From util/nibbles.s
-.IMPORT nibbles
+.IMPORT nibble_0
 
 # From util/parity.s
 .IMPORT parity
@@ -215,12 +215,10 @@ update_auxiliary_carry_sbb:
     arb -4
 
     # Find low-order half-byte of src and dst
-    mul [rb + src], 2, [rb + tmp]
-    add nibbles, [rb + tmp], [ip + 1]
+    add nibble_0, [rb + src], [ip + 1]
     add [0], 0, [rb + a4l]
 
-    mul [rb + dst], 2, [rb + tmp]
-    add nibbles, [rb + tmp], [ip + 1]
+    add nibble_0, [rb + dst], [ip + 1]
     add [0], 0, [rb + b4l]
 
     # Subtract b4l - a4l - carry

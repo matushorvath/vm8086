@@ -25,7 +25,7 @@
 .IMPORT mod17
 
 # From util/nibbles.s
-.IMPORT nibbles
+.IMPORT nibble_0
 
 # From util/shl.s
 .IMPORT shl
@@ -56,8 +56,7 @@ execute_rol_w:
     jz  [rb + count], execute_rol_w_done
 
     # Use the nibbles table to obtain count mod 16
-    mul [rb + count], 2, [rb + tmp]
-    add nibbles, [rb + tmp], [ip + 1]
+    add nibble_0, [rb + count], [ip + 1]
     add [0], 0, [rb + count]
 
     # Read the value to rotate
@@ -291,8 +290,7 @@ execute_ror_w:
     jz  [rb + count], execute_ror_w_done
 
     # Use the nibbles table to obtain count mod 16
-    mul [rb + count], 2, [rb + tmp]
-    add nibbles, [rb + tmp], [ip + 1]
+    add nibble_0, [rb + count], [ip + 1]
     add [0], 0, [rb + count]
 
     # Read the value to rotate
