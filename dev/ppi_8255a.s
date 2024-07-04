@@ -7,7 +7,14 @@
 .IMPORT report_error
 
 # From util/bits.s
-.IMPORT bits
+.IMPORT bit_0
+.IMPORT bit_1
+.IMPORT bit_2
+.IMPORT bit_3
+.IMPORT bit_4
+.IMPORT bit_5
+.IMPORT bit_6
+.IMPORT bit_7
 
 # From the config file
 .IMPORT config_boot_80x25
@@ -109,40 +116,35 @@ ppi_port_b_read:
 
 ##########
 ppi_port_b_write:
-.FRAME addr, value; value_bits
-    arb -1
-
+.FRAME addr, value;
     # Supported bits:
     # 0: 8253 channel 2 gate
     # 3: read high switches/low switches
 
-    add bits, [rb + value], [rb + value_bits]
-
     # Set/reset PIT channel 2 gate
-    add [rb + value_bits], 0, [ip + 1]
+    add bit_0, [rb + value], [ip + 1]
     add [0], 0, [rb - 1]
     arb -1
     call pit_set_gate_ch2
 
     # Save the "read high switches" flag
-    add [rb + value_bits], 3, [ip + 1]
+    add bit_3, [rb + value], [ip + 1]
     add [0], 0, [ppi_read_high_switches]
 
     # Save the other bits so we can return them later
-    add [rb + value_bits], 1, [ip + 1]
+    add bit_1, [rb + value], [ip + 1]
     add [0], 0, [ppi_b_bit_1]
-    add [rb + value_bits], 2, [ip + 1]
+    add bit_2, [rb + value], [ip + 1]
     add [0], 0, [ppi_b_bit_2]
-    add [rb + value_bits], 4, [ip + 1]
+    add bit_4, [rb + value], [ip + 1]
     add [0], 0, [ppi_b_bit_4]
-    add [rb + value_bits], 5, [ip + 1]
+    add bit_5, [rb + value], [ip + 1]
     add [0], 0, [ppi_b_bit_5]
-    add [rb + value_bits], 6, [ip + 1]
+    add bit_6, [rb + value], [ip + 1]
     add [0], 0, [ppi_b_bit_6]
-    add [rb + value_bits], 7, [ip + 1]
+    add bit_7, [rb + value], [ip + 1]
     add [0], 0, [ppi_b_bit_7]
 
-    arb 1
     ret 2
 .ENDFRAME
 
@@ -154,7 +156,7 @@ ppi_port_c_read:
     # Upper four bits don't depend on ppi_read_high_switches
     mul [pit_output_ch2], 0b00100000, [rb + value]
 
-    jz  [ppi_read_high_switches], ppi_port_c_read_high_switches
+    jnz [ppi_read_high_switches], ppi_port_c_read_high_switches
 
     # 0   : loop on post: 0 - no
     # 1   : coprocessor installed: 0 - no

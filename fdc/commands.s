@@ -75,7 +75,7 @@
 .IMPORT dma_receive_data
 
 # From util/bits.s
-.IMPORT bits
+.IMPORT bit_0
 
 # From util/log.s
 .IMPORT log_start
@@ -669,7 +669,7 @@ fdc_exec_recalibrate_after_irq:
 fdc_exec_specify:
 .FRAME
     # We ignore all the timings, but verify that ND (bit 0) is zero for DMA mode
-    add bits, [fdc_cmd_hlt_nd], [ip + 1]
+    add bit_0, [fdc_cmd_hlt_nd], [ip + 1]
     jnz [0], fdc_exec_specify_non_dma
 
     ret 0
