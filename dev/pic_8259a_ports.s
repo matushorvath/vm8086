@@ -24,7 +24,13 @@
 .IMPORT report_error
 
 # From util/bits.s
-.IMPORT bits
+.IMPORT bit_0
+.IMPORT bit_1
+.IMPORT bit_2
+.IMPORT bit_3
+.IMPORT bit_4
+.IMPORT bit_5
+.IMPORT bit_6
 
 # From util/shr.s
 .IMPORT shr
@@ -63,11 +69,11 @@ pic_command_write_after_log:
     mul [rb + value], 8, [rb + value_x8]
 
     # If bit 4 is 1, this is ICW1
-    add bits + 4, [rb + value_x8], [ip + 1]
+    add bit_4, [rb + value], [ip + 1]
     jnz [0], pic_command_write_icw1
 
     # Bit 4 is 0; if bit 3 is 0, this is OCW2
-    add bits + 3, [rb + value_x8], [ip + 1]
+    add bit_3, [rb + value], [ip + 1]
     jz  [0], pic_command_write_ocw2
 
     # Bit 3 is 1, this is OCW3
@@ -77,15 +83,15 @@ pic_command_write_icw1:
     # Receive ICW1
 
     # ICW4 is always required, since we only support the 8086/8088 mode
-    add bits + 0, [rb + value_x8], [ip + 1]
+    add bit_0, [rb + value], [ip + 1]
     jz  [0], pic_command_write_invalid_icw1
 
     # No support for cascade mode, since there is just one PIC
-    add bits + 1, [rb + value_x8], [ip + 1]
+    add bit_1, [rb + value], [ip + 1]
     jz  [0], pic_command_write_invalid_icw1
 
     # Only support edge triggered mode
-    add bits + 3, [rb + value_x8], [ip + 1]
+    add bit_3, [rb + value], [ip + 1]
     jnz [0], pic_command_write_invalid_icw1
 
     # Clear the interrupt mask register
@@ -169,25 +175,25 @@ pic_command_write_ocw3:
     # Receive OCW3
 
     # Should we set the "read register" value?
-    add bits + 1, [rb + value_x8], [ip + 1]
+    add bit_1, [rb + value], [ip + 1]
     jz  [0], pic_command_write_ocw3_after_rr
 
     # Yes, set the "read register" value
-    add bits + 0, [rb + value_x8], [ip + 1]
+    add bit_0, [rb + value], [ip + 1]
     add [0], 0, [pic_read_in_service]
 
 pic_command_write_ocw3_after_rr:
     # Should we set the "special mask mode" value?
-    add bits + 6, [rb + value_x8], [ip + 1]
+    add bit_6, [rb + value], [ip + 1]
     jz  [0], pic_command_write_ocw3_after_smm
 
     # Yes, but we only support special mask mode off
-    add bits + 5, [rb + value_x8], [ip + 1]
+    add bit_5, [rb + value], [ip + 1]
     jnz [0], pic_command_write_invalid_ocw3
 
 pic_command_write_ocw3_after_smm:
     # Poll mode is not supported
-    add bits + 2, [rb + value_x8], [ip + 1]
+    add bit_2, [rb + value], [ip + 1]
     jnz [0], pic_command_write_invalid_ocw3
 
 pic_command_write_done:
@@ -299,15 +305,15 @@ pic_data_write_expect_icw4:
     # Receive ICW4
 
     # We only support the 8086/8088 mode
-    add bits + 0, [rb + value_x8], [ip + 1]
+    add bit_0, [rb + value], [ip + 1]
     jz  [0], pic_data_write_invalid_icw3
 
     # No support for auto end of interrupt
-    add bits + 1, [rb + value_x8], [ip + 1]
+    add bit_1, [rb + value], [ip + 1]
     jnz [0], pic_data_write_invalid_icw3
 
     # No support for special fully nested mode
-    add bits + 4, [rb + value_x8], [ip + 1]
+    add bit_4, [rb + value], [ip + 1]
     jnz [0], pic_data_write_invalid_icw3
 
     # Set up next state

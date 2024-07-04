@@ -17,7 +17,14 @@
 .IMPORT mem
 
 # From util/bits.s
-.IMPORT bits
+.IMPORT bit_0
+.IMPORT bit_1
+.IMPORT bit_2
+.IMPORT bit_3
+.IMPORT bit_4
+.IMPORT bit_5
+.IMPORT bit_6
+.IMPORT bit_7
 
 # From util/log.s
 .IMPORT log_start
@@ -177,8 +184,10 @@ dma_receive_data_log_fdc_start:
 
 ##########
 dma_mode_write:
-.FRAME addr, value; value_x8, channel, transfer_type, dma_mode, tmp
-    arb -5
+.FRAME addr, value; channel, transfer_type, dma_mode, tmp
+    arb -4
+
+    # Set DMA mode
 
     # Floppy controller logging
     jz  [config_log_fdc], dma_mode_write_after_log_fdc
@@ -190,19 +199,16 @@ dma_mode_write:
     call dma_mode_write_log_fdc
 
 dma_mode_write_after_log_fdc:
-    # Set DMA mode
-    mul [rb + value], 8, [rb + value_x8]
-
     # Read channel number from bits 0 and 1
-    add bits + 1, [rb + value_x8], [ip + 1]
+    add bit_1, [rb + value], [ip + 1]
     mul [0], 0b10, [rb + channel]
-    add bits + 0, [rb + value_x8], [ip + 1]
+    add bit_0, [rb + value], [ip + 1]
     add [0], [rb + channel], [rb + channel]
 
     # Read transfer type from bits 2 and 3
-    add bits + 3, [rb + value_x8], [ip + 1]
+    add bit_3, [rb + value], [ip + 1]
     mul [0], 0b10, [rb + transfer_type]
-    add bits + 2, [rb + value_x8], [ip + 1]
+    add bit_2, [rb + value], [ip + 1]
     add [0], [rb + transfer_type], [rb + transfer_type]
 
     # Transfer type 0b11 is invalid
@@ -210,9 +216,9 @@ dma_mode_write_after_log_fdc:
     jnz [rb + tmp], dma_mode_write_done
 
     # Read DMA mode from bits 6 and 7
-    add bits + 7, [rb + value_x8], [ip + 1]
+    add bit_7, [rb + value], [ip + 1]
     mul [0], 0b10, [rb + dma_mode]
-    add bits + 6, [rb + value_x8], [ip + 1]
+    add bit_6, [rb + value], [ip + 1]
     add [0], [rb + dma_mode], [rb + dma_mode]
 
     # DMA mode 0b11 (cascade) is invalid
@@ -228,19 +234,19 @@ dma_mode_write_after_log_fdc:
     add [rb + dma_mode], 0, [0]
 
     # Read and save auto init mode
-    add bits + 4, [rb + value_x8], [ip + 1]
+    add bit_4, [rb + value], [ip + 1]
     add [0], 0, [rb + tmp]
     add dma_auto_init_channels, [rb + channel], [ip + 3]
     add [rb + tmp], 0, [0]
 
     # Read and save decrement mode
-    add bits + 5, [rb + value_x8], [ip + 1]
+    add bit_5, [rb + value], [ip + 1]
     add [0], 0, [rb + tmp]
     add dma_decrement_channels, [rb + channel], [ip + 3]
     add [rb + tmp], 0, [0]
 
 dma_mode_write_done:
-    arb 5
+    arb 4
     ret 2
 .ENDFRAME
 
@@ -266,15 +272,11 @@ dma_mode_write_log_fdc_start:
 
 ##########
 dma_command_write:
-.FRAME addr, value; value_x8
-    arb -1
-
+.FRAME addr, value;
     # Only bit 3 is useful, it disables the DMA controller
-    mul [rb + value], 8, [rb + value_x8]
-    add bits + 3, [rb + value_x8], [ip + 1]
+    add bit_3, [rb + value], [ip + 1]
     add [0], 0, [dma_disable_controller]
 
-    arb 1
     ret 2
 .ENDFRAME
 
@@ -335,52 +337,45 @@ dma_flip_flop_reset_write:
 
 ##########
 dma_single_channel_mask_write:
-.FRAME addr, value; value_x8, channel, mask
-    arb -3
+.FRAME addr, value; channel, mask
+    arb -2
 
     # Mask a single channel
-    mul [rb + value], 8, [rb + value_x8]
 
     # Read channel number from bits 0 and 1
-    add bits + 1, [rb + value_x8], [ip + 1]
+    add bit_1, [rb + value], [ip + 1]
     mul [0], 0b10, [rb + channel]
-    add bits + 0, [rb + value_x8], [ip + 1]
+    add bit_0, [rb + value], [ip + 1]
     add [0], [rb + channel], [rb + channel]
 
     # Read mask/unmask value from bit 2
-    add bits + 2, [rb + value_x8], [ip + 1]
+    add bit_2, [rb + value], [ip + 1]
     add [0], 0, [rb + mask]
 
     # Mask/unmask the channel
     add dma_mask_channels, [rb + channel], [ip + 3]
     add [rb + mask], 0, [0]
 
-    arb 3
+    arb 2
     ret 2
 .ENDFRAME
 
 ##########
 dma_multi_channel_mask_write:
-.FRAME addr, value; value_x8
-    arb -1
-
+.FRAME addr, value;
     # Mask a all channels
-    mul [rb + value], 8, [rb + value_x8]
-
-    # Set mask for individual channels
-    add bits + 0, [rb + value_x8], [ip + 1]
+    add bit_0, [rb + value], [ip + 1]
     add [0], 0, [dma_mask_ch0]
 
-    add bits + 1, [rb + value_x8], [ip + 1]
+    add bit_1, [rb + value], [ip + 1]
     add [0], 0, [dma_mask_ch1]
 
-    add bits + 2, [rb + value_x8], [ip + 1]
+    add bit_2, [rb + value], [ip + 1]
     add [0], 0, [dma_mask_ch2]
 
-    add bits + 3, [rb + value_x8], [ip + 1]
+    add bit_3, [rb + value], [ip + 1]
     add [0], 0, [dma_mask_ch3]
 
-    arb 1
     ret 2
 .ENDFRAME
 

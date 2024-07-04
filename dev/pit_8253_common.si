@@ -13,7 +13,14 @@
 .IMPORT report_error
 
 # From util/bits.s
-.IMPORT bits
+.IMPORT bit_0
+.IMPORT bit_1
+.IMPORT bit_2
+.IMPORT bit_3
+.IMPORT bit_4
+.IMPORT bit_5
+.IMPORT bit_6
+.IMPORT bit_7
 
 # From util/log.s
 .IMPORT log_start
@@ -160,22 +167,18 @@ pit_vm_callback_common_done:
 
 ##########
 pit_mode_command_write_common:
-.FRAME value; value_bits, orig_output, tmp
-    arb -3
-
-    # Split value to components
-    mul [rb + value], 8, [rb + tmp]
-    add bits, [rb + tmp], [rb + value_bits]
+.FRAME value; orig_output, tmp
+    arb -2
 
     # Check for BCD mode, which is not supported
-    add [rb + value_bits], 0, [ip + 1]
+    add bit_0, [rb + value], [ip + 1]
     jnz [0], pit_mode_command_write_common_bcd
 
     # Read the access mode
-    add [rb + value_bits], 5, [ip + 1]
+    add bit_5, [rb + value], [ip + 1]
     add [0], 0, [rb + tmp]
     mul [rb + tmp], 2, [rb + tmp]
-    add [rb + value_bits], 4, [ip + 1]
+    add bit_4, [rb + value], [ip + 1]
     add [0], [rb + tmp], [rb + tmp]
 
     # Handle latch command
@@ -183,13 +186,13 @@ pit_mode_command_write_common:
     add [rb + tmp], 0, [pit_access]
 
     # Read the operating mode
-    add [rb + value_bits], 3, [ip + 1]
+    add bit_3, [rb + value], [ip + 1]
     add [0], 0, [pit_mode]
     mul [pit_mode], 2, [pit_mode]
-    add [rb + value_bits], 2, [ip + 1]
+    add bit_2, [rb + value], [ip + 1]
     add [0], [pit_mode], [pit_mode]
     mul [pit_mode], 2, [pit_mode]
-    add [rb + value_bits], 1, [ip + 1]
+    add bit_1, [rb + value], [ip + 1]
     add [0], [pit_mode], [pit_mode]
 
     # Modes 0b110 and 0b111 are aliases for 0b010 and 0b011
@@ -252,7 +255,7 @@ pit_mode_command_write_common_latch:
     call pit_mode_command_write_latch_log
 
 pit_mode_command_write_common_done:
-    arb 3
+    arb 2
     ret 1
 
 pit_mode_command_write_common_bcd:
@@ -317,7 +320,7 @@ pit_data_write_common_handle_reload:
     # Zero least significant bit of the reload value in mode 3
     eq  [pit_mode], 3, [rb + tmp]
     jz  [rb + tmp], pit_data_write_common_after_mod2
-    add bits, [pit_reload_lo], [ip + 1]
+    add bit_0, [pit_reload_lo], [ip + 1]
     jz  [0], pit_data_write_common_after_mod2
     add [pit_reload_lo], -1, [pit_reload_lo]
 
