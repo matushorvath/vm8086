@@ -2,6 +2,13 @@
 .EXPORT set_disk_active
 .EXPORT redraw_status_bar
 
+# From screen.s
+.IMPORT screen_width_chars
+.IMPORT screen_height_chars
+
+# From util/printb.s
+.IMPORT printb
+
 # From libxib.a
 .IMPORT print_num_radix
 
@@ -35,11 +42,14 @@ redraw_status_bar:
     # Assume that we have a 25 row text mode during POST
     # TODO we now have status after POST, use the real row count
 
-    # Position the cursor to column 1, row 26 (just below the lower left corner of the screen)
+    # Position the cursor to column 1, one row below the screen
     out 0x1b
     out '['
-    out '2'
-    out '6'
+
+    add [screen_height_chars], 1, [rb - 1]
+    arb -1
+    call printb
+
     out ';'
     out '1'
     out 'H'
@@ -68,14 +78,20 @@ redraw_status_bar_after_post:
 ##########
 redraw_disk_activity:
 .FRAME
-    # Position the cursor to column 79, row 26 (end of the status line)
+    # Position the cursor to column 79, one row below the screen
     out 0x1b
     out '['
-    out '2'
-    out '6'
+
+    add [screen_height_chars], 1, [rb - 1]
+    arb -1
+    call printb
+
     out ';'
-    out '7'
-    out '9'
+
+    add [screen_width_chars], -1, [rb - 1]
+    arb -1
+    call printb
+
     out 'H'
 
     # If there is disk activity, set color to black on yellow
