@@ -18,6 +18,7 @@
     arb -1
     call print_str
 
+    add 32, 0, [gen_number_max]
     add 0, 0, [bit_index]
 
 bit_loop:

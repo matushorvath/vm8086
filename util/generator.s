@@ -86,7 +86,7 @@ pow_2_done:
 
 ##########
 gen_number_max:
-    db  16
+    db  0
 gen_number_count:
     db  0
 
