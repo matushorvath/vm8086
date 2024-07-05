@@ -3,7 +3,7 @@
 # From cpu/devices.s
 .IMPORT register_ports
 
-# From cga/status.s
+# From cga/status_bar.s
 .IMPORT post_status_write
 
 ##########

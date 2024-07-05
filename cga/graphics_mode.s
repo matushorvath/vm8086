@@ -107,7 +107,7 @@ write_memory_graphics:
     # TODO starting from here, create a function that builds one char and call it twice
     # params: addr_row, crumbs3, crumbs2 (or crumbs1, crumbs0)
     # it will keep r?c? internally, count colors, map colors, build char, print char
-    # common: set cursor position (before printing chars) just once
+    # common: set cursor position (before printing chars), reset attributes after
 
     # Read first row of pixels
     add [rb + addr_row], 0, [ip + 1]

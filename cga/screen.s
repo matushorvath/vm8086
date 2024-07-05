@@ -14,8 +14,8 @@
 .IMPORT mode_enable_output
 .IMPORT mode_high_res_graphics
 
-# From status.s
-.IMPORT redraw_vm_status
+# From status_bar.s
+.IMPORT redraw_status_bar
 
 # From util/error.s
 .IMPORT report_error
@@ -59,13 +59,13 @@ reset_screen_text:
 
 reset_screen_redraw_memory:
     # Don't redraw the memory if output is disabled
-    jz  [mode_enable_output], reset_screen_redraw_vm_status
+    jz  [mode_enable_output], reset_screen_redraw_status_bar
 
     # TODO redraw the memory in new mode
 
-reset_screen_redraw_vm_status:
+reset_screen_redraw_status_bar:
     # Redraw the status line
-    call redraw_vm_status
+    call redraw_status_bar
 
     ret 0
 
