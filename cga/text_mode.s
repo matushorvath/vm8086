@@ -36,7 +36,9 @@
 .IMPORT nibble_1
 
 # From util/shr.s
-.IMPORT shr
+.IMPORT shr_1
+.IMPORT shr_4
+.IMPORT shr_5
 
 # From util/printb.s
 .IMPORT printb
@@ -46,8 +48,8 @@
 
 ##########
 write_memory_text:
-.FRAME addr, value; row, col, col_x8, char, attr, addr_lo, addr_hi, tmp
-    arb -8
+.FRAME addr, value; row, col, char, attr, addr_lo, addr_hi, tmp
+    arb -7
 
     # TODO don't draw if mode_enable_output is 0; redraw whole screen after enabling output
 
@@ -80,8 +82,7 @@ write_memory_text:
     # Screen row is 80 bytes, divide by 2^4
     mul [rb + addr_hi], 0x10, [rb + row]
 
-    mul [rb + addr_lo], 8, [rb + tmp]
-    add shr + 4, [rb + tmp], [ip + 1]
+    add shr_4, [rb + addr_lo], [ip + 1]
     add [0], [rb + row], [rb + row]
 
     # Divide the result by 5
@@ -98,8 +99,7 @@ write_memory_text_calc_160:
     # Screen row is 160 bytes, divide by 2^5
     mul [rb + addr_hi], 0x08, [rb + row]
 
-    mul [rb + addr_lo], 8, [rb + tmp]
-    add shr + 5, [rb + tmp], [ip + 1]
+    add shr_5, [rb + addr_lo], [ip + 1]
     add [0], [rb + row], [rb + row]
 
     # Divide the result by 5
@@ -134,8 +134,7 @@ write_memory_text_get_attr:
 
 write_memory_text_print:
     # Each screen location occupies two bytes, so divide col by 2
-    mul [rb + col], 8, [rb + col_x8]
-    add shr + 1, [rb + col_x8], [ip + 1]
+    add shr_1, [rb + col], [ip + 1]
     add [0], 0, [rb + col]
 
     # Set cursor position
@@ -283,7 +282,7 @@ write_memory_text_after_print:
     out 'm'
 
 write_memory_text_done:
-    arb 8
+    arb 7
     ret 2
 .ENDFRAME
 

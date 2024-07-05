@@ -33,7 +33,8 @@
 .IMPORT bit_6
 
 # From util/shr.s
-.IMPORT shr
+.IMPORT shr_3
+.IMPORT shr_5
 
 ##########
 pic_ports:
@@ -55,8 +56,8 @@ init_pic_8259a:
 
 ##########
 pic_command_write:
-.FRAME addr, value; value_x8, tmp
-    arb -2
+.FRAME addr, value; tmp
+    arb -1
 
     # PIC logging
     jz  [config_log_pic], pic_command_write_after_log
@@ -66,8 +67,6 @@ pic_command_write:
     call pic_command_write_log
 
 pic_command_write_after_log:
-    mul [rb + value], 8, [rb + value_x8]
-
     # If bit 4 is 1, this is ICW1
     add bit_4, [rb + value], [ip + 1]
     jnz [0], pic_command_write_icw1
@@ -118,7 +117,7 @@ pic_command_write_ocw2:
     # Receive OCW2
 
     # Decide what to do based on top 3 bits
-    add shr + 5, [rb + value_x8], [ip + 1]
+    add shr_5, [rb + value], [ip + 1]
     add [0], pic_command_write_ocw2_table, [ip + 2]
     jz  0, [0]
 
@@ -197,7 +196,7 @@ pic_command_write_ocw3_after_smm:
     jnz [0], pic_command_write_invalid_ocw3
 
 pic_command_write_done:
-    arb 2
+    arb 1
     ret 2
 
 pic_command_write_invalid_icw1:
@@ -227,8 +226,8 @@ pic_command_write_invalid_ocw3_message:
 
 ##########
 pic_data_write:
-.FRAME addr, value; value_x8, tmp
-    arb -2
+.FRAME addr, value; tmp
+    arb -1
 
     # PIC logging
     jz  [config_log_pic], pic_data_write_after_log
@@ -238,8 +237,6 @@ pic_data_write:
     call pic_data_write_log
 
 pic_data_write_after_log:
-    mul [rb + value], 8, [rb + value_x8]
-
     # Continue based on PIC state
     add pic_data_write_table, [pic_state], [ip + 2]
     jz  0, [0]
@@ -293,7 +290,7 @@ pic_data_write_expect_icw2:
 
     # Top 5 bits are the interrupt vector offset
     # We only support the offset of 8, which maps IRQ0-7 to interrupts 8-15
-    add shr + 3, [rb + value_x8], [ip + 1]
+    add shr_3, [rb + value], [ip + 1]
     eq  [0], 0b00001, [rb + tmp]
     jz  [rb + tmp], pic_data_write_invalid_icw2
 
@@ -320,7 +317,7 @@ pic_data_write_expect_icw4:
     add S_DEFAULT, 0, [pic_state]
 
 pic_data_write_done:
-    arb 2
+    arb 1
     ret 2
 
 pic_data_write_invalid_icw2:

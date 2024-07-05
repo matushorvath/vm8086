@@ -28,7 +28,14 @@
 .IMPORT shl
 
 # From util/shr.s
-.IMPORT shr
+.IMPORT shr_0
+.IMPORT shr_1
+.IMPORT shr_2
+.IMPORT shr_3
+.IMPORT shr_4
+.IMPORT shr_5
+.IMPORT shr_6
+.IMPORT shr_7
 
 # From util/split233.s
 .IMPORT split233
@@ -83,43 +90,43 @@ execute_rol_b_table:
     db execute_rol_b_by_7
 
 execute_rol_b_by_1:
-    add shr + 7, [rb + valx8], [ip + 5]
+    add shr_7, [rb + val], [ip + 5]
     add shl + 1, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
     jz  0, execute_rol_b_flags
 
 execute_rol_b_by_2:
-    add shr + 6, [rb + valx8], [ip + 5]
+    add shr_6, [rb + val], [ip + 5]
     add shl + 2, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
     jz  0, execute_rol_b_flags
 
 execute_rol_b_by_3:
-    add shr + 5, [rb + valx8], [ip + 5]
+    add shr_5, [rb + val], [ip + 5]
     add shl + 3, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
     jz  0, execute_rol_b_flags
 
 execute_rol_b_by_4:
-    add shr + 4, [rb + valx8], [ip + 5]
+    add shr_4, [rb + val], [ip + 5]
     add shl + 4, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
     jz  0, execute_rol_b_flags
 
 execute_rol_b_by_5:
-    add shr + 3, [rb + valx8], [ip + 5]
+    add shr_3, [rb + val], [ip + 5]
     add shl + 5, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
     jz  0, execute_rol_b_flags
 
 execute_rol_b_by_6:
-    add shr + 2, [rb + valx8], [ip + 5]
+    add shr_2, [rb + val], [ip + 5]
     add shl + 6, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
     jz  0, execute_rol_b_flags
 
 execute_rol_b_by_7:
-    add shr + 1, [rb + valx8], [ip + 5]
+    add shr_1, [rb + val], [ip + 5]
     add shl + 7, [rb + valx8], [ip + 2]
     add [0], [0], [rb + val]
 
@@ -190,43 +197,43 @@ execute_ror_b_table:
 
 execute_ror_b_by_1:
     add shl + 7, [rb + valx8], [ip + 5]
-    add shr + 1, [rb + valx8], [ip + 2]
+    add shr_1, [rb + val], [ip + 2]
     add [0], [0], [rb + val]
     jz  0, execute_ror_b_flags
 
 execute_ror_b_by_2:
     add shl + 6, [rb + valx8], [ip + 5]
-    add shr + 2, [rb + valx8], [ip + 2]
+    add shr_2, [rb + val], [ip + 2]
     add [0], [0], [rb + val]
     jz  0, execute_ror_b_flags
 
 execute_ror_b_by_3:
     add shl + 5, [rb + valx8], [ip + 5]
-    add shr + 3, [rb + valx8], [ip + 2]
+    add shr_3, [rb + val], [ip + 2]
     add [0], [0], [rb + val]
     jz  0, execute_ror_b_flags
 
 execute_ror_b_by_4:
     add shl + 4, [rb + valx8], [ip + 5]
-    add shr + 4, [rb + valx8], [ip + 2]
+    add shr_4, [rb + val], [ip + 2]
     add [0], [0], [rb + val]
     jz  0, execute_ror_b_flags
 
 execute_ror_b_by_5:
     add shl + 3, [rb + valx8], [ip + 5]
-    add shr + 5, [rb + valx8], [ip + 2]
+    add shr_5, [rb + val], [ip + 2]
     add [0], [0], [rb + val]
     jz  0, execute_ror_b_flags
 
 execute_ror_b_by_6:
     add shl + 2, [rb + valx8], [ip + 5]
-    add shr + 6, [rb + valx8], [ip + 2]
+    add shr_6, [rb + val], [ip + 2]
     add [0], [0], [rb + val]
     jz  0, execute_ror_b_flags
 
 execute_ror_b_by_7:
     add shl + 1, [rb + valx8], [ip + 5]
-    add shr + 7, [rb + valx8], [ip + 2]
+    add shr_7, [rb + val], [ip + 2]
     add [0], [0], [rb + val]
 
 execute_ror_b_flags:
@@ -333,7 +340,7 @@ execute_rcl_b_by_1:
     jz  0, [rb + overflow_algorithm]
 
 execute_rcl_b_by_2:
-    add shr + 7, [rb + valx8], [ip + 5]
+    add shr_7, [rb + input], [ip + 5]
     add shl + 2, [rb + valx8], [ip + 2]
     add [0], [0], [rb + output]
     mul [flag_carry], 0x02, [rb + tmp]
@@ -345,7 +352,7 @@ execute_rcl_b_by_2:
     jz  0, [rb + overflow_algorithm]
 
 execute_rcl_b_by_3:
-    add shr + 6, [rb + valx8], [ip + 5]
+    add shr_6, [rb + input], [ip + 5]
     add shl + 3, [rb + valx8], [ip + 2]
     add [0], [0], [rb + output]
     mul [flag_carry], 0x04, [rb + tmp]
@@ -357,7 +364,7 @@ execute_rcl_b_by_3:
     jz  0, [rb + overflow_algorithm]
 
 execute_rcl_b_by_4:
-    add shr + 5, [rb + valx8], [ip + 5]
+    add shr_5, [rb + input], [ip + 5]
     add shl + 4, [rb + valx8], [ip + 2]
     add [0], [0], [rb + output]
     mul [flag_carry], 0x08, [rb + tmp]
@@ -369,7 +376,7 @@ execute_rcl_b_by_4:
     jz  0, [rb + overflow_algorithm]
 
 execute_rcl_b_by_5:
-    add shr + 4, [rb + valx8], [ip + 5]
+    add shr_4, [rb + input], [ip + 5]
     add shl + 5, [rb + valx8], [ip + 2]
     add [0], [0], [rb + output]
     mul [flag_carry], 0x10, [rb + tmp]
@@ -381,7 +388,7 @@ execute_rcl_b_by_5:
     jz  0, [rb + overflow_algorithm]
 
 execute_rcl_b_by_6:
-    add shr + 3, [rb + valx8], [ip + 5]
+    add shr_3, [rb + input], [ip + 5]
     add shl + 6, [rb + valx8], [ip + 2]
     add [0], [0], [rb + output]
     mul [flag_carry], 0x20, [rb + tmp]
@@ -393,7 +400,7 @@ execute_rcl_b_by_6:
     jz  0, [rb + overflow_algorithm]
 
 execute_rcl_b_by_7:
-    add shr + 2, [rb + valx8], [ip + 5]
+    add shr_2, [rb + input], [ip + 5]
     add shl + 7, [rb + valx8], [ip + 2]
     add [0], [0], [rb + output]
     mul [flag_carry], 0x40, [rb + tmp]
@@ -405,7 +412,7 @@ execute_rcl_b_by_7:
     jz  0, [rb + overflow_algorithm]
 
 execute_rcl_b_by_8:
-    add shr + 1, [rb + valx8], [ip + 5]
+    add shr_1, [rb + input], [ip + 5]
     mul [flag_carry], 0x80, [rb + tmp]
     add [0], [rb + tmp], [rb + output]
 

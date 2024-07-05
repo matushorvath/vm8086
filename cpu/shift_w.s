@@ -89,9 +89,8 @@ execute_shl_w:
     add [0], 0, [rb + val_hi]
 
     # Shift the lo value right to calculate carry from lo to hi
-    mul [rb + val_lo], 8, [rb + tmp]
-    add shr, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + spill], [ip + 1]
+    add shr, [rb + spill], [ip + 1]
+    add [0], [rb + val_lo], [ip + 1]
     add [0], [rb + val_hi], [rb + val_hi]
 
     # Find shifted lo value in the shl table
@@ -250,9 +249,8 @@ execute_shr_w:
     add [0], 0, [flag_carry]
 
     # Find shifted lo value in the shr table
-    mul [rb + val_lo], 8, [rb + tmp]
-    add shr, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
+    add shr, [rb + count], [ip + 1]
+    add [0], [rb + val_lo], [ip + 1]
     add [0], 0, [rb + val_lo]
 
     # Shift the hi value left to calculate carry from hi to lo
@@ -265,9 +263,8 @@ execute_shr_w:
     add [0], [rb + val_lo], [rb + val_lo]
 
     # Find shifted hi value in the shr table
-    mul [rb + val_hi], 8, [rb + tmp]
-    add shr, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
+    add shr, [rb + count], [ip + 1]
+    add [0], [rb + val_hi], [ip + 1]
     add [0], 0, [rb + val_hi]
 
     jz  0, execute_shr_w_update_flags
@@ -285,9 +282,8 @@ execute_shr_w_8_to_15:
     add [0], 0, [flag_carry]
 
     # Find shifted hi value in the shr table and use it as lo value
-    mul [rb + val_hi], 8, [rb + tmp]
-    add shr, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
+    add shr, [rb + count], [ip + 1]
+    add [0], [rb + val_hi], [ip + 1]
     add [0], 0, [rb + val_lo]
 
     # Zero the hi value
@@ -414,9 +410,8 @@ execute_sar_w:
     add [0], 0, [flag_carry]
 
     # Find shifted lo value in the shr table
-    mul [rb + val_lo], 8, [rb + tmp]
-    add shr, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
+    add shr, [rb + count], [ip + 1]
+    add [0], [rb + val_lo], [ip + 1]
     add [0], 0, [rb + val_lo]
 
     # Shift the hi value left to calculate carry from hi to lo
@@ -429,9 +424,8 @@ execute_sar_w:
     add [0], [rb + val_lo], [rb + val_lo]
 
     # Find shifted hi value in the shr table
-    mul [rb + val_hi], 8, [rb + tmp]
-    add shr, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
+    add shr, [rb + count], [ip + 1]
+    add [0], [rb + val_hi], [ip + 1]
     add [0], 0, [rb + val_hi]
 
     # Sign-fill the left side of hi byte
@@ -454,9 +448,8 @@ execute_sar_w_8_to_15:
     add [0], 0, [flag_carry]
 
     # Find shifted hi value in the shr table and use it as lo value
-    mul [rb + val_hi], 8, [rb + tmp]
-    add shr, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
+    add shr, [rb + count], [ip + 1]
+    add [0], [rb + val_hi], [ip + 1]
     add [0], 0, [rb + val_lo]
 
     # Sign-fill the left side of lo byte and the whole hi byte
