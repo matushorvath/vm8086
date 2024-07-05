@@ -21,6 +21,22 @@ $(BINDIR)/libcga.a: $(CGA_OBJS:%.o=$(OBJDIR)/%.o)
 $(OBJDIR)/%.o: %.s
 	$(run-intcode-as)
 
+# Some data tables are generated at compile time for performance reasons
+
+GENERATOR_OBJS = $(BINDIR)/libutil.a
+
+.PRECIOUS: $(OBJDIR)/%.o
+$(OBJDIR)/%.o: $(OBJDIR)/%.s
+	$(run-intcode-as)
+
+.PRECIOUS: $(OBJDIR)/%.s
+$(OBJDIR)/%.s: $(OBJDIR)/gen_%.input
+	$(ICVM) $< > $@ || ( cat $@ ; false )
+
+.PRECIOUS: $(OBJDIR)/gen_%.input
+$(OBJDIR)/gen_%.input: $(OBJDIR)/gen_%.o $(GENERATOR_OBJS:%.o=$(OBJDIR)/%.o) $(LIBXIB)
+	$(run-intcode-ld)
+
 .PHONY: clean
 clean:
 	rm -rf $(BINDIR)/libcga.a* $(OBJDIR)

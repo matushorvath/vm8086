@@ -1,4 +1,4 @@
-# Utility to generate div9.s
+# Utility to generate div5.s
 
 .IMPORT print_str
 .IMPORT print_num
