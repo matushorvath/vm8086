@@ -23,7 +23,8 @@ freedos.img.xz:
 
 freedos.img: freedos.img.xz
 	xz -dkf $<
-	mdeltree -i $@ FSEVEN~1
+	# don't fail if mtools are not available, because of CI/CD
+	mdeltree -i $@ FSEVEN~1 || true
 
 # https://winworldpc.com/product/ms-dos/331
 msdos.7z:
