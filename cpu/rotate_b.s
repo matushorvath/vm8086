@@ -45,7 +45,7 @@
 .IMPORT shr_7
 
 # From util/split233.s
-.IMPORT split233
+.IMPORT split233_0
 
 # From state.s
 .IMPORT reg_cl
@@ -53,16 +53,16 @@
 .IMPORT flag_overflow
 
 ##########
-.FRAME lseg, loff; val, count, tmp
+.FRAME lseg, loff; val, count
     # Function with multiple entry points
 
 execute_rol_1_b:
-    arb -3
+    arb -2
     add 1, 0, [rb + count]
     jz  0, execute_rol_b
 
 execute_rol_cl_b:
-    arb -3
+    arb -2
     add [reg_cl], 0, [rb + count]
 
 execute_rol_b:
@@ -70,8 +70,7 @@ execute_rol_b:
     jz  [rb + count], execute_rol_b_done
 
     # Use the split233 table to obtain count mod 8
-    mul [rb + count], 3, [rb + tmp]
-    add split233, [rb + tmp], [ip + 1]
+    add split233_0, [rb + count], [ip + 1]
     add [0], 0, [rb + count]
 
     # Read the value to rotate
@@ -153,21 +152,21 @@ execute_rol_b_flags:
     call write_location_b
 
 execute_rol_b_done:
-    arb 3
+    arb 2
     ret 2
 .ENDFRAME
 
 ##########
-.FRAME lseg, loff; val, count, tmp
+.FRAME lseg, loff; val, count
     # Function with multiple entry points
 
 execute_ror_1_b:
-    arb -3
+    arb -2
     add 1, 0, [rb + count]
     jz  0, execute_ror_b
 
 execute_ror_cl_b:
-    arb -3
+    arb -2
     add [reg_cl], 0, [rb + count]
 
 execute_ror_b:
@@ -175,8 +174,7 @@ execute_ror_b:
     jz  [rb + count], execute_ror_b_done
 
     # Use the split233 table to obtain count mod 8
-    mul [rb + count], 3, [rb + tmp]
-    add split233, [rb + tmp], [ip + 1]
+    add split233_0, [rb + count], [ip + 1]
     add [0], 0, [rb + count]
 
     # Read the value to rotate
@@ -258,7 +256,7 @@ execute_ror_b_flags:
     call write_location_b
 
 execute_ror_b_done:
-    arb 3
+    arb 2
     ret 2
 .ENDFRAME
 

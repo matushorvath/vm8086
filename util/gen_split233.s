@@ -1,166 +1,115 @@
 # Utility to generate split233.s
 
-.IMPORT print_num_radix
-.IMPORT print_str
+# From generator.s
+.IMPORT gen_number_times
+.IMPORT pow_2
 
+.IMPORT gen_number_max
+.IMPORT gen_number_count
+
+# From libxib.a
+.IMPORT print_str
+.IMPORT print_num
+
+##########
     arb stack
 
-    add header, 0, [rb - 1]
+    add file_header, 0, [rb - 1]
     arb -1
     call print_str
 
-b7_loop:
-    b6_loop:
-        b5_loop:
-            b4_loop:
-                b3_loop:
-                    # Print line start
-                    add line_start, 0, [rb - 1]
-                    arb -1
-                    call print_str
+    add 8, 0, [gen_number_max]
+    add 0, 0, [part_index]
 
-                    add 1, 0, [new_line]
+part_loop:
+    # Part header
+    add part_header, 0, [rb - 1]
+    arb -1
+    call print_str
 
-                    b2_loop:
-                        b1_loop:
-                            b0_loop:
-                                # Skip separator before the first number
-                                jnz [new_line], skip_separator
+    add [part_index], 0, [rb - 1]
+    arb -1
+    call print_num
+    out ':'
 
-                                # Print separator
-                                add separator, 0, [rb - 1]
-                                arb -1
-                                call print_str
+    # Parts 0 and 1 are 3 bits, part 2 is 2 bits
+    lt  [part_index], 2, [part_bits]
+    add [part_bits], 2, [part_bits]
 
-                            skip_separator:
-                                add 0, 0, [new_line]
+    # Calculate number of periods and period length
+    mul [part_index], -3, [rb - 1]
+    add [rb - 1], 8, [rb - 1]
+    arb -1
+    call pow_2
+    add [rb - 3], 0, [period_index]
 
-                                # Calculate the lower 3 bits and print them
-                                add [b2], 0, [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b1], [tmp], [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b0], [tmp], [rb - 1]                       # [tmp] -> param0
+    mul [part_index], 3, [rb - 1]
+    arb -1
+    call pow_2
+    add [rb - 3], 0, [period_length]
 
-                                add 16, 0, [rb - 2]
-                                add 0, 0, [rb - 3]
-                                arb -3
-                                call print_num_radix
+    # Intialize the period loop
+    add 0, 0, [value]
+    add 0, 0, [gen_number_count]
 
-                                # Print separator
-                                add separator, 0, [rb - 1]
-                                arb -1
-                                call print_str
+period_loop:
+    # Generate one period of numbers
+    add [value], 0, [rb - 1]
+    add 2, 0, [rb - 2]
+    add [part_bits], 0, [rb - 3]
+    add number_prefix, 0, [rb - 4]
+    add [period_length], 0, [rb - 5]
+    arb -5
+    call gen_number_times
 
-                                # Calculate the middle 3 bits and print them
-                                add [b5], 0, [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b4], [tmp], [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b3], [tmp], [rb - 1]                       # [tmp] -> param0
+    # value = (value + 1) mod 8
+    add [value], 1, [value]
+    eq  [value], 8, [tmp]
+    mul [tmp], -8, [tmp]
+    add [value], [tmp], [value]
 
-                                add 16, 0, [rb - 2]
-                                add 0, 0, [rb - 3]
-                                arb -3
-                                call print_num_radix
+    add [period_index], -1, [period_index]
+    jnz [period_index], period_loop
 
-                                # Print separator
-                                add separator, 0, [rb - 1]
-                                arb -1
-                                call print_str
+    # Loop to next part
+    add [part_index], 1, [part_index]
+    eq  [part_index], 3, [tmp]
+    jz  [tmp], part_loop
 
-                                # Calculate the upper 2 bits and print them
-                                add [b7], 0, [tmp]
-                                mul [tmp], 2, [tmp]
-                                add [b6], [tmp], [rb - 1]                       # [tmp] -> param0
-
-                                add 16, 0, [rb - 2]
-                                add 0, 0, [rb - 3]
-                                arb -3
-                                call print_num_radix
-
-                                add [b0], 1, [b0]
-                                eq  [b0], 2, [tmp]
-                                jz  [tmp], b0_loop
-                                add 0, 0, [b0]
-
-                            add [b1], 1, [b1]
-                            eq  [b1], 2, [tmp]
-                            jz  [tmp], b1_loop
-                            add 0, 0, [b1]
-
-                        add [b2], 1, [b2]
-                        eq  [b2], 2, [tmp]
-                        jz  [tmp], b2_loop
-                        add 0, 0, [b2]
-
-                        # Print line end
-                        add line_end, 0, [rb - 1]
-                        arb -1
-                        call print_str
-
-                    add [b3], 1, [b3]
-                    eq  [b3], 2, [tmp]
-                    jz  [tmp], b3_loop
-                    add 0, 0, [b3]
-
-                add [b4], 1, [b4]
-                eq  [b4], 2, [tmp]
-                jz  [tmp], b4_loop
-                add 0, 0, [b4]
-
-            add [b5], 1, [b5]
-            eq  [b5], 2, [tmp]
-            jz  [tmp], b5_loop
-            add 0, 0, [b5]
-
-        add [b6], 1, [b6]
-        eq  [b6], 2, [tmp]
-        jz  [tmp], b6_loop
-        add 0, 0, [b6]
-
-    add [b7], 1, [b7]
-    eq  [b7], 2, [tmp]
-    jz  [tmp], b7_loop
-    add 0, 0, [b7]
-
-    add footer, 0, [rb - 1]
+    # Finish the file
+    add file_footer, 0, [rb - 1]
     arb -1
     call print_str
 
     hlt
 
-new_line:
-    db  1
-b0:
+##########
+part_bits:
     db  0
-b1:
+part_index:
     db  0
-b2:
+period_index:
     db  0
-b3:
+period_length:
     db  0
-b4:
-    db  0
-b5:
-    db  0
-b6:
-    db  0
-b7:
+value:
     db  0
 tmp:
     db  0
 
-header:
-    db  ".EXPORT split233", 10, 10, "# Generated using gen_split233.s", 10, 10, "split233:", 10, 0
-line_start:
-    db  "    db  0x", 0
-separator:
-    db  ", 0x", 0
-line_end:
-    db  10, 0
-footer:
-    db  10, ".EOF", 10, 0
+file_header:
+    db  ".EXPORT split233", 10, ".EXPORT split233_0", 10, ".EXPORT split233_1", 10, ".EXPORT split233_2", 10, 10
+    db  "# Generated using gen_split233.s", 10, 10
+    db  "split233:", 10, "    db  split233_0", 10, "    db  split233_1", 10, "    db  split233_2", 0
+
+part_header:
+    db  10, 10, "split233_", 0
+
+number_prefix:
+    db  "0b", 0
+
+file_footer:
+    db  10, 10, ".EOF", 10, 0
 
     ds  100, 0
 stack:

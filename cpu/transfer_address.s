@@ -17,7 +17,9 @@
 .IMPORT read_cs_ip_b
 
 # From util/split233.s
-.IMPORT split233
+.IMPORT split233_0
+.IMPORT split233_1
+.IMPORT split233_2
 
 # From state.s
 .IMPORT reg_ds
@@ -34,12 +36,11 @@ execute_lea:
     add [rb - 2], 0, [rb + tmp]
     call inc_ip_b
 
-    mul [rb + tmp], 3, [rb + tmp]
-    add split233 + 0, [rb + tmp], [ip + 1]
+    add split233_0, [rb + tmp], [ip + 1]
     add [0], 0, [rb + rm]
-    add split233 + 1, [rb + tmp], [ip + 1]
+    add split233_1, [rb + tmp], [ip + 1]
     add [0], 0, [rb + reg]
-    add split233 + 2, [rb + tmp], [ip + 1]
+    add split233_2, [rb + tmp], [ip + 1]
     add [0], 0, [rb + mod]
 
     # Decode MOD and R/M
