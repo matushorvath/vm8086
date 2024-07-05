@@ -28,7 +28,6 @@ TODO
 ====
 
 - Make sure makefiles display and delete output files when compilation fails.
-- All generated tables should be changed to avoid multiplying the input number by N
 - https://wiki.osdev.org/APM APM for poweroff, FreeDOS should support it
 - higher level floppy logging (read CHS+count -> target buffer)
 
