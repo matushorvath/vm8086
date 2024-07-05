@@ -1,3 +1,4 @@
 @ECHO OFF
 
+CD A:\AV
 A:\AV\AV.EXE
