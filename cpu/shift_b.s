@@ -21,7 +21,7 @@
 .IMPORT shl
 
 # From util/shr.s
-.IMPORT shr
+.IMPORT shr_ng
 
 # From state.s
 .IMPORT reg_cl
@@ -185,9 +185,8 @@ execute_shr_b:
     add [0], 0, [flag_carry]
 
     # Find shifted value in the shr table
-    mul [rb + val], 8, [rb + tmp]
-    add shr, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
+    add shr_ng, [rb + count], [ip + 1]
+    add [0], [rb + val], [ip + 1]
     add [0], 0, [rb + val]
 
     # Update flags
@@ -288,10 +287,9 @@ execute_sar_b:
     add [0], [rb + val], [ip + 1]
     add [0], 0, [flag_carry]
 
-    # Find shifted value in the sar table
-    mul [rb + val], 8, [rb + tmp]
-    add shr, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
+    # Find shifted value in the shr table
+    add shr_ng, [rb + count], [ip + 1]
+    add [0], [rb + val], [ip + 1]
     add [0], 0, [rb + val]
 
     # Sign-fill the left side of value
