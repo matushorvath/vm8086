@@ -23,7 +23,7 @@ $(OBJDIR)/%.o: %.s
 
 # Some data tables are generated at compile time for performance reasons
 
-GENERATOR_OBJS = $(BINDIR)/libutil.a
+GENERATOR_OBJS = unicode.o $(BINDIR)/libutil.a
 
 .PRECIOUS: $(OBJDIR)/%.o
 $(OBJDIR)/%.o: $(OBJDIR)/%.s
