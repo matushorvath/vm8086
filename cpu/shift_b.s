@@ -76,9 +76,8 @@ execute_shl_b:
     add [0], 0, [flag_carry]
 
     # Find shifted value in the shl table
-    mul [rb + val], 8, [rb + tmp]
-    add shl, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
+    add shl, [rb + count], [ip + 1]
+    add [0], [rb + val], [ip + 1]
     add [0], 0, [rb + val]
 
     # Update flags

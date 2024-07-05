@@ -28,7 +28,14 @@
 .IMPORT nibble_0
 
 # From util/shl.s
-.IMPORT shl
+.IMPORT shl_0
+.IMPORT shl_1
+.IMPORT shl_2
+.IMPORT shl_3
+.IMPORT shl_4
+.IMPORT shl_5
+.IMPORT shl_6
+.IMPORT shl_7
 
 # From util/shr.s
 .IMPORT shr_0
@@ -46,16 +53,16 @@
 .IMPORT flag_overflow
 
 ##########
-.FRAME lseg, loff; input_lo, input_hi, output_lo, output_hi, valx8_lo, valx8_hi, count
+.FRAME lseg, loff; input_lo, input_hi, output_lo, output_hi, count
     # Function with multiple entry points
 
 execute_rol_1_w:
-    arb -7
+    arb -5
     add 1, 0, [rb + count]
     jz  0, execute_rol_w
 
 execute_rol_cl_w:
-    arb -7
+    arb -5
     add [reg_cl], 0, [rb + count]
 
 execute_rol_w:
@@ -72,9 +79,7 @@ execute_rol_w:
     arb -2
     call read_location_w
     add [rb - 4], 0, [rb + input_lo]
-    mul [rb - 4], 8, [rb + valx8_lo]
     add [rb - 5], 0, [rb + input_hi]
-    mul [rb - 5], 8, [rb + valx8_hi]
 
     # Jump to the label that handles this case
     add execute_rol_w_table, [rb + count], [ip + 2]
@@ -106,77 +111,77 @@ execute_rol_w_by_0:
 
 execute_rol_w_by_1:
     add shr_7, [rb + input_hi], [ip + 5]
-    add shl + 1, [rb + valx8_lo], [ip + 2]
+    add shl_1, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     add shr_7, [rb + input_lo], [ip + 5]
-    add shl + 1, [rb + valx8_hi], [ip + 2]
+    add shl_1, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     jz  0, execute_rol_w_flags
 
 execute_rol_w_by_2:
     add shr_6, [rb + input_hi], [ip + 5]
-    add shl + 2, [rb + valx8_lo], [ip + 2]
+    add shl_2, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     add shr_6, [rb + input_lo], [ip + 5]
-    add shl + 2, [rb + valx8_hi], [ip + 2]
+    add shl_2, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     jz  0, execute_rol_w_flags
 
 execute_rol_w_by_3:
     add shr_5, [rb + input_hi], [ip + 5]
-    add shl + 3, [rb + valx8_lo], [ip + 2]
+    add shl_3, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     add shr_5, [rb + input_lo], [ip + 5]
-    add shl + 3, [rb + valx8_hi], [ip + 2]
+    add shl_3, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     jz  0, execute_rol_w_flags
 
 execute_rol_w_by_4:
     add shr_4, [rb + input_hi], [ip + 5]
-    add shl + 4, [rb + valx8_lo], [ip + 2]
+    add shl_4, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     add shr_4, [rb + input_lo], [ip + 5]
-    add shl + 4, [rb + valx8_hi], [ip + 2]
+    add shl_4, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     jz  0, execute_rol_w_flags
 
 execute_rol_w_by_5:
     add shr_3, [rb + input_hi], [ip + 5]
-    add shl + 5, [rb + valx8_lo], [ip + 2]
+    add shl_5, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     add shr_3, [rb + input_lo], [ip + 5]
-    add shl + 5, [rb + valx8_hi], [ip + 2]
+    add shl_5, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     jz  0, execute_rol_w_flags
 
 execute_rol_w_by_6:
     add shr_2, [rb + input_hi], [ip + 5]
-    add shl + 6, [rb + valx8_lo], [ip + 2]
+    add shl_6, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     add shr_2, [rb + input_lo], [ip + 5]
-    add shl + 6, [rb + valx8_hi], [ip + 2]
+    add shl_6, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     jz  0, execute_rol_w_flags
 
 execute_rol_w_by_7:
     add shr_1, [rb + input_hi], [ip + 5]
-    add shl + 7, [rb + valx8_lo], [ip + 2]
+    add shl_7, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     add shr_1, [rb + input_lo], [ip + 5]
-    add shl + 7, [rb + valx8_hi], [ip + 2]
+    add shl_7, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     jz  0, execute_rol_w_flags
@@ -189,77 +194,77 @@ execute_rol_w_by_8:
 
 execute_rol_w_by_9:
     add shr_7, [rb + input_hi], [ip + 5]
-    add shl + 1, [rb + valx8_lo], [ip + 2]
+    add shl_1, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     add shr_7, [rb + input_lo], [ip + 5]
-    add shl + 1, [rb + valx8_hi], [ip + 2]
+    add shl_1, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     jz  0, execute_rol_w_flags
 
 execute_rol_w_by_a:
     add shr_6, [rb + input_hi], [ip + 5]
-    add shl + 2, [rb + valx8_lo], [ip + 2]
+    add shl_2, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     add shr_6, [rb + input_lo], [ip + 5]
-    add shl + 2, [rb + valx8_hi], [ip + 2]
+    add shl_2, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     jz  0, execute_rol_w_flags
 
 execute_rol_w_by_b:
     add shr_5, [rb + input_hi], [ip + 5]
-    add shl + 3, [rb + valx8_lo], [ip + 2]
+    add shl_3, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     add shr_5, [rb + input_lo], [ip + 5]
-    add shl + 3, [rb + valx8_hi], [ip + 2]
+    add shl_3, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     jz  0, execute_rol_w_flags
 
 execute_rol_w_by_c:
     add shr_4, [rb + input_hi], [ip + 5]
-    add shl + 4, [rb + valx8_lo], [ip + 2]
+    add shl_4, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     add shr_4, [rb + input_lo], [ip + 5]
-    add shl + 4, [rb + valx8_hi], [ip + 2]
+    add shl_4, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     jz  0, execute_rol_w_flags
 
 execute_rol_w_by_d:
     add shr_3, [rb + input_hi], [ip + 5]
-    add shl + 5, [rb + valx8_lo], [ip + 2]
+    add shl_5, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     add shr_3, [rb + input_lo], [ip + 5]
-    add shl + 5, [rb + valx8_hi], [ip + 2]
+    add shl_5, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     jz  0, execute_rol_w_flags
 
 execute_rol_w_by_e:
     add shr_2, [rb + input_hi], [ip + 5]
-    add shl + 6, [rb + valx8_lo], [ip + 2]
+    add shl_6, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     add shr_2, [rb + input_lo], [ip + 5]
-    add shl + 6, [rb + valx8_hi], [ip + 2]
+    add shl_6, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     jz  0, execute_rol_w_flags
 
 execute_rol_w_by_f:
     add shr_1, [rb + input_hi], [ip + 5]
-    add shl + 7, [rb + valx8_lo], [ip + 2]
+    add shl_7, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     add shr_1, [rb + input_lo], [ip + 5]
-    add shl + 7, [rb + valx8_hi], [ip + 2]
+    add shl_7, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
 execute_rol_w_flags:
@@ -280,21 +285,21 @@ execute_rol_w_flags:
     call write_location_w
 
 execute_rol_w_done:
-    arb 7
+    arb 5
     ret 2
 .ENDFRAME
 
 ##########
-.FRAME lseg, loff; input_lo, input_hi, output_lo, output_hi, valx8_lo, valx8_hi, count
+.FRAME lseg, loff; input_lo, input_hi, output_lo, output_hi, count
     # Function with multiple entry points
 
 execute_ror_1_w:
-    arb -7
+    arb -5
     add 1, 0, [rb + count]
     jz  0, execute_ror_w
 
 execute_ror_cl_w:
-    arb -7
+    arb -5
     add [reg_cl], 0, [rb + count]
 
 execute_ror_w:
@@ -311,9 +316,7 @@ execute_ror_w:
     arb -2
     call read_location_w
     add [rb - 4], 0, [rb + input_lo]
-    mul [rb - 4], 8, [rb + valx8_lo]
     add [rb - 5], 0, [rb + input_hi]
-    mul [rb - 5], 8, [rb + valx8_hi]
 
     # Jump to the label that handles this case
     add execute_ror_w_table, [rb + count], [ip + 2]
@@ -344,77 +347,77 @@ execute_ror_w_by_0:
     jz  0, execute_ror_w_flags
 
 execute_ror_w_by_1:
-    add shl + 7, [rb + valx8_lo], [ip + 5]
+    add shl_7, [rb + input_lo], [ip + 5]
     add shr_1, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
-    add shl + 7, [rb + valx8_hi], [ip + 5]
+    add shl_7, [rb + input_hi], [ip + 5]
     add shr_1, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     jz  0, execute_ror_w_flags
 
 execute_ror_w_by_2:
-    add shl + 6, [rb + valx8_lo], [ip + 5]
+    add shl_6, [rb + input_lo], [ip + 5]
     add shr_2, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
-    add shl + 6, [rb + valx8_hi], [ip + 5]
+    add shl_6, [rb + input_hi], [ip + 5]
     add shr_2, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     jz  0, execute_ror_w_flags
 
 execute_ror_w_by_3:
-    add shl + 5, [rb + valx8_lo], [ip + 5]
+    add shl_5, [rb + input_lo], [ip + 5]
     add shr_3, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
-    add shl + 5, [rb + valx8_hi], [ip + 5]
+    add shl_5, [rb + input_hi], [ip + 5]
     add shr_3, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     jz  0, execute_ror_w_flags
 
 execute_ror_w_by_4:
-    add shl + 4, [rb + valx8_lo], [ip + 5]
+    add shl_4, [rb + input_lo], [ip + 5]
     add shr_4, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
-    add shl + 4, [rb + valx8_hi], [ip + 5]
+    add shl_4, [rb + input_hi], [ip + 5]
     add shr_4, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     jz  0, execute_ror_w_flags
 
 execute_ror_w_by_5:
-    add shl + 3, [rb + valx8_lo], [ip + 5]
+    add shl_3, [rb + input_lo], [ip + 5]
     add shr_5, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
-    add shl + 3, [rb + valx8_hi], [ip + 5]
+    add shl_3, [rb + input_hi], [ip + 5]
     add shr_5, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     jz  0, execute_ror_w_flags
 
 execute_ror_w_by_6:
-    add shl + 2, [rb + valx8_lo], [ip + 5]
+    add shl_2, [rb + input_lo], [ip + 5]
     add shr_6, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
-    add shl + 2, [rb + valx8_hi], [ip + 5]
+    add shl_2, [rb + input_hi], [ip + 5]
     add shr_6, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     jz  0, execute_ror_w_flags
 
 execute_ror_w_by_7:
-    add shl + 1, [rb + valx8_lo], [ip + 5]
+    add shl_1, [rb + input_lo], [ip + 5]
     add shr_7, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
-    add shl + 1, [rb + valx8_hi], [ip + 5]
+    add shl_1, [rb + input_hi], [ip + 5]
     add shr_7, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
 
@@ -427,77 +430,77 @@ execute_ror_w_by_8:
     jz  0, execute_ror_w_flags
 
 execute_ror_w_by_9:
-    add shl + 7, [rb + valx8_lo], [ip + 5]
+    add shl_7, [rb + input_lo], [ip + 5]
     add shr_1, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
-    add shl + 7, [rb + valx8_hi], [ip + 5]
+    add shl_7, [rb + input_hi], [ip + 5]
     add shr_1, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     jz  0, execute_ror_w_flags
 
 execute_ror_w_by_a:
-    add shl + 6, [rb + valx8_lo], [ip + 5]
+    add shl_6, [rb + input_lo], [ip + 5]
     add shr_2, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
-    add shl + 6, [rb + valx8_hi], [ip + 5]
+    add shl_6, [rb + input_hi], [ip + 5]
     add shr_2, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     jz  0, execute_ror_w_flags
 
 execute_ror_w_by_b:
-    add shl + 5, [rb + valx8_lo], [ip + 5]
+    add shl_5, [rb + input_lo], [ip + 5]
     add shr_3, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
-    add shl + 5, [rb + valx8_hi], [ip + 5]
+    add shl_5, [rb + input_hi], [ip + 5]
     add shr_3, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     jz  0, execute_ror_w_flags
 
 execute_ror_w_by_c:
-    add shl + 4, [rb + valx8_lo], [ip + 5]
+    add shl_4, [rb + input_lo], [ip + 5]
     add shr_4, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
-    add shl + 4, [rb + valx8_hi], [ip + 5]
+    add shl_4, [rb + input_hi], [ip + 5]
     add shr_4, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     jz  0, execute_ror_w_flags
 
 execute_ror_w_by_d:
-    add shl + 3, [rb + valx8_lo], [ip + 5]
+    add shl_3, [rb + input_lo], [ip + 5]
     add shr_5, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
-    add shl + 3, [rb + valx8_hi], [ip + 5]
+    add shl_3, [rb + input_hi], [ip + 5]
     add shr_5, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     jz  0, execute_ror_w_flags
 
 execute_ror_w_by_e:
-    add shl + 2, [rb + valx8_lo], [ip + 5]
+    add shl_2, [rb + input_lo], [ip + 5]
     add shr_6, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
-    add shl + 2, [rb + valx8_hi], [ip + 5]
+    add shl_2, [rb + input_hi], [ip + 5]
     add shr_6, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     jz  0, execute_ror_w_flags
 
 execute_ror_w_by_f:
-    add shl + 1, [rb + valx8_lo], [ip + 5]
+    add shl_1, [rb + input_lo], [ip + 5]
     add shr_7, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
-    add shl + 1, [rb + valx8_hi], [ip + 5]
+    add shl_1, [rb + input_hi], [ip + 5]
     add shr_7, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
 
@@ -519,37 +522,37 @@ execute_ror_w_flags:
     call write_location_w
 
 execute_ror_w_done:
-    arb 7
+    arb 5
     ret 2
 .ENDFRAME
 
 ##########
-.FRAME lseg, loff; table, overflow_algorithm, input_lo, input_hi, output_lo, output_hi, valx8_lo, valx8_hi, count, tmp
+.FRAME lseg, loff; table, overflow_algorithm, input_lo, input_hi, output_lo, output_hi, count, tmp
     # Function with multiple entry points
 
 execute_rcl_1_w:
-    arb -10
+    arb -8
     add 1, 0, [rb + count]
     add execute_rcl_w_table, 0, [rb + table]
     add execute_rcl_w_flags, 0, [rb + overflow_algorithm]
     jz  0, execute_rcl_rcr_w
 
 execute_rcl_cl_w:
-    arb -10
+    arb -8
     add [reg_cl], 0, [rb + count]
     add execute_rcl_w_table, 0, [rb + table]
     add execute_rcl_w_flags, 0, [rb + overflow_algorithm]
     jz  0, execute_rcl_rcr_w
 
 execute_rcr_1_w:
-    arb -10
+    arb -8
     add 1, 0, [rb + count]
     add execute_rcr_w_table, 0, [rb + table]
     add execute_rcr_w_flags, 0, [rb + overflow_algorithm]
     jz  0, execute_rcl_rcr_w
 
 execute_rcr_cl_w:
-    arb -10
+    arb -8
     add [reg_cl], 0, [rb + count]
     add execute_rcr_w_table, 0, [rb + table]
     add execute_rcr_w_flags, 0, [rb + overflow_algorithm]
@@ -568,9 +571,7 @@ execute_rcl_rcr_w:
     arb -2
     call read_location_w
     add [rb - 4], 0, [rb + input_lo]
-    mul [rb - 4], 8, [rb + valx8_lo]
     add [rb - 5], 0, [rb + input_hi]
-    mul [rb - 5], 8, [rb + valx8_hi]
 
     # Jump to the label that handles this case
     add [rb + table], [rb + count], [ip + 2]
@@ -616,10 +617,10 @@ execute_rcr_w_table:
 
 execute_rcl_w_by_1:
     add shr_7, [rb + input_lo], [ip + 5]
-    add shl + 1, [rb + valx8_hi], [ip + 2]
+    add shl_1, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
-    add shl + 1, [rb + valx8_lo], [ip + 1]
+    add shl_1, [rb + input_lo], [ip + 1]
     add [0], [flag_carry], [rb + output_lo]
 
     add bit_7, [rb + input_hi], [ip + 1]
@@ -629,11 +630,11 @@ execute_rcl_w_by_1:
 
 execute_rcl_w_by_2:
     add shr_6, [rb + input_lo], [ip + 5]
-    add shl + 2, [rb + valx8_hi], [ip + 2]
+    add shl_2, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     add shr_7, [rb + input_hi], [ip + 5]
-    add shl + 2, [rb + valx8_lo], [ip + 2]
+    add shl_2, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     mul [flag_carry], 0x02, [rb + tmp]
@@ -646,11 +647,11 @@ execute_rcl_w_by_2:
 
 execute_rcl_w_by_3:
     add shr_5, [rb + input_lo], [ip + 5]
-    add shl + 3, [rb + valx8_hi], [ip + 2]
+    add shl_3, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     add shr_6, [rb + input_hi], [ip + 5]
-    add shl + 3, [rb + valx8_lo], [ip + 2]
+    add shl_3, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     mul [flag_carry], 0x04, [rb + tmp]
@@ -663,11 +664,11 @@ execute_rcl_w_by_3:
 
 execute_rcl_w_by_4:
     add shr_4, [rb + input_lo], [ip + 5]
-    add shl + 4, [rb + valx8_hi], [ip + 2]
+    add shl_4, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     add shr_5, [rb + input_hi], [ip + 5]
-    add shl + 4, [rb + valx8_lo], [ip + 2]
+    add shl_4, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     mul [flag_carry], 0x08, [rb + tmp]
@@ -680,11 +681,11 @@ execute_rcl_w_by_4:
 
 execute_rcl_w_by_5:
     add shr_3, [rb + input_lo], [ip + 5]
-    add shl + 5, [rb + valx8_hi], [ip + 2]
+    add shl_5, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     add shr_4, [rb + input_hi], [ip + 5]
-    add shl + 5, [rb + valx8_lo], [ip + 2]
+    add shl_5, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     mul [flag_carry], 0x10, [rb + tmp]
@@ -697,11 +698,11 @@ execute_rcl_w_by_5:
 
 execute_rcl_w_by_6:
     add shr_2, [rb + input_lo], [ip + 5]
-    add shl + 6, [rb + valx8_hi], [ip + 2]
+    add shl_6, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     add shr_3, [rb + input_hi], [ip + 5]
-    add shl + 6, [rb + valx8_lo], [ip + 2]
+    add shl_6, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     mul [flag_carry], 0x20, [rb + tmp]
@@ -714,11 +715,11 @@ execute_rcl_w_by_6:
 
 execute_rcl_w_by_7:
     add shr_1, [rb + input_lo], [ip + 5]
-    add shl + 7, [rb + valx8_hi], [ip + 2]
+    add shl_7, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     add shr_2, [rb + input_hi], [ip + 5]
-    add shl + 7, [rb + valx8_lo], [ip + 2]
+    add shl_7, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     mul [flag_carry], 0x40, [rb + tmp]
@@ -744,7 +745,7 @@ execute_rcl_w_by_8:
 execute_rcl_w_by_9:
     add [rb + input_hi], 0, [rb + output_lo]
 
-    add shl + 1, [rb + valx8_lo], [ip + 1]
+    add shl_1, [rb + input_lo], [ip + 1]
     add [0], [flag_carry], [rb + output_hi]
 
     add bit_7, [rb + input_lo], [ip + 1]
@@ -754,11 +755,11 @@ execute_rcl_w_by_9:
 
 execute_rcl_w_by_a:
     add shr_7, [rb + input_lo], [ip + 5]
-    add shl + 1, [rb + valx8_hi], [ip + 2]
+    add shl_1, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     add shr_7, [rb + input_hi], [ip + 5]
-    add shl + 2, [rb + valx8_lo], [ip + 2]
+    add shl_2, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     mul [flag_carry], 0x02, [rb + tmp]
@@ -771,11 +772,11 @@ execute_rcl_w_by_a:
 
 execute_rcl_w_by_b:
     add shr_6, [rb + input_lo], [ip + 5]
-    add shl + 2, [rb + valx8_hi], [ip + 2]
+    add shl_2, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     add shr_6, [rb + input_hi], [ip + 5]
-    add shl + 3, [rb + valx8_lo], [ip + 2]
+    add shl_3, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     mul [flag_carry], 0x04, [rb + tmp]
@@ -788,11 +789,11 @@ execute_rcl_w_by_b:
 
 execute_rcl_w_by_c:
     add shr_5, [rb + input_lo], [ip + 5]
-    add shl + 3, [rb + valx8_hi], [ip + 2]
+    add shl_3, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     add shr_5, [rb + input_hi], [ip + 5]
-    add shl + 4, [rb + valx8_lo], [ip + 2]
+    add shl_4, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     mul [flag_carry], 0x08, [rb + tmp]
@@ -805,11 +806,11 @@ execute_rcl_w_by_c:
 
 execute_rcl_w_by_d:
     add shr_4, [rb + input_lo], [ip + 5]
-    add shl + 4, [rb + valx8_hi], [ip + 2]
+    add shl_4, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     add shr_4, [rb + input_hi], [ip + 5]
-    add shl + 5, [rb + valx8_lo], [ip + 2]
+    add shl_5, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     mul [flag_carry], 0x10, [rb + tmp]
@@ -822,11 +823,11 @@ execute_rcl_w_by_d:
 
 execute_rcl_w_by_e:
     add shr_3, [rb + input_lo], [ip + 5]
-    add shl + 5, [rb + valx8_hi], [ip + 2]
+    add shl_5, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     add shr_3, [rb + input_hi], [ip + 5]
-    add shl + 6, [rb + valx8_lo], [ip + 2]
+    add shl_6, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     mul [flag_carry], 0x20, [rb + tmp]
@@ -839,11 +840,11 @@ execute_rcl_w_by_e:
 
 execute_rcl_w_by_f:
     add shr_2, [rb + input_lo], [ip + 5]
-    add shl + 6, [rb + valx8_hi], [ip + 2]
+    add shl_6, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     add shr_2, [rb + input_hi], [ip + 5]
-    add shl + 7, [rb + valx8_lo], [ip + 2]
+    add shl_7, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
 
     mul [flag_carry], 0x40, [rb + tmp]
@@ -856,7 +857,7 @@ execute_rcl_w_by_f:
 
 execute_rcl_w_by_10:
     add shr_1, [rb + input_lo], [ip + 5]
-    add shl + 7, [rb + valx8_hi], [ip + 2]
+    add shl_7, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
     mul [flag_carry], 0x80, [rb + tmp]
@@ -893,7 +894,7 @@ execute_rcl_rcr_w_store:
     call write_location_w
 
 execute_rcl_rcr_w_done:
-    arb 10
+    arb 8
     ret 2
 .ENDFRAME
 

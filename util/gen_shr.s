@@ -44,7 +44,7 @@ shift_loop:
     call pow_2
     add [rb - 3], 0, [period_length]
 
-    # Intialize the number loop
+    # Intialize the period loop
     add 0, 0, [value]
     add 0, 0, [gen_number_count]
 

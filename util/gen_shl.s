@@ -1,141 +1,120 @@
 # Utility to generate shl.s
 
-.IMPORT print_num_radix
-.IMPORT print_str
+# From generator.s
+.IMPORT gen_number
+.IMPORT pow_2
 
+.IMPORT gen_number_max
+.IMPORT gen_number_count
+
+# From libxib.a
+.IMPORT print_str
+.IMPORT print_num
+
+##########
     arb stack
 
-    add header, 0, [rb - 1]
+    add file_header, 0, [rb - 1]
     arb -1
     call print_str
 
-add 0, 0, [bits + 7]
-b7_loop:
-    add 0, 0, [bits + 6]
-    b6_loop:
-        add 0, 0, [bits + 5]
-        b5_loop:
-            add 0, 0, [bits + 4]
-            b4_loop:
-                add 0, 0, [bits + 3]
-                b3_loop:
-                    add 0, 0, [bits + 2]
-                    b2_loop:
-                        add 0, 0, [bits + 1]
-                        b1_loop:
-                            add 0, 0, [bits + 0]
-                            b0_loop:
-                                # Print line start
-                                add line_start, 0, [rb - 1]
-                                arb -1
-                                call print_str
+    add 8, 0, [gen_number_max]
+    add 0, 0, [shift_index]
 
-                                add 0, 0, [cnt]
-                                cnt_loop:
-                                    add 0, 0, [res]
+shift_loop:
+    # Shift header
+    add shift_header, 0, [rb - 1]
+    arb -1
+    call print_str
 
-                                    mul [cnt], -1, [tmp]
-                                    add 8, [tmp], [bit]
+    add [shift_index], 0, [rb - 1]
+    arb -1
+    call print_num
+    out ':'
 
-                                    # Print the separator, unless this is the first number
-                                    jz  [cnt], bit_loop
-                                    add separator, 0, [rb - 1]
-                                    arb -1
-                                    call print_str
+    # Calculate number of periods and period length
+    add [shift_index], 0, [rb - 1]
+    arb -1
+    call pow_2
+    add [rb - 3], 0, [period_index]
+    add [rb - 3], 0, [increment]
 
-                                    bit_loop:
-                                        add [bit], -1, [bit]
+    mul [shift_index], -1, [rb - 1]
+    add [rb - 1], 8, [rb - 1]
+    arb -1
+    call pow_2
+    add [rb - 3], 0, [period_length]
 
-                                        # Calculate the shifted number
-                                        mul [res], 2, [res]
-                                        add bits, [bit], [ip + 1]
-                                        add [0], [res], [res]
+    # Intialize the period loop
+    add 0, 0, [gen_number_count]
 
-                                        jnz [bit], bit_loop
+period_loop:
+    # Generate one period of numbers
+    add [period_length], 0, [number_index]
+    add 0, 0, [value]
 
-                                    # Shift the number left
-                                    add power_of_two, [cnt], [ip + 1]
-                                    mul [0], [res], [res]
+number_loop:
+    # Generate one number
+    add [value], 0, [rb - 1]
+    add 2, 0, [rb - 2]
+    add 8, 0, [rb - 3]
+    add number_prefix, 0, [rb - 4]
+    arb -4
+    call gen_number
 
-                                    # Print the shifted number
-                                    add [res], 0, [rb - 1]
-                                    add 2, 0, [rb - 2]
-                                    add 8, 0, [rb - 3]
-                                    arb -3
-                                    call print_num_radix
+    # Next number
+    add  [value], [increment], [value]
 
-                                    add [cnt], 1, [cnt]
-                                    eq  [cnt], 8, [tmp]
-                                    jz  [tmp], cnt_loop
+    add [number_index], -1, [number_index]
+    jnz [number_index], number_loop
 
-                                # Print line end
-                                add line_end, 0, [rb - 1]
-                                arb -1
-                                call print_str
+    # Next period
+    add [period_index], -1, [period_index]
+    jnz [period_index], period_loop
 
-                                add [bits + 0], 1, [bits + 0]
-                                eq  [bits + 0], 2, [tmp]
-                                jz  [tmp], b0_loop
+    # Loop to next shift
+    add [shift_index], 1, [shift_index]
+    eq  [shift_index], 8, [tmp]
+    jz  [tmp], shift_loop
 
-                            add [bits + 1], 1, [bits + 1]
-                            eq  [bits + 1], 2, [tmp]
-                            jz  [tmp], b1_loop
-
-                        add [bits + 2], 1, [bits + 2]
-                        eq  [bits + 2], 2, [tmp]
-                        jz  [tmp], b2_loop
-
-                    add [bits + 3], 1, [bits + 3]
-                    eq  [bits + 3], 2, [tmp]
-                    jz  [tmp], b3_loop
-
-                add [bits + 4], 1, [bits + 4]
-                eq  [bits + 4], 2, [tmp]
-                jz  [tmp], b4_loop
-
-            add [bits + 5], 1, [bits + 5]
-            eq  [bits + 5], 2, [tmp]
-            jz  [tmp], b5_loop
-
-        add [bits + 6], 1, [bits + 6]
-        eq  [bits + 6], 2, [tmp]
-        jz  [tmp], b6_loop
-
-    add [bits + 7], 1, [bits + 7]
-    eq  [bits + 7], 2, [tmp]
-    jz  [tmp], b7_loop
-
-    add footer, 0, [rb - 1]
+    # Finish the file
+    add file_footer, 0, [rb - 1]
     arb -1
     call print_str
 
     hlt
 
-new_line:
-    db  1
-bits:
-    ds  8, 0
-cnt:
+##########
+shift_index:
     db  0
-bit:
+period_index:
     db  0
-res:
+period_length:
+    db  0
+number_index:
+    db  0
+increment:
+    db  0
+value:
     db  0
 tmp:
     db  0
 
-header:
-    db  ".EXPORT shl", 10, 10, "# Generated using gen_shl.s", 10, 10, "shl:", 10, 0
-line_start:
-    db  "    db  0b", 0
-separator:
-    db  ", 0b", 0
-line_end:
-    db  10, 0
-footer:
-    db  10, ".EOF", 10, 0
-power_of_two:
-    db  0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80
+file_header:
+    db  ".EXPORT shl", 10, ".EXPORT shl_0", 10, ".EXPORT shl_1", 10, ".EXPORT shl_2", 10, ".EXPORT shl_3"
+    db  10, ".EXPORT shl_4", 10, ".EXPORT shl_5", 10, ".EXPORT shl_6", 10, ".EXPORT shl_7"
+    db  10, 10, "# Generated using gen_shl.s", 10, 10
+    db  "shl:", 10, "    db  shl_0", 10, "    db  shl_1", 10, "    db  shl_2", 10, "    db  shl_3"
+    db  10, "    db  shl_4", 10, "    db  shl_5", 10, "    db  shl_6", 10, "    db  shl_7", 0
+
+shift_header:
+    db  10, 10, "shl_", 0
+
+number_prefix:
+    db  "0b", 0
+
+file_footer:
+    db  10, 10, ".EOF", 10, 0
 
     ds  100, 0
 stack:
