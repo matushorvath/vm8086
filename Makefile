@@ -8,9 +8,6 @@ SRCDIRS = cga cpu dev fdc img util test-cga vm
 TOOLSDIR = monitor
 TESTDIRS = test-bochs test-cpu
 
-FLOPPY ?= freedos
-FLOPPY_TARGET="$(FLOPPY).img"
-
 # Build VM
 .PHONY: build
 build: $(SRCDIRS)
@@ -18,8 +15,6 @@ build: $(SRCDIRS)
 .PHONY: $(SRCDIRS)
 $(SRCDIRS):
 	make -C $@ build
-img:
-	make -C $@ 
 
 .PHONY: run
 run: build
