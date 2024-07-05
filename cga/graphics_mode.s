@@ -23,7 +23,6 @@
 
 # From util/shr.s
 .IMPORT shr_1
-.IMPORT shr_2
 
 ##########
 write_memory_graphics:
@@ -69,22 +68,24 @@ write_memory_graphics:
     add [rb - 3], 0, [rb + row]
     add [rb - 4], 0, [rb + col]
 
-    # Calculate CGA pixel coordinates by adjusting the text row and column
-    mul [rb + row], 2, [rb + row]
-    add [rb + row], [rb + odd], [rb + row]
-    mul [rb + col], 4, [rb + col]       # first out of 4 pixel columns updated on this row
-
     # We are going to update two characters, that is 4x4 pixels
     #
-    # First calculate terminal character cordinates from CGA pixel coordinates:
+    # First, transform the text mode coordinates to pixel coordinates:
+    # pixel_row = tm_row * 2 + odd      # apply interlacing
+    # pixel_col = tm_col * 4            # four pixels per one byte
+    #
+    # Next calculate terminal character cordinates from CGA pixel coordinates:
     # term_row0 = floor(pixel_row / pixel_rows_per_char) = floor(pixel_row / 4)
     # term_col0 = floor(pixel_col / pixel_cols_per_char) = floor(pixel_col / 2)
+    #
+    # Together this is:
+    # term_row0 = floor((tm_row * 2 + odd) / 4) = floor(tm_row / 2)
+    # term_col0 = floor((tm_col * 4) / 2) = tm_col * 2
 
-    add shr_2, [rb + row], [ip + 1]
+    # Calculate terminal character coordinates
+    add shr_1, [rb + row], [ip + 1]
     add [0], 0, [rb + row]
-
-    add shr_1, [rb + col], [ip + 1]
-    add [0], 0, [rb + col]              # first out of 2 characters updated on this row
+    mul [rb + col], 2, [rb + col]
 
     # Next calculate the memory address where first of the four pixel rows starts:
     # pixel_row0 = term_row0 * pixel_rows_per_char = term_row0 * 4
