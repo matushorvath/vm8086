@@ -10,7 +10,7 @@
 .IMPORT write_location_w
 
 # From util/nibbles.s
-.IMPORT nibbles
+.IMPORT nibble_0
 
 # From util/parity.s
 .IMPORT parity
@@ -54,8 +54,7 @@ execute_inc_b_after_carry:
     add [0], 0, [flag_parity]
 
     # If the low-order half-byte of result is 0x0, it must have been 0xf before
-    mul [rb + value], 2, [rb + tmp]
-    add nibbles, [rb + tmp], [ip + 1]
+    add nibble_0, [rb + value], [ip + 1]
     eq  [0], 0, [flag_auxiliary_carry]
 
     # If the result is 0x80, it must have been 0x7f before
@@ -114,8 +113,7 @@ execute_inc_w_after_carry:
     add [0], 0, [flag_parity]
 
     # If the low-order half-byte of result is 0x0, it must have been 0xf before
-    mul [rb + value_lo], 2, [rb + tmp]
-    add nibbles, [rb + tmp], [ip + 1]
+    add nibble_0, [rb + value_lo], [ip + 1]
     eq  [0], 0, [flag_auxiliary_carry]
 
     # If the result is 0x8000, it must have been 0x7fff before
@@ -168,8 +166,7 @@ execute_dec_b_after_borrow:
     add [0], 0, [flag_parity]
 
     # If the low-order half-byte of result is 0xf, it must have been 0x0 before
-    mul [rb + value], 2, [rb + tmp]
-    add nibbles, [rb + tmp], [ip + 1]
+    add nibble_0, [rb + value], [ip + 1]
     eq  [0], 0xf, [flag_auxiliary_carry]
 
     # If the result is 0x7f, it must have been 0x80 before
@@ -228,8 +225,7 @@ execute_dec_w_after_borrow:
     add [0], 0, [flag_parity]
 
     # If the low-order half-byte of result is 0xf, it must have been 0x0 before
-    mul [rb + value_lo], 2, [rb + tmp]
-    add nibbles, [rb + tmp], [ip + 1]
+    add nibble_0, [rb + value_lo], [ip + 1]
     eq  [0], 0xf, [flag_auxiliary_carry]
 
     # If the result is 0x8000, it must have been 0x7fff before

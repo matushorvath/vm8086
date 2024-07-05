@@ -24,10 +24,17 @@
 .IMPORT report_error
 
 # From util/bits.s
-.IMPORT bits
+.IMPORT bit_0
+.IMPORT bit_1
+.IMPORT bit_2
+.IMPORT bit_3
+.IMPORT bit_4
+.IMPORT bit_5
+.IMPORT bit_6
 
 # From util/shr.s
-.IMPORT shr
+.IMPORT shr_3
+.IMPORT shr_5
 
 ##########
 pic_ports:
@@ -49,8 +56,8 @@ init_pic_8259a:
 
 ##########
 pic_command_write:
-.FRAME addr, value; value_x8, tmp
-    arb -2
+.FRAME addr, value; tmp
+    arb -1
 
     # PIC logging
     jz  [config_log_pic], pic_command_write_after_log
@@ -60,14 +67,12 @@ pic_command_write:
     call pic_command_write_log
 
 pic_command_write_after_log:
-    mul [rb + value], 8, [rb + value_x8]
-
     # If bit 4 is 1, this is ICW1
-    add bits + 4, [rb + value_x8], [ip + 1]
+    add bit_4, [rb + value], [ip + 1]
     jnz [0], pic_command_write_icw1
 
     # Bit 4 is 0; if bit 3 is 0, this is OCW2
-    add bits + 3, [rb + value_x8], [ip + 1]
+    add bit_3, [rb + value], [ip + 1]
     jz  [0], pic_command_write_ocw2
 
     # Bit 3 is 1, this is OCW3
@@ -77,15 +82,15 @@ pic_command_write_icw1:
     # Receive ICW1
 
     # ICW4 is always required, since we only support the 8086/8088 mode
-    add bits + 0, [rb + value_x8], [ip + 1]
+    add bit_0, [rb + value], [ip + 1]
     jz  [0], pic_command_write_invalid_icw1
 
     # No support for cascade mode, since there is just one PIC
-    add bits + 1, [rb + value_x8], [ip + 1]
+    add bit_1, [rb + value], [ip + 1]
     jz  [0], pic_command_write_invalid_icw1
 
     # Only support edge triggered mode
-    add bits + 3, [rb + value_x8], [ip + 1]
+    add bit_3, [rb + value], [ip + 1]
     jnz [0], pic_command_write_invalid_icw1
 
     # Clear the interrupt mask register
@@ -112,7 +117,7 @@ pic_command_write_ocw2:
     # Receive OCW2
 
     # Decide what to do based on top 3 bits
-    add shr + 5, [rb + value_x8], [ip + 1]
+    add shr_5, [rb + value], [ip + 1]
     add [0], pic_command_write_ocw2_table, [ip + 2]
     jz  0, [0]
 
@@ -169,29 +174,29 @@ pic_command_write_ocw3:
     # Receive OCW3
 
     # Should we set the "read register" value?
-    add bits + 1, [rb + value_x8], [ip + 1]
+    add bit_1, [rb + value], [ip + 1]
     jz  [0], pic_command_write_ocw3_after_rr
 
     # Yes, set the "read register" value
-    add bits + 0, [rb + value_x8], [ip + 1]
+    add bit_0, [rb + value], [ip + 1]
     add [0], 0, [pic_read_in_service]
 
 pic_command_write_ocw3_after_rr:
     # Should we set the "special mask mode" value?
-    add bits + 6, [rb + value_x8], [ip + 1]
+    add bit_6, [rb + value], [ip + 1]
     jz  [0], pic_command_write_ocw3_after_smm
 
     # Yes, but we only support special mask mode off
-    add bits + 5, [rb + value_x8], [ip + 1]
+    add bit_5, [rb + value], [ip + 1]
     jnz [0], pic_command_write_invalid_ocw3
 
 pic_command_write_ocw3_after_smm:
     # Poll mode is not supported
-    add bits + 2, [rb + value_x8], [ip + 1]
+    add bit_2, [rb + value], [ip + 1]
     jnz [0], pic_command_write_invalid_ocw3
 
 pic_command_write_done:
-    arb 2
+    arb 1
     ret 2
 
 pic_command_write_invalid_icw1:
@@ -221,8 +226,8 @@ pic_command_write_invalid_ocw3_message:
 
 ##########
 pic_data_write:
-.FRAME addr, value; value_x8, tmp
-    arb -2
+.FRAME addr, value; tmp
+    arb -1
 
     # PIC logging
     jz  [config_log_pic], pic_data_write_after_log
@@ -232,8 +237,6 @@ pic_data_write:
     call pic_data_write_log
 
 pic_data_write_after_log:
-    mul [rb + value], 8, [rb + value_x8]
-
     # Continue based on PIC state
     add pic_data_write_table, [pic_state], [ip + 2]
     jz  0, [0]
@@ -287,7 +290,7 @@ pic_data_write_expect_icw2:
 
     # Top 5 bits are the interrupt vector offset
     # We only support the offset of 8, which maps IRQ0-7 to interrupts 8-15
-    add shr + 3, [rb + value_x8], [ip + 1]
+    add shr_3, [rb + value], [ip + 1]
     eq  [0], 0b00001, [rb + tmp]
     jz  [rb + tmp], pic_data_write_invalid_icw2
 
@@ -299,22 +302,22 @@ pic_data_write_expect_icw4:
     # Receive ICW4
 
     # We only support the 8086/8088 mode
-    add bits + 0, [rb + value_x8], [ip + 1]
+    add bit_0, [rb + value], [ip + 1]
     jz  [0], pic_data_write_invalid_icw3
 
     # No support for auto end of interrupt
-    add bits + 1, [rb + value_x8], [ip + 1]
+    add bit_1, [rb + value], [ip + 1]
     jnz [0], pic_data_write_invalid_icw3
 
     # No support for special fully nested mode
-    add bits + 4, [rb + value_x8], [ip + 1]
+    add bit_4, [rb + value], [ip + 1]
     jnz [0], pic_data_write_invalid_icw3
 
     # Set up next state
     add S_DEFAULT, 0, [pic_state]
 
 pic_data_write_done:
-    arb 2
+    arb 1
     ret 2
 
 pic_data_write_invalid_icw2:

@@ -1,133 +1,108 @@
 # Utility to generate shr.s
 
-.IMPORT print_num_radix
-.IMPORT print_str
+# From generator.s
+.IMPORT gen_number_times
+.IMPORT pow_2
 
+.IMPORT gen_number_max
+.IMPORT gen_number_count
+
+# From libxib.a
+.IMPORT print_str
+.IMPORT print_num
+
+##########
     arb stack
 
-    add header, 0, [rb - 1]
+    add file_header, 0, [rb - 1]
     arb -1
     call print_str
 
-add 0, 0, [bits + 7]
-b7_loop:
-    add 0, 0, [bits + 6]
-    b6_loop:
-        add 0, 0, [bits + 5]
-        b5_loop:
-            add 0, 0, [bits + 4]
-            b4_loop:
-                add 0, 0, [bits + 3]
-                b3_loop:
-                    add 0, 0, [bits + 2]
-                    b2_loop:
-                        add 0, 0, [bits + 1]
-                        b1_loop:
-                            add 0, 0, [bits + 0]
-                            b0_loop:
-                                # Print line start
-                                add line_start, 0, [rb - 1]
-                                arb -1
-                                call print_str
+    add 8, 0, [gen_number_max]
+    add 0, 0, [shift_index]
 
-                                add 0, 0, [cnt]
-                                cnt_loop:
-                                    add 0, 0, [res]
-                                    add 7, 0, [bit]
+shift_loop:
+    # Shift header
+    add shift_header, 0, [rb - 1]
+    arb -1
+    call print_str
 
-                                    # Print the separator, unless this is the first number
-                                    jz  [cnt], bit_loop
-                                    add separator, 0, [rb - 1]
-                                    arb -1
-                                    call print_str
+    add [shift_index], 0, [rb - 1]
+    arb -1
+    call print_num
+    out ':'
 
-                                    bit_loop:
-                                        # Calculate the shifted number
-                                        mul [res], 2, [res]
-                                        add bits, [bit], [ip + 1]
-                                        add [0], [res], [res]
+    # Calculate number of periods and period length
+    mul [shift_index], -1, [rb - 1]
+    add [rb - 1], 8, [rb - 1]
+    arb -1
+    call pow_2
+    add [rb - 3], 0, [period_index]
 
-                                        eq  [bit], [cnt], [tmp]
-                                        add [bit], -1, [bit]
-                                        jz  [tmp], bit_loop
+    add [shift_index], 0, [rb - 1]
+    arb -1
+    call pow_2
+    add [rb - 3], 0, [period_length]
 
-                                    # Print the shifted number
-                                    add [res], 0, [rb - 1]
-                                    add 2, 0, [rb - 2]
-                                    add 8, 0, [rb - 3]
-                                    arb -3
-                                    call print_num_radix
+    # Intialize the period loop
+    add 0, 0, [value]
+    add 0, 0, [gen_number_count]
 
-                                    add [cnt], 1, [cnt]
-                                    eq  [cnt], 8, [tmp]
-                                    jz  [tmp], cnt_loop
+period_loop:
+    # Generate one period of numbers
+    add [value], 0, [rb - 1]
+    add 2, 0, [rb - 2]
+    add 8, 0, [rb - 3]
+    add number_prefix, 0, [rb - 4]
+    add [period_length], 0, [rb - 5]
+    arb -5
+    call gen_number_times
 
-                                # Print line end
-                                add line_end, 0, [rb - 1]
-                                arb -1
-                                call print_str
+    # Next value
+    add  [value], 1, [value]
 
-                                add [bits + 0], 1, [bits + 0]
-                                eq  [bits + 0], 2, [tmp]
-                                jz  [tmp], b0_loop
+    add [period_index], -1, [period_index]
+    jnz [period_index], period_loop
 
-                            add [bits + 1], 1, [bits + 1]
-                            eq  [bits + 1], 2, [tmp]
-                            jz  [tmp], b1_loop
+    # Loop to next shift
+    add [shift_index], 1, [shift_index]
+    eq  [shift_index], 8, [tmp]
+    jz  [tmp], shift_loop
 
-                        add [bits + 2], 1, [bits + 2]
-                        eq  [bits + 2], 2, [tmp]
-                        jz  [tmp], b2_loop
-
-                    add [bits + 3], 1, [bits + 3]
-                    eq  [bits + 3], 2, [tmp]
-                    jz  [tmp], b3_loop
-
-                add [bits + 4], 1, [bits + 4]
-                eq  [bits + 4], 2, [tmp]
-                jz  [tmp], b4_loop
-
-            add [bits + 5], 1, [bits + 5]
-            eq  [bits + 5], 2, [tmp]
-            jz  [tmp], b5_loop
-
-        add [bits + 6], 1, [bits + 6]
-        eq  [bits + 6], 2, [tmp]
-        jz  [tmp], b6_loop
-
-    add [bits + 7], 1, [bits + 7]
-    eq  [bits + 7], 2, [tmp]
-    jz  [tmp], b7_loop
-
-    add footer, 0, [rb - 1]
+    # Finish the file
+    add file_footer, 0, [rb - 1]
     arb -1
     call print_str
 
     hlt
 
-new_line:
-    db  1
-bits:
-    ds  8, 0
-cnt:
+##########
+shift_index:
     db  0
-bit:
+period_index:
     db  0
-res:
+period_length:
+    db  0
+value:
     db  0
 tmp:
     db  0
 
-header:
-    db  ".EXPORT shr", 10, 10, "# Generated using gen_shr.s", 10, 10, "shr:", 10, 0
-line_start:
-    db  "    db  0b", 0
-separator:
-    db  ", 0b", 0
-line_end:
-    db  10, 0
-footer:
-    db  10, ".EOF", 10, 0
+file_header:
+    db  ".EXPORT shr", 10, ".EXPORT shr_0", 10, ".EXPORT shr_1", 10, ".EXPORT shr_2", 10, ".EXPORT shr_3"
+    db  10, ".EXPORT shr_4", 10, ".EXPORT shr_5", 10, ".EXPORT shr_6", 10, ".EXPORT shr_7"
+    db  10, 10, "# Generated using gen_shr.s", 10, 10
+    db  "shr:", 10, "    db  shr_0", 10, "    db  shr_1", 10, "    db  shr_2", 10, "    db  shr_3"
+    db  10, "    db  shr_4", 10, "    db  shr_5", 10, "    db  shr_6", 10, "    db  shr_7", 0
+
+shift_header:
+    db  10, 10, "shr_", 0
+
+number_prefix:
+    db  "0b", 0
+
+file_footer:
+    db  10, 10, ".EOF", 10, 0
 
     ds  100, 0
 stack:

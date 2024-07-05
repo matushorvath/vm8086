@@ -22,7 +22,7 @@
 .IMPORT read_cs_ip_b
 
 # From util/nibbles.s
-.IMPORT nibbles
+.IMPORT nibble_0
 
 # From util/parity.s
 .IMPORT parity
@@ -48,8 +48,7 @@ execute_aaa:
     arb -2
 
     # Get the lower nibble of AL
-    mul [reg_al], 2, [rb + tmp]
-    add nibbles, [rb + tmp], [ip + 1]
+    add nibble_0, [reg_al], [ip + 1]
     add [0], 0, [rb + al_lo]
 
     # Handle decimal carry if AF is set, or if AL > 9
@@ -88,8 +87,7 @@ execute_aaa_after_ah:
 
 execute_aaa_done:
     # Clear the higher nibble of AL
-    mul [reg_al], 2, [rb + tmp]
-    add nibbles, [rb + tmp], [ip + 1]
+    add nibble_0, [reg_al], [ip + 1]
     add [0], 0, [reg_al]
 
     arb 2
@@ -102,8 +100,7 @@ execute_aas:
     arb -2
 
     # Get the lower nibble of AL
-    mul [reg_al], 2, [rb + tmp]
-    add nibbles, [rb + tmp], [ip + 1]
+    add nibble_0, [reg_al], [ip + 1]
     add [0], 0, [rb + al_lo]
 
     # Handle decimal carry if AF is set, or if AL > 9
@@ -142,8 +139,7 @@ execute_aas_after_ah:
 
 execute_aas_done:
     # Clear the higher nibble of AL
-    mul [reg_al], 2, [rb + tmp]
-    add nibbles, [rb + tmp], [ip + 1]
+    add nibble_0, [reg_al], [ip + 1]
     add [0], 0, [reg_al]
 
     arb 2
@@ -170,8 +166,7 @@ execute_daa_after_cmp_val:
     add [reg_al], 0, [rb + old_al]
 
     # Get the lower nibble of AL
-    mul [reg_al], 2, [rb + tmp]
-    add nibbles, [rb + tmp], [ip + 1]
+    add nibble_0, [reg_al], [ip + 1]
     add [0], 0, [rb + al_lo]
 
     # Handle decimal carry for lower digit if AF is set, or if AL_lo > 9
@@ -233,8 +228,7 @@ execute_das:
 
 execute_das_after_cmp_val:
     # Get the lower nibble of AL
-    mul [reg_al], 2, [rb + tmp]
-    add nibbles, [rb + tmp], [ip + 1]
+    add nibble_0, [reg_al], [ip + 1]
     add [0], 0, [rb + al_lo]
 
     # Save AL and carry

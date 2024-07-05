@@ -11,6 +11,8 @@
 
 # From util/bits.s
 .IMPORT bits
+.IMPORT bit_0
+.IMPORT bit_7
 
 # From util/parity.s
 .IMPORT parity
@@ -31,16 +33,16 @@
 .IMPORT flag_overflow
 
 ##########
-.FRAME lseg, loff; val_lo, val_hi, val_bits_lo, val_bits_hi, count, spill, tmp
+.FRAME lseg, loff; val_lo, val_hi, count, spill, tmp
     # Function with multiple entry points
 
 execute_shl_1_w:
-    arb -7
+    arb -5
     add 1, 0, [rb + count]
     jz  0, execute_shl_w
 
 execute_shl_cl_w:
-    arb -7
+    arb -5
     add [reg_cl], 0, [rb + count]
 
 execute_shl_w:
@@ -61,12 +63,6 @@ execute_shl_w:
     # If we are shifting by 0, use a simplified algorithm
     jz  [rb + count], execute_shl_w_0
 
-    # Expand val to bits
-    mul [rb + val_lo], 8, [rb + tmp]
-    add bits, [rb + tmp], [rb + val_bits_lo]
-    mul [rb + val_hi], 8, [rb + tmp]
-    add bits, [rb + tmp], [rb + val_bits_hi]
-
     # If we are shifting by 8 or 16, use a simplified algorithm
     eq  [rb + count], 8, [rb + tmp]
     jnz [rb + tmp], execute_shl_w_8
@@ -80,25 +76,25 @@ execute_shl_w:
     # Carry flag is the last bit shifted out of hi byte
     mul [rb + count], -1, [rb + tmp]
     add 8, [rb + tmp], [rb + spill]
-    add [rb + val_bits_hi], [rb + spill], [ip + 1]
+
+    # Get spill-th bit of val_hi
+    add bits, [rb + spill], [ip + 1]
+    add [0], [rb + val_hi], [ip + 1]
     add [0], 0, [flag_carry]
 
     # Find shifted hi value in the shl table
-    mul [rb + val_hi], 8, [rb + tmp]
-    add shl, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
+    add shl, [rb + count], [ip + 1]
+    add [0], [rb + val_hi], [ip + 1]
     add [0], 0, [rb + val_hi]
 
     # Shift the lo value right to calculate carry from lo to hi
-    mul [rb + val_lo], 8, [rb + tmp]
-    add shr, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + spill], [ip + 1]
+    add shr, [rb + spill], [ip + 1]
+    add [0], [rb + val_lo], [ip + 1]
     add [0], [rb + val_hi], [rb + val_hi]
 
     # Find shifted lo value in the shl table
-    mul [rb + val_lo], 8, [rb + tmp]
-    add shl, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
+    add shl, [rb + count], [ip + 1]
+    add [0], [rb + val_lo], [ip + 1]
     add [0], 0, [rb + val_lo]
 
     jz  0, execute_shl_w_update_flags
@@ -110,13 +106,15 @@ execute_shl_w_8_to_15:
     # Carry flag is the last bit shifted out of lo byte
     mul [rb + count], -1, [rb + tmp]
     add 8, [rb + tmp], [rb + spill]
-    add [rb + val_bits_lo], [rb + spill], [ip + 1]
+
+    # Get spill-th bit of val_lo
+    add bits, [rb + spill], [ip + 1]
+    add [0], [rb + val_lo], [ip + 1]
     add [0], 0, [flag_carry]
 
     # Find shifted lo value in the shl table and use it as hi value
-    mul [rb + val_lo], 8, [rb + tmp]
-    add shl, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
+    add shl, [rb + count], [ip + 1]
+    add [0], [rb + val_lo], [ip + 1]
     add [0], 0, [rb + val_hi]
 
     # Zero the lo value
@@ -125,12 +123,12 @@ execute_shl_w_8_to_15:
     jz  0, execute_shl_w_update_flags
 
 execute_shl_w_8:
-    # If we are shifting by 8, move the lo byte to hi byte and zero the lo byte, then update flags
+    # If we are shifting by 8, update the flags, then move the lo byte to hi byte and zero the lo byte
+    add bit_0, [rb + val_hi], [ip + 1]
+    add [0], 0, [flag_carry]
+
     add [rb + val_lo], 0, [rb + val_hi]
     add 0, 0, [rb + val_lo]
-
-    add [rb + val_bits_hi], 0, [ip + 1]
-    add [0], 0, [flag_carry]
 
 execute_shl_w_update_flags:
     # Update flags
@@ -156,7 +154,7 @@ execute_shl_w_0:
 
 execute_shl_w_16:
     # If we are shifting by 16, zero the value and use fixed flags except for CF
-    add [rb + val_bits_lo], 0, [ip + 1]
+    add bit_0, [rb + val_lo], [ip + 1]
     add [0], 0, [flag_carry]
 
     eq  [flag_carry], 1, [flag_overflow]
@@ -190,21 +188,21 @@ execute_shl_w_store:
     call write_location_w
 
 execute_shl_w_done:
-    arb 7
+    arb 5
     ret 2
 .ENDFRAME
 
 ##########
-.FRAME lseg, loff; val_lo, val_hi, val_bits_lo, val_bits_hi, count, spill, tmp
+.FRAME lseg, loff; val_lo, val_hi, count, spill, tmp
     # Function with multiple entry points
 
 execute_shr_1_w:
-    arb -7
+    arb -5
     add 1, 0, [rb + count]
     jz  0, execute_shr_w
 
 execute_shr_cl_w:
-    arb -7
+    arb -5
     add [reg_cl], 0, [rb + count]
 
 execute_shr_w:
@@ -225,12 +223,6 @@ execute_shr_w:
     # If we are shifting by 0, use a simplified algorithm
     jz  [rb + count], execute_shr_w_0
 
-    # Expand val to bits
-    mul [rb + val_lo], 8, [rb + tmp]
-    add bits, [rb + tmp], [rb + val_bits_lo]
-    mul [rb + val_hi], 8, [rb + tmp]
-    add bits, [rb + tmp], [rb + val_bits_hi]
-
     # If we are shifting by 8 or 16, use a simplified algorithm
     eq  [rb + count], 8, [rb + tmp]
     jnz [rb + tmp], execute_shr_w_8
@@ -247,28 +239,28 @@ execute_shr_w:
 
     # Carry flag is the last bit shifted out of lo byte
     add [rb + count], -1, [rb + tmp]
-    add [rb + val_bits_lo], [rb + tmp], [ip + 1]
+
+    # Get tmp-th bit of val_lo
+    add bits, [rb + tmp], [ip + 1]
+    add [0], [rb + val_lo], [ip + 1]
     add [0], 0, [flag_carry]
 
     # Find shifted lo value in the shr table
-    mul [rb + val_lo], 8, [rb + tmp]
-    add shr, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
+    add shr, [rb + count], [ip + 1]
+    add [0], [rb + val_lo], [ip + 1]
     add [0], 0, [rb + val_lo]
 
     # Shift the hi value left to calculate carry from hi to lo
     mul [rb + count], -1, [rb + tmp]
     add 8, [rb + tmp], [rb + spill]
 
-    mul [rb + val_hi], 8, [rb + tmp]
-    add shl, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + spill], [ip + 1]
+    add shl, [rb + spill], [ip + 1]
+    add [0], [rb + val_hi], [ip + 1]
     add [0], [rb + val_lo], [rb + val_lo]
 
     # Find shifted hi value in the shr table
-    mul [rb + val_hi], 8, [rb + tmp]
-    add shr, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
+    add shr, [rb + count], [ip + 1]
+    add [0], [rb + val_hi], [ip + 1]
     add [0], 0, [rb + val_hi]
 
     jz  0, execute_shr_w_update_flags
@@ -279,13 +271,15 @@ execute_shr_w_8_to_15:
 
     # Carry flag is the last bit shifted out of hi byte
     add [rb + count], -1, [rb + tmp]
-    add [rb + val_bits_hi], [rb + tmp], [ip + 1]
+
+    # Get tmp-th bit of val_hi
+    add bits, [rb + tmp], [ip + 1]
+    add [0], [rb + val_hi], [ip + 1]
     add [0], 0, [flag_carry]
 
     # Find shifted hi value in the shr table and use it as lo value
-    mul [rb + val_hi], 8, [rb + tmp]
-    add shr, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
+    add shr, [rb + count], [ip + 1]
+    add [0], [rb + val_hi], [ip + 1]
     add [0], 0, [rb + val_lo]
 
     # Zero the hi value
@@ -294,12 +288,12 @@ execute_shr_w_8_to_15:
     jz  0, execute_shr_w_update_flags
 
 execute_shr_w_8:
-    # If we are shifting by 8, move the hi byte to lo byte and zero the hi byte, then update flags
+    # If we are shifting by 8, update the flags, then move the hi byte to lo byte and zero the hi byte
+    add bit_7, [rb + val_lo], [ip + 1]
+    add [0], 0, [flag_carry]
+
     add [rb + val_hi], 0, [rb + val_lo]
     add 0, 0, [rb + val_hi]
-
-    add [rb + val_bits_lo], 7, [ip + 1]
-    add [0], 0, [flag_carry]
 
 execute_shr_w_update_flags:
     # Update flags
@@ -321,7 +315,7 @@ execute_shr_w_0:
 
 execute_shr_w_16:
     # If we are shifting by 16, zero the value and use fixed flags except for CF
-    add [rb + val_bits_hi], 7, [ip + 1]
+    add bit_7, [rb + val_hi], [ip + 1]
     add [0], 0, [flag_carry]
 
     eq  [flag_carry], 1, [flag_overflow]
@@ -355,21 +349,21 @@ execute_shr_w_store:
     call write_location_w
 
 execute_shr_w_done:
-    arb 7
+    arb 5
     ret 2
 .ENDFRAME
 
 ##########
-.FRAME lseg, loff; val_lo, val_hi, val_bits_lo, val_bits_hi, count, spill, tmp
+.FRAME lseg, loff; val_lo, val_hi, count, spill, tmp
     # Function with multiple entry points
 
 execute_sar_1_w:
-    arb -7
+    arb -5
     add 1, 0, [rb + count]
     jz  0, execute_sar_w
 
 execute_sar_cl_w:
-    arb -7
+    arb -5
     add [reg_cl], 0, [rb + count]
 
 execute_sar_w:
@@ -393,12 +387,6 @@ execute_sar_w:
     lt  [rb + count], 17, [rb + tmp]
     jz  [rb + tmp], execute_sar_w_many
 
-    # Expand val to bits
-    mul [rb + val_lo], 8, [rb + tmp]
-    add bits, [rb + tmp], [rb + val_bits_lo]
-    mul [rb + val_hi], 8, [rb + tmp]
-    add bits, [rb + tmp], [rb + val_bits_hi]
-
     # If we are shifting by 8 or 16, use a simplified algorithm
     eq  [rb + count], 8, [rb + tmp]
     jnz [rb + tmp], execute_sar_w_8
@@ -411,28 +399,28 @@ execute_sar_w:
 
     # Carry flag is the last bit shifted out of lo byte
     add [rb + count], -1, [rb + tmp]
-    add [rb + val_bits_lo], [rb + tmp], [ip + 1]
+
+    # Get tmp-th bit of val_lo
+    add bits, [rb + tmp], [ip + 1]
+    add [0], [rb + val_lo], [ip + 1]
     add [0], 0, [flag_carry]
 
     # Find shifted lo value in the shr table
-    mul [rb + val_lo], 8, [rb + tmp]
-    add shr, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
+    add shr, [rb + count], [ip + 1]
+    add [0], [rb + val_lo], [ip + 1]
     add [0], 0, [rb + val_lo]
 
     # Shift the hi value left to calculate carry from hi to lo
     mul [rb + count], -1, [rb + tmp]
     add 8, [rb + tmp], [rb + spill]
 
-    mul [rb + val_hi], 8, [rb + tmp]
-    add shl, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + spill], [ip + 1]
+    add shl, [rb + spill], [ip + 1]
+    add [0], [rb + val_hi], [ip + 1]
     add [0], [rb + val_lo], [rb + val_lo]
 
     # Find shifted hi value in the shr table
-    mul [rb + val_hi], 8, [rb + tmp]
-    add shr, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
+    add shr, [rb + count], [ip + 1]
+    add [0], [rb + val_hi], [ip + 1]
     add [0], 0, [rb + val_hi]
 
     # Sign-fill the left side of hi byte
@@ -448,13 +436,15 @@ execute_sar_w_8_to_15:
 
     # Carry flag is the last bit shifted out of hi byte
     add [rb + count], -1, [rb + tmp]
-    add [rb + val_bits_hi], [rb + tmp], [ip + 1]
+
+    # Get tmp-th bit of val_hi
+    add bits, [rb + tmp], [ip + 1]
+    add [0], [rb + val_hi], [ip + 1]
     add [0], 0, [flag_carry]
 
     # Find shifted hi value in the shr table and use it as lo value
-    mul [rb + val_hi], 8, [rb + tmp]
-    add shr, [rb + tmp], [rb + tmp]
-    add [rb + tmp], [rb + count], [ip + 1]
+    add shr, [rb + count], [ip + 1]
+    add [0], [rb + val_hi], [ip + 1]
     add [0], 0, [rb + val_lo]
 
     # Sign-fill the left side of lo byte and the whole hi byte
@@ -466,12 +456,12 @@ execute_sar_w_8_to_15:
     jz  0, execute_sar_w_update_flags
 
 execute_sar_w_8:
-    # If we are shifting by 8, move the hi byte to lo byte and sign-fill the hi byte, then update flags
+    # If we are shifting by 8, update the flags, then move the hi byte to lo byte and sign-fill the hi byte
+    add bit_7, [rb + val_lo], [ip + 1]
+    add [0], 0, [flag_carry]
+
     add [rb + val_hi], 0, [rb + val_lo]
     mul [flag_sign], 0xff, [rb + val_hi]
-
-    add [rb + val_bits_lo], 7, [ip + 1]
-    add [0], 0, [flag_carry]
 
 execute_sar_w_update_flags:
     # Update flags
@@ -495,7 +485,7 @@ execute_sar_w_0:
 
 execute_sar_w_16:
     # If we are shifting by 16, sign-fill the value and use fixed flags except for CF
-    add [rb + val_bits_hi], 7, [ip + 1]
+    add bit_7, [rb + val_hi], [ip + 1]
     add [0], 0, [flag_carry]
 
     add 0, 0, [flag_overflow]
@@ -527,7 +517,7 @@ execute_sar_w_store:
     call write_location_w
 
 execute_sar_w_done:
-    arb 7
+    arb 5
     ret 2
 .ENDFRAME
 

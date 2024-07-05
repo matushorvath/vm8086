@@ -24,7 +24,11 @@
 .IMPORT report_error
 
 # From util/bits.s
-.IMPORT bits
+.IMPORT bit_0
+.IMPORT bit_2
+.IMPORT bit_3
+.IMPORT bit_4
+.IMPORT bit_5
 
 # From util/log.s
 .IMPORT log_start
@@ -35,8 +39,8 @@
 
 ##########
 fdc_dor_write:
-.FRAME addr, value; value_bits, tmp
-    arb -2
+.FRAME addr, value; tmp
+    arb -1
 
     # Floppy controller logging
     jz  [config_log_fdc], fdc_dor_write_after_log_fdc
@@ -46,13 +50,9 @@ fdc_dor_write:
     call fdc_dor_write_log_fdc
 
 fdc_dor_write_after_log_fdc:
-    # Convert value to bits
-    mul [rb + value], 8, [rb + tmp]
-    add bits, [rb + tmp], [rb + value_bits]
-
     # Save the original fdc_dor_reset value before changing it
     eq  [fdc_dor_reset], 0, [rb + tmp]
-    add [rb + value_bits], 2, [ip + 1]
+    add bit_2, [rb + value], [ip + 1]
     add [0], 0, [fdc_dor_reset]
     add [fdc_dor_reset], [rb + tmp], [rb + tmp]
 
@@ -63,10 +63,10 @@ fdc_dor_write_after_log_fdc:
 
 fdc_dor_write_after_reset:
     # Save the other bits
-    add [rb + value_bits], 0, [ip + 1]
+    add bit_0, [rb + value], [ip + 1]
     add [0], 0, [fdc_dor_drive_a_select]
 
-    add [rb + value_bits], 3, [ip + 1]
+    add bit_3, [rb + value], [ip + 1]
     jnz [0], fdc_dor_write_dma_enabled
 
     add fdc_error_non_dma, 0, [rb - 1]
@@ -74,13 +74,13 @@ fdc_dor_write_after_reset:
     call report_error
 
 fdc_dor_write_dma_enabled:
-    add [rb + value_bits], 4, [ip + 1]
+    add bit_4, [rb + value], [ip + 1]
     add [0], 0, [fdc_dor_enable_motor_unit0]
 
-    add [rb + value_bits], 5, [ip + 1]
+    add bit_5, [rb + value], [ip + 1]
     add [0], 0, [fdc_dor_enable_motor_unit1]
 
-    arb 2
+    arb 1
     ret 2
 .ENDFRAME
 

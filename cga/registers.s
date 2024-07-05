@@ -37,7 +37,12 @@
 .IMPORT reset_screen
 
 # From util/bits.s
-.IMPORT bits
+.IMPORT bit_0
+.IMPORT bit_1
+.IMPORT bit_2
+.IMPORT bit_3
+.IMPORT bit_4
+.IMPORT bit_5
 
 ##########
 mc6845_address_read:
@@ -103,30 +108,24 @@ mc6845_data_write_after_log:
 
 ##########
 mode_control_write:
-.FRAME addr, value; value_bits, tmp
-    arb -2
-
-    # Convert value to bits
-    mul [rb + value], 8, [rb + tmp]
-    add bits, [rb + tmp], [rb + value_bits]
-
+.FRAME addr, value;
     # Store individual bits
-    add [rb + value_bits], 0, [ip + 1]
+    add bit_0, [rb + value], [ip + 1]
     add [0], 0, [mode_high_res_text]
 
-    add [rb + value_bits], 1, [ip + 1]
+    add bit_1, [rb + value], [ip + 1]
     add [0], 0, [mode_graphics]
 
-    add [rb + value_bits], 2, [ip + 1]
+    add bit_2, [rb + value], [ip + 1]
     add [0], 0, [mode_back_and_white]
 
-    add [rb + value_bits], 3, [ip + 1]
+    add bit_3, [rb + value], [ip + 1]
     add [0], 0, [mode_enable_output]
 
-    add [rb + value_bits], 4, [ip + 1]
+    add bit_4, [rb + value], [ip + 1]
     add [0], 0, [mode_high_res_graphics]
 
-    add [rb + value_bits], 5, [ip + 1]
+    add bit_5, [rb + value], [ip + 1]
     add [0], 0, [mode_not_blinking]
 
     # TODO don't reset the terminal unless it's needed, it breaks nc in pcxtbios
@@ -140,41 +139,33 @@ mode_control_write:
     call mode_control_write_log
 
 mode_control_write_after_log:
-    arb 2
     ret 2
 .ENDFRAME
 
 ##########
 color_control_write:
-.FRAME addr, value; value_bits, tmp
-    arb -2
-
-    # Convert value to bits
-    mul [rb + value], 8, [rb + tmp]
-    add bits, [rb + tmp], [rb + value_bits]
-
+.FRAME addr, value;
     # Store selected color
     # TODO use color_selected
-    add [rb + value_bits], 3, [ip + 1]
-    add [0], 0, [color_selected]
-    mul [color_selected], 2, [color_selected]
+    add bit_3, [rb + value], [ip + 1]
+    mul [0], 2, [color_selected]
 
-    add [rb + value_bits], 2, [ip + 1]
+    add bit_2, [rb + value], [ip + 1]
     add [0], [color_selected], [color_selected]
     mul [color_selected], 2, [color_selected]
 
-    add [rb + value_bits], 1, [ip + 1]
+    add bit_1, [rb + value], [ip + 1]
     add [0], [color_selected], [color_selected]
     mul [color_selected], 2, [color_selected]
 
-    add [rb + value_bits], 0, [ip + 1]
+    add bit_0, [rb + value], [ip + 1]
     add [0], [color_selected], [color_selected]
 
     # Store the other bits
-    add [rb + value_bits], 4, [ip + 1]
+    add bit_4, [rb + value], [ip + 1]
     add [0], 0, [color_bright]
 
-    add [rb + value_bits], 5, [ip + 1]
+    add bit_5, [rb + value], [ip + 1]
     add [0], 0, [color_palette]
 
     # TODO don't reset the terminal unless it's needed, it breaks nc in pcxtbios
@@ -188,7 +179,6 @@ color_control_write:
     call color_control_write_log
 
 color_control_write_after_log:
-    arb 2
     ret 2
 .ENDFRAME
 

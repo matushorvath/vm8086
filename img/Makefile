@@ -5,11 +5,14 @@
 #  = https://www.myabandonware.com/game/arcade-volleyball-1on -> av.zip
 #  - https://www.myabandonware.com/game/prince-of-persia-pd -> prince.zip
 
+FLOPPY ?= freedos
+BUILD_TARGET=$(FLOPPY).img
+
 .PHONY: build-all
 build-all: freedos msdos
 
 .PHONY: build
-build: freedos.img
+build: $(BUILD_TARGET)
 
 .PHONY: freedos
 freedos: freedos.img freedos-nc.img freedos-av.img freedos-prince.img
@@ -23,6 +26,8 @@ freedos.img.xz:
 
 freedos.img: freedos.img.xz
 	xz -dkf $<
+	# ignore errors, since this is just cosmetic and CI/CD has no mtools
+	mdeltree -i $@ FSEVEN~1 || true
 
 # https://winworldpc.com/product/ms-dos/331
 msdos.7z:

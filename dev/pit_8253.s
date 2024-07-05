@@ -8,7 +8,8 @@
 .IMPORT report_error
 
 # From util/bits.s
-.IMPORT bits
+.IMPORT bit_6
+.IMPORT bit_7
 
 # From pit_8253_ch0.s
 .IMPORT pit_data_read_ch0
@@ -97,18 +98,14 @@ pit_vm_callback_decrement:
 
 ##########
 pit_mode_command_write:
-.FRAME addr, value; value_bits, channel, handler, tmp
-    arb -4
-
-    # Split value to components
-    mul [rb + value], 8, [rb + tmp]
-    add bits, [rb + tmp], [rb + value_bits]
+.FRAME addr, value; channel, handler, tmp
+    arb -3
 
     # Read the channel
-    add [rb + value_bits], 7, [ip + 1]
+    add bit_7, [rb + value], [ip + 1]
     add [0], 0, [rb + channel]
     mul [rb + channel], 2, [rb + channel]
-    add [rb + value_bits], 6, [ip + 1]
+    add bit_6, [rb + value], [ip + 1]
     add [0], [rb + channel], [rb + channel]
 
     add pit_mode_command_write_table, [rb + channel], [ip + 1]
@@ -118,7 +115,7 @@ pit_mode_command_write:
     arb -1
     call [rb + handler + 1]
 
-    arb 4
+    arb 3
     ret 2
 
 pit_mode_command_write_table:

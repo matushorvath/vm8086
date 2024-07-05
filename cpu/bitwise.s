@@ -16,7 +16,7 @@
 .IMPORT write_location_w
 
 # From util/bits.s
-.IMPORT bits
+.IMPORT bit_7
 
 # From util/parity.s
 .IMPORT parity
@@ -190,99 +190,88 @@ execute_bitwise_w_end:
 
 ##########
 and_b:
-.FRAME a, b; res, bit, tmp, a_bits, b_bits                  # returns res
-    arb -5
-
-    # Convert operands to bits
-    mul [rb + a], 8, [rb + a_bits]
-    add bits, [rb + a_bits], [rb + a_bits]
-    mul [rb + b], 8, [rb + b_bits]
-    add bits, [rb + b_bits], [rb + b_bits]
+.FRAME a, b; res, bit, tmp, table                           # returns res
+    arb -4
 
     # Process individual bits and build the output
     add 0, 0, [rb + res]
     add 8, 0, [rb + bit]
+    add bit_7, 0, [rb + table]
 
 and_b_loop:
-    add [rb + bit], -1, [rb + bit]
-
     mul [rb + res], 2, [rb + res]                           # res << 1
 
-    add [rb + a_bits], [rb + bit], [ip + 5]
-    add [rb + b_bits], [rb + bit], [ip + 2]
+    add [rb + table], [rb + a], [ip + 5]
+    add [rb + table], [rb + b], [ip + 2]
     add [0], [0], [rb + tmp]                                # bit n of a + bit n of b -> tmp
 
     eq  [rb + tmp], 2, [rb + tmp]                           # tmp is 2 means both bits are 1
     add [rb + res], [rb + tmp], [rb + res]                  # res += bit n
 
+    add [rb + bit], -1, [rb + bit]
+    add [rb + table], -0x100, [rb + table]
+
     jnz [rb + bit], and_b_loop
 
-    arb 5
+    arb 4
     ret 2
 .ENDFRAME
 
 ##########
 or_b:
-.FRAME a, b; res, bit, tmp, a_bits, b_bits                  # returns res
-    arb -5
-
-    # Convert operands to bits
-    mul [rb + a], 8, [rb + a_bits]
-    add bits, [rb + a_bits], [rb + a_bits]
-    mul [rb + b], 8, [rb + b_bits]
-    add bits, [rb + b_bits], [rb + b_bits]
+.FRAME a, b; res, bit, tmp, table                           # returns res
+    arb -4
 
     # Process individual bits and build the output
     add 0, 0, [rb + res]
     add 8, 0, [rb + bit]
+    add bit_7, 0, [rb + table]
 
 or_b_loop:
-    add [rb + bit], -1, [rb + bit]
-
     mul [rb + res], 2, [rb + res]                           # res << 1
 
-    add [rb + a_bits], [rb + bit], [ip + 5]
-    add [rb + b_bits], [rb + bit], [ip + 2]
+    add [rb + table], [rb + a], [ip + 5]
+    add [rb + table], [rb + b], [ip + 2]
     add [0], [0], [rb + tmp]                                # bit n of a + bit n of b -> tmp
 
     lt  0, [rb + tmp], [rb + tmp]                           # tmp is 0 means both bits are 0
     add [rb + res], [rb + tmp], [rb + res]                  # res += bit n
 
+    add [rb + bit], -1, [rb + bit]
+    add [rb + table], -0x100, [rb + table]
+
     jnz [rb + bit], or_b_loop
 
-    arb 5
+    arb 4
     ret 2
 .ENDFRAME
 
 ##########
 xor_b:
-.FRAME a, b; res, bit, tmp, a_bits, b_bits                  # returns res
-    arb -5
-
-    # Convert operands to bits
-    mul [rb + a], 8, [rb + a_bits]
-    add bits, [rb + a_bits], [rb + a_bits]
-    mul [rb + b], 8, [rb + b_bits]
-    add bits, [rb + b_bits], [rb + b_bits]
+.FRAME a, b; res, bit, tmp, table                           # returns res
+    arb -4
 
     # Process individual bits and build the output
     add 0, 0, [rb + res]
     add 8, 0, [rb + bit]
+    add bit_7, 0, [rb + table]
 
 xor_b_loop:
-    add [rb + bit], -1, [rb + bit]
-
     mul [rb + res], 2, [rb + res]                           # res << 1
 
-    add [rb + a_bits], [rb + bit], [ip + 5]
-    add [rb + b_bits], [rb + bit], [ip + 2]
+    add [rb + table], [rb + a], [ip + 5]
+    add [rb + table], [rb + b], [ip + 2]
     eq  [0], [0], [rb + tmp]                                # if both bits are equal, tmp is 1
+
     eq  [rb + tmp], 0, [rb + tmp]                           # tmp = ~tmp
     add [rb + res], [rb + tmp], [rb + res]                  # res += bit n
 
+    add [rb + bit], -1, [rb + bit]
+    add [rb + table], -0x100, [rb + table]
+
     jnz [rb + bit], xor_b_loop
 
-    arb 5
+    arb 4
     ret 2
 .ENDFRAME
 

@@ -1,4 +1,4 @@
-# Utility to generate bits.s
+# Utility to generate crumbs.s
 
 # From generator.s
 .IMPORT gen_number_times
@@ -18,28 +18,28 @@
     arb -1
     call print_str
 
-    add 32, 0, [gen_number_max]
-    add 0, 0, [bit_index]
+    add 16, 0, [gen_number_max]
+    add 0, 0, [crumb_index]
 
-bit_loop:
-    # Bit header
-    add bit_header, 0, [rb - 1]
+crumb_loop:
+    # Crumb header
+    add crumb_header, 0, [rb - 1]
     arb -1
     call print_str
 
-    add [bit_index], 0, [rb - 1]
+    add [crumb_index], 0, [rb - 1]
     arb -1
     call print_num
     out ':'
 
     # Calculate number of periods and period length
-    mul [bit_index], -1, [rb - 1]
+    mul [crumb_index], -2, [rb - 1]
     add [rb - 1], 8, [rb - 1]
     arb -1
     call pow_2
     add [rb - 3], 0, [period_index]
 
-    add [bit_index], 0, [rb - 1]
+    mul [crumb_index], 2, [rb - 1]
     arb -1
     call pow_2
     add [rb - 3], 0, [period_length]
@@ -52,22 +52,25 @@ period_loop:
     # Generate one period of numbers
     add [value], 0, [rb - 1]
     add 2, 0, [rb - 2]
-    add 1, 0, [rb - 3]
+    add 2, 0, [rb - 3]
     add number_prefix, 0, [rb - 4]
     add [period_length], 0, [rb - 5]
     arb -5
     call gen_number_times
 
-    # value = !value
-    eq  [value], 0, [value]
+    # value = (value + 1) mod 4
+    add [value], 1, [value]
+    eq  [value], 4, [tmp]
+    mul [tmp], -4, [tmp]
+    add [value], [tmp], [value]
 
     add [period_index], -1, [period_index]
     jnz [period_index], period_loop
 
-    # Loop to next bit
-    add [bit_index], 1, [bit_index]
-    eq  [bit_index], 8, [tmp]
-    jz  [tmp], bit_loop
+    # Loop to next crumb
+    add [crumb_index], 1, [crumb_index]
+    eq  [crumb_index], 4, [tmp]
+    jz  [tmp], crumb_loop
 
     # Finish the file
     add file_footer, 0, [rb - 1]
@@ -77,7 +80,7 @@ period_loop:
     hlt
 
 ##########
-bit_index:
+crumb_index:
     db  0
 period_index:
     db  0
@@ -89,17 +92,15 @@ tmp:
     db  0
 
 file_header:
-    db  ".EXPORT bits", 10, ".EXPORT bit_0", 10, ".EXPORT bit_1", 10, ".EXPORT bit_2", 10, ".EXPORT bit_3"
-    db  10, ".EXPORT bit_4", 10, ".EXPORT bit_5", 10, ".EXPORT bit_6", 10, ".EXPORT bit_7"
-    db  10, 10, "# Generated using gen_bits.s", 10, 10
-    db  "bits:", 10, "    db  bit_0", 10, "    db  bit_1", 10, "    db  bit_2", 10, "    db  bit_3"
-    db  10, "    db  bit_4", 10, "    db  bit_5", 10, "    db  bit_6", 10, "    db  bit_7", 0
+    db  ".EXPORT crumbs", 10, ".EXPORT crumb_0", 10, ".EXPORT crumb_1", 10, ".EXPORT crumb_2", 10, ".EXPORT crumb_3"
+    db  10, 10, "# Generated using gen_crumbs.s", 10, 10
+    db  "crumbs:", 10, "    db  crumb_0", 10, "    db  crumb_1", 10, "    db  crumb_2", 10, "    db  crumb_3", 0
 
-bit_header:
-    db  10, 10, "bit_", 0
+crumb_header:
+    db  10, 10, "crumb_", 0
 
 number_prefix:
-    db  "", 0
+    db  "0b", 0
 
 file_footer:
     db  10, 10, ".EOF", 10, 0
