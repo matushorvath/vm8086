@@ -4,9 +4,9 @@
 .IMPORT config_color_mode
 
 # From cp437.s
-.IMPORT cp437_b0
-.IMPORT cp437_b1
-.IMPORT cp437_b2
+.IMPORT cp437_0
+.IMPORT cp437_1
+.IMPORT cp437_2
 
 # From palette.s
 .IMPORT palette_4b_text_fg
@@ -260,17 +260,17 @@ write_memory_text_after_double_width:
 
 write_memory_text_after_blink:
     # Print the character, converting from CP437 to UTF-8
-    add cp437_b0, [rb + char], [ip + 1]
+    add cp437_0, [rb + char], [ip + 1]
     out [0]
 
-    add cp437_b1, [rb + char], [ip + 1]
+    add cp437_1, [rb + char], [ip + 1]
     jz  [0], write_memory_text_after_print
-    add cp437_b1, [rb + char], [ip + 1]
+    add cp437_1, [rb + char], [ip + 1]
     out [0]
 
-    add cp437_b2, [rb + char], [ip + 1]
+    add cp437_2, [rb + char], [ip + 1]
     jz  [0], write_memory_text_after_print
-    add cp437_b2, [rb + char], [ip + 1]
+    add cp437_2, [rb + char], [ip + 1]
     out [0]
 
 write_memory_text_after_print:

@@ -4,7 +4,7 @@ include intcode.mk
 BINDIR ?= bin
 OBJDIR ?= obj
 
-SRCDIRS = cga cpu dev fdc img util test-cga vm
+SRCDIRS = util cga cpu dev fdc img test-cga vm
 TOOLSDIR = monitor
 TESTDIRS = test-bochs test-cpu
 
