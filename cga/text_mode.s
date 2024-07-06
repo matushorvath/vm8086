@@ -1,5 +1,4 @@
 .EXPORT write_memory_text
-.EXPORT address_to_row_col
 
 # From cp437.s
 .IMPORT cp437_0
@@ -24,8 +23,8 @@
 # From util/bits.s
 .IMPORT bit_0
 
-# From util/mod5.s
-.IMPORT div5
+# From util/div80.s
+.IMPORT div80
 
 # From util/nibbles.s
 .IMPORT nibble_0
@@ -33,14 +32,9 @@
 
 # From util/shr.s
 .IMPORT shr_1
-.IMPORT shr_4
-.IMPORT shr_5
 
 # From util/printb.s
 .IMPORT printb
-
-# From util/util.s
-.IMPORT split_16_8_8
 
 ##########
 write_memory_text:
@@ -54,13 +48,33 @@ write_memory_text:
     lt  [rb + addr], [screen_page_size], [rb + tmp]
     jz  [rb + tmp], write_memory_text_done
 
-    # Calculate row and column from the memory address
-    add [rb + addr], 0, [rb - 1]
-    arb -1
-    call address_to_row_col
-    add [rb - 3], 0, [rb + row]
-    add [rb - 4], 0, [rb + col]
+    # Divide the address by 80 or 160, depending on screen row size
+    #  80: row = addr / 80, col = addr - row * 80
+    # 160: row = (addr / 80) / 2, col = addr - row * 160
 
+    jnz [screen_row_size_160], write_memory_text_calc_160
+
+    # Screen row is 80 bytes, divide by 80 only
+    add div80, [rb + addr], [ip + 1]
+    add [0], 0, [rb + row]
+
+    # Calculate column
+    mul [rb + row], -80, [rb + tmp]
+    add [rb + addr], [rb + tmp], [rb + col]
+
+    jz  0, write_memory_text_after_calc
+
+write_memory_text_calc_160:
+    # Screen row is 160 bytes, divide by 80 and then by 2
+    add div80, [rb + addr], [ip + 1]
+    add [0], shr_1, [ip + 1]
+    add [0], 0, [rb + row]
+
+    # Calculate column
+    mul [rb + row], -160, [rb + tmp]
+    add [rb + addr], [rb + tmp], [rb + col]
+
+write_memory_text_after_calc:
     # Is this the character or the attributes?
     add bit_0, [rb + col], [ip + 1]
     jz  [0], write_memory_text_get_attr
@@ -211,68 +225,6 @@ write_memory_text_after_print:
 write_memory_text_done:
     arb 5
     ret 2
-.ENDFRAME
-
-##########
-address_to_row_col:
-.FRAME addr; row, col, addr_lo, addr_hi, tmp                # returns row, col
-    arb -5
-
-    # Split the 14-bit address in video memory to bytes
-    # TODO avoid split_16_8_8 for performance
-    add [rb + addr], 0, [rb - 1]
-    arb -1
-    call split_16_8_8
-    add [rb - 3], 0, [rb + addr_lo]
-    add [rb - 4], 0, [rb + addr_hi]
-
-    # Divide the address by 80 or 160, depending on screen row size. We first divide by either
-    # 2^4 or 2^5 using shift operations, then use the div5/mod5 tables to divide by 5.
-    #
-    # 0 1 2 3 4 5 6 7   0 1 2 3 4 5 6 7
-    #     ==addr_hi==   ====addr_lo====
-    #     ====div====   ==div== ==mod==         divide by 2^4
-    #     ====div====   =div= ===mod===         divide by 2^5
-    #
-    # addr = div * 2^4 + mod1 = (row * 5 + mod2) * 2^4 + mod1 = row * 80 + col
-    # col = addr - row * 80
-
-    jnz [screen_row_size_160], address_to_row_col_calc_160
-
-    # Screen row is 80 bytes, divide by 2^4
-    mul [rb + addr_hi], 0x10, [rb + row]
-
-    add shr_4, [rb + addr_lo], [ip + 1]
-    add [0], [rb + row], [rb + row]
-
-    # Divide the result by 5
-    add div5, [rb + row], [ip + 1]
-    add [0], 0, [rb + row]
-
-    # Calculate column
-    mul [rb + row], -80, [rb + tmp]
-    add [rb + addr], [rb + tmp], [rb + col]
-
-    jz  0, address_to_row_col_done
-
-address_to_row_col_calc_160:
-    # Screen row is 160 bytes, divide by 2^5
-    mul [rb + addr_hi], 0x08, [rb + row]
-
-    add shr_5, [rb + addr_lo], [ip + 1]
-    add [0], [rb + row], [rb + row]
-
-    # Divide the result by 5
-    add div5, [rb + row], [ip + 1]
-    add [0], 0, [rb + row]
-
-    # Calculate column
-    mul [rb + row], -160, [rb + tmp]
-    add [rb + addr], [rb + tmp], [rb + col]
-
-address_to_row_col_done:
-    arb 5
-    ret 1
 .ENDFRAME
 
 .EOF

@@ -6,9 +6,6 @@
 .IMPORT blocks_4x2_2
 .IMPORT blocks_4x2_3
 
-# From text_mode.s
-.IMPORT address_to_row_col
-
 # From cpu/state.s
 .IMPORT mem
 
@@ -17,6 +14,9 @@
 .IMPORT crumb_1
 .IMPORT crumb_2
 .IMPORT crumb_3
+
+# From util/div80.s
+.IMPORT div80
 
 # From util/printb.s
 .IMPORT printb
@@ -49,7 +49,6 @@ write_memory_graphics:
     # and print them there
 
     # TODO don't draw if mode_enable_output is 0; redraw whole screen after enabling output
-    # TODO precalculate term_row0, term_col0, addr_row0
 
     # CGA memory is interlaced
     lt  0x1fff, [rb + addr], [rb + odd]
@@ -60,13 +59,13 @@ write_memory_graphics:
     lt  [rb + addr], 8000, [rb + tmp]
     jz  [rb + tmp], write_memory_graphics_done
 
-    # Calculate text row and column from the memory address
-    # Yes, this is graphics mode, but the algorithm is the same
-    add [rb + addr], 0, [rb - 1]
-    arb -1
-    call address_to_row_col
-    add [rb - 3], 0, [rb + row]
-    add [rb - 4], 0, [rb + col]
+    # Calculate text mode row and column from the memory address
+    # row = addr / 80, col = addr - row * 80
+    add div80, [rb + addr], [ip + 1]
+    add [0], 0, [rb + row]
+
+    mul [rb + row], -80, [rb + tmp]
+    add [rb + addr], [rb + tmp], [rb + col]
 
     # We are going to update two characters, that is 4x4 pixels
     #

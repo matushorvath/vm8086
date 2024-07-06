@@ -39,9 +39,6 @@ set_disk_active:
 ##########
 redraw_status_bar:
 .FRAME
-    # Assume that we have a 25 row text mode during POST
-    # TODO we now have status after POST, use the real row count
-
     # Position the cursor to column 1, one row below the screen
     out 0x1b
     out '['
