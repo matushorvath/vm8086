@@ -105,132 +105,6 @@ write_memory_graphics:
     add [rb + addr_row0], [mem], [rb + addr_row0]
     add [rb + addr_row0], 0xb8000, [rb + addr_row0]         # CGA memory start
 
-    # TODO starting from here, create a function that builds one char and call it twice
-    # params: addr_row0, crumbs3, crumbs2 (or crumbs1, crumbs0)
-    # it will keep r?c? internally, count colors, map colors, build char, print char
-    # common: set cursor position (before printing chars), reset attributes after
-
-    # Read first row of pixels
-    add [rb + addr_row0], 0, [ip + 1]
-    add [0], 0, [rb + tmp]
-
-    add crumb_3, [rb + tmp], [ip + 1]
-    add [0], 0, [r0c0]
-    add crumb_2, [rb + tmp], [ip + 1]
-    add [0], 0, [r0c1]
-    add crumb_1, [rb + tmp], [ip + 1]
-    add [0], 0, [r0c2]
-    add crumb_0, [rb + tmp], [ip + 1]
-    add [0], 0, [r0c3]
-
-    # Read second row of pixels
-    add [rb + addr_row0], 0x2000, [ip + 1]                  # 0x2000 because of interlacing
-    add [0], 0, [rb + tmp]
-
-    add crumb_3, [rb + tmp], [ip + 1]
-    add [0], 0, [r1c0]
-    add crumb_2, [rb + tmp], [ip + 1]
-    add [0], 0, [r1c1]
-    add crumb_1, [rb + tmp], [ip + 1]
-    add [0], 0, [r1c2]
-    add crumb_0, [rb + tmp], [ip + 1]
-    add [0], 0, [r1c3]
-
-    # Read third row of pixels
-    add [rb + addr_row0], 80, [ip + 1]                      # 80 is one row of pixels
-    add [0], 0, [rb + tmp]
-
-    add crumb_3, [rb + tmp], [ip + 1]
-    add [0], 0, [r2c0]
-    add crumb_2, [rb + tmp], [ip + 1]
-    add [0], 0, [r2c1]
-    add crumb_1, [rb + tmp], [ip + 1]
-    add [0], 0, [r2c2]
-    add crumb_0, [rb + tmp], [ip + 1]
-    add [0], 0, [r2c3]
-
-    # Read fourth row of pixels
-    add [rb + addr_row0], 0x2050, [ip + 1]                  # 0x2050 = 0x2000 + 80
-    add [0], 0, [rb + tmp]
-
-    add crumb_3, [rb + tmp], [ip + 1]
-    add [0], 0, [r3c0]
-    add crumb_2, [rb + tmp], [ip + 1]
-    add [0], 0, [r3c1]
-    add crumb_1, [rb + tmp], [ip + 1]
-    add [0], 0, [r3c2]
-    add crumb_0, [rb + tmp], [ip + 1]
-    add [0], 0, [r3c3]
-
-    # Map each crumb to either background (0) or foreground (1)
-    # TODO select background and foreground color to use for each character
-    # TODO for now 0b00 maps to background, 0b01-0b11 to foreground
-    lt  0b00, [r0c0], [r0c0]
-    lt  0b00, [r0c1], [r0c1]
-    lt  0b00, [r0c2], [r0c2]
-    lt  0b00, [r0c3], [r0c3]
-    lt  0b00, [r1c0], [r1c0]
-    lt  0b00, [r1c1], [r1c1]
-    lt  0b00, [r1c2], [r1c2]
-    lt  0b00, [r1c3], [r1c3]
-    lt  0b00, [r2c0], [r2c0]
-    lt  0b00, [r2c1], [r2c1]
-    lt  0b00, [r2c2], [r2c2]
-    lt  0b00, [r2c3], [r2c3]
-    lt  0b00, [r3c0], [r3c0]
-    lt  0b00, [r3c1], [r3c1]
-    lt  0b00, [r3c2], [r3c2]
-    lt  0b00, [r3c3], [r3c3]
-
-    # Build two characters out of the individual pixels
-    add 0, 0, [rb + char0]
-    add 0, 0, [rb + char1]
-
-    # Build two characters out of the individual pixels
-    #
-    #      c0 c1  c2 c3
-    # r0 | a  b | A  B |
-    # r1 | c  d | C  D |
-    # r2 | e  f | E  F |
-    # r3 | g  h | G  H |
-    #
-    # char0 = 0xhgfedcba
-    # char1 = 0xHGFEDCBA
-
-    # First character
-    mul [r3c1], 0b10000000, [rb + char0]
-    mul [r3c0], 0b01000000, [rb + tmp]
-    add [rb + char0], [rb + tmp], [rb + char0]
-    mul [r2c1], 0b00100000, [rb + tmp]
-    add [rb + char0], [rb + tmp], [rb + char0]
-    mul [r2c0], 0b00010000, [rb + tmp]
-    add [rb + char0], [rb + tmp], [rb + char0]
-    mul [r1c1], 0b00001000, [rb + tmp]
-    add [rb + char0], [rb + tmp], [rb + char0]
-    mul [r1c0], 0b00000100, [rb + tmp]
-    add [rb + char0], [rb + tmp], [rb + char0]
-    mul [r0c1], 0b00000010, [rb + tmp]
-    add [rb + char0], [rb + tmp], [rb + char0]
-    add [rb + char0], [r0c0], [rb + char0]
-
-    # Second character
-    mul [r3c3], 0b10000000, [rb + char1]
-    mul [r3c2], 0b01000000, [rb + tmp]
-    add [rb + char1], [rb + tmp], [rb + char1]
-    mul [r2c3], 0b00100000, [rb + tmp]
-    add [rb + char1], [rb + tmp], [rb + char1]
-    mul [r2c2], 0b00010000, [rb + tmp]
-    add [rb + char1], [rb + tmp], [rb + char1]
-    mul [r1c3], 0b00001000, [rb + tmp]
-    add [rb + char1], [rb + tmp], [rb + char1]
-    mul [r1c2], 0b00000100, [rb + tmp]
-    add [rb + char1], [rb + tmp], [rb + char1]
-    mul [r0c3], 0b00000010, [rb + tmp]
-    add [rb + char1], [rb + tmp], [rb + char1]
-    add [rb + char1], [r0c2], [rb + char1]
-
-    # Output the two characters
-    # TODO consider making this a function, perhaps common with text_mode
     # Set cursor position
     out 0x1b
     out '['
@@ -247,47 +121,19 @@ write_memory_graphics:
 
     out 'H'
 
-    # TODO set colors, see text mode for example
+    # Build and output the two characters
+    add [rb + addr_row0], 0, [rb - 1]
+    add crumb_3, 0, [rb - 2]
+    add crumb_2, 0, [rb - 3]
+    arb -3
+    call output_character
 
-    # Print the two characters
-    add blocks_4x2_0, [rb + char0], [ip + 1]
-    out [0]
+    add [rb + addr_row0], 0, [rb - 1]
+    add crumb_1, 0, [rb - 2]
+    add crumb_0, 0, [rb - 3]
+    arb -3
+    call output_character
 
-    add blocks_4x2_1, [rb + char0], [ip + 1]
-    jz  [0], write_memory_graphics_after_char0
-    add blocks_4x2_1, [rb + char0], [ip + 1]
-    out [0]
-
-    add blocks_4x2_2, [rb + char0], [ip + 1]
-    jz  [0], write_memory_graphics_after_char0
-    add blocks_4x2_2, [rb + char0], [ip + 1]
-    out [0]
-
-    add blocks_4x2_3, [rb + char0], [ip + 1]
-    jz  [0], write_memory_graphics_after_char0
-    add blocks_4x2_3, [rb + char0], [ip + 1]
-    out [0]
-
-write_memory_graphics_after_char0:
-    add blocks_4x2_0, [rb + char1], [ip + 1]
-    out [0]
-
-    add blocks_4x2_1, [rb + char1], [ip + 1]
-    jz  [0], write_memory_graphics_after_char1
-    add blocks_4x2_1, [rb + char1], [ip + 1]
-    out [0]
-
-    add blocks_4x2_2, [rb + char1], [ip + 1]
-    jz  [0], write_memory_graphics_after_char1
-    add blocks_4x2_2, [rb + char1], [ip + 1]
-    out [0]
-
-    add blocks_4x2_3, [rb + char1], [ip + 1]
-    jz  [0], write_memory_graphics_after_char1
-    add blocks_4x2_3, [rb + char1], [ip + 1]
-    out [0]
-
-write_memory_graphics_after_char1:
     # Reset all attributes
     # TODO only reset when needed
     out 0x1b
@@ -301,37 +147,107 @@ write_memory_graphics_done:
 .ENDFRAME
 
 ##########
-r0c0:
-    db  0
-r0c1:
-    db  0
-r0c2:
-    db  0
-r0c3:
-    db  0
-r1c0:
-    db  0
-r1c1:
-    db  0
-r1c2:
-    db  0
-r1c3:
-    db  0
-r2c0:
-    db  0
-r2c1:
-    db  0
-r2c2:
-    db  0
-r2c3:
-    db  0
-r3c0:
-    db  0
-r3c1:
-    db  0
-r3c2:
-    db  0
-r3c3:
-    db  0
+output_character:
+.FRAME addr_row0, crumb_hi, crumb_lo; char, tmp, r0c0, r0c1, r1c0, r1c1, r2c0, r2c1, r3c0, r3c1
+    arb -10
+
+    # Read first row of pixels
+    add [rb + addr_row0], 0, [ip + 1]
+    add [0], 0, [rb + tmp]
+
+    add [rb + crumb_hi], [rb + tmp], [ip + 1]
+    add [0], 0, [rb + r0c0]
+    add [rb + crumb_lo], [rb + tmp], [ip + 1]
+    add [0], 0, [rb + r0c1]
+
+    # Read second row of pixels
+    add [rb + addr_row0], 0x2000, [ip + 1]                  # 0x2000 because of interlacing
+    add [0], 0, [rb + tmp]
+
+    add [rb + crumb_hi], [rb + tmp], [ip + 1]
+    add [0], 0, [rb + r1c0]
+    add [rb + crumb_lo], [rb + tmp], [ip + 1]
+    add [0], 0, [rb + r1c1]
+
+    # Read third row of pixels
+    add [rb + addr_row0], 80, [ip + 1]                      # 80 is one row of pixels
+    add [0], 0, [rb + tmp]
+
+    add [rb + crumb_hi], [rb + tmp], [ip + 1]
+    add [0], 0, [rb + r2c0]
+    add [rb + crumb_lo], [rb + tmp], [ip + 1]
+    add [0], 0, [rb + r2c1]
+
+    # Read fourth row of pixels
+    add [rb + addr_row0], 0x2050, [ip + 1]                  # 0x2050 = 0x2000 + 80
+    add [0], 0, [rb + tmp]
+
+    add [rb + crumb_hi], [rb + tmp], [ip + 1]
+    add [0], 0, [rb + r3c0]
+    add [rb + crumb_lo], [rb + tmp], [ip + 1]
+    add [0], 0, [rb + r3c1]
+
+    # Map each pixel to either background (0) or foreground (1)
+    # TODO select background and foreground color to use for each character
+    # TODO for now 0b00 maps to background, 0b01-0b11 to foreground
+    lt  0b00, [rb + r0c0], [rb + r0c0]
+    lt  0b00, [rb + r0c1], [rb + r0c1]
+    lt  0b00, [rb + r1c0], [rb + r1c0]
+    lt  0b00, [rb + r1c1], [rb + r1c1]
+    lt  0b00, [rb + r2c0], [rb + r2c0]
+    lt  0b00, [rb + r2c1], [rb + r2c1]
+    lt  0b00, [rb + r3c0], [rb + r3c0]
+    lt  0b00, [rb + r3c1], [rb + r3c1]
+
+    # Build a characters out of the individual pixels
+    #
+    #      c0 c1 
+    # r0 | a  b |
+    # r1 | c  d |
+    # r2 | e  f |
+    # r3 | g  h |
+    #
+    # char = 0xhgfedcba
+
+    mul [rb + r3c1], 0b10000000, [rb + char]
+    mul [rb + r3c0], 0b01000000, [rb + tmp]
+    add [rb + char], [rb + tmp], [rb + char]
+    mul [rb + r2c1], 0b00100000, [rb + tmp]
+    add [rb + char], [rb + tmp], [rb + char]
+    mul [rb + r2c0], 0b00010000, [rb + tmp]
+    add [rb + char], [rb + tmp], [rb + char]
+    mul [rb + r1c1], 0b00001000, [rb + tmp]
+    add [rb + char], [rb + tmp], [rb + char]
+    mul [rb + r1c0], 0b00000100, [rb + tmp]
+    add [rb + char], [rb + tmp], [rb + char]
+    mul [rb + r0c1], 0b00000010, [rb + tmp]
+    add [rb + char], [rb + tmp], [rb + char]
+    add [rb + char], [rb + r0c0], [rb + char]
+
+    # TODO set colors
+
+    # Print the character
+    add blocks_4x2_0, [rb + char], [ip + 1]
+    out [0]
+
+    add blocks_4x2_1, [rb + char], [ip + 1]
+    jz  [0], output_character_done
+    add blocks_4x2_1, [rb + char], [ip + 1]
+    out [0]
+
+    add blocks_4x2_2, [rb + char], [ip + 1]
+    jz  [0], output_character_done
+    add blocks_4x2_2, [rb + char], [ip + 1]
+    out [0]
+
+    add blocks_4x2_3, [rb + char], [ip + 1]
+    jz  [0], output_character_done
+    add blocks_4x2_3, [rb + char], [ip + 1]
+    out [0]
+
+output_character_done:
+    arb 10
+    ret 3
+.ENDFRAME
 
 .EOF
