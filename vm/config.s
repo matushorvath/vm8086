@@ -5,6 +5,7 @@
 .EXPORT config_bcd_as_bochs
 .EXPORT config_de_fault_as_286
 .EXPORT config_boot_80x25
+.EXPORT config_cga_hide_cursor
 
 .EXPORT config_log_cga_debug
 .EXPORT config_log_cga_trace
@@ -64,6 +65,11 @@ config_de_fault_as_286:
 
 # Boot in CGA 80x25 text mode
 config_boot_80x25:
+    db  1
+
+# Hide the cursor, which messes up the terminal after stopping the VM
+# You can show the cursor again by running "tput cnorm"
+config_cga_hide_cursor:
     db  1
 
 # Logging configuration

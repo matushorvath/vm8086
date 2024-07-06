@@ -1,5 +1,8 @@
 .EXPORT init_cga
 
+# From the config file
+.IMPORT config_cga_hide_cursor
+
 # From cpu/devices.s
 .IMPORT register_region
 .IMPORT register_ports
@@ -56,6 +59,17 @@ init_cga:
     arb -1
     call register_ports
 
+    # Hide the cursor if requested
+    jz  [config_cga_hide_cursor], init_cga_after_cursor
+
+    out 0x1b
+    out '['
+    out '?'
+    out '2'
+    out '5'
+    out 'l'
+
+init_cga_after_cursor:
     # Reset the screen
     call reset_screen
 
