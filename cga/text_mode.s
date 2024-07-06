@@ -1,18 +1,14 @@
 .EXPORT write_memory_text
-
-# From the config file
-.IMPORT config_color_mode
+.EXPORT address_to_row_col
 
 # From cp437.s
 .IMPORT cp437_0
 .IMPORT cp437_1
 .IMPORT cp437_2
 
-# From palette.s
-.IMPORT palette_4b_text_fg
-.IMPORT palette_4b_text_bg_ptr
-.IMPORT palette_24b_text_fg
-.IMPORT palette_24b_text_bg_ptr
+# From text_palette.s
+.IMPORT palette_text_fg
+.IMPORT palette_text_bg_ptr
 
 # From screen.s
 .IMPORT screen_page_size
@@ -48,8 +44,8 @@
 
 ##########
 write_memory_text:
-.FRAME addr, value; row, col, char, attr, addr_lo, addr_hi, tmp
-    arb -7
+.FRAME addr, value; row, col, char, attr, tmp
+    arb -5
 
     # TODO don't draw if mode_enable_output is 0; redraw whole screen after enabling output
 
@@ -58,59 +54,13 @@ write_memory_text:
     lt  [rb + addr], [screen_page_size], [rb + tmp]
     jz  [rb + tmp], write_memory_text_done
 
-    # Split the 14-bit address in video memory to bytes
-    # TODO receive address already pre-split to bytes to avoid the split_16_8_8
+    # Calculate row and column from the memory address
     add [rb + addr], 0, [rb - 1]
     arb -1
-    call split_16_8_8
-    add [rb - 3], 0, [rb + addr_lo]
-    add [rb - 4], 0, [rb + addr_hi]
+    call address_to_row_col
+    add [rb - 3], 0, [rb + row]
+    add [rb - 4], 0, [rb + col]
 
-    # Divide the address by 80 or 160, depending on screen row size. We first divide by either
-    # 2^4 or 2^5 using shift operations, then use the div5/mod5 tables to divide by 5.
-    #
-    # 0 1 2 3 4 5 6 7   0 1 2 3 4 5 6 7
-    #     ==addr_hi==   ====addr_lo====
-    #     ====div====   ==div== ==mod==         divide by 2^4
-    #     ====div====   =div= ===mod===         divide by 2^5
-    #
-    # addr = div * 2^4 + mod1 = (row * 5 + mod2) * 2^4 + mod1 = row * 80 + col
-    # col = addr - row * 80
-
-    jnz [screen_row_size_160], write_memory_text_calc_160
-
-    # Screen row is 80 bytes, divide by 2^4
-    mul [rb + addr_hi], 0x10, [rb + row]
-
-    add shr_4, [rb + addr_lo], [ip + 1]
-    add [0], [rb + row], [rb + row]
-
-    # Divide the result by 5
-    add div5, [rb + row], [ip + 1]
-    add [0], 0, [rb + row]
-
-    # Calculate column
-    mul [rb + row], -80, [rb + tmp]
-    add [rb + addr], [rb + tmp], [rb + col]
-
-    jz  0, write_memory_text_after_calc
-
-write_memory_text_calc_160:
-    # Screen row is 160 bytes, divide by 2^5
-    mul [rb + addr_hi], 0x08, [rb + row]
-
-    add shr_5, [rb + addr_lo], [ip + 1]
-    add [0], [rb + row], [rb + row]
-
-    # Divide the result by 5
-    add div5, [rb + row], [ip + 1]
-    add [0], 0, [rb + row]
-
-    # Calculate column
-    mul [rb + row], -160, [rb + tmp]
-    add [rb + addr], [rb + tmp], [rb + col]
-
-write_memory_text_after_calc:
     # Is this the character or the attributes?
     add bit_0, [rb + col], [ip + 1]
     jz  [0], write_memory_text_get_attr
@@ -160,30 +110,7 @@ write_memory_text_print:
     out 0x1b
     out '['
 
-    # Should we use 24-bit terminal colors?
-    jnz [config_color_mode], write_memory_text_24b
-
-    # No, use 4-bit terminal colors
-    add nibble_0, [rb + attr], [ip + 1]
-    add [0], palette_4b_text_fg, [ip + 1]
-    add [0], 0, [rb - 1]
-    arb -1
-    call printb
-
-    out ';'
-
-    add nibble_1, [rb + attr], [ip + 1]
-    add [0], [palette_4b_text_bg_ptr], [ip + 1]
-    add [0], 0, [rb - 1]
-    arb -1
-    call printb
-
-    out 'm'
-
-    jz  0, write_memory_text_after_color
-
-write_memory_text_24b:
-    # Use 24-bit terminal colors
+    # Set foreground and background color
     out '3'
     out '8'
     out ';'
@@ -193,19 +120,19 @@ write_memory_text_24b:
     add nibble_0, [rb + attr], [ip + 1]
     mul [0], 3, [rb + tmp]
 
-    add palette_24b_text_fg + 0, [rb + tmp], [ip + 1]
+    add palette_text_fg + 0, [rb + tmp], [ip + 1]
     add [0], 0, [rb - 1]
     arb -1
     call printb
     out ';'
 
-    add palette_24b_text_fg + 1, [rb + tmp], [ip + 1]
+    add palette_text_fg + 1, [rb + tmp], [ip + 1]
     add [0], 0, [rb - 1]
     arb -1
     call printb
     out ';'
 
-    add palette_24b_text_fg + 2, [rb + tmp], [ip + 1]
+    add palette_text_fg + 2, [rb + tmp], [ip + 1]
     add [0], 0, [rb - 1]
     arb -1
     call printb
@@ -220,21 +147,21 @@ write_memory_text_24b:
     add nibble_1, [rb + attr], [ip + 1]
     mul [0], 3, [rb + tmp]
 
-    add [palette_24b_text_bg_ptr], [rb + tmp], [ip + 1]
+    add [palette_text_bg_ptr], [rb + tmp], [ip + 1]
     add [0], 0, [rb - 1]
     arb -1
     call printb
     out ';'
 
     add [rb + tmp], 1, [rb + tmp]
-    add [palette_24b_text_bg_ptr], [rb + tmp], [ip + 1]
+    add [palette_text_bg_ptr], [rb + tmp], [ip + 1]
     add [0], 0, [rb - 1]
     arb -1
     call printb
     out ';'
 
     add [rb + tmp], 1, [rb + tmp]
-    add [palette_24b_text_bg_ptr], [rb + tmp], [ip + 1]
+    add [palette_text_bg_ptr], [rb + tmp], [ip + 1]
     add [0], 0, [rb - 1]
     arb -1
     call printb
@@ -282,8 +209,70 @@ write_memory_text_after_print:
     out 'm'
 
 write_memory_text_done:
-    arb 7
+    arb 5
     ret 2
+.ENDFRAME
+
+##########
+address_to_row_col:
+.FRAME addr; row, col, addr_lo, addr_hi, tmp                # returns row, col
+    arb -5
+
+    # Split the 14-bit address in video memory to bytes
+    # TODO avoid split_16_8_8 for performance
+    add [rb + addr], 0, [rb - 1]
+    arb -1
+    call split_16_8_8
+    add [rb - 3], 0, [rb + addr_lo]
+    add [rb - 4], 0, [rb + addr_hi]
+
+    # Divide the address by 80 or 160, depending on screen row size. We first divide by either
+    # 2^4 or 2^5 using shift operations, then use the div5/mod5 tables to divide by 5.
+    #
+    # 0 1 2 3 4 5 6 7   0 1 2 3 4 5 6 7
+    #     ==addr_hi==   ====addr_lo====
+    #     ====div====   ==div== ==mod==         divide by 2^4
+    #     ====div====   =div= ===mod===         divide by 2^5
+    #
+    # addr = div * 2^4 + mod1 = (row * 5 + mod2) * 2^4 + mod1 = row * 80 + col
+    # col = addr - row * 80
+
+    jnz [screen_row_size_160], address_to_row_col_calc_160
+
+    # Screen row is 80 bytes, divide by 2^4
+    mul [rb + addr_hi], 0x10, [rb + row]
+
+    add shr_4, [rb + addr_lo], [ip + 1]
+    add [0], [rb + row], [rb + row]
+
+    # Divide the result by 5
+    add div5, [rb + row], [ip + 1]
+    add [0], 0, [rb + row]
+
+    # Calculate column
+    mul [rb + row], -80, [rb + tmp]
+    add [rb + addr], [rb + tmp], [rb + col]
+
+    jz  0, address_to_row_col_done
+
+address_to_row_col_calc_160:
+    # Screen row is 160 bytes, divide by 2^5
+    mul [rb + addr_hi], 0x08, [rb + row]
+
+    add shr_5, [rb + addr_lo], [ip + 1]
+    add [0], [rb + row], [rb + row]
+
+    # Divide the result by 5
+    add div5, [rb + row], [ip + 1]
+    add [0], 0, [rb + row]
+
+    # Calculate column
+    mul [rb + row], -160, [rb + tmp]
+    add [rb + addr], [rb + tmp], [rb + col]
+
+address_to_row_col_done:
+    arb 5
+    ret 1
 .ENDFRAME
 
 .EOF

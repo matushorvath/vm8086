@@ -19,6 +19,8 @@
 .IMPORT status_read
 .IMPORT reset_screen
 
+# TODO hide the cursor if running on a VM that supports extended console IO
+
 ##########
 cga_ports:
     db  0xd4, 0x03, mc6845_address_read, mc6845_address_write                   # MC6845 address register

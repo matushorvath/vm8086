@@ -1,11 +1,16 @@
 .EXPORT post_status_write
 .EXPORT set_disk_active
-.EXPORT redraw_vm_status
+.EXPORT redraw_status_bar
+
+# From screen.s
+.IMPORT screen_width_chars
+.IMPORT screen_height_chars
+
+# From util/printb.s
+.IMPORT printb
 
 # From libxib.a
 .IMPORT print_num_radix
-
-# This file support reporting VM status on screen while the CGA is active
 
 ##########
 post_status_write:
@@ -13,8 +18,8 @@ post_status_write:
     # Save the new value
     add [rb + value], 0, [post_status]
 
-    # POST codes are not performance critical, just redraw the whole status line
-    call redraw_vm_status
+    # POST codes are not performance critical, just redraw the whole status bar
+    call redraw_status_bar
 
     ret 2
 .ENDFRAME
@@ -32,16 +37,19 @@ set_disk_active:
 .ENDFRAME
 
 ##########
-redraw_vm_status:
+redraw_status_bar:
 .FRAME
     # Assume that we have a 25 row text mode during POST
     # TODO we now have status after POST, use the real row count
 
-    # Position the cursor to column 1, row 26 (just below the lower left corner of the screen)
+    # Position the cursor to column 1, one row below the screen
     out 0x1b
     out '['
-    out '2'
-    out '6'
+
+    add [screen_height_chars], 1, [rb - 1]
+    arb -1
+    call printb
+
     out ';'
     out '1'
     out 'H'
@@ -53,7 +61,7 @@ redraw_vm_status:
     out 'K'
 
     # Print the POST status code, unless it's 00
-    jz  [post_status], redraw_vm_status_after_post
+    jz  [post_status], redraw_status_bar_after_post
 
     add [post_status], 0, [rb - 1]
     add 16, 0, [rb - 2]
@@ -61,7 +69,7 @@ redraw_vm_status:
     arb -3
     call print_num_radix
 
-redraw_vm_status_after_post:
+redraw_status_bar_after_post:
     call redraw_disk_activity
 
     ret 0
@@ -70,14 +78,20 @@ redraw_vm_status_after_post:
 ##########
 redraw_disk_activity:
 .FRAME
-    # Position the cursor to column 79, row 26 (end of the status line)
+    # Position the cursor to column 79, one row below the screen
     out 0x1b
     out '['
-    out '2'
-    out '6'
+
+    add [screen_height_chars], 1, [rb - 1]
+    arb -1
+    call printb
+
     out ';'
-    out '7'
-    out '9'
+
+    add [screen_width_chars], -1, [rb - 1]
+    arb -1
+    call printb
+
     out 'H'
 
     # If there is disk activity, set color to black on yellow

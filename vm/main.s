@@ -24,7 +24,7 @@
 # From cpu/images.s
 .IMPORT init_images
 
-# From cga/status.s
+# From cga/status_bar.s
 .IMPORT set_disk_active
 
 # From dev/dma.s

@@ -15,10 +15,10 @@ build-all: freedos msdos
 build: $(BUILD_TARGET)
 
 .PHONY: freedos
-freedos: freedos.img freedos-nc.img freedos-av.img freedos-prince.img
+freedos: freedos.img freedos-nc.img #freedos-av.img freedos-prince.img
 
 .PHONY: msdos
-msdos: msdos.img msdos-nc.img msdos-av.img msdos-prince.img
+msdos: msdos.img msdos-nc.img #msdos-av.img msdos-prince.img
 
 # https://github.com/codercowboy/freedosbootdisks
 freedos.img.xz:

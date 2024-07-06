@@ -6,7 +6,6 @@
 .EXPORT config_bcd_as_bochs
 .EXPORT config_de_fault_as_286
 .EXPORT config_boot_80x25
-.EXPORT config_color_mode
 
 .EXPORT config_log_cga_debug
 .EXPORT config_log_cga_trace
@@ -43,10 +42,6 @@ config_de_fault_as_286:
 
 # Boot in CGA 80x25 text mode
 config_boot_80x25:
-    db  1
-
-# Terminal color setting mechanism: 0 = 4-bit colors, 1=24-bit colors
-config_color_mode:
     db  1
 
 # Logging configuration
