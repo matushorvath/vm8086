@@ -26,7 +26,7 @@
 
 ##########
 write_memory_graphics:
-.FRAME addr, value; odd, row, col, addr_row, char0, char1, tmp
+.FRAME addr, value; odd, row, col, addr_row0, char0, char1, tmp
     arb -7
 
     # Update all characters affected by writing one byte to CGA memory (that's 2 characters for 320x200)
@@ -49,7 +49,7 @@ write_memory_graphics:
     # and print them there
 
     # TODO don't draw if mode_enable_output is 0; redraw whole screen after enabling output
-    # TODO precalculate termr, termc (=col, row where we will print), addr_row0
+    # TODO precalculate term_row0, term_col0, addr_row0
 
     # CGA memory is interlaced
     lt  0x1fff, [rb + addr], [rb + odd]
@@ -97,21 +97,21 @@ write_memory_graphics:
     #      = term_row0 * 4 / 2 * 80 + term_col0 * 2 / 4
     #      = (term_row0 * 160) + (term_col0 >> 1)
 
-    mul [rb + row], 160, [rb + addr_row]
+    mul [rb + row], 160, [rb + addr_row0]
     add shr_1, [rb + col], [ip + 1]
-    add [0], [rb + addr_row], [rb + addr_row]
+    add [0], [rb + addr_row0], [rb + addr_row0]
 
     # Convert the 8086 address to intcode address
-    add [rb + addr_row], [mem], [rb + addr_row]
-    add [rb + addr_row], 0xb8000, [rb + addr_row]           # CGA memory start
+    add [rb + addr_row0], [mem], [rb + addr_row0]
+    add [rb + addr_row0], 0xb8000, [rb + addr_row0]         # CGA memory start
 
     # TODO starting from here, create a function that builds one char and call it twice
-    # params: addr_row, crumbs3, crumbs2 (or crumbs1, crumbs0)
+    # params: addr_row0, crumbs3, crumbs2 (or crumbs1, crumbs0)
     # it will keep r?c? internally, count colors, map colors, build char, print char
     # common: set cursor position (before printing chars), reset attributes after
 
     # Read first row of pixels
-    add [rb + addr_row], 0, [ip + 1]
+    add [rb + addr_row0], 0, [ip + 1]
     add [0], 0, [rb + tmp]
 
     add crumb_3, [rb + tmp], [ip + 1]
@@ -124,7 +124,7 @@ write_memory_graphics:
     add [0], 0, [r0c3]
 
     # Read second row of pixels
-    add [rb + addr_row], 0x2000, [ip + 1]                   # 0x2000 because of interlacing
+    add [rb + addr_row0], 0x2000, [ip + 1]                  # 0x2000 because of interlacing
     add [0], 0, [rb + tmp]
 
     add crumb_3, [rb + tmp], [ip + 1]
@@ -137,7 +137,7 @@ write_memory_graphics:
     add [0], 0, [r1c3]
 
     # Read third row of pixels
-    add [rb + addr_row], 80, [ip + 1]                       # 80 is one row of pixels
+    add [rb + addr_row0], 80, [ip + 1]                      # 80 is one row of pixels
     add [0], 0, [rb + tmp]
 
     add crumb_3, [rb + tmp], [ip + 1]
@@ -150,7 +150,7 @@ write_memory_graphics:
     add [0], 0, [r2c3]
 
     # Read fourth row of pixels
-    add [rb + addr_row], 0x2050, [ip + 1]                   # 0x2050 = 0x2000 + 80
+    add [rb + addr_row0], 0x2050, [ip + 1]                  # 0x2050 = 0x2000 + 80
     add [0], 0, [rb + tmp]
 
     add crumb_3, [rb + tmp], [ip + 1]
@@ -162,14 +162,8 @@ write_memory_graphics:
     add crumb_0, [rb + tmp], [ip + 1]
     add [0], 0, [r3c3]
 
-    # TODO select which background and foreground color to use for each character
-
-    # Build two characters from individual pixels
-    add 0, 0, [rb + char0]
-    add 0, 0, [rb + char1]
-
     # Map each crumb to either background (0) or foreground (1)
-    # TODO map each pixel color to one of the two colors selected
+    # TODO select background and foreground color to use for each character
     # TODO for now 0b00 maps to background, 0b01-0b11 to foreground
     lt  0b00, [r0c0], [r0c0]
     lt  0b00, [r0c1], [r0c1]
@@ -187,6 +181,10 @@ write_memory_graphics:
     lt  0b00, [r3c1], [r3c1]
     lt  0b00, [r3c2], [r3c2]
     lt  0b00, [r3c3], [r3c3]
+
+    # Build two characters out of the individual pixels
+    add 0, 0, [rb + char0]
+    add 0, 0, [rb + char1]
 
     # Build two characters out of the individual pixels
     #
