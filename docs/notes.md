@@ -265,3 +265,5 @@ complex:
 - don't draw when mode_enable_output is 0, needs whole screen redraw support
 - debug and fix Prince graphics
 - support missing floppy commands
+
+TODO consider using strings for the palettes, avoid printb to speed up; e.g. string "170;170;0;" for yellow

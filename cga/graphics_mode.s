@@ -6,6 +6,10 @@
 .IMPORT blocks_4x2_2
 .IMPORT blocks_4x2_3
 
+# From graphics_palette.s
+.IMPORT palette_graphics
+.IMPORT color_mappings
+
 # From cpu/state.s
 .IMPORT mem
 
@@ -147,8 +151,8 @@ write_memory_graphics_done:
 
 ##########
 output_character:
-.FRAME addr_row0, crumb_hi, crumb_lo; char, tmp, r0c0, r0c1, r1c0, r1c1, r2c0, r2c1, r3c0, r3c1
-    arb -10
+.FRAME addr_row0, crumb_hi, crumb_lo; char, tmp, r0c0, r0c1, r1c0, r1c1, r2c0, r2c1, r3c0, r3c1, max01, max23, color_bg, color_fg, mapping
+    arb -15
 
     # Read first row of pixels
     add [rb + addr_row0], 0, [ip + 1]
@@ -186,19 +190,82 @@ output_character:
     add [rb + crumb_lo], [rb + tmp], [ip + 1]
     add [0], 0, [rb + r3c1]
 
-    # Map each pixel to either background (0) or foreground (1)
-    # TODO select background and foreground color to use for each character
-    # TODO for now 0b00 maps to background, 0b01-0b11 to foreground
-    lt  0b00, [rb + r0c0], [rb + r0c0]
-    lt  0b00, [rb + r0c1], [rb + r0c1]
-    lt  0b00, [rb + r1c0], [rb + r1c0]
-    lt  0b00, [rb + r1c1], [rb + r1c1]
-    lt  0b00, [rb + r2c0], [rb + r2c0]
-    lt  0b00, [rb + r2c1], [rb + r2c1]
-    lt  0b00, [rb + r3c0], [rb + r3c0]
-    lt  0b00, [rb + r3c1], [rb + r3c1]
+    # Count which colors are used in this character
+    add 0, 0, [colors + 0]
+    add 0, 0, [colors + 1]
+    add 0, 0, [colors + 2]
+    add 0, 0, [colors + 3]
 
-    # Build a characters out of the individual pixels
+    add colors, [rb + r0c0], [ip + 5]
+    add colors, [rb + r0c0], [ip + 3]
+    add [0], 1, [0]
+    add colors, [rb + r0c1], [ip + 5]
+    add colors, [rb + r0c1], [ip + 3]
+    add [0], 1, [0]
+    add colors, [rb + r1c0], [ip + 5]
+    add colors, [rb + r1c0], [ip + 3]
+    add [0], 1, [0]
+    add colors, [rb + r1c1], [ip + 5]
+    add colors, [rb + r1c1], [ip + 3]
+    add [0], 1, [0]
+    add colors, [rb + r2c0], [ip + 5]
+    add colors, [rb + r2c0], [ip + 3]
+    add [0], 1, [0]
+    add colors, [rb + r2c1], [ip + 5]
+    add colors, [rb + r2c1], [ip + 3]
+    add [0], 1, [0]
+    add colors, [rb + r3c0], [ip + 5]
+    add colors, [rb + r3c0], [ip + 3]
+    add [0], 1, [0]
+    add colors, [rb + r3c1], [ip + 5]
+    add colors, [rb + r3c1], [ip + 3]
+    add [0], 1, [0]
+
+    # Find two most used colors by sorting the colors array
+    lt  [colors + 0], [colors + 1], [rb + max01]
+    lt  [colors + 2], [colors + 3], [rb + max23]
+
+    # Find out color_bg
+    add colors + 0, [rb + max01], [ip + 5]
+    add colors + 2, [rb + max23], [ip + 2]
+    lt  [0], [0], [rb + tmp]
+    jz  [rb + tmp], output_character_color_bg_01
+
+    # One of colors 2, 3 is color_bg, the other one could still be color_fg
+    add [rb + max23], 2, [rb + color_bg]
+    eq  [rb + max23], 0, [rb + max23]
+    jz  0, output_character_after_color_bg
+
+output_character_color_bg_01:
+    # One of colors 0, 1 is color_bg, the other one could still be color_fg
+    add [rb + max01], 0, [rb + color_bg]
+    eq  [rb + max01], 0, [rb + max01]
+
+output_character_after_color_bg:
+    # Find out color_fg
+    add colors + 0, [rb + max01], [ip + 5]
+    add colors + 2, [rb + max23], [ip + 2]
+    lt  [0], [0], [rb + tmp]
+    jz  [rb + tmp], output_character_color_fg_01
+
+    # One of colors 2, 3 is color_fg
+    add [rb + max23], 2, [rb + color_fg]
+    jz  0, output_character_after_color_fg
+
+output_character_color_fg_01:
+    # One of colors 0, 1 is color_fg
+    add [rb + max01], 0, [rb + color_fg]
+
+output_character_after_color_fg:
+    # Find the color mapping based on two most used colors
+    mul [rb + color_bg], 4, [rb + tmp]
+    add [rb + color_fg], [rb + tmp], [rb + tmp]
+
+    mul [rb + tmp], 4, [rb + tmp]
+    add [color_mappings], [rb + tmp], [rb + mapping]
+
+    # Build a characters out of the individual pixels,
+    # while mapping each pixel to either background or foreground color
     #
     #      c0 c1 
     # r0 | a  b |
@@ -208,22 +275,89 @@ output_character:
     #
     # char = 0xhgfedcba
 
-    mul [rb + r3c1], 0b10000000, [rb + char]
-    mul [rb + r3c0], 0b01000000, [rb + tmp]
+    add [rb + mapping], [rb + r3c1], [ip + 1]
+    mul [0], 0b10000000, [rb + char]
+    add [rb + mapping], [rb + r3c0], [ip + 1]
+    mul [0], 0b01000000, [rb + tmp]
     add [rb + char], [rb + tmp], [rb + char]
-    mul [rb + r2c1], 0b00100000, [rb + tmp]
+    add [rb + mapping], [rb + r2c1], [ip + 1]
+    mul [0], 0b00100000, [rb + tmp]
     add [rb + char], [rb + tmp], [rb + char]
-    mul [rb + r2c0], 0b00010000, [rb + tmp]
+    add [rb + mapping], [rb + r2c0], [ip + 1]
+    mul [0], 0b00010000, [rb + tmp]
     add [rb + char], [rb + tmp], [rb + char]
-    mul [rb + r1c1], 0b00001000, [rb + tmp]
+    add [rb + mapping], [rb + r1c1], [ip + 1]
+    mul [0], 0b00001000, [rb + tmp]
     add [rb + char], [rb + tmp], [rb + char]
-    mul [rb + r1c0], 0b00000100, [rb + tmp]
+    add [rb + mapping], [rb + r1c0], [ip + 1]
+    mul [0], 0b00000100, [rb + tmp]
     add [rb + char], [rb + tmp], [rb + char]
-    mul [rb + r0c1], 0b00000010, [rb + tmp]
+    add [rb + mapping], [rb + r0c1], [ip + 1]
+    mul [0], 0b00000010, [rb + tmp]
     add [rb + char], [rb + tmp], [rb + char]
-    add [rb + char], [rb + r0c0], [rb + char]
+    add [rb + mapping], [rb + r0c0], [ip + 1]
+    add [0], [rb + char], [rb + char]
 
-    # TODO set colors
+    # Set foreground and background color
+    out 0x1b
+    out '['
+
+    out '3'
+    out '8'
+    out ';'
+    out '2'
+    out ';'
+
+    mul [rb + color_fg], 3, [rb + tmp]
+
+    add [palette_graphics], [rb + tmp], [ip + 1]
+    add [0], 0, [rb - 1]
+    arb -1
+    call printb
+    out ';'
+
+    add [rb + tmp], 1, [rb + tmp]
+    add [palette_graphics], [rb + tmp], [ip + 1]
+    add [0], 0, [rb - 1]
+    arb -1
+    call printb
+    out ';'
+
+    add [rb + tmp], 1, [rb + tmp]
+    add [palette_graphics], [rb + tmp], [ip + 1]
+    add [0], 0, [rb - 1]
+    arb -1
+    call printb
+
+    out ';'
+    out '4'
+    out '8'
+    out ';'
+    out '2'
+    out ';'
+
+    mul [rb + color_bg], 3, [rb + tmp]
+
+    add [palette_graphics], [rb + tmp], [ip + 1]
+    add [0], 0, [rb - 1]
+    arb -1
+    call printb
+    out ';'
+
+    add [rb + tmp], 1, [rb + tmp]
+    add [palette_graphics], [rb + tmp], [ip + 1]
+    add [0], 0, [rb - 1]
+    arb -1
+    call printb
+    out ';'
+
+    add [rb + tmp], 1, [rb + tmp]
+    add [palette_graphics], [rb + tmp], [ip + 1]
+    add [0], 0, [rb - 1]
+    arb -1
+    call printb
+
+    out 'm'
 
     # Print the character
     add blocks_4x2_0, [rb + char], [ip + 1]
@@ -245,8 +379,11 @@ output_character:
     out [0]
 
 output_character_done:
-    arb 10
+    arb 15
     ret 3
+
+colors:
+    ds  4, 0
 .ENDFRAME
 
 .EOF

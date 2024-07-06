@@ -18,8 +18,8 @@ reinitialize_graphics_palette:
     mul [color_bright], 2, [rb + tmp]
     add [rb + tmp], [mode_back_and_white], [rb + tmp]
     mul [rb + tmp], 2, [rb + tmp]
-    add [rb + tmp], [color_palette], [ip + 1]
-    add [0], 0, [palette_graphics]
+    #add [rb + tmp], [color_palette], [ip + 1] # TODO uncomment
+    #add [0], 0, [palette_graphics] # TODO uncomment
 
     # TODO set also color_mappings
 
