@@ -36,9 +36,6 @@ reset_screen:
 
     # Graphics mode
 
-    # Screen row size is always 80 bytes
-    add 0, 0, [screen_row_size_160]
-
     # Screen width is 320/2 = 160 characters, height is 200/4 = 50 characters
     add 160, 0, [screen_width_chars]
     add 50, 0, [screen_height_chars]
