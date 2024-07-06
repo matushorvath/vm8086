@@ -15,10 +15,13 @@ reinitialize_graphics_palette:
     arb -1
 
     # Select graphics palette
+    # tmp = 0b_<bright>_<b&w>_<palette>
     mul [color_bright], 2, [rb + tmp]
     add [rb + tmp], [mode_back_and_white], [rb + tmp]
     mul [rb + tmp], 2, [rb + tmp]
-    add [rb + tmp], [color_palette], [ip + 1]
+    add [rb + tmp], [color_palette], [rb + tmp]
+
+    add reinitialize_graphics_palette_data, [rb + tmp], [ip + 1]
     add [0], 0, [palette_graphics]
 
     # TODO set also color_mappings

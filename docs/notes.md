@@ -260,8 +260,9 @@ simple:
 - avoid resetting the colors if we did not set them
 
 complex:
-- color support
 - fix screen clearing, only do it when necessary (breaks nc on pcxtbios)
 - don't draw when mode_enable_output is 0, needs whole screen redraw support
 - debug and fix Prince graphics
 - support missing floppy commands
+
+TODO consider using strings for the palettes, avoid printb to speed up; e.g. string "170;170;0;" for yellow
