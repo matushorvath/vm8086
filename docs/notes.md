@@ -266,3 +266,21 @@ complex:
 - support missing floppy commands
 
 TODO consider using strings for the palettes, avoid printb to speed up; e.g. string "170;170;0;" for yellow
+
+Prince of Persia
+================
+
+Graphics mode not available.
+
+(3002:4189) cga address write: value 00001111
+(3002:418b) cga data read: value 10111000000000000000
+(3002:418e) cga data write: value 01010101
+(3002:4194) cga data read: value 10111000000000000000
+(3002:4199) cga data write: value 10111000000000000000
+
+reads R15 from MC6845
+writes 0x55 to R15
+reads R15, compares it with 0x55, expects equal
+writes original value back to R15
+
+screen blinking after a sword hit and during the demo, clears the screen but it shouldn't

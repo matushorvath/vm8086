@@ -13,7 +13,6 @@
 .IMPORT write_memory_bc000
 
 # From registers.s
-.IMPORT mc6845_address_read
 .IMPORT mc6845_address_write
 .IMPORT mc6845_data_read
 .IMPORT mc6845_data_write
@@ -26,12 +25,12 @@
 
 ##########
 cga_ports:
-    db  0xd4, 0x03, mc6845_address_read, mc6845_address_write                   # MC6845 address register
-    db  0xd5, 0x03, mc6845_data_read, mc6845_data_write                         # MC6845 data register
+    db  0xd4, 0x03, 0, mc6845_address_write                 # MC6845 address register
+    db  0xd5, 0x03, mc6845_data_read, mc6845_data_write     # MC6845 data register
 
-    db  0xd8, 0x03, 0, mode_control_write                                       # mode control register
-    db  0xd9, 0x03, 0, color_control_write                                      # color control register
-    db  0xda, 0x03, status_read, 0                                              # status register
+    db  0xd8, 0x03, 0, mode_control_write                   # mode control register
+    db  0xd9, 0x03, 0, color_control_write                  # color control register
+    db  0xda, 0x03, status_read, 0                          # status register
 
     db  -1, -1, -1, -1
 
