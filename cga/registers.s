@@ -1,4 +1,3 @@
-.EXPORT mc6845_address_read
 .EXPORT mc6845_address_write
 .EXPORT mc6845_data_read
 .EXPORT mc6845_data_write
@@ -45,25 +44,10 @@
 .IMPORT bit_5
 
 ##########
-mc6845_address_read:
-.FRAME port; value                      # returns value
-    arb -1
-
-    # CGA logging
-    jz  [config_log_cga_trace], mc6845_address_read_after_log
-
-    add [rb + value], 0, [rb - 1]
-    arb -1
-    call mc6845_address_read_log
-
-mc6845_address_read_after_log:
-    arb 1
-    ret 1
-.ENDFRAME
-
-##########
 mc6845_address_write:
-.FRAME addr, value;
+.FRAME addr, value; tmp
+    arb -1
+
     # CGA logging
     jz  [config_log_cga_trace], mc6845_address_write_after_log
 
@@ -72,6 +56,14 @@ mc6845_address_write:
     call mc6845_address_write_log
 
 mc6845_address_write_after_log:
+    # Select one of 18 MC6845 registers to access
+    lt  [rb + value], 18, [rb + tmp]
+    jz  [rb + tmp], mc6845_address_write_done
+
+    add [rb + value], 0, [mc6845_address]
+
+mc6845_address_write_done:
+    arb 1
     ret 2
 .ENDFRAME
 
@@ -79,6 +71,10 @@ mc6845_address_write_after_log:
 mc6845_data_read:
 .FRAME port; value                      # returns value
     arb -1
+
+    # Read value from a MC6845 register
+    add mc6845_registers, [mc6845_address], [ip + 1]
+    add [0], 0, [rb + value]
 
     # CGA logging
     jz  [config_log_cga_trace], mc6845_data_read_after_log
@@ -103,6 +99,10 @@ mc6845_data_write:
     call mc6845_data_write_log
 
 mc6845_data_write_after_log:
+    # Write value to a MC6845 register
+    add mc6845_registers, [mc6845_address], [ip + 3]
+    add [rb + value], 0, [0]
+
     ret 2
 .ENDFRAME
 
@@ -226,6 +226,11 @@ status_read_after_log:
 .ENDFRAME
 
 ##########
+mc6845_address:
+    db  0
+mc6845_registers:
+    ds  18, 0
+
 mode_high_res_text:
     db  0
 mode_graphics:
