@@ -4,7 +4,7 @@ Notes
 Run without interpreting ANSI escape sequences:
 make && ~/intcode/xzintbit/vms/c/ic bin/vm.bios-xt.input | tr '\33' '\n'
 
-Decoding
+Instruction Decoding
 ========
 
 Instruction set 2-51 p70  
@@ -30,6 +30,7 @@ TODO
 - Make sure makefiles display and delete output files when compilation fails.
 - https://wiki.osdev.org/APM APM for poweroff, FreeDOS should support it
 - higher level floppy logging (read CHS+count -> target buffer)
+- indicate pc speaker sounds on the status bar
 
 VM:
 - nmi_mask_reg
@@ -38,11 +39,11 @@ VM:
 Emulators
 =========
 
-https://i8086emu.sourceforge.net/
-https://github.com/YJDoc2/8086-Emulator/
-https://github.com/adriancable/8086tiny
-https://bochs.sourceforge.io/
-https://github.com/86Box/86Box
+https://i8086emu.sourceforge.net/  
+https://github.com/YJDoc2/8086-Emulator/  
+https://github.com/adriancable/8086tiny  
+https://bochs.sourceforge.io/  
+https://github.com/86Box/86Box  
 
 Tests for 8086
 ==============
@@ -54,11 +55,14 @@ https://github.com/xoreaxeaxeax/sandsifter
 https://www.pcjs.org/software/pcx86/test/cpu/  
 
 DAA behavior with AF=1
-https://draft.blogger.com/comment.g?blogID=6264947694886887540&postID=1529067761550380331&bpli=1&pli=1
-https://github.com/shirriff/DAA
+https://draft.blogger.com/comment.g?blogID=6264947694886887540&postID=1529067761550380331&bpli=1&pli=1  
+https://github.com/shirriff/DAA  
 
 BIOS
 ====
+
+8086_bios
+---------
 
 https://github.com/skiselev/8088_bios.git
 
@@ -66,50 +70,62 @@ listing:
 set(CMAKE_ASM_NASM_FLAGS "-O9 -l $(basename $@).lst)"
 ./build/CMakeFiles/bios-xt.bin.dir/src/bios.asm.lst
 
+GLaBIOS
+-------
+
 https://glabios.org/
 
+f000:e0c2 end of BIOS checksum
+f000:e0e9 PIT test LOOP	INIT_PIT1_TEST
+it keeps looping forever
+because it's trying to test PIT channel 1 and we don't have it
+if DRAM_REFRESH <= 0 it will instead use channel 0
+
+PCXTBIOS
+--------
+
 https://github.com/virtualxt/pcxtbios
-chmod a+x make_linux.sh
-install freebasic
-compile toolsrc using fbc -lang qb file.bas
-move the compiled tools to ./linux
-eproms/2764/pcxtbios.rom at 0xfe000 is mandatory, the rest is optional
+- chmod a+x make_linux.sh
+- install freebasic
+- compile toolsrc using fbc -lang qb file.bas
+- move the compiled tools to ./linux
+- eproms/2764/pcxtbios.rom at 0xfe000 is mandatory, the rest is optional
 
 pcxtbios + BASIC:
-make -C vm clean
-cat ~/intcode/pcxtbios/eproms/2764/basicfc.rom ~/intcode/pcxtbios/eproms/2764/pcxtbios.rom > bios.tmp
-BIOS_LOAD_ADDRESS=fc000 BIOS_BIN=$(pwd)/bios.tmp make && ~/intcode/xzintbit/vms/c/ic bin/vm.input
+- make -C vm clean
+- cat ~/intcode/pcxtbios/eproms/2764/basicfc.rom ~/intcode/pcxtbios/eproms/2764/pcxtbios.rom > - bios.tmp
+- BIOS_LOAD_ADDRESS=fc000 BIOS_BIN=$(pwd)/bios.tmp make && ~/intcode/xzintbit/vms/c/ic bin/vm.input
 
 CGA
 ===
 
-http://nerdlypleasures.blogspot.com/2016/05/ibms-cga-hardware-explained.html?m=1
-https://www.seasip.info/VintagePC/cga.html
+http://nerdlypleasures.blogspot.com/2016/05/ibms-cga-hardware-explained.html?m=1  
+https://www.seasip.info/VintagePC/cga.html  
 
-https://en.wikipedia.org/wiki/ANSI_escape_code
-https://www.lihaoyi.com/post/BuildyourownCommandLinewithANSIescapecodes.html
+https://en.wikipedia.org/wiki/ANSI_escape_code  
+https://www.lihaoyi.com/post/BuildyourownCommandLinewithANSIescapecodes.html  
 
 PIT Programmable Interval Timer 8253
 ====================================
 
-https://wiki.osdev.org/Programmable_Interval_Timer
+https://wiki.osdev.org/Programmable_Interval_Timer  
 
 PPI Programmable Peripheral Interface 8255
 ==========================================
 
-https://www.geeksforgeeks.org/programmable-peripheral-interface-8255/
-https://www.renesas.com/us/en/document/dst/82c55a-datasheet
-http://aturing.umcs.maine.edu/~meadow/courses/cos335/Intel8255A.pdf
-https://www.learn-c.com/8255.pdf
+https://www.geeksforgeeks.org/programmable-peripheral-interface-8255/  
+https://www.renesas.com/us/en/document/dst/82c55a-datasheet  
+http://aturing.umcs.maine.edu/~meadow/courses/cos335/Intel8255A.pdf  
+https://www.learn-c.com/8255.pdf  
 
-ppi_pa_reg 60h: 8255 PPI port A
-read keyboard data
+ppi_pa_reg 60h: 8255 PPI port A  
+read keyboard data  
 
-ppi_pb_reg 61h: 8255 PPI port B
-write
+ppi_pb_reg 61h: 8255 PPI port B  
+write  
 
-ppi_pc_reg 62h: 8255 PPI port C
-read
+ppi_pc_reg 62h: 8255 PPI port C  
+read  
 
 ppi_cwd_reg	63h: 8255 PPI control word register
 0b10011001
@@ -117,13 +133,14 @@ ppi_cwd_reg	63h: 8255 PPI control word register
 Floppy Disk Controller
 ======================
 
-https://www.pcjs.org/machines/pcx86/ibm/hdc/
-https://www.datasheet.live/pdfviewer?url=https%3A%2F%2Fpdf.datasheet.live%2F3fe4a52f%2Fintel.com%2FP8272A.pdf
-https://en.m.wikipedia.org/wiki/Floppy-disk_controller
-https://retrocmp.de/fdd/general/floppy-formats.htm
-https://wiki.osdev.org/Floppy_Disk_Controller
-https://www.isdaman.com/alsos/hardware/fdc/floppy.htm
+https://www.pcjs.org/machines/pcx86/ibm/hdc/  
+https://www.datasheet.live/pdfviewer?url=https%3A%2F%2Fpdf.datasheet.live%2F3fe4a52f%2Fintel.com%2FP8272A.pdf  
+https://en.m.wikipedia.org/wiki/Floppy-disk_controller  
+https://retrocmp.de/fdd/general/floppy-formats.htm  
+https://wiki.osdev.org/Floppy_Disk_Controller  
+https://www.isdaman.com/alsos/hardware/fdc/floppy.htm  
 
+```
 config_tracing_cs:
     db  0xf000
 config_tracing_ip:
@@ -131,8 +148,17 @@ config_tracing_ip:
     db  0xec59 # int_13
     db  0xc425 # int_13_fn00
     db  0xc42f # fdc_init
+```
 
 <bin/vm.bios-xt.input.map.yaml yq '.symbols.fdc_dor_write.export|(.module)+(.offset)'
+
+Interrupts
+==========
+
+https://wiki.osdev.org/8259_PIC
+http://www.brokenthorn.com/Resources/OSDevPic.html
+https://helppc.netcore2k.net/hardware/8259
+https://stanislavs.org/helppc/idx_interrupt.html
 
 FreeDOS Plan
 ============
@@ -165,40 +191,6 @@ tools (sorted by priority):
         - for symbols and line addresses, they need to be relocated same as exported symbols
         - for lines, we also need to somehow know file name for the line number (perhaps an additional input to asd, same as bin2obj)
 
-pcxtbios
-========
-
-delay_keypress f000:f9b3
-
-int 16h, ah=1 check for keypress
-int 16h, ah=1 flush keyboard buffer
-
-f000:f9bb is where the int 16h happens
-
-bx starts as 3*18
-add [es:46Ch] to bx (0000:046C = 0040:006C)
-
-problem: [es:46Ch] always is 0x00ca, it's supposed to be current ticks but it never changes
--> investigate how [es:46Ch] is updated, probably from something we don't have implemented in timer
-
-	dw	?		; 40:6C		; Ticks since midnite (lo)
-	dw	?		; 40:6E		; Ticks since midnite (hi)
-
-updated by:
-INT_8:  STI                                     ; Routine services clock tick
-also
-INT_1A: STI (but that seems to be the API to set time of day)
-
-proc	int_8	far hardware clock
-8259 chip
-
--> we need something to trigger int 8
-that will change the ticks count and make the delay eventually expire
-
-int8 is irq 0, timer interrupt that we don't have
-
--> workaround: in boot_basic comment out delay_keypress
-
 FreeDOS Prompt
 ==============
 
@@ -225,43 +217,6 @@ INT 2a = critical section and NETBIOS (could be keyboard busy loop if AH=84)
 https://stanislavs.org/helppc/int_2a.html
 
 f000:cb32 "fdc reset controller" - what happens before that, why is it resetting the fdc?
-
-Interrupts
-==========
-
-https://wiki.osdev.org/8259_PIC
-http://www.brokenthorn.com/Resources/OSDevPic.html
-https://helppc.netcore2k.net/hardware/8259
-https://stanislavs.org/helppc/idx_interrupt.html
-
-FreeDOS Crash
-=============
-
-1000:01f0 MOV REG16, REG16/MEM16(8b) d7 8b de
-1000:01f2 MOV REG16, REG16/MEM16(8b) de ff 3b
-1000:01f4 INC/DEC/CALL NEAR/CALL FAR/JMP NEAR/JMP FAR/PUSH REG16/MEM16(ff) 3b df 74
-
-01e0-01ef don't seem to be executed
-
-Booting OS...
-FreeDOS kernel - SVN (build 2040 OEM:0xfd) [compiled Apr  7 2012]
-Kernel compatibility 7.10 - WATCOMC - FAT32 support
-
-(C) Copyright 1995-2011 Pasquale J. Villani and The FreeDOS Project.
-All Rights Reserved. This is free software and comes with ABSOLUTELY NO
-WARRANTY; you can redistribute it and/or modify it under the terms of the
-GNU General Public License as published by the Free Software Foundation;
-either version 2, or (at your option) any later version.
- - InitDiskno hard disks detected
-Press F8 to trace or F5 to skip CONFIG.SYS/AUTOEXEC.BAT
-
--> crashing after EXEC A:\COMMAND.COM
-in DOS log, search EXEC
-
-(1000:0000) CS changed
-(20ce:0006) CS changed
-
-20ce:0006 only has 00 bytes until 20ce:01ec
 
 Keyboard
 ========
@@ -297,11 +252,16 @@ non-blocking input options:
     - needs to be synchronous, only generate on stdout if there is a request, avoid buffering - can that be done?
  - think about fallbacks - running with standard ICVM (disable keyboard?), running without filter (how to even detect that?)
 
-GLaBIOS
-=======
+Next Steps
+==========
 
-f000:e0c2 end of BIOS checksum
-f000:e0e9 PIT test LOOP	INIT_PIT1_TEST
-it keeps looping forever
-because it's trying to test PIT channel 1 and we don't have it
-if DRAM_REFRESH <= 0 it will instead use channel 0
+simple:
+- support CGA paging (affects start address where we read CGA data from mem)
+- avoid resetting the colors if we did not set them
+
+complex:
+- color support
+- fix screen clearing, only do it when necessary (breaks nc on pcxtbios)
+- don't draw when mode_enable_output is 0, needs whole screen redraw support
+- debug and fix Prince graphics
+- support missing floppy commands
