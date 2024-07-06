@@ -1,12 +1,7 @@
-.EXPORT config_vm_callback
+.EXPORT vm_callback
 
 # From cpu/prefix.s
 .IMPORT prefix_valid
-
-##########
-# Register callback function to call before each instruction
-config_vm_callback:
-    db  vm_callback
 
 ##########
 vm_callback:

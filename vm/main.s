@@ -12,6 +12,9 @@
 # From ports.s
 .IMPORT init_vm_ports
 
+# From timer.s
+.IMPORT vm_callback
+
 # From cga/cga.s
 .IMPORT init_cga
 
@@ -20,6 +23,7 @@
 
 # From cpu/execute.s
 .IMPORT execute
+.IMPORT execute_callback
 
 # From cpu/images.s
 .IMPORT init_images
@@ -82,6 +86,7 @@ main:
     call init_vm_ports
 
     # Start the CPU
+    add vm_callback, 0, [execute_callback]
     call execute
 
     ret 0

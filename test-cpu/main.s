@@ -1,8 +1,12 @@
 .EXPORT irq_execute
 .EXPORT irq_need_to_execute
 
+# From callback.s
+.IMPORT vm_callback
+
 # From cpu/execute.s
 .IMPORT execute
+.IMPORT execute_callback
 
 # From init_test.s
 .IMPORT init_processor_test
@@ -25,6 +29,7 @@
 main:
 .FRAME
     call init_processor_test
+    add vm_callback, 0, [execute_callback]
     call execute
     call print_output
 

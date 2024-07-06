@@ -3,6 +3,7 @@
 .EXPORT execute_esc
 .EXPORT execute_hlt
 .EXPORT invalid_opcode
+.EXPORT execute_callback
 
 .EXPORT halt
 .EXPORT exec_ip
@@ -12,7 +13,6 @@
 .IMPORT config_enable_tracing
 .IMPORT config_tracing_cs
 .IMPORT config_tracing_ip
-.IMPORT config_vm_callback
 
 # From util/error.s
 .IMPORT report_error
@@ -107,9 +107,9 @@ execute_irq_done:
     add 0, 0, [irq_delay_execution]
 
     # Call the callback if enabled
-    jz  [config_vm_callback], execute_callback_done
+    jz  [execute_callback], execute_callback_done
 
-    call [config_vm_callback]
+    call [execute_callback]
     jnz [rb - 2], execute_callback_done
 
     # Callback returned 0, stop the VM
@@ -223,5 +223,8 @@ exec_ip:                                # IP where the currently executed instru
     db  0
 
 irq_delay_execution:                    # flag to delay IRQ execution by one cycle (used after updating a segment register)
+    db  0
+
+execute_callback:
     db  0
 .EOF
