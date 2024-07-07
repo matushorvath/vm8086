@@ -8,8 +8,8 @@
 .EXPORT screen_width_chars
 .EXPORT screen_height_chars
 
-# From graphics_mode.s
-.IMPORT redraw_screen_graphics
+# From graphics_mode_lo.s
+.IMPORT redraw_screen_graphics_lo
 
 # From graphics_palette.s
 .IMPORT reinitialize_graphics_palette
@@ -65,7 +65,7 @@ reset_screen:
     call reinitialize_graphics_palette
 
     # Redraw the screen
-    call redraw_screen_graphics
+    call redraw_screen_graphics_lo
 
     jz  0, reset_screen_redraw_status_bar
 
@@ -126,7 +126,7 @@ enable_disable_screen:
     jz  [mode_graphics], enable_screen_text
 
     # Redraw the screen
-    call redraw_screen_graphics
+    call redraw_screen_graphics_lo
 
     jz  0, enable_screen_done
 

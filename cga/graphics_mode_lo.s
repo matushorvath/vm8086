@@ -1,5 +1,5 @@
-.EXPORT redraw_screen_graphics
-.EXPORT write_memory_graphics
+.EXPORT redraw_screen_graphics_lo
+.EXPORT write_memory_graphics_lo
 
 # From the config file
 .IMPORT config_log_cga_debug
@@ -42,7 +42,7 @@
 .IMPORT shr_1
 
 ##########
-redraw_screen_graphics:
+redraw_screen_graphics_lo:
 .FRAME row, col, addr_row0, tmp
     arb -4
 
@@ -134,7 +134,7 @@ redraw_screen_graphics_done:
 .ENDFRAME
 
 ##########
-write_memory_graphics:
+write_memory_graphics_lo:
 .FRAME addr, value; odd, row, col, addr_row0, char0, char1, tmp
     arb -7
 

@@ -2,8 +2,8 @@
 .EXPORT read_memory_bc000
 .EXPORT write_memory_bc000
 
-# From graphics_mode.s
-.IMPORT write_memory_graphics
+# From graphics_mode_lo.s
+.IMPORT write_memory_graphics_lo
 
 # From registers.s
 .IMPORT mode_graphics
@@ -41,7 +41,7 @@ write_memory:
     add [rb + addr], 0, [rb - 1]
     add [rb + value], 0, [rb - 2]
     arb -2
-    call write_memory_graphics
+    call write_memory_graphics_lo
 
     jz  0, write_memory_done
 
