@@ -145,7 +145,6 @@ mode_control_write_start:
     add [0], 0, [mode_back_and_white]
 
     # When setting palette 3 in graphics mode, reset the screen
-    # TODO just update the palette and redraw only colors, keep characters (is it possible?)
     eq  [rb + tmp], [mode_back_and_white], [rb + tmp]
     eq  [rb + tmp], 0, [rb + tmp]
     mul [rb + tmp], [mode_graphics], [rb + tmp]
@@ -179,7 +178,6 @@ mode_control_write_start:
     add [0], 0, [mode_not_blinking]
 
     # When switching blinking in text mode, reset the screen
-    # TODO just update the palette and redraw only the blinking attribute, keep characters (is it possible?)
     eq  [rb + tmp], [mode_not_blinking], [rb + tmp]
     add [rb + tmp], [mode_graphics], [rb + tmp]
     eq  [rb + tmp], 0, [rb + tmp]

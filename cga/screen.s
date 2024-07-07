@@ -40,6 +40,7 @@
 reset_screen:
 .FRAME
     # Clear the terminal
+    # TODO no need to clear if we're redrawing the same data with different palette
     out 0x1b
     out '['
     out '2'

@@ -42,11 +42,11 @@
 .IMPORT nibble_0
 .IMPORT nibble_1
 
-# From util/shr.s
-.IMPORT shr_1
-
 # From util/printb.s
 .IMPORT printb
+
+# From util/shr.s
+.IMPORT shr_1
 
 ##########
 redraw_screen_text:
@@ -133,13 +133,20 @@ write_memory_text:
 .FRAME addr, value; row, col, char, attr, tmp
     arb -5
 
-    # TODO don't draw if mode_enable_output is 0; redraw whole screen after enabling output
-
     # Is this inside the screen area?
     # TODO use start address of the screen buffer
     lt  [rb + addr], [screen_page_size], [rb + tmp]
     jz  [rb + tmp], write_memory_text_done
 
+    # We are going to draw, is output enabled?
+    jnz [mode_enable_output], write_memory_text_enabled
+
+    # Drawing is disabled, screen contents will no longer match CGA memory
+    add 1, 0, [screen_needs_redraw]
+
+    jz  0, write_memory_text_done
+
+write_memory_text_enabled:
     # Divide the address by 80 or 160, depending on screen row size
     #  80: row = addr / 80, col = (addr - row * 80) / 2
     # 160: row = (addr / 80) / 2, col = (addr - row * 160) / 2
