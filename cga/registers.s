@@ -28,12 +28,14 @@
 .IMPORT mc6845_data_read_log
 .IMPORT mc6845_data_write_log
 
-.IMPORT mode_control_write_log
+.IMPORT mode_control_write_log_1
+.IMPORT mode_control_write_log_2
 .IMPORT color_control_write_log
 .IMPORT status_read_log
 
 # From screen.s
 .IMPORT reset_screen
+.IMPORT enable_disable_screen
 
 # From util/bits.s
 .IMPORT bit_0
@@ -108,9 +110,17 @@ mc6845_data_write_after_log:
 
 ##########
 mode_control_write:
-.FRAME addr, value; reset, tmp
-    arb -2
+.FRAME addr, value; reset, enable_disable, tmp
+    arb -3
 
+    # CGA logging
+    jz  [config_log_cga_debug], mode_control_write_start
+
+    add [rb + value], 0, [rb - 1]
+    arb -1
+    call mode_control_write_log_1
+
+mode_control_write_start:
     # Save text/graphics mode setting
     add [mode_graphics], 0, [rb + tmp]
     add bit_1, [rb + value], [ip + 1]
@@ -125,11 +135,9 @@ mode_control_write:
     add bit_3, [rb + value], [ip + 1]
     add [0], 0, [mode_enable_output]
 
-    # When the output is disabled/enabled, reset the screen
-    # TODO clear the screen when disabled, don't reset the rest
-    #eq  [rb + tmp], [mode_enable_output], [rb + tmp]
-    #eq  [rb + tmp], 0, [rb + tmp]
-    #add [rb + reset], [rb + tmp], [rb + reset]
+    # When the output is disabled/enabled, just do a screen redraw
+    eq  [rb + tmp], [mode_enable_output], [rb + tmp]
+    eq  [rb + tmp], 0, [rb + enable_disable]
 
     # Save the black and white setting (which is actually palette 3 setting)
     add [mode_back_and_white], 0, [rb + tmp]
@@ -137,7 +145,7 @@ mode_control_write:
     add [0], 0, [mode_back_and_white]
 
     # When setting palette 3 in graphics mode, reset the screen
-    # TODO just update the palette and redraw
+    # TODO just update the palette and redraw only colors, keep characters (is it possible?)
     eq  [rb + tmp], [mode_back_and_white], [rb + tmp]
     eq  [rb + tmp], 0, [rb + tmp]
     mul [rb + tmp], [mode_graphics], [rb + tmp]
@@ -171,7 +179,7 @@ mode_control_write:
     add [0], 0, [mode_not_blinking]
 
     # When switching blinking in text mode, reset the screen
-    # TODO just update the palette and redraw
+    # TODO just update the palette and redraw only the blinking attribute, keep characters (is it possible?)
     eq  [rb + tmp], [mode_not_blinking], [rb + tmp]
     add [rb + tmp], [mode_graphics], [rb + tmp]
     eq  [rb + tmp], 0, [rb + tmp]
@@ -181,17 +189,25 @@ mode_control_write:
     jz  [rb + reset], mode_control_write_after_reset
     call reset_screen
 
+    # Don't worry about enable/disable if we did a full reset
+    jz  0, mode_control_write_done
+
 mode_control_write_after_reset:
+    # Reset was not needed, do we need to process an enable/disable?
+    jz  [rb + enable_disable], mode_control_write_done
+    call enable_disable_screen
+
+mode_control_write_done:
     # CGA logging
     jz  [config_log_cga_debug], mode_control_write_after_log
 
-    add [rb + value], 0, [rb - 1]
-    add [rb + reset], 0, [rb - 2]
+    add [rb + reset], 0, [rb - 1]
+    add [rb + enable_disable], 0, [rb - 2]
     arb -2
-    call mode_control_write_log
+    call mode_control_write_log_2
 
 mode_control_write_after_log:
-    arb 2
+    arb 3
     ret 2
 .ENDFRAME
 

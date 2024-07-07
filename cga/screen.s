@@ -1,8 +1,14 @@
 .EXPORT reset_screen
+.EXPORT enable_disable_screen
+
+.EXPORT screen_needs_redraw
 .EXPORT screen_page_size
 .EXPORT screen_row_size_160
 .EXPORT screen_width_chars
 .EXPORT screen_height_chars
+
+# From graphics_mode.s
+.IMPORT redraw_screen_graphics
 
 # From graphics_palette.s
 .IMPORT reinitialize_graphics_palette
@@ -49,7 +55,10 @@ reset_screen:
     # Initialize the palette for low resolution graphics mode
     call reinitialize_graphics_palette
 
-    jz  0, reset_screen_redraw_memory
+    # Redraw the screen
+    call redraw_screen_graphics
+
+    jz  0, reset_screen_redraw_status_bar
 
 reset_screen_text:
     # Text mode
@@ -68,11 +77,9 @@ reset_screen_text:
     # Initialize the palette for text mode
     call reinitialize_text_palette
 
-reset_screen_redraw_memory:
-    # Don't redraw the memory if output is disabled
-    jz  [mode_enable_output], reset_screen_redraw_status_bar
-
-    # TODO redraw the memory in new mode
+    # Redraw the screen
+    # TODO redraw screen in text mode
+    #call redraw_screen_text
 
 reset_screen_redraw_status_bar:
     # Redraw the status line
@@ -90,8 +97,38 @@ reset_screen_hires_not_supported_msg:
 .ENDFRAME
 
 ##########
+enable_disable_screen:
+.FRAME
+    # Is the screen being enabled or disabled?
+    jz  [mode_enable_output], enable_screen_done
+
+    # Redraw the screen if it no longer matches CGA memory
+    jz [screen_needs_redraw], enable_screen_done
+
+    # Graphics mode?
+    jz  [mode_graphics], enable_screen_text
+
+    # Redraw the screen
+    call redraw_screen_graphics
+
+    jz  0, enable_screen_done
+
+enable_screen_text:
+    # Redraw the screen
+    # TODO redraw screen in text mode
+    #call redraw_screen_text
+
+enable_screen_done:
+    ret 0
+.ENDFRAME
+
+##########
 # Precalculated values used in address to row/column conversion
 # The defaults are set up for 80x25 text mode, which is the mode used at boot
+
+# Flag to mark that the screen will need a redraw once output is enabled again
+screen_needs_redraw:
+    db  0
 
 # One screen page size
 screen_page_size:

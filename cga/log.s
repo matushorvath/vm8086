@@ -4,9 +4,12 @@
 .EXPORT mc6845_data_read_log
 .EXPORT mc6845_data_write_log
 
-.EXPORT mode_control_write_log
+.EXPORT mode_control_write_log_1
+.EXPORT mode_control_write_log_2
 .EXPORT color_control_write_log
 .EXPORT status_read_log
+
+.EXPORT redraw_screen_graphics_log
 
 # From registers.s
 .IMPORT mode_high_res_text
@@ -109,11 +112,11 @@ mc6845_data_write_log_start:
 .ENDFRAME
 
 ##########
-mode_control_write_log:
-.FRAME value, reset;
+mode_control_write_log_1:
+.FRAME value;
     call log_start
 
-    add mode_control_write_log_value, 0, [rb - 1]
+    add mode_control_write_log_1_value, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -121,11 +124,32 @@ mode_control_write_log:
     arb -1
     call print_num_2_b
 
-    add mode_control_write_log_reset, 0, [rb - 1]
+    out 10
+
+    ret 1
+
+mode_control_write_log_1_value:
+    db  "cga mode write: value ", 0
+.ENDFRAME
+
+##########
+mode_control_write_log_2:
+.FRAME reset, enable_disable;
+    call log_start
+
+    add mode_control_write_log_2_reset, 0, [rb - 1]
     arb -1
     call print_str
 
     add [rb + reset], 0, [rb - 1]
+    arb -1
+    call print_num
+
+    add mode_control_write_log_2_enable, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [rb + enable_disable], 0, [rb - 1]
     arb -1
     call print_num
 
@@ -135,10 +159,10 @@ mode_control_write_log:
 
     ret 2
 
-mode_control_write_log_value:
-    db  "cga mode write: value ", 0
-mode_control_write_log_reset:
-    db  " reset ", 0
+mode_control_write_log_2_reset:
+    db  "cga mode write: reset ", 0
+mode_control_write_log_2_enable:
+    db  " enable/disable ", 0
 .ENDFRAME
 
 ##########
@@ -182,6 +206,22 @@ status_read_log:
 
 status_read_log_start:
     db  "cga status read: value ", 0
+.ENDFRAME
+
+##########
+redraw_screen_graphics_log:
+.FRAME
+    call log_start
+
+    add redraw_screen_graphics_log_msg, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    out 10
+    ret 0
+
+redraw_screen_graphics_log_msg:
+    db  "cga screen redraw, graphics", 0
 .ENDFRAME
 
 ##########

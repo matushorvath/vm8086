@@ -284,3 +284,41 @@ reads R15, compares it with 0x55, expects equal
 writes original value back to R15
 
 screen blinking after a sword hit and during the demo, clears the screen but it shouldn't
+
+(f000:e0ea) cga mode write: value 00000000 reset 1
+(f000:e0ea) cga state: hi-text 0 gr 0 mono 0 output 0 hi-gr 0 blink 0 select 0 bright 0 palette 0
+(f000:f129) cga mode write: value 00000000 reset 0
+(f000:f129) cga state: hi-text 0 gr 0 mono 0 output 0 hi-gr 0 blink 0 select 0 bright 0 palette 0
+(f000:f17e) cga mode write: value 00101001 reset 2
+(f000:f17e) cga state: hi-text 1 gr 0 mono 0 output 1 hi-gr 0 blink 1 select 0 bright 0 palette 0
+(f000:f18f) cga color write: value 00110000
+(f000:f18f) cga state: hi-text 1 gr 0 mono 0 output 1 hi-gr 0 blink 1 select 0 bright 1 palette 1
+(f000:f129) cga mode write: value 00000000 reset 2
+(f000:f129) cga state: hi-text 0 gr 0 mono 0 output 0 hi-gr 0 blink 0 select 0 bright 1 palette 1
+(f000:f17e) cga mode write: value 00101010 reset 1
+(f000:f17e) cga state: hi-text 0 gr 1 mono 0 output 1 hi-gr 0 blink 1 select 0 bright 1 palette 1
+(f000:f18f) cga color write: value 00110000
+<blinking starts here>
+(f000:f18f) cga state: hi-text 0 gr 1 mono 0 output 1 hi-gr 0 blink 1 select 0 bright 1 palette 1
+(f000:f642) cga color write: value 00111111
+(f000:f642) cga state: hi-text 0 gr 1 mono 0 output 1 hi-gr 0 blink 1 select 15 bright 1 palette 1
+(f000:f642) cga color write: value 00110000
+(f000:f642) cga state: hi-text 0 gr 1 mono 0 output 1 hi-gr 0 blink 1 select 0 bright 1 palette 1
+(f000:f642) cga color write: value 00111111
+(f000:f642) cga state: hi-text 0 gr 1 mono 0 output 1 hi-gr 0 blink 1 select 15 bright 1 palette 1
+(f000:f642) cga color write: value 00110000
+(f000:f642) cga state: hi-text 0 gr 1 mono 0 output 1 hi-gr 0 blink 1 select 0 bright 1 palette 1
+(f000:f642) cga color write: value 00111111
+(f000:f642) cga state: hi-text 0 gr 1 mono 0 output 1 hi-gr 0 blink 1 select 15 bright 1 palette 1
+(f000:f642) cga color write: value 00110000
+(f000:f642) cga state: hi-text 0 gr 1 mono 0 output 1 hi-gr 0 blink 1 select 0 bright 1 palette 1
+(f000:f642) cga color write: value 00111111
+(f000:f642) cga state: hi-text 0 gr 1 mono 0 output 1 hi-gr 0 blink 1 select 15 bright 1 palette 1
+(f000:f642) cga color write: value 00110000
+(f000:f642) cga state: hi-text 0 gr 1 mono 0 output 1 hi-gr 0 blink 1 select 0 bright 1 palette 1
+(f000:f642) cga color write: value 00111111
+(f000:f642) cga state: hi-text 0 gr 1 mono 0 output 1 hi-gr 0 blink 1 select 15 bright 1 palette 1
+(f000:f642) cga color write: value 00110000
+(f000:f642) cga state: hi-text 0 gr 1 mono 0 output 1 hi-gr 0 blink 1 select 0 bright 1 palette 1
+
+repeatedly sets background and border to (intensity, r, g, b) = (1, 1, 1, 1)

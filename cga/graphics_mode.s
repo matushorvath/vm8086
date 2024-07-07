@@ -1,4 +1,8 @@
+.EXPORT redraw_screen_graphics
 .EXPORT write_memory_graphics
+
+# From the config file
+.IMPORT config_log_cga_debug
 
 # From blocks_4x2.s
 .IMPORT blocks_4x2_0
@@ -9,6 +13,15 @@
 # From graphics_palette.s
 .IMPORT palette_graphics
 .IMPORT color_mappings
+
+# From log.s
+.IMPORT redraw_screen_graphics_log
+
+# From registers.s
+.IMPORT mode_enable_output
+
+# From screen.s
+.IMPORT screen_needs_redraw
 
 # From cpu/state.s
 .IMPORT mem
@@ -27,6 +40,98 @@
 
 # From util/shr.s
 .IMPORT shr_1
+
+##########
+redraw_screen_graphics:
+.FRAME row, col, addr_row0, tmp
+    arb -4
+
+    # We are going to draw, is output enabled?
+    jnz [mode_enable_output], redraw_screen_graphics_enabled
+
+    # Drawing is disabled, screen contents will no longer match CGA memory
+    add 1, 0, [screen_needs_redraw]
+
+    jz  0, redraw_screen_graphics_done
+
+redraw_screen_graphics_enabled:
+    # Redraw the whole screen by iterating over pairs of characters
+
+    # Initialize the row loop
+    add [mem], 0xb8000, [rb + addr_row0]
+    add 0, 0, [rb + row]
+
+redraw_screen_graphics_row_loop:
+    # Set cursor position for each row
+    out 0x1b
+    out '['
+
+    add [rb + row], 1, [rb - 1]
+    arb -1
+    call printb
+
+    out ';'
+    out '0'
+    out 'H'
+
+    # Initialize the column loop
+    add 0, 0, [rb + col]
+
+redraw_screen_graphics_col_loop:
+    # Build and output the two characters
+    add [rb + addr_row0], 0, [rb - 1]
+    add crumb_3, 0, [rb - 2]
+    add crumb_2, 0, [rb - 3]
+    arb -3
+    call output_character
+
+    add [rb + addr_row0], 0, [rb - 1]
+    add crumb_1, 0, [rb - 2]
+    add crumb_0, 0, [rb - 3]
+    arb -3
+    call output_character
+
+    # Next column
+    add [rb + addr_row0], 1, [rb + addr_row0]               # 1 byte of CGA memory processed with every iteration
+    add [rb + col], 2, [rb + col]                           # 2 characters output with every iteration
+
+    eq  [rb + col], 160, [rb + tmp]                         # 160 = 320 pixels / 2 pixels per terminal character
+    jz  [rb + tmp], redraw_screen_graphics_col_loop
+
+    # We have processed 4 rows of pixels (since each terminal character is 4 pixels high)
+    # Because of interlacing, we only need to increment addr_row0 by two rows each iteration
+    # It is incremented by one row during the course of drawing the row
+    # Here we need to increment it by one additional row to prepare it for next row loop iteration
+    #
+    # row 0: <addr>                 *. .. .. .. .. .. .. .. * addr_row0 was here before we drew current row
+    # row 1: <addr + 0x2000>        .. .. .. .. .. .. .. ..   (this row is 8kB below, not relevant for calculations)
+    # row 2: <addr + 80>            *. .. .. .. .. .. .. .. * addr_row0 points here now, after drawing current row
+    # row 3: <addr + 0x2000 + 80>    .. .. .. .. .. .. .. ..   (this row is also not relevant for calculations)
+    # row 0: <addr + 80 + 80>       *. .. .. .. .. .. .. .. * addr_row0 needs to point here for the next row
+
+    # Next row
+    add [rb + addr_row0], 80, [rb + addr_row0]              # 80 = increment addr_row0 by one pixel row, as explained above
+    add [rb + row], 1, [rb + row]                           # 1 row of characters was output
+
+    eq  [rb + row], 50, [rb + tmp]                          # 50 = 200 pixels / 4 pixels per terminal character
+    jz  [rb + tmp], redraw_screen_graphics_row_loop
+
+    # Reset all attributes
+    out 0x1b
+    out '['
+    out '0'
+    out 'm'
+
+    add 0, 0, [screen_needs_redraw]
+
+    # CGA logging
+    jz  [config_log_cga_debug], redraw_screen_graphics_done
+    call redraw_screen_graphics_log
+
+redraw_screen_graphics_done:
+    arb 4
+    ret 0
+.ENDFRAME
 
 ##########
 write_memory_graphics:
@@ -52,8 +157,6 @@ write_memory_graphics:
     # build those two characters from the pixels, then calculate their on-screen coordinates
     # and print them there
 
-    # TODO don't draw if mode_enable_output is 0; redraw whole screen after enabling output
-
     # CGA memory is interlaced
     lt  0x1fff, [rb + addr], [rb + odd]
     mul [rb + odd], -0x2000, [rb + tmp]
@@ -63,6 +166,15 @@ write_memory_graphics:
     lt  [rb + addr], 8000, [rb + tmp]
     jz  [rb + tmp], write_memory_graphics_done
 
+    # We are going to draw, is output enabled?
+    jnz [mode_enable_output], write_memory_graphics_enabled
+
+    # Drawing is disabled, screen contents will no longer match CGA memory
+    add 1, 0, [screen_needs_redraw]
+
+    jz  0, write_memory_graphics_done
+
+write_memory_graphics_enabled:
     # Calculate text mode row and column from the memory address
     # row = addr / 80, col = addr - row * 80
     add div80, [rb + addr], [ip + 1]
@@ -138,11 +250,12 @@ write_memory_graphics:
     call output_character
 
     # Reset all attributes
-    # TODO only reset when needed
     out 0x1b
     out '['
     out '0'
     out 'm'
+
+    add 0, 0, [screen_needs_redraw]
 
 write_memory_graphics_done:
     arb 7
