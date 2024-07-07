@@ -110,10 +110,10 @@ mc6845_data_write_log_start:
 
 ##########
 mode_control_write_log:
-.FRAME value;
+.FRAME value, reset;
     call log_start
 
-    add mode_control_write_log_start, 0, [rb - 1]
+    add mode_control_write_log_value, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -121,14 +121,24 @@ mode_control_write_log:
     arb -1
     call print_num_2_b
 
+    add mode_control_write_log_reset, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [rb + reset], 0, [rb - 1]
+    arb -1
+    call print_num
+
     out 10
 
     call dump_cga_state
 
-    ret 1
+    ret 2
 
-mode_control_write_log_start:
+mode_control_write_log_value:
     db  "cga mode write: value ", 0
+mode_control_write_log_reset:
+    db  " reset ", 0
 .ENDFRAME
 
 ##########

@@ -108,37 +108,90 @@ mc6845_data_write_after_log:
 
 ##########
 mode_control_write:
-.FRAME addr, value;
-    # Store individual bits
-    add bit_0, [rb + value], [ip + 1]
-    add [0], 0, [mode_high_res_text]
+.FRAME addr, value; reset, tmp
+    arb -2
 
+    # Save text/graphics mode setting
+    add [mode_graphics], 0, [rb + tmp]
     add bit_1, [rb + value], [ip + 1]
     add [0], 0, [mode_graphics]
 
-    add bit_2, [rb + value], [ip + 1]
-    add [0], 0, [mode_back_and_white]
+    # If text/graphics mode has changed, reset the screen
+    eq  [rb + tmp], [mode_graphics], [rb + tmp]
+    eq  [rb + tmp], 0, [rb + reset]
 
+    # Save the enable output setting
+    add [mode_enable_output], 0, [rb + tmp]
     add bit_3, [rb + value], [ip + 1]
     add [0], 0, [mode_enable_output]
 
+    # When the output is disabled/enabled, reset the screen
+    # TODO clear the screen when disabled, don't reset the rest
+    #eq  [rb + tmp], [mode_enable_output], [rb + tmp]
+    #eq  [rb + tmp], 0, [rb + tmp]
+    #add [rb + reset], [rb + tmp], [rb + reset]
+
+    # Save the black and white setting (which is actually palette 3 setting)
+    add [mode_back_and_white], 0, [rb + tmp]
+    add bit_2, [rb + value], [ip + 1]
+    add [0], 0, [mode_back_and_white]
+
+    # When setting palette 3 in graphics mode, reset the screen
+    # TODO just update the palette and redraw
+    eq  [rb + tmp], [mode_back_and_white], [rb + tmp]
+    eq  [rb + tmp], 0, [rb + tmp]
+    mul [rb + tmp], [mode_graphics], [rb + tmp]
+    add [rb + reset], [rb + tmp], [rb + reset]
+
+    # Save the high res graphics setting
+    add [mode_high_res_graphics], 0, [rb + tmp]
     add bit_4, [rb + value], [ip + 1]
     add [0], 0, [mode_high_res_graphics]
 
+    # When switching high res graphics in graphics mode, reset the screen
+    eq  [rb + tmp], [mode_high_res_graphics], [rb + tmp]
+    eq  [rb + tmp], 0, [rb + tmp]
+    mul [rb + tmp], [mode_graphics], [rb + tmp]
+    add [rb + reset], [rb + tmp], [rb + reset]
+
+    # Save the high res text setting
+    add [mode_high_res_text], 0, [rb + tmp]
+    add bit_0, [rb + value], [ip + 1]
+    add [0], 0, [mode_high_res_text]
+
+    # When switching high res text in text mode, reset the screen
+    eq  [rb + tmp], [mode_high_res_text], [rb + tmp]
+    add [rb + tmp], [mode_graphics], [rb + tmp]
+    eq  [rb + tmp], 0, [rb + tmp]
+    add [rb + reset], [rb + tmp], [rb + reset]
+
+    # Save the blinking setting
+    add [mode_not_blinking], 0, [rb + tmp]
     add bit_5, [rb + value], [ip + 1]
     add [0], 0, [mode_not_blinking]
 
-    # TODO don't reset the terminal unless it's needed, it breaks nc in pcxtbios
+    # When switching blinking in text mode, reset the screen
+    # TODO just update the palette and redraw
+    eq  [rb + tmp], [mode_not_blinking], [rb + tmp]
+    add [rb + tmp], [mode_graphics], [rb + tmp]
+    eq  [rb + tmp], 0, [rb + tmp]
+    add [rb + reset], [rb + tmp], [rb + reset]
+
+    # Reset the terminal if needed
+    jz  [rb + reset], mode_control_write_after_reset
     call reset_screen
 
+mode_control_write_after_reset:
     # CGA logging
     jz  [config_log_cga_debug], mode_control_write_after_log
 
     add [rb + value], 0, [rb - 1]
-    arb -1
+    add [rb + reset], 0, [rb - 2]
+    arb -2
     call mode_control_write_log
 
 mode_control_write_after_log:
+    arb 2
     ret 2
 .ENDFRAME
 
