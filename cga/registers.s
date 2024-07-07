@@ -213,7 +213,6 @@ mode_control_write_after_log:
 color_control_write:
 .FRAME addr, value;
     # Store selected color
-    # TODO use color_selected
     add bit_3, [rb + value], [ip + 1]
     mul [0], 2, [color_selected]
 

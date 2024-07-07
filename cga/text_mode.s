@@ -1,3 +1,4 @@
+.EXPORT initialize_text_mode
 .EXPORT redraw_screen_text
 .EXPORT write_memory_text
 
@@ -13,13 +14,9 @@
 .IMPORT redraw_screen_text_log
 
 # From text_palette.s
+.IMPORT reinitialize_text_palette
 .IMPORT palette_text_fg
 .IMPORT palette_text_bg_ptr
-
-# From screen.s
-.IMPORT screen_page_size
-.IMPORT screen_text_negative_row_size
-.IMPORT screen_text_row_shr_table
 
 # From registers.s
 .IMPORT mode_high_res_text
@@ -46,7 +43,33 @@
 .IMPORT printb
 
 # From util/shr.s
+.IMPORT shr_0
 .IMPORT shr_1
+
+##########
+initialize_text_mode:
+.FRAME
+    # Negative value of screen row size; -160 for 80x25, -80 for 40x25
+    mul [mode_high_res_text], -80, [negative_row_size]
+    add [negative_row_size], -80, [negative_row_size]
+
+    # Right shift table used to divide address into rows, shr_1 for 80x25, shr_0 for 40x25
+    add initialize_text_mode_row_shr_tables, [mode_high_res_text], [ip + 1]
+    add [0], 0, [row_shr_table]
+
+    # Page size is 25 rows * 80/160 bytes per row = 2000/4000 bytes depending on column count
+    add [mode_high_res_text], 1, [page_size]
+    mul [page_size], 2000, [page_size]
+
+    # Initialize the palette for text mode
+    call reinitialize_text_palette
+
+    ret 0
+
+initialize_text_mode_row_shr_tables:
+    db  shr_0
+    db  shr_1
+.ENDFRAME
 
 ##########
 redraw_screen_text:
@@ -135,7 +158,7 @@ write_memory_text:
 
     # Is this inside the screen area?
     # TODO use start address of the screen buffer
-    lt  [rb + addr], [screen_page_size], [rb + tmp]
+    lt  [rb + addr], [page_size], [rb + tmp]
     jz  [rb + tmp], write_memory_text_done
 
     # We are going to draw, is output enabled?
@@ -153,11 +176,11 @@ write_memory_text_enabled:
 
     # Divide by 80 only, the divide by either 1 or 2 depending on which text mode this is
     add div80, [rb + addr], [ip + 1]
-    add [0], [screen_text_row_shr_table], [ip + 1]
+    add [0], [row_shr_table], [ip + 1]
     add [0], 0, [rb + row]
 
     # Calculate column * 2, it will be divided by 2 later
-    mul [rb + row], [screen_text_negative_row_size], [rb + tmp]
+    mul [rb + row], [negative_row_size], [rb + tmp]
     add [rb + addr], [rb + tmp], [rb + col]
 
     # Is this the character or the attributes?
@@ -326,5 +349,18 @@ output_character_done:
     arb 1
     ret 2
 .ENDFRAME
+
+##########
+# One screen page size
+page_size:
+    db  4000                            # 25 rows * 160 bytes per row
+
+# Negative value of screen row size; -160 for 80x25, -80 for 40x25
+negative_row_size:
+    db  -160
+
+# Right shift table used to divide address into rows, shr_1 for 80x25, shr_0 for 40x25
+row_shr_table:
+    db  shr_1
 
 .EOF
