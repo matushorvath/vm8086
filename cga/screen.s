@@ -3,7 +3,8 @@
 
 .EXPORT screen_needs_redraw
 .EXPORT screen_page_size
-.EXPORT screen_row_size_160
+.EXPORT screen_text_negative_row_size
+.EXPORT screen_text_row_shr_table
 .EXPORT screen_width_chars
 .EXPORT screen_height_chars
 
@@ -27,6 +28,10 @@
 
 # From util/error.s
 .IMPORT report_error
+
+# From util/shr.s
+.IMPORT shr_0
+.IMPORT shr_1
 
 ##########
 reset_screen:
@@ -63,8 +68,13 @@ reset_screen:
 reset_screen_text:
     # Text mode
 
-    # Screen row is 160 bytes in 80x25 mode, 80 bytes otherwise
-    add [mode_high_res_text], 0, [screen_row_size_160]
+    # Negative value of screen row size; -160 for 80x25, -80 for 40x25
+    mul [mode_high_res_text], -80, [screen_text_negative_row_size]
+    add [screen_text_negative_row_size], -80, [screen_text_negative_row_size]
+
+    # Right shift table used to divide address into rows, shr_1 for 80x25, shr_0 for 40x25
+    add reset_screen_row_shr_tables, [mode_high_res_text], [ip + 1]
+    add [0], 0, [screen_text_row_shr_table]
 
     # Screen width is 80 chars (even in 40 char mode), height is 25 chars
     add 80, 0, [screen_width_chars]
@@ -94,6 +104,10 @@ reset_screen_hires_not_supported:
 
 reset_screen_hires_not_supported_msg:
     db  "cga: high res graphics is not supported", 0
+
+reset_screen_row_shr_tables:
+    db  shr_0
+    db  shr_1
 .ENDFRAME
 
 ##########
@@ -134,9 +148,12 @@ screen_needs_redraw:
 screen_page_size:
     db  4000                            # 25 rows * 160 bytes per row
 
-# Every screen row is 160 bytes in 80x25 text mode, 80 bytes in all other modes
-screen_row_size_160:
-    db  1
+# Negative value of screen row size; -160 for 80x25, -80 for 40x25
+screen_text_negative_row_size:
+    db  -160
+# Right shift table used to divide address into rows, shr_1 for 80x25, shr_0 for 40x25
+screen_text_row_shr_table:
+    db  shr_1
 
 # Screen width and height, for placing the status bar
 screen_width_chars:

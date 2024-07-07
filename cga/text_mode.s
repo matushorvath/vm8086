@@ -11,7 +11,8 @@
 
 # From screen.s
 .IMPORT screen_page_size
-.IMPORT screen_row_size_160
+.IMPORT screen_text_negative_row_size
+.IMPORT screen_text_row_shr_table
 
 # From registers.s
 .IMPORT mode_high_res_text
@@ -49,32 +50,18 @@ write_memory_text:
     jz  [rb + tmp], write_memory_text_done
 
     # Divide the address by 80 or 160, depending on screen row size
-    #  80: row = addr / 80, col = addr - row * 80
-    # 160: row = (addr / 80) / 2, col = addr - row * 160
+    #  80: row = addr / 80, col = (addr - row * 80) / 2
+    # 160: row = (addr / 80) / 2, col = (addr - row * 160) / 2
 
-    jnz [screen_row_size_160], write_memory_text_calc_160
-
-    # Screen row is 80 bytes, divide by 80 only
+    # Divide by 80 only, the divide by either 1 or 2 depending on which text mode this is
     add div80, [rb + addr], [ip + 1]
+    add [0], [screen_text_row_shr_table], [ip + 1]
     add [0], 0, [rb + row]
 
     # Calculate column
-    mul [rb + row], -80, [rb + tmp]
+    mul [rb + row], [screen_text_negative_row_size], [rb + tmp]
     add [rb + addr], [rb + tmp], [rb + col]
 
-    jz  0, write_memory_text_after_calc
-
-write_memory_text_calc_160:
-    # Screen row is 160 bytes, divide by 80 and then by 2
-    add div80, [rb + addr], [ip + 1]
-    add [0], shr_1, [ip + 1]
-    add [0], 0, [rb + row]
-
-    # Calculate column
-    mul [rb + row], -160, [rb + tmp]
-    add [rb + addr], [rb + tmp], [rb + col]
-
-write_memory_text_after_calc:
     # Is this the character or the attributes?
     add bit_0, [rb + col], [ip + 1]
     jz  [0], write_memory_text_get_attr
