@@ -58,7 +58,7 @@ write_memory_text:
     add [0], [screen_text_row_shr_table], [ip + 1]
     add [0], 0, [rb + row]
 
-    # Calculate column
+    # Calculate column * 2, it will be divided by 2 later
     mul [rb + row], [screen_text_negative_row_size], [rb + tmp]
     add [rb + addr], [rb + tmp], [rb + col]
 
@@ -69,8 +69,8 @@ write_memory_text:
     # These are the attributes, load the character from video memory
     add [rb + value], 0, [rb + attr]
 
-    add [mem], [rb + addr], [rb + tmp]
-    add [rb + tmp], 0xb7fff, [ip + 1]
+    add [mem], 0xb7fff, [rb + tmp]
+    add [rb + tmp], [rb + addr], [ip + 1]
     add [0], 0, [rb + char]
 
     jz  0, write_memory_text_print
@@ -79,8 +79,8 @@ write_memory_text_get_attr:
     # This is the character, load the attributes from video memory
     add [rb + value], 0, [rb + char]
 
-    add [mem], [rb + addr], [rb + tmp]
-    add [rb + tmp], 0xb8001, [ip + 1]
+    add [mem], 0xb8001, [rb + tmp]
+    add [rb + tmp], [rb + addr], [ip + 1]
     add [0], 0, [rb + attr]
 
 write_memory_text_print:
@@ -104,9 +104,32 @@ write_memory_text_print:
 
     out 'H'
 
+    # Output the character
+    add [rb + char], 0, [rb - 1]
+    add [rb + attr], 0, [rb - 2]
+    arb -2
+    call output_character
+
+    # Reset all attributes
+    # TODO only reset when needed
+    out 0x1b
+    out '['
+    out '0'
+    out 'm'
+
+write_memory_text_done:
+    arb 5
+    ret 2
+.ENDFRAME
+
+##########
+output_character:
+.FRAME char, attr; tmp
+    arb -1
+
     # Set colors, unless it's the default white-on-black
     eq  [rb + attr], 0x07, [rb + tmp]
-    jnz [rb + tmp], write_memory_text_after_color
+    jnz [rb + tmp], output_character_after_color
 
     out 0x1b
     out '['
@@ -169,16 +192,16 @@ write_memory_text_print:
 
     out 'm'
 
-write_memory_text_after_color:
-    jnz [mode_high_res_text], write_memory_text_after_double_width
+output_character_after_color:
+    jnz [mode_high_res_text], output_character_double_width
 
     # Select double width font for 40x25
     out 0x1b
     out '#'
     out '6'
 
-write_memory_text_after_double_width:
-    jnz [mode_not_blinking], write_memory_text_after_blink
+output_character_double_width:
+    jnz [mode_not_blinking], output_character_blink
 
     # Turn on blinking
     out 0x1b
@@ -186,31 +209,23 @@ write_memory_text_after_double_width:
     out '5'
     out 'm'
 
-write_memory_text_after_blink:
+output_character_blink:
     # Print the character, converting from CP437 to UTF-8
     add cp437_0, [rb + char], [ip + 1]
     out [0]
 
     add cp437_1, [rb + char], [ip + 1]
-    jz  [0], write_memory_text_after_print
+    jz  [0], output_character_done
     add cp437_1, [rb + char], [ip + 1]
     out [0]
 
     add cp437_2, [rb + char], [ip + 1]
-    jz  [0], write_memory_text_after_print
+    jz  [0], output_character_done
     add cp437_2, [rb + char], [ip + 1]
     out [0]
 
-write_memory_text_after_print:
-    # Reset all attributes
-    # TODO only reset when needed
-    out 0x1b
-    out '['
-    out '0'
-    out 'm'
-
-write_memory_text_done:
-    arb 5
+output_character_done:
+    arb 1
     ret 2
 .ENDFRAME
 
