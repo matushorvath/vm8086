@@ -28,8 +28,9 @@
 ##########
 main:
 .FRAME
-    call init_processor_test
     add vm_callback, 0, [execute_callback]
+
+    call init_processor_test
     call execute
     call print_output
 

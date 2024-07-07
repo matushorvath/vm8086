@@ -1,5 +1,3 @@
-.EXPORT fdc_activity_callback
-
 # From bios.o
 .IMPORT bios_image
 
@@ -37,6 +35,9 @@
 # From dev/fdc.s
 .IMPORT init_fdc
 
+# From dev/commands.s
+.IMPORT fdc_activity_callback
+
 # From dev/pic_8259a.s
 .IMPORT init_pic_8259a
 
@@ -60,6 +61,9 @@
 ##########
 main:
 .FRAME
+    add vm_callback, 0, [execute_callback]
+    add set_disk_active, 0, [fdc_activity_callback]
+
     # Initialize the ROM and floppy images
     add [bios_address], 0, [rb - 1]
     add bios_image, 0, [rb - 2]
@@ -86,7 +90,6 @@ main:
     call init_vm_ports
 
     # Start the CPU
-    add vm_callback, 0, [execute_callback]
     call execute
 
     ret 0
@@ -101,16 +104,6 @@ write_rom:
     add 0, 0, [rb + write_through]
 
     arb 1
-    ret 2
-.ENDFRAME
-
-##########
-fdc_activity_callback:
-.FRAME unit, active;
-    add [rb + active], 0, [rb - 1]
-    arb -1
-    call set_disk_active
-
     ret 2
 .ENDFRAME
 
