@@ -17,7 +17,7 @@
 .EXPORT config_log_pic
 .EXPORT config_log_pit
 
-# Tracing (0 - disable tracing, -1 - trace always, >0 - tracing past given address)
+# Tracing (0 - disabled, 1 - enabled)
 config_enable_tracing:
     db  0
 
