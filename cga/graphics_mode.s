@@ -22,9 +22,13 @@
 # From registers.s
 .IMPORT mode_enable_output
 .IMPORT mode_high_res_graphics
+.IMPORT color_selected
 
 # From screen.s
 .IMPORT screen_needs_redraw
+
+# From text_palette.s
+.IMPORT palette_text_fg
 
 # From cpu/state.s
 .IMPORT mem
@@ -77,8 +81,6 @@ initialize_graphics_mode_hi:
     add bit_4, 0, [table_char0_lo]
     add bit_2, 0, [table_char1_hi]
     add bit_0, 0, [table_char1_lo]
-
-    # TODO select foreground color for high resolution graphics
 
 initialize_graphics_mode_done:
     ret 0
@@ -641,40 +643,25 @@ output_character_hi:
     out '2'
     out ';'
 
-# TODO use the correct foreground color
-    out '2'
-    out '5'
-    out '5'
-    out ';'
-    out '2'
-    out '5'
-    out '5'
-    out ';'
-    out '2'
-    out '5'
-    out '5'
+    # Foreground color uses the same palette as text modes
+    mul [color_selected], 3, [rb + tmp]
+
+    add palette_text_fg + 0, [rb + tmp], [ip + 1]
+    add [0], 0, [rb - 1]
+    arb -1
+    call printb
     out ';'
 
-#    mul [rb + color_fg], 3, [rb + tmp]
-#
-#    add [palette_graphics], [rb + tmp], [ip + 1]
-#    add [0], 0, [rb - 1]
-#    arb -1
-#    call printb
-#    out ';'
-#
-#    add [rb + tmp], 1, [rb + tmp]
-#    add [palette_graphics], [rb + tmp], [ip + 1]
-#    add [0], 0, [rb - 1]
-#    arb -1
-#    call printb
-#    out ';'
-#
-#    add [rb + tmp], 1, [rb + tmp]
-#    add [palette_graphics], [rb + tmp], [ip + 1]
-#    add [0], 0, [rb - 1]
-#    arb -1
-#    call printb
+    add palette_text_fg + 1, [rb + tmp], [ip + 1]
+    add [0], 0, [rb - 1]
+    arb -1
+    call printb
+    out ';'
+
+    add palette_text_fg + 2, [rb + tmp], [ip + 1]
+    add [0], 0, [rb - 1]
+    arb -1
+    call printb
 
     out ';'
     out '4'
@@ -683,12 +670,12 @@ output_character_hi:
     out '2'
     out ';'
 
+    # Background color is always black
     out '0'
     out ';'
     out '0'
     out ';'
     out '0'
-    out ';'
 
     out 'm'
 

@@ -25,8 +25,7 @@ reinitialize_graphics_palette:
     add [0], 0, [palette_graphics]
 
     # TODO set also color_mappings
-
-    # TODO color_selected 4 bits to select background color (3=intensity, 210=RGB)
+    # TODO set background color: copy palette_text_fg[color_selected] into color 0 of palette_graphics
 
     arb 1
     ret 0
