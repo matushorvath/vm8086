@@ -8,14 +8,9 @@
 .EXPORT screen_width_chars
 .EXPORT screen_height_chars
 
-# From graphics_mode_hi.s
-.IMPORT redraw_screen_graphics_hi
-
 # From graphics_mode_lo.s
-.IMPORT redraw_screen_graphics_lo
-
-# From graphics_palette.s
-.IMPORT reinitialize_graphics_palette
+.IMPORT initialize_graphics_mode
+.IMPORT redraw_screen_graphics
 
 # From text_palette.s
 .IMPORT reinitialize_text_palette
@@ -27,7 +22,6 @@
 .IMPORT mode_high_res_text
 .IMPORT mode_graphics
 .IMPORT mode_enable_output
-.IMPORT mode_high_res_graphics
 
 # From status_bar.s
 .IMPORT redraw_status_bar
@@ -49,31 +43,15 @@ reset_screen:
     # Graphics mode?
     jz  [mode_graphics], reset_screen_text
 
-    # Graphics mode
-
-    # Screen width is 320/2 = 160 characters, height is 200/4 = 50 characters
+    # Screen width is 320/2 [640/4] = 160 characters, height is 200/4 = 50 characters
     add 160, 0, [screen_width_chars]
     add 50, 0, [screen_height_chars]
 
-    # Page size is 200 rows * 80 bytes per row = 16000 bytes
-    add 16000, 0, [screen_page_size]
+    # Prepare for drawing the graphics mode
+    call initialize_graphics_mode
 
-    # High resolution graphics mode?
-    jnz [mode_high_res_graphics], reset_screen_graphics_hi
-
-    # Initialize the palette for low resolution graphics mode
-    call reinitialize_graphics_palette
-
-    # Redraw the screen for 320x200
-    call redraw_screen_graphics_lo
-
-    jz  0, reset_screen_redraw_status_bar
-
-reset_screen_graphics_hi:
-    # TODO select foreground color for hi res graphics
-
-    # Redraw the screen for 640x200
-    call redraw_screen_graphics_hi
+    # Redraw the screen
+    call redraw_screen_graphics
 
     jz  0, reset_screen_redraw_status_bar
 
@@ -125,17 +103,8 @@ enable_disable_screen:
     # Graphics mode?
     jz  [mode_graphics], enable_screen_text
 
-    # High resolution graphics mode?
-    jnz [mode_high_res_graphics], enable_screen_graphics_hi
-
     # Redraw the screen for 320x200
-    call redraw_screen_graphics_lo
-
-    jz  0, enable_screen_done
-
-enable_screen_graphics_hi:
-    # Redraw the screen for 640x200
-    call redraw_screen_graphics_hi
+    call redraw_screen_graphics
 
     jz  0, enable_screen_done
 
@@ -156,13 +125,16 @@ screen_needs_redraw:
     db  0
 
 # One screen page size
+# TODO move to text_mode
 screen_page_size:
     db  4000                            # 25 rows * 160 bytes per row
 
 # Negative value of screen row size; -160 for 80x25, -80 for 40x25
+# TODO move to text_mode
 screen_text_negative_row_size:
     db  -160
 # Right shift table used to divide address into rows, shr_1 for 80x25, shr_0 for 40x25
+# TODO move to text_mode
 screen_text_row_shr_table:
     db  shr_1
 

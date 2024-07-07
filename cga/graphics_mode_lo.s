@@ -1,5 +1,9 @@
-.EXPORT redraw_screen_graphics_lo
-.EXPORT write_memory_graphics_lo
+.EXPORT initialize_graphics_mode
+.EXPORT redraw_screen_graphics
+.EXPORT write_memory_graphics
+
+# TODO fix
+.IMPORT output_character_hi
 
 # From the config file
 .IMPORT config_log_cga_debug
@@ -11,6 +15,7 @@
 .IMPORT blocks_4x2_3
 
 # From graphics_palette.s
+.IMPORT reinitialize_graphics_palette
 .IMPORT palette_graphics
 .IMPORT color_mappings
 
@@ -19,12 +24,19 @@
 
 # From registers.s
 .IMPORT mode_enable_output
+.IMPORT mode_high_res_graphics
 
 # From screen.s
 .IMPORT screen_needs_redraw
 
 # From cpu/state.s
 .IMPORT mem
+
+# From util/bits.s
+.IMPORT bit_0
+.IMPORT bit_2
+.IMPORT bit_4
+.IMPORT bit_6
 
 # From util/crumbs.s
 .IMPORT crumb_0
@@ -42,7 +54,41 @@
 .IMPORT shr_1
 
 ##########
-redraw_screen_graphics_lo:
+initialize_graphics_mode:
+.FRAME
+    # High resolution graphics mode?
+    jnz [mode_high_res_graphics], initialize_graphics_mode_hi
+
+    # Prepare constants for low resolution graphics
+    add output_character_lo, 0, [output_character]
+
+    add crumb_3, 0, [table_char0_hi]
+    add crumb_2, 0, [table_char0_lo]
+    add crumb_1, 0, [table_char1_hi]
+    add crumb_0, 0, [table_char1_lo]
+
+    # Initialize the palette for low resolution graphics
+    call reinitialize_graphics_palette
+
+    jz  0, initialize_graphics_mode_done
+
+initialize_graphics_mode_hi:
+    # Prepare constants for high resolution graphics
+    add output_character_hi, 0, [output_character]
+
+    add bit_6, 0, [table_char0_hi]
+    add bit_4, 0, [table_char0_lo]
+    add bit_2, 0, [table_char1_hi]
+    add bit_0, 0, [table_char1_lo]
+
+    # TODO select foreground color for high resolution graphics
+
+initialize_graphics_mode_done:
+    ret 0
+.ENDFRAME
+
+##########
+redraw_screen_graphics:
 .FRAME row, col, addr_row0, tmp
     arb -4
 
@@ -80,16 +126,16 @@ redraw_screen_graphics_row_loop:
 redraw_screen_graphics_col_loop:
     # Build and output the two characters
     add [rb + addr_row0], 0, [rb - 1]
-    add crumb_3, 0, [rb - 2]
-    add crumb_2, 0, [rb - 3]
+    add [table_char0_hi], 0, [rb - 2]
+    add [table_char0_lo], 0, [rb - 3]
     arb -3
-    call output_character
+    call [output_character]
 
     add [rb + addr_row0], 0, [rb - 1]
-    add crumb_1, 0, [rb - 2]
-    add crumb_0, 0, [rb - 3]
+    add [table_char1_hi], 0, [rb - 2]
+    add [table_char0_lo], 0, [rb - 3]
     arb -3
-    call output_character
+    call [output_character]
 
     # Next column
     add [rb + addr_row0], 1, [rb + addr_row0]               # 1 byte of CGA memory processed with every iteration
@@ -136,7 +182,7 @@ redraw_screen_graphics_done:
 .ENDFRAME
 
 ##########
-write_memory_graphics_lo:
+write_memory_graphics:
 .FRAME addr, value; row, col, addr_row0, tmp
     arb -4
 
@@ -264,16 +310,16 @@ write_memory_graphics_enabled:
 
     # Build and output the two characters
     add [rb + addr_row0], 0, [rb - 1]
-    add crumb_3, 0, [rb - 2]
-    add crumb_2, 0, [rb - 3]
+    add [table_char0_hi], 0, [rb - 2]
+    add [table_char0_lo], 0, [rb - 3]
     arb -3
-    call output_character
+    call [output_character]
 
     add [rb + addr_row0], 0, [rb - 1]
-    add crumb_1, 0, [rb - 2]
-    add crumb_0, 0, [rb - 3]
+    add [table_char1_hi], 0, [rb - 2]
+    add [table_char1_lo], 0, [rb - 3]
     arb -3
-    call output_character
+    call [output_character]
 
     # Reset all attributes
     out 0x1b
@@ -289,7 +335,7 @@ write_memory_graphics_done:
 .ENDFRAME
 
 ##########
-output_character:
+output_character_lo:
 .FRAME addr_row0, table_hi, table_lo; char, tmp, max01, max23, color_bg, color_fg, mapping
     arb -7
 
@@ -368,34 +414,34 @@ output_character:
     add colors + 0, [rb + max01], [ip + 5]
     add colors + 2, [rb + max23], [ip + 2]
     lt  [0], [0], [rb + tmp]
-    jz  [rb + tmp], output_character_color_bg_01
+    jz  [rb + tmp], output_character_lo_color_bg_01
 
     # One of colors 2, 3 is color_bg, the other one could still be color_fg
     add [rb + max23], 2, [rb + color_bg]
     eq  [rb + max23], 0, [rb + max23]
-    jz  0, output_character_after_color_bg
+    jz  0, output_character_lo_after_color_bg
 
-output_character_color_bg_01:
+output_character_lo_color_bg_01:
     # One of colors 0, 1 is color_bg, the other one could still be color_fg
     add [rb + max01], 0, [rb + color_bg]
     eq  [rb + max01], 0, [rb + max01]
 
-output_character_after_color_bg:
+output_character_lo_after_color_bg:
     # Find out color_fg
     add colors + 0, [rb + max01], [ip + 5]
     add colors + 2, [rb + max23], [ip + 2]
     lt  [0], [0], [rb + tmp]
-    jz  [rb + tmp], output_character_color_fg_01
+    jz  [rb + tmp], output_character_lo_color_fg_01
 
     # One of colors 2, 3 is color_fg
     add [rb + max23], 2, [rb + color_fg]
-    jz  0, output_character_after_color_fg
+    jz  0, output_character_lo_after_color_fg
 
-output_character_color_fg_01:
+output_character_lo_color_fg_01:
     # One of colors 0, 1 is color_fg
     add [rb + max01], 0, [rb + color_fg]
 
-output_character_after_color_fg:
+output_character_lo_after_color_fg:
     # Find the color mapping based on two most used colors
     mul [rb + color_bg], 4, [rb + tmp]
     add [rb + color_fg], [rb + tmp], [rb + tmp]
@@ -403,7 +449,7 @@ output_character_after_color_fg:
     mul [rb + tmp], 4, [rb + tmp]
     add [color_mappings], [rb + tmp], [rb + mapping]
 
-    # Build a characters out of the individual pixels,
+    # Build a character out of the individual pixels,
     # while mapping each pixel to either background or foreground color
     #
     #      c0 c1 
@@ -503,26 +549,40 @@ output_character_after_color_fg:
     out [0]
 
     add blocks_4x2_1, [rb + char], [ip + 1]
-    jz  [0], output_character_done
+    jz  [0], output_character_lo_done
     add blocks_4x2_1, [rb + char], [ip + 1]
     out [0]
 
     add blocks_4x2_2, [rb + char], [ip + 1]
-    jz  [0], output_character_done
+    jz  [0], output_character_lo_done
     add blocks_4x2_2, [rb + char], [ip + 1]
     out [0]
 
     add blocks_4x2_3, [rb + char], [ip + 1]
-    jz  [0], output_character_done
+    jz  [0], output_character_lo_done
     add blocks_4x2_3, [rb + char], [ip + 1]
     out [0]
 
-output_character_done:
+output_character_lo_done:
     arb 7
     ret 3
 .ENDFRAME
 
 ##########
+# Output character function for current mode
+output_character:
+    db  0
+
+# Tables used to split a CGA memory byte into pixels
+table_char0_hi:
+    db  0
+table_char0_lo:
+    db  0
+table_char1_hi:
+    db  0
+table_char1_lo:
+    db  0
+
 # Pixel data for currently processed character
 r0c0:
     db  0

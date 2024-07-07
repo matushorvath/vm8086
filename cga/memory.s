@@ -2,15 +2,11 @@
 .EXPORT read_memory_bc000
 .EXPORT write_memory_bc000
 
-# From graphics_mode_hi.s
-.IMPORT write_memory_graphics_hi
-
 # From graphics_mode_lo.s
-.IMPORT write_memory_graphics_lo
+.IMPORT write_memory_graphics
 
 # From registers.s
 .IMPORT mode_graphics
-.IMPORT mode_high_res_graphics
 
 # From text_mode.s
 .IMPORT write_memory_text
@@ -41,22 +37,11 @@ write_memory:
 
     # Update the screen based on screen mode
     jz  [mode_graphics], write_memory_text_mode
-    jnz [mode_high_res_graphics], write_memory_graphics_mode_hi
 
-    # Low resolution graphics
     add [rb + addr], 0, [rb - 1]
     add [rb + value], 0, [rb - 2]
     arb -2
-    call write_memory_graphics_lo
-
-    jz  0, write_memory_done
-
-write_memory_graphics_mode_hi:
-    # High resolution graphics
-    add [rb + addr], 0, [rb - 1]
-    add [rb + value], 0, [rb - 2]
-    arb -2
-    call write_memory_graphics_hi
+    call write_memory_graphics
 
     jz  0, write_memory_done
 
