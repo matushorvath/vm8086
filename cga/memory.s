@@ -2,7 +2,7 @@
 .EXPORT read_memory_bc000
 .EXPORT write_memory_bc000
 
-# From graphics_mode_lo.s
+# From graphics_mode.s
 .IMPORT write_memory_graphics
 
 # From registers.s

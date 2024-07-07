@@ -8,7 +8,7 @@
 .EXPORT screen_width_chars
 .EXPORT screen_height_chars
 
-# From graphics_mode_lo.s
+# From graphics_mode.s
 .IMPORT initialize_graphics_mode
 .IMPORT redraw_screen_graphics
 
