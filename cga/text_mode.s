@@ -1,9 +1,16 @@
+.EXPORT redraw_screen_text
 .EXPORT write_memory_text
+
+# From the config file
+.IMPORT config_log_cga_debug
 
 # From cp437.s
 .IMPORT cp437_0
 .IMPORT cp437_1
 .IMPORT cp437_2
+
+# From log.s
+.IMPORT redraw_screen_text_log
 
 # From text_palette.s
 .IMPORT palette_text_fg
@@ -17,6 +24,10 @@
 # From registers.s
 .IMPORT mode_high_res_text
 .IMPORT mode_not_blinking
+.IMPORT mode_enable_output
+
+# From screen.s
+.IMPORT screen_needs_redraw
 
 # From cpu/state.s
 .IMPORT mem
@@ -36,6 +47,86 @@
 
 # From util/printb.s
 .IMPORT printb
+
+##########
+redraw_screen_text:
+.FRAME row, col, addr, row_length, tmp
+    arb -5
+
+    # We are going to draw, is output enabled?
+    jnz [mode_enable_output], redraw_screen_text_enabled
+
+    # Drawing is disabled, screen contents will no longer match CGA memory
+    add 1, 0, [screen_needs_redraw]
+
+    jz  0, redraw_screen_text_done
+
+redraw_screen_text_enabled:
+    # Redraw the whole screen by iterating over characters
+
+    # Row length in terminal characters
+    mul [mode_high_res_text], 40, [rb + row_length]
+    add [rb + row_length], 40, [rb + row_length]
+
+    # Initialize the row loop
+    # TODO use start address of the screen buffer
+    add [mem], 0xb8000, [rb + addr]
+    add 0, 0, [rb + row]
+
+redraw_screen_text_row_loop:
+    # Set cursor position for each row
+    out 0x1b
+    out '['
+
+    add [rb + row], 1, [rb - 1]
+    arb -1
+    call printb
+
+    out ';'
+    out '0'
+    out 'H'
+
+    # Initialize the column loop
+    add 0, 0, [rb + col]
+
+redraw_screen_text_col_loop:
+    # Output the character
+    add [rb + addr], 0, [ip + 1]
+    add [0], 0, [rb - 1]
+    add [rb + addr], 1, [ip + 1]
+    add [0], 0, [rb - 2]
+    arb -2
+    call output_character
+
+    # Next column
+    add [rb + addr], 2, [rb + addr]                         # 2 bytes of CGA memory processed with every iteration
+    add [rb + col], 1, [rb + col]                           # 1 character output with every iteration
+
+    eq  [rb + col], [rb + row_length], [rb + tmp]           # 80 or 40 terminal characters per row
+    jz  [rb + tmp], redraw_screen_text_col_loop
+
+    # Next row
+    add [rb + row], 1, [rb + row]                           # 1 row of characters was output
+
+    eq  [rb + row], 25, [rb + tmp]                          # 25 terminal rows
+    jz  [rb + tmp], redraw_screen_text_row_loop
+
+    # Reset all attributes
+    out 0x1b
+    out '['
+    out '0'
+    out 'm'
+
+    add 0, 0, [screen_needs_redraw]
+
+    # CGA logging
+    jz  [config_log_cga_debug], redraw_screen_text_done
+    call redraw_screen_text_log
+
+redraw_screen_text_done:
+    arb 5
+    ret 0
+.ENDFRAME
 
 ##########
 write_memory_text:

@@ -9,6 +9,7 @@
 .EXPORT color_control_write_log
 .EXPORT status_read_log
 
+.EXPORT redraw_screen_text_log
 .EXPORT redraw_screen_graphics_log
 
 # From registers.s
@@ -206,6 +207,22 @@ status_read_log:
 
 status_read_log_start:
     db  "cga status read: value ", 0
+.ENDFRAME
+
+##########
+redraw_screen_text_log:
+.FRAME
+    call log_start
+
+    add redraw_screen_text_log_msg, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    out 10
+    ret 0
+
+redraw_screen_text_log_msg:
+    db  "cga screen redraw, text", 0
 .ENDFRAME
 
 ##########

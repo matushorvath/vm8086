@@ -17,6 +17,9 @@
 # From text_palette.s
 .IMPORT reinitialize_text_palette
 
+# From text_mode.s
+.IMPORT redraw_screen_text
+
 # From registers.s
 .IMPORT mode_high_res_text
 .IMPORT mode_graphics
@@ -88,8 +91,7 @@ reset_screen_text:
     call reinitialize_text_palette
 
     # Redraw the screen
-    # TODO redraw screen in text mode
-    #call redraw_screen_text
+    call redraw_screen_text
 
 reset_screen_redraw_status_bar:
     # Redraw the status line
@@ -129,8 +131,7 @@ enable_disable_screen:
 
 enable_screen_text:
     # Redraw the screen
-    # TODO redraw screen in text mode
-    #call redraw_screen_text
+    call redraw_screen_text
 
 enable_screen_done:
     ret 0
