@@ -1,5 +1,4 @@
 .EXPORT init_pit_8253
-.EXPORT config_vm_callback
 
 # From cpu/devices.s
 .IMPORT register_ports
@@ -15,13 +14,11 @@
 .IMPORT pit_data_read_ch0
 .IMPORT pit_data_write_ch0
 .IMPORT pit_mode_command_write_ch0
-.IMPORT pit_vm_callback_ch0
 
 # From pit_8253_ch2.s
 .IMPORT pit_data_read_ch2
 .IMPORT pit_data_write_ch2
 .IMPORT pit_mode_command_write_ch2
-.IMPORT pit_vm_callback_ch2
 
 # How 8086_bios uses the channels (MACHINE_XT):
 #
@@ -72,31 +69,6 @@ init_pit_8253:
 .ENDFRAME
 
 ##########
-config_vm_callback:
-    db  pit_vm_callback
-
-##########
-pit_vm_callback:
-.FRAME continue                         # returns continue
-    arb -1
-
-    add 1, 0, [rb + continue]
-
-    # Run the timer every 64 instructions
-    jnz [vm_callback_counter], pit_vm_callback_decrement
-    add 64, 0, [vm_callback_counter]
-
-    call pit_vm_callback_ch0
-    call pit_vm_callback_ch2
-
-pit_vm_callback_decrement:
-    add [vm_callback_counter], -1, [vm_callback_counter]
-
-    arb 1
-    ret 0
-.ENDFRAME
-
-##########
 pit_mode_command_write:
 .FRAME addr, value; channel, handler, tmp
     arb -3
@@ -143,9 +115,5 @@ pit_mode_command_write_read_back:
 pit_mode_command_write_read_back_error:
     db  "PIT WR: MC Error, read-back ", "command is not supported", 0
 .ENDFRAME
-
-##########
-vm_callback_counter:
-    db  0
 
 .EOF

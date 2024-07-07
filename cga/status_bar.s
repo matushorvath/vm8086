@@ -1,5 +1,9 @@
 .EXPORT post_status_write
+
 .EXPORT set_disk_active
+.EXPORT set_disk_inactive
+.EXPORT disk_active
+
 .EXPORT redraw_status_bar
 
 # From screen.s
@@ -26,14 +30,34 @@ post_status_write:
 
 ##########
 set_disk_active:
-.FRAME active;
+.FRAME unit;
+    # Do nothing if already active
+    jnz [disk_active], set_disk_active_done
+
     # Save the new value
-    add [rb + active], 0, [disk_active]
+    add 1, 0, [disk_active]
 
     # Redraw just the disk activity
     call redraw_disk_activity
 
+set_disk_active_done:
     ret 1
+.ENDFRAME
+
+##########
+set_disk_inactive:
+.FRAME
+    # Do nothing if already inactive
+    jz  [disk_active], set_disk_inactive_done
+
+    # Save the new value
+    add 0, 0, [disk_active]
+
+    # Redraw just the disk activity
+    call redraw_disk_activity
+
+set_disk_inactive_done:
+    ret 0
 .ENDFRAME
 
 ##########
@@ -75,7 +99,7 @@ redraw_status_bar_after_post:
 ##########
 redraw_disk_activity:
 .FRAME
-    # Position the cursor to column 79, one row below the screen
+    # Position the cursor one row below the screen, right side
     out 0x1b
     out '['
 
@@ -91,40 +115,33 @@ redraw_disk_activity:
 
     out 'H'
 
-    # If there is disk activity, set color to black on yellow
-    jz  [disk_active], redraw_disk_activity_after_set_color
+    # Is the disk active?
+    jz  [disk_active], redraw_disk_activity_blank
 
-    out 0x1b
-    out '['
-    out '3'
-    out '0'
-    out ';'
-    out '1'
-    out '0'
-    out '3'
-    out 'm'
+    # Draw a diskette icon
 
-redraw_disk_activity_after_set_color:
-    # Draw a diskette icon and a space (the icon is two characters wide)
+    # These work on Windows only:
     # F0 9F 96 AB = U+1F5AB White Hard Shell Floppy Disk 🖫
     # F0 9F 96 AC = U+1F5AC Soft Shell Floppy Disk 🖬
     # F0 9F 96 B4 = U+1F5B4 Hard Disk 🖴
 
+    # These work on both Windows and Mac:
+    # F0 9F 92 BE = U+1F4BE Floppy Disk Emoji 💾
+    # E2 9B 81    = U+26C1  White Draughts King ⛁
+    # E2 9B 83 	  = U+26C3  Black Draughts King ⛃
+
     out 0xf0
     out 0x9f
-    out 0x96
-    out 0xab
+    out 0x92
+    out 0xbe
+
+    jz  0, redraw_disk_activity_done
+
+redraw_disk_activity_blank:
+    # Draw a blank space for no disk activity
     out ' '
 
-    # Reset text attributes if we have set them above
-    jz  [disk_active], redraw_disk_activity_after_reset_color
-
-    out 0x1b
-    out '['
-    out '0'
-    out 'm'
-
-redraw_disk_activity_after_reset_color:
+redraw_disk_activity_done:
     ret 0
 .ENDFRAME
 

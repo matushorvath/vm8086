@@ -16,11 +16,10 @@
 .EXPORT fdc_exec_sense_drive_status
 .EXPORT fdc_exec_seek
 
+.EXPORT fdc_activity_callback
+
 # From the config file
 .IMPORT config_log_fdd
-
-# From a linked binary
-.IMPORT fdc_activity_callback
 
 # From fdc_config.s
 .IMPORT fdc_config_connected_units
@@ -108,11 +107,12 @@ fdc_exec_read_data:
     jz  [0], fdc_exec_read_data_no_floppy
 
     # Floppy is accessible, report disk activity
+    jz  [fdc_activity_callback], fdc_exec_read_data_after_callback
     add [fdc_cmd_unit_selected], 0, [rb - 1]
-    add 1, 0, [rb - 2]
-    arb -2
-    call fdc_activity_callback
+    arb -1
+    call [fdc_activity_callback]
 
+fdc_exec_read_data_after_callback:
     # Load floppy parameters
     add fdc_medium_heads_units, [fdc_cmd_unit_selected], [ip + 1]
     add [0], 0, [rb + heads]
@@ -287,13 +287,6 @@ fdc_exec_read_data_terminated:
     add 6, 0, [rb - 1]
     arb -1
     call interrupt_request
-
-fdc_exec_read_data_after_irq:
-    # Report disk activity
-    add [fdc_cmd_unit_selected], 0, [rb - 1]
-    add 0, 0, [rb - 2]
-    arb -2
-    call fdc_activity_callback
 
     arb 6
     ret 0
@@ -726,11 +719,12 @@ fdc_exec_seek:
     jz  [rb + tmp], fdc_exec_seek_bad_input
 
     # Report disk activity
+    jz  [fdc_activity_callback], fdc_exec_seek_after_callback
     add [fdc_cmd_unit_selected], 0, [rb - 1]
-    add 1, 0, [rb - 2]
-    arb -2
-    call fdc_activity_callback
+    arb -1
+    call [fdc_activity_callback]
 
+fdc_exec_seek_after_callback:
     # Set present cylinder to the requested cylinder
     add fdc_present_cylinder_units, [fdc_cmd_unit_selected], [ip + 3]
     add [fdc_cmd_cylinder], 0, [0]
@@ -761,15 +755,12 @@ fdc_exec_seek_terminated:
     arb -1
     call interrupt_request
 
-fdc_exec_seek_after_irq:
-    # Report disk activity
-    add [fdc_cmd_unit_selected], 0, [rb - 1]
-    add 0, 0, [rb - 2]
-    arb -2
-    call fdc_activity_callback
-
     arb 2
     ret 0
 .ENDFRAME
+
+##########
+fdc_activity_callback:
+    db  0
 
 .EOF
