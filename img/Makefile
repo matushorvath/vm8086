@@ -2,8 +2,9 @@
 #
 # download:
 #  - https://vetusware.com/download/Norton%20Commander%203.0%203.0 -> nc.7z
-#  = https://www.myabandonware.com/game/arcade-volleyball-1on -> av.zip
+#  - https://www.myabandonware.com/game/arcade-volleyball-1on -> av.zip
 #  - https://www.myabandonware.com/game/prince-of-persia-pd -> prince.zip
+#  - https://vetusware.com/download/Text602 _T602_ 1.00 %231090 CZ -> t602-1.zip
 
 FLOPPY ?= freedos
 BUILD_TARGET=$(FLOPPY).img
@@ -15,10 +16,10 @@ build-all: freedos msdos
 build: $(BUILD_TARGET)
 
 .PHONY: freedos
-freedos: freedos.img freedos-nc.img #freedos-av.img freedos-prince.img
+freedos: freedos.img freedos-nc.img freedos-t602-1.img freedos-av.img freedos-prince.img 
 
 .PHONY: msdos
-msdos: msdos.img msdos-nc.img #msdos-av.img msdos-prince.img
+msdos: msdos.img msdos-nc.img msdos-t602-1.img msdos-av.img msdos-prince.img
 
 # https://github.com/codercowboy/freedosbootdisks
 freedos.img.xz:
@@ -46,6 +47,15 @@ msdos.img: msdos.7z
 	mcopy -D o -i $@ autoexec-nc.bat ::AUTOEXEC.BAT
 	mcopy -D o -i $@ nc.ini ::NC/NC.INI
 
+%-t602-1.img: %-nc.img t602-1.zip autoexec-t602-1.bat
+	rm -rf T602
+	mkdir -p T602
+	7zz -y x t602-1.zip -oT602
+	cp $< $@
+	mcopy -D o -s -i $@ T602/t602 ::T602
+	rm -rf T602
+	mcopy -D o -i $@ autoexec-t602-1.bat ::AUTOEXEC.BAT
+
 %-av.img: %.img av.zip autoexec-av.bat
 	rm -rf AV
 	mkdir -p AV
@@ -56,18 +66,17 @@ msdos.img: msdos.7z
 	mcopy -D o -i $@ autoexec-av.bat ::AUTOEXEC.BAT
 
 %-prince.img: %.img prince.zip autoexec-prince.bat
-	rm -rf PRINCE PRINCE.tmp
-	mkdir -p PRINCE.tmp
-	7zz -y x prince.zip -oPRINCE.tmp
-	mv PRINCE.tmp/PoP1 PRINCE
+	rm -rf PRINCE
+	mkdir -p PRINCE
+	7zz -y x prince.zip -oPRINCE
 	cp $< $@
-	mcopy -D o -s -i $@ PRINCE ::PRINCE
-	rm -rf PRINCE PRINCE.tmp
+	mcopy -D o -s -i $@ PRINCE/PoP1 ::PRINCE
+	rm -rf PRINCE
 	mcopy -D o -i $@ autoexec-prince.bat ::AUTOEXEC.BAT
 
 .PHONY: clean
 clean:
-	rm -rf *.img AV NC PRINCE PRINCE.tmp
+	rm -rf *.img AV NC PRINCE T602
 
 .PHONY: very-clean
 very-clean: clean
