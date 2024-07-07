@@ -8,6 +8,9 @@
 .EXPORT screen_width_chars
 .EXPORT screen_height_chars
 
+# From graphics_mode_hi.s
+.IMPORT redraw_screen_graphics_hi
+
 # From graphics_mode_lo.s
 .IMPORT redraw_screen_graphics_lo
 
@@ -29,9 +32,6 @@
 # From status_bar.s
 .IMPORT redraw_status_bar
 
-# From util/error.s
-.IMPORT report_error
-
 # From util/shr.s
 .IMPORT shr_0
 .IMPORT shr_1
@@ -46,7 +46,7 @@ reset_screen:
     out '2'
     out 'J'
 
-    # Set screen parameters based on register values
+    # Graphics mode?
     jz  [mode_graphics], reset_screen_text
 
     # Graphics mode
@@ -58,14 +58,22 @@ reset_screen:
     # Page size is 200 rows * 80 bytes per row = 16000 bytes
     add 16000, 0, [screen_page_size]
 
-    # TODO no support for 640x200 yet
-    jnz [mode_high_res_graphics], reset_screen_hires_not_supported
+    # High resolution graphics mode?
+    jnz [mode_high_res_graphics], reset_screen_graphics_hi
 
     # Initialize the palette for low resolution graphics mode
     call reinitialize_graphics_palette
 
-    # Redraw the screen
+    # Redraw the screen for 320x200
     call redraw_screen_graphics_lo
+
+    jz  0, reset_screen_redraw_status_bar
+
+reset_screen_graphics_hi:
+    # TODO select foreground color for hi res graphics
+
+    # Redraw the screen for 640x200
+    call redraw_screen_graphics_hi
 
     jz  0, reset_screen_redraw_status_bar
 
@@ -100,14 +108,6 @@ reset_screen_redraw_status_bar:
 
     ret 0
 
-reset_screen_hires_not_supported:
-    add reset_screen_hires_not_supported_msg, 0, [rb - 1]
-    arb -1
-    call report_error
-
-reset_screen_hires_not_supported_msg:
-    db  "cga: high res graphics is not supported", 0
-
 reset_screen_row_shr_tables:
     db  shr_0
     db  shr_1
@@ -125,8 +125,17 @@ enable_disable_screen:
     # Graphics mode?
     jz  [mode_graphics], enable_screen_text
 
-    # Redraw the screen
+    # High resolution graphics mode?
+    jnz [mode_high_res_graphics], enable_screen_graphics_hi
+
+    # Redraw the screen for 320x200
     call redraw_screen_graphics_lo
+
+    jz  0, enable_screen_done
+
+enable_screen_graphics_hi:
+    # Redraw the screen for 640x200
+    call redraw_screen_graphics_hi
 
     jz  0, enable_screen_done
 
