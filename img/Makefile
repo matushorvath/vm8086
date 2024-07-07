@@ -10,10 +10,14 @@ FLOPPY ?= freedos
 BUILD_TARGET=$(FLOPPY).img
 
 .PHONY: build-all
-build-all: freedos msdos
+build-all: checksum freedos msdos
 
 .PHONY: build
 build: $(BUILD_TARGET)
+
+.PHONY: checksum
+checksum: hash.md5 av.zip freedos.img.xz msdos.7z nc.7z prince.zip t602-1.zip
+	md5sum -c < $<
 
 .PHONY: freedos
 freedos: freedos.img freedos-nc.img freedos-t602-1.img freedos-av.img freedos-prince.img 
