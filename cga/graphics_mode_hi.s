@@ -289,44 +289,44 @@ write_memory_graphics_done:
 
 ##########
 output_character:
-.FRAME addr_row0, table_hi, table_lo; char, tmp, r0c0, r0c1, r1c0, r1c1, r2c0, r2c1, r3c0, r3c1
-    arb -10
+.FRAME addr_row0, table_hi, table_lo; char, tmp
+    arb -2
 
     # Read first row of pixels
     add [rb + addr_row0], 0, [ip + 1]
     add [0], 0, [rb + tmp]
 
     add [rb + table_hi], [rb + tmp], [ip + 1]
-    add [0], 0, [rb + r0c0]
+    add [0], 0, [r0c0]
     add [rb + table_lo], [rb + tmp], [ip + 1]
-    add [0], 0, [rb + r0c1]
+    add [0], 0, [r0c1]
 
     # Read second row of pixels
     add [rb + addr_row0], 0x2000, [ip + 1]                  # 0x2000 because of interlacing
     add [0], 0, [rb + tmp]
 
     add [rb + table_hi], [rb + tmp], [ip + 1]
-    add [0], 0, [rb + r1c0]
+    add [0], 0, [r1c0]
     add [rb + table_lo], [rb + tmp], [ip + 1]
-    add [0], 0, [rb + r1c1]
+    add [0], 0, [r1c1]
 
     # Read third row of pixels
     add [rb + addr_row0], 80, [ip + 1]                      # 80 is one row of pixels
     add [0], 0, [rb + tmp]
 
     add [rb + table_hi], [rb + tmp], [ip + 1]
-    add [0], 0, [rb + r2c0]
+    add [0], 0, [r2c0]
     add [rb + table_lo], [rb + tmp], [ip + 1]
-    add [0], 0, [rb + r2c1]
+    add [0], 0, [r2c1]
 
     # Read fourth row of pixels
     add [rb + addr_row0], 0x2050, [ip + 1]                  # 0x2050 = 0x2000 + 80
     add [0], 0, [rb + tmp]
 
     add [rb + table_hi], [rb + tmp], [ip + 1]
-    add [0], 0, [rb + r3c0]
+    add [0], 0, [r3c0]
     add [rb + table_lo], [rb + tmp], [ip + 1]
-    add [0], 0, [rb + r3c1]
+    add [0], 0, [r3c1]
 
     # Build a characters out of the individual pixels
     #
@@ -338,20 +338,20 @@ output_character:
     #
     # char = 0xhgfedcba
 
-    mul [rb + r3c1], 0b10000000, [rb + char]
-    mul [rb + r3c0], 0b01000000, [rb + tmp]
+    mul [r3c1], 0b10000000, [rb + char]
+    mul [r3c0], 0b01000000, [rb + tmp]
     add [rb + char], [rb + tmp], [rb + char]
-    mul [rb + r2c1], 0b00100000, [rb + tmp]
+    mul [r2c1], 0b00100000, [rb + tmp]
     add [rb + char], [rb + tmp], [rb + char]
-    mul [rb + r2c0], 0b00010000, [rb + tmp]
+    mul [r2c0], 0b00010000, [rb + tmp]
     add [rb + char], [rb + tmp], [rb + char]
-    mul [rb + r1c1], 0b00001000, [rb + tmp]
+    mul [r1c1], 0b00001000, [rb + tmp]
     add [rb + char], [rb + tmp], [rb + char]
-    mul [rb + r1c0], 0b00000100, [rb + tmp]
+    mul [r1c0], 0b00000100, [rb + tmp]
     add [rb + char], [rb + tmp], [rb + char]
-    mul [rb + r0c1], 0b00000010, [rb + tmp]
+    mul [r0c1], 0b00000010, [rb + tmp]
     add [rb + char], [rb + tmp], [rb + char]
-    add [rb + r0c0], [rb + char], [rb + char]
+    add [r0c0], [rb + char], [rb + char]
 
     # Set foreground and background color
     out 0x1b
@@ -434,8 +434,27 @@ output_character:
     out [0]
 
 output_character_done:
-    arb 10
+    arb 2
     ret 3
 .ENDFRAME
+
+##########
+# Pixel data for currently processed character
+r0c0:
+    db  0
+r0c1:
+    db  0
+r1c0:
+    db  0
+r1c1:
+    db  0
+r2c0:
+    db  0
+r2c1:
+    db  0
+r3c0:
+    db  0
+r3c1:
+    db  0
 
 .EOF

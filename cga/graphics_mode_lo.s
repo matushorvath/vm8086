@@ -290,44 +290,44 @@ write_memory_graphics_done:
 
 ##########
 output_character:
-.FRAME addr_row0, table_hi, table_lo; char, tmp, r0c0, r0c1, r1c0, r1c1, r2c0, r2c1, r3c0, r3c1, max01, max23, color_bg, color_fg, mapping
-    arb -15
+.FRAME addr_row0, table_hi, table_lo; char, tmp, max01, max23, color_bg, color_fg, mapping
+    arb -7
 
     # Read first row of pixels
     add [rb + addr_row0], 0, [ip + 1]
     add [0], 0, [rb + tmp]
 
     add [rb + table_hi], [rb + tmp], [ip + 1]
-    add [0], 0, [rb + r0c0]
+    add [0], 0, [r0c0]
     add [rb + table_lo], [rb + tmp], [ip + 1]
-    add [0], 0, [rb + r0c1]
+    add [0], 0, [r0c1]
 
     # Read second row of pixels
     add [rb + addr_row0], 0x2000, [ip + 1]                  # 0x2000 because of interlacing
     add [0], 0, [rb + tmp]
 
     add [rb + table_hi], [rb + tmp], [ip + 1]
-    add [0], 0, [rb + r1c0]
+    add [0], 0, [r1c0]
     add [rb + table_lo], [rb + tmp], [ip + 1]
-    add [0], 0, [rb + r1c1]
+    add [0], 0, [r1c1]
 
     # Read third row of pixels
     add [rb + addr_row0], 80, [ip + 1]                      # 80 is one row of pixels
     add [0], 0, [rb + tmp]
 
     add [rb + table_hi], [rb + tmp], [ip + 1]
-    add [0], 0, [rb + r2c0]
+    add [0], 0, [r2c0]
     add [rb + table_lo], [rb + tmp], [ip + 1]
-    add [0], 0, [rb + r2c1]
+    add [0], 0, [r2c1]
 
     # Read fourth row of pixels
     add [rb + addr_row0], 0x2050, [ip + 1]                  # 0x2050 = 0x2000 + 80
     add [0], 0, [rb + tmp]
 
     add [rb + table_hi], [rb + tmp], [ip + 1]
-    add [0], 0, [rb + r3c0]
+    add [0], 0, [r3c0]
     add [rb + table_lo], [rb + tmp], [ip + 1]
-    add [0], 0, [rb + r3c1]
+    add [0], 0, [r3c1]
 
     # Count which colors are used in this character
     add 0, 0, [colors + 0]
@@ -335,29 +335,29 @@ output_character:
     add 0, 0, [colors + 2]
     add 0, 0, [colors + 3]
 
-    add colors, [rb + r0c0], [ip + 5]
-    add colors, [rb + r0c0], [ip + 3]
+    add colors, [r0c0], [ip + 5]
+    add colors, [r0c0], [ip + 3]
     add [0], 1, [0]
-    add colors, [rb + r0c1], [ip + 5]
-    add colors, [rb + r0c1], [ip + 3]
+    add colors, [r0c1], [ip + 5]
+    add colors, [r0c1], [ip + 3]
     add [0], 1, [0]
-    add colors, [rb + r1c0], [ip + 5]
-    add colors, [rb + r1c0], [ip + 3]
+    add colors, [r1c0], [ip + 5]
+    add colors, [r1c0], [ip + 3]
     add [0], 1, [0]
-    add colors, [rb + r1c1], [ip + 5]
-    add colors, [rb + r1c1], [ip + 3]
+    add colors, [r1c1], [ip + 5]
+    add colors, [r1c1], [ip + 3]
     add [0], 1, [0]
-    add colors, [rb + r2c0], [ip + 5]
-    add colors, [rb + r2c0], [ip + 3]
+    add colors, [r2c0], [ip + 5]
+    add colors, [r2c0], [ip + 3]
     add [0], 1, [0]
-    add colors, [rb + r2c1], [ip + 5]
-    add colors, [rb + r2c1], [ip + 3]
+    add colors, [r2c1], [ip + 5]
+    add colors, [r2c1], [ip + 3]
     add [0], 1, [0]
-    add colors, [rb + r3c0], [ip + 5]
-    add colors, [rb + r3c0], [ip + 3]
+    add colors, [r3c0], [ip + 5]
+    add colors, [r3c0], [ip + 3]
     add [0], 1, [0]
-    add colors, [rb + r3c1], [ip + 5]
-    add colors, [rb + r3c1], [ip + 3]
+    add colors, [r3c1], [ip + 5]
+    add colors, [r3c1], [ip + 3]
     add [0], 1, [0]
 
     # Find two most used colors by sorting the colors array
@@ -414,27 +414,27 @@ output_character_after_color_fg:
     #
     # char = 0xhgfedcba
 
-    add [rb + mapping], [rb + r3c1], [ip + 1]
+    add [rb + mapping], [r3c1], [ip + 1]
     mul [0], 0b10000000, [rb + char]
-    add [rb + mapping], [rb + r3c0], [ip + 1]
+    add [rb + mapping], [r3c0], [ip + 1]
     mul [0], 0b01000000, [rb + tmp]
     add [rb + char], [rb + tmp], [rb + char]
-    add [rb + mapping], [rb + r2c1], [ip + 1]
+    add [rb + mapping], [r2c1], [ip + 1]
     mul [0], 0b00100000, [rb + tmp]
     add [rb + char], [rb + tmp], [rb + char]
-    add [rb + mapping], [rb + r2c0], [ip + 1]
+    add [rb + mapping], [r2c0], [ip + 1]
     mul [0], 0b00010000, [rb + tmp]
     add [rb + char], [rb + tmp], [rb + char]
-    add [rb + mapping], [rb + r1c1], [ip + 1]
+    add [rb + mapping], [r1c1], [ip + 1]
     mul [0], 0b00001000, [rb + tmp]
     add [rb + char], [rb + tmp], [rb + char]
-    add [rb + mapping], [rb + r1c0], [ip + 1]
+    add [rb + mapping], [r1c0], [ip + 1]
     mul [0], 0b00000100, [rb + tmp]
     add [rb + char], [rb + tmp], [rb + char]
-    add [rb + mapping], [rb + r0c1], [ip + 1]
+    add [rb + mapping], [r0c1], [ip + 1]
     mul [0], 0b00000010, [rb + tmp]
     add [rb + char], [rb + tmp], [rb + char]
-    add [rb + mapping], [rb + r0c0], [ip + 1]
+    add [rb + mapping], [r0c0], [ip + 1]
     add [0], [rb + char], [rb + char]
 
     # Set foreground and background color
@@ -518,11 +518,31 @@ output_character_after_color_fg:
     out [0]
 
 output_character_done:
-    arb 15
+    arb 7
     ret 3
+.ENDFRAME
 
+##########
+# Pixel data for currently processed character
+r0c0:
+    db  0
+r0c1:
+    db  0
+r1c0:
+    db  0
+r1c1:
+    db  0
+r2c0:
+    db  0
+r2c1:
+    db  0
+r3c0:
+    db  0
+r3c1:
+    db  0
+
+# Colors used within currently processed character
 colors:
     ds  4, 0
-.ENDFRAME
 
 .EOF
