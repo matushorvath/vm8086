@@ -138,7 +138,7 @@ write_memory_graphics:
 .FRAME addr, value; odd, row, col, addr_row0, char0, char1, tmp
     arb -7
 
-    # Update all characters affected by writing one byte to CGA memory (that's 2 characters for 320x200)
+    # Update all characters affected by writing one byte to CGA memory (that's 2 characters for 320x200) # TODO 640: add an image to explain 640x200
     #
     # bits:     01 23 45 67 01 23 45 67 01 23 45 67 
     # bytes:   |           |           |           |
@@ -195,25 +195,26 @@ write_memory_graphics_enabled:
     #
     # Together this is:
     # term_row0 = floor((tm_row * 2 + odd) / 4) = floor(tm_row / 2)
-    # term_col0 = floor((tm_col * 4) / 2) = tm_col * 2
+    # term_col0 = floor((tm_col * 4) / 2) = tm_col * 2 # TODO 640: * 4
 
     # Calculate terminal character coordinates
     add shr_1, [rb + row], [ip + 1]
     add [0], 0, [rb + row]
-    mul [rb + col], 2, [rb + col]
+    mul [rb + col], 2, [rb + col] # TODO 640: col * 4 -> col
 
     # Next calculate the memory address where first of the four pixel rows starts:
     # pixel_row0 = term_row0 * pixel_rows_per_char = term_row0 * 4
     # pixel_col0 = term_col0 * pixel_cols_per_char = term_col0 * 2
     #
-    # Interlaced rows (=2), 80 bytes per row, 4 pixels per byte
+    # Interlaced rows (=2), 80 bytes per row, 4 pixels per byte # TODO 640: 8 pixels per byte
     # The first row of each character is always even
-    # addr = (pixel_row0 / 2) * 80 + (pixel_col0 / 4)
-    #      = term_row0 * 4 / 2 * 80 + term_col0 * 2 / 4
-    #      = (term_row0 * 160) + (term_col0 >> 1)
+    # addr = (pixel_row0 / 2) * 80 + (pixel_col0 / 4) # TODO 640: / 8
+    #      = term_row0 * 4 / 2 * 80 + term_col0 * 2 / 4 # TODO 640: / 8
+    #      = (term_row0 * 160) + (term_col0 >> 1) # TODO 640: >> 2
 
     mul [rb + row], 160, [rb + addr_row0]
-    add shr_1, [rb + col], [ip + 1]
+    # TODO this division seems unnecessary, we are multiplying col by 2 a few lines above
+    add shr_1, [rb + col], [ip + 1] # TODO 640: shr_2
     add [0], [rb + addr_row0], [rb + addr_row0]
 
     # Convert the 8086 address to intcode address
@@ -236,7 +237,7 @@ write_memory_graphics_enabled:
 
     out 'H'
 
-    # Build and output the two characters
+    # Build and output the two characters # TODO 640: still just two characters, no color mapping needed, but merge 2 columns into 1
     add [rb + addr_row0], 0, [rb - 1]
     add crumb_3, 0, [rb - 2]
     add crumb_2, 0, [rb - 3]
