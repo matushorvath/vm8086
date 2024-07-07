@@ -40,29 +40,27 @@
 # From util/shr.s
 .IMPORT shr_1
 
-# TODO merge graphics_mode_lo and graphics_mode_hi
-
 ##########
 redraw_screen_graphics_hi:
 .FRAME row, col, addr_row0, tmp
     arb -4
 
     # We are going to draw, is output enabled?
-    jnz [mode_enable_output], redraw_screen_graphics_hi_enabled
+    jnz [mode_enable_output], redraw_screen_graphics_enabled
 
     # Drawing is disabled, screen contents will no longer match CGA memory
     add 1, 0, [screen_needs_redraw]
 
-    jz  0, redraw_screen_graphics_hi_done
+    jz  0, redraw_screen_graphics_done
 
-redraw_screen_graphics_hi_enabled:
+redraw_screen_graphics_enabled:
     # Redraw the whole screen by iterating over pairs of characters
 
     # Initialize the row loop
     add [mem], 0xb8000, [rb + addr_row0]
     add 0, 0, [rb + row]
 
-redraw_screen_graphics_hi_row_loop:
+redraw_screen_graphics_row_loop:
     # Set cursor position for each row
     out 0x1b
     out '['
@@ -78,7 +76,7 @@ redraw_screen_graphics_hi_row_loop:
     # Initialize the column loop
     add 0, 0, [rb + col]
 
-redraw_screen_graphics_hi_col_loop:
+redraw_screen_graphics_col_loop:
     # Build and output the two characters
     add [rb + addr_row0], 0, [rb - 1]
     add bit_6, 0, [rb - 2]
@@ -96,8 +94,10 @@ redraw_screen_graphics_hi_col_loop:
     add [rb + addr_row0], 1, [rb + addr_row0]               # 1 byte of CGA memory processed with every iteration
     add [rb + col], 2, [rb + col]                           # 2 characters output with every iteration
 
-    eq  [rb + col], 160, [rb + tmp]                         # 160 = 640 pixels / 4 pixels per terminal character
-    jz  [rb + tmp], redraw_screen_graphics_hi_col_loop
+    # 320x200: 160 = 640 pixels / 4 pixels per terminal character
+    # 640x200: 160 = 320 pixels / 2 pixels per terminal character
+    eq  [rb + col], 160, [rb + tmp]
+    jz  [rb + tmp], redraw_screen_graphics_col_loop
 
     # We have processed 4 rows of pixels (since each terminal character is 4 pixels high)
     # Because of interlacing, we only need to increment addr_row0 by two rows each iteration
@@ -115,7 +115,7 @@ redraw_screen_graphics_hi_col_loop:
     add [rb + row], 1, [rb + row]                           # 1 row of characters was output
 
     eq  [rb + row], 50, [rb + tmp]                          # 50 = 200 pixels / 4 pixels per terminal character
-    jz  [rb + tmp], redraw_screen_graphics_hi_row_loop
+    jz  [rb + tmp], redraw_screen_graphics_row_loop
 
     # Reset all attributes
     out 0x1b
@@ -126,10 +126,10 @@ redraw_screen_graphics_hi_col_loop:
     add 0, 0, [screen_needs_redraw]
 
     # CGA logging
-    jz  [config_log_cga_debug], redraw_screen_graphics_hi_done
+    jz  [config_log_cga_debug], redraw_screen_graphics_done
     call redraw_screen_graphics_log
 
-redraw_screen_graphics_hi_done:
+redraw_screen_graphics_done:
     arb 4
     ret 0
 .ENDFRAME
@@ -141,6 +141,21 @@ write_memory_graphics_hi:
 
     # Update both characters affected by writing one byte to CGA memory
     #
+    # 320x200:
+    # bits:     01 23 45 67 01 23 45 67 01 23 45 67
+    # bytes:   |           |           |           |
+    # pixels:  |  |  |  |  |  |  |  |  |  |  |  |  |
+    # chars:   |     |     |     |     |     |     |
+    #                       aa bb|aa bb
+    #                       cc dd|cc dd
+    #                       ee ff|ee ff
+    #                       gg hh|gg hh
+    #
+    # If the second byte was updated, it means four pixels in one pixel row were updated
+    # That means two characters were updated (since each character is two pixels wide)
+    # Those two characters together cover four pixel columns and four pixel rows
+    #
+    # 640x200:
     # bits:     0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7
     # bytes:   |               |               |               |
     # pixels:  | | | | | | | | | | | | | | | | | | | | | | | | |
@@ -158,6 +173,8 @@ write_memory_graphics_hi:
     # We will calculate  memory coordinates of all pixels covered by those two characters,
     # build those two characters from the pixels, then calculate their on-screen coordinates
     # and print them there
+    #
+    # Calculations for both graphics modes actually result in the same numbers
 
     # CGA memory is interlaced
     lt  0x1fff, [rb + addr], [rb + tmp]
@@ -166,17 +183,17 @@ write_memory_graphics_hi:
 
     # Is the address too large to be on screen?
     lt  [rb + addr], 8000, [rb + tmp]
-    jz  [rb + tmp], write_memory_graphics_hi_done
+    jz  [rb + tmp], write_memory_graphics_done
 
     # We are going to draw, is output enabled?
-    jnz [mode_enable_output], write_memory_graphics_hi_enabled
+    jnz [mode_enable_output], write_memory_graphics_enabled
 
     # Drawing is disabled, screen contents will no longer match CGA memory
     add 1, 0, [screen_needs_redraw]
 
-    jz  0, write_memory_graphics_hi_done
+    jz  0, write_memory_graphics_done
 
-write_memory_graphics_hi_enabled:
+write_memory_graphics_enabled:
     # Calculate text mode row and column from the memory address
     # row = addr / 80, col = addr - row * 80
     add div80, [rb + addr], [ip + 1]
@@ -185,19 +202,22 @@ write_memory_graphics_hi_enabled:
     mul [rb + row], -80, [rb + tmp]
     add [rb + addr], [rb + tmp], [rb + col]
 
-    # We are going to update two characters, that is 8x4 pixels
+    # These comments are written for the 320x200 mode, with 640x200 values in
+    # angle brackets whenever they differ
+    #
+    # We are going to update two characters, 4x4 [8x4] pixels
     #
     # First, transform the text mode coordinates to pixel coordinates:
     # pixel_row = tm_row * 2 + odd      # apply interlacing
-    # pixel_col = tm_col * 8            # eight pixels per one byte
+    # pixel_col = tm_col * 4 [8]        # four [eight] pixels per one byte
     #
     # Next calculate terminal character cordinates from CGA pixel coordinates:
     # term_row0 = floor(pixel_row / pixel_rows_per_char) = floor(pixel_row / 4)
-    # term_col0 = floor(pixel_col / pixel_cols_per_char) = floor(pixel_col / 4)
+    # term_col0 = floor(pixel_col / pixel_cols_per_char) = floor(pixel_col / 2 [4])
     #
-    # Together this is:
+    # When put together, the result is the same for both modes:
     # term_row0 = floor((tm_row * 2 + odd) / 4) = floor(tm_row / 2)
-    # term_col0 = floor((tm_col * 8) / 4) = tm_col * 2
+    # term_col0 = floor((tm_col * 4 [8]) / 2 [4]) = tm_col * 2
 
     # Calculate terminal character coordinates
     add shr_1, [rb + row], [ip + 1]
@@ -206,13 +226,15 @@ write_memory_graphics_hi_enabled:
 
     # Next calculate the memory address where first of the four pixel rows starts:
     # pixel_row0 = term_row0 * pixel_rows_per_char = term_row0 * 4
-    # pixel_col0 = term_col0 * pixel_cols_per_char = term_col0 * 4
+    # pixel_col0 = term_col0 * pixel_cols_per_char = term_col0 * 2 [4]
     #
-    # Interlaced rows (=2), 80 bytes per row, 8 pixels per byte
+    # Interlaced rows (=2), 80 bytes per row, 4 [8] pixels per byte
     # The first row of each character is always even
-    # addr = (pixel_row0 / 2) * 80 + (pixel_col0 / 8)
-    #      = term_row0 * 4 / 2 * 80 + term_col0 * 4 / 8
+    # addr = (pixel_row0 / 2) * 80 + (pixel_col0 / 4 [8])
+    #      = term_row0 * 4 / 2 * 80 + term_col0 * 2 [4] / 4 [8]
     #      = (term_row0 * 160) + (term_col0 >> 1)
+    #
+    # The resulting address is the same for both modes
 
     mul [rb + row], 160, [rb + addr_row0]
     # TODO this division seems unnecessary, we are multiplying col by 2 a few lines above
@@ -260,50 +282,50 @@ write_memory_graphics_hi_enabled:
 
     add 0, 0, [screen_needs_redraw]
 
-write_memory_graphics_hi_done:
+write_memory_graphics_done:
     arb 4
     ret 2
 .ENDFRAME
 
 ##########
 output_character:
-.FRAME addr_row0, bit_hi, bit_lo; char, tmp, r0c0, r0c1, r1c0, r1c1, r2c0, r2c1, r3c0, r3c1
+.FRAME addr_row0, table_hi, table_lo; char, tmp, r0c0, r0c1, r1c0, r1c1, r2c0, r2c1, r3c0, r3c1
     arb -10
 
     # Read first row of pixels
     add [rb + addr_row0], 0, [ip + 1]
     add [0], 0, [rb + tmp]
 
-    add [rb + bit_hi], [rb + tmp], [ip + 1]
+    add [rb + table_hi], [rb + tmp], [ip + 1]
     add [0], 0, [rb + r0c0]
-    add [rb + bit_lo], [rb + tmp], [ip + 1]
+    add [rb + table_lo], [rb + tmp], [ip + 1]
     add [0], 0, [rb + r0c1]
 
     # Read second row of pixels
     add [rb + addr_row0], 0x2000, [ip + 1]                  # 0x2000 because of interlacing
     add [0], 0, [rb + tmp]
 
-    add [rb + bit_hi], [rb + tmp], [ip + 1]
+    add [rb + table_hi], [rb + tmp], [ip + 1]
     add [0], 0, [rb + r1c0]
-    add [rb + bit_lo], [rb + tmp], [ip + 1]
+    add [rb + table_lo], [rb + tmp], [ip + 1]
     add [0], 0, [rb + r1c1]
 
     # Read third row of pixels
     add [rb + addr_row0], 80, [ip + 1]                      # 80 is one row of pixels
     add [0], 0, [rb + tmp]
 
-    add [rb + bit_hi], [rb + tmp], [ip + 1]
+    add [rb + table_hi], [rb + tmp], [ip + 1]
     add [0], 0, [rb + r2c0]
-    add [rb + bit_lo], [rb + tmp], [ip + 1]
+    add [rb + table_lo], [rb + tmp], [ip + 1]
     add [0], 0, [rb + r2c1]
 
     # Read fourth row of pixels
     add [rb + addr_row0], 0x2050, [ip + 1]                  # 0x2050 = 0x2000 + 80
     add [0], 0, [rb + tmp]
 
-    add [rb + bit_hi], [rb + tmp], [ip + 1]
+    add [rb + table_hi], [rb + tmp], [ip + 1]
     add [0], 0, [rb + r3c0]
-    add [rb + bit_lo], [rb + tmp], [ip + 1]
+    add [rb + table_lo], [rb + tmp], [ip + 1]
     add [0], 0, [rb + r3c1]
 
     # Build a characters out of the individual pixels
