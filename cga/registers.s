@@ -219,8 +219,11 @@ mode_control_write_after_log:
 
 ##########
 color_control_write:
-.FRAME addr, value;
+.FRAME addr, value; redraw, tmp
+    arb -2
+
     # Store selected color
+    add [color_selected], 0, [rb + tmp]
     add bit_3, [rb + value], [ip + 1]
     mul [0], 2, [color_selected]
 
@@ -235,16 +238,37 @@ color_control_write:
     add bit_0, [rb + value], [ip + 1]
     add [0], [color_selected], [color_selected]
 
-    # Store the other bits
+    # When changing selected color, redraw the screen
+    eq  [rb + tmp], [color_selected], [rb + tmp]
+    eq  [rb + tmp], 0, [rb + redraw]
+
+    # Store the regular/bright palette setting
+    add [color_bright], 0, [rb + tmp]
     add bit_4, [rb + value], [ip + 1]
     add [0], 0, [color_bright]
 
+    # When changing regular/bright setting, redraw the screen
+    eq  [rb + tmp], [color_selected], [rb + tmp]
+    eq  [rb + tmp], 0, [rb + tmp]
+    add [rb + redraw], [rb + tmp], [rb + redraw]
+
+    # Store the palette 1/palette 2 setting
+    add [color_palette], 0, [rb + tmp]
     add bit_5, [rb + value], [ip + 1]
     add [0], 0, [color_palette]
 
-    # TODO don't redraw unless some of the values have changed
+    # When changing regular/bright setting, redraw the screen
+    eq  [rb + tmp], [color_palette], [rb + tmp]
+    eq  [rb + tmp], 0, [rb + tmp]
+    add [rb + redraw], [rb + tmp], [rb + redraw]
+
+    # All these settings only affect the graphics mode
+    mul [rb + redraw], [mode_graphics], [rb + redraw]
+    jz  [rb + redraw], color_control_write_done
+
     call redraw_screen
 
+color_control_write_done:
     # CGA logging
     jz  [config_log_cga_debug], color_control_write_after_log
 
@@ -253,6 +277,7 @@ color_control_write:
     call color_control_write_log
 
 color_control_write_after_log:
+    arb 2
     ret 2
 .ENDFRAME
 
