@@ -14,7 +14,6 @@
 .IMPORT redraw_screen_text_log
 
 # From text_palette.s
-.IMPORT reinitialize_text_palette
 .IMPORT palette_text_fg
 .IMPORT palette_text_bg_ptr
 
@@ -60,9 +59,6 @@ initialize_text_mode:
     # Page size is 25 rows * 80/160 bytes per row = 2000/4000 bytes depending on column count
     add [mode_high_res_text], 1, [page_size]
     mul [page_size], 2000, [page_size]
-
-    # Initialize the palette for text mode
-    call reinitialize_text_palette
 
     ret 0
 

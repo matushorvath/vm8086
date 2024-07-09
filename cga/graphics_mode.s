@@ -12,7 +12,6 @@
 .IMPORT blocks_4x2_3
 
 # From graphics_palette.s
-.IMPORT reinitialize_graphics_palette
 .IMPORT palette_graphics
 .IMPORT color_mappings
 
@@ -67,9 +66,6 @@ initialize_graphics_mode:
     add crumb_2, 0, [table_char0_lo]
     add crumb_1, 0, [table_char1_hi]
     add crumb_0, 0, [table_char1_lo]
-
-    # Initialize the palette for low resolution graphics
-    call reinitialize_graphics_palette
 
     jz  0, initialize_graphics_mode_done
 

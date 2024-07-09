@@ -34,7 +34,8 @@
 .IMPORT status_read_log
 
 # From screen.s
-.IMPORT reset_screen
+.IMPORT initialize_screen
+.IMPORT redraw_screen
 .IMPORT enable_disable_screen
 
 # From util/bits.s
@@ -110,8 +111,8 @@ mc6845_data_write_after_log:
 
 ##########
 mode_control_write:
-.FRAME addr, value; reset, enable_disable, tmp
-    arb -3
+.FRAME addr, value; reinitialize, redraw, enable, tmp
+    arb -4
 
     # CGA logging
     jz  [config_log_cga_debug], mode_control_write_start
@@ -126,86 +127,93 @@ mode_control_write_start:
     add bit_1, [rb + value], [ip + 1]
     add [0], 0, [mode_graphics]
 
-    # If text/graphics mode has changed, reset the screen
+    # If text/graphics mode has changed, reinitialize the screen
     eq  [rb + tmp], [mode_graphics], [rb + tmp]
-    eq  [rb + tmp], 0, [rb + reset]
+    eq  [rb + tmp], 0, [rb + reinitialize]
 
     # Save the enable output setting
     add [mode_enable_output], 0, [rb + tmp]
     add bit_3, [rb + value], [ip + 1]
     add [0], 0, [mode_enable_output]
 
-    # When the output is disabled/enabled, just do a screen redraw
+    # When the output is enabled/disabled, enable/disable the output
     eq  [rb + tmp], [mode_enable_output], [rb + tmp]
-    eq  [rb + tmp], 0, [rb + enable_disable]
+    eq  [rb + tmp], 0, [rb + enable]
 
     # Save the black and white setting (which is actually palette 3 setting)
     add [mode_back_and_white], 0, [rb + tmp]
     add bit_2, [rb + value], [ip + 1]
     add [0], 0, [mode_back_and_white]
 
-    # When setting palette 3 in graphics mode, reset the screen
+    # When setting palette 3 in graphics mode, redraw the screen
     eq  [rb + tmp], [mode_back_and_white], [rb + tmp]
     eq  [rb + tmp], 0, [rb + tmp]
-    mul [rb + tmp], [mode_graphics], [rb + tmp]
-    add [rb + reset], [rb + tmp], [rb + reset]
+    mul [rb + tmp], [mode_graphics], [rb + redraw]
 
     # Save the high res graphics setting
     add [mode_high_res_graphics], 0, [rb + tmp]
     add bit_4, [rb + value], [ip + 1]
     add [0], 0, [mode_high_res_graphics]
 
-    # When switching high res graphics in graphics mode, reset the screen
+    # When switching high res graphics in graphics mode, reinitialize the screen
     eq  [rb + tmp], [mode_high_res_graphics], [rb + tmp]
     eq  [rb + tmp], 0, [rb + tmp]
     mul [rb + tmp], [mode_graphics], [rb + tmp]
-    add [rb + reset], [rb + tmp], [rb + reset]
+    add [rb + reinitialize], [rb + tmp], [rb + reinitialize]
 
     # Save the high res text setting
     add [mode_high_res_text], 0, [rb + tmp]
     add bit_0, [rb + value], [ip + 1]
     add [0], 0, [mode_high_res_text]
 
-    # When switching high res text in text mode, reset the screen
+    # When switching high res text in text mode, reinitialize the screen
     eq  [rb + tmp], [mode_high_res_text], [rb + tmp]
     add [rb + tmp], [mode_graphics], [rb + tmp]
     eq  [rb + tmp], 0, [rb + tmp]
-    add [rb + reset], [rb + tmp], [rb + reset]
+    add [rb + reinitialize], [rb + tmp], [rb + reinitialize]
 
     # Save the blinking setting
     add [mode_not_blinking], 0, [rb + tmp]
     add bit_5, [rb + value], [ip + 1]
     add [0], 0, [mode_not_blinking]
 
-    # When switching blinking in text mode, reset the screen
+    # When switching blinking in text mode, redraw the screen
     eq  [rb + tmp], [mode_not_blinking], [rb + tmp]
     add [rb + tmp], [mode_graphics], [rb + tmp]
     eq  [rb + tmp], 0, [rb + tmp]
-    add [rb + reset], [rb + tmp], [rb + reset]
+    add [rb + redraw], [rb + tmp], [rb + redraw]
 
-    # Reset the terminal if needed
-    jz  [rb + reset], mode_control_write_after_reset
-    call reset_screen
+    # Do we need to reinitialize the terminal?
+    jz  [rb + reinitialize], mode_control_write_redraw
 
-    # Don't worry about enable/disable if we did a full reset
+    call initialize_screen
     jz  0, mode_control_write_done
 
-mode_control_write_after_reset:
-    # Reset was not needed, do we need to process an enable/disable?
-    jz  [rb + enable_disable], mode_control_write_done
+mode_control_write_redraw:
+    # No need to reinitialize, do we need to redraw?
+    jz  [rb + redraw], mode_control_write_enable
+
+    call redraw_screen
+    jz  0, mode_control_write_done
+
+mode_control_write_enable:
+    # No need to redraw, do we need to enable output?
+    jz  [rb + enable], mode_control_write_done
+
     call enable_disable_screen
 
 mode_control_write_done:
     # CGA logging
     jz  [config_log_cga_debug], mode_control_write_after_log
 
-    add [rb + reset], 0, [rb - 1]
-    add [rb + enable_disable], 0, [rb - 2]
-    arb -2
+    add [rb + reinitialize], 0, [rb - 1]
+    add [rb + redraw], 0, [rb - 2]
+    add [rb + enable], 0, [rb - 3]
+    arb -3
     call mode_control_write_log_2
 
 mode_control_write_after_log:
-    arb 3
+    arb 4
     ret 2
 .ENDFRAME
 
@@ -234,7 +242,8 @@ color_control_write:
     add bit_5, [rb + value], [ip + 1]
     add [0], 0, [color_palette]
 
-    call reset_screen
+    # TODO don't redraw unless some of the values have changed
+    call redraw_screen
 
     # CGA logging
     jz  [config_log_cga_debug], color_control_write_after_log
