@@ -28,7 +28,7 @@
 .IMPORT screen_needs_redraw
 
 # From text_palette.s
-.IMPORT palette_text_fg
+.IMPORT palette_16
 
 # From cpu/state.s
 .IMPORT mem
@@ -652,22 +652,22 @@ output_character_hi:
     out '2'
     out ';'
 
-    # Foreground color uses the same palette as text modes
+    # Foreground color uses the 16 color palette
     mul [color_selected], 3, [rb + tmp]
 
-    add palette_text_fg + 0, [rb + tmp], [ip + 1]
+    add palette_16 + 0, [rb + tmp], [ip + 1]
     add [0], 0, [rb - 1]
     arb -1
     call printb
     out ';'
 
-    add palette_text_fg + 1, [rb + tmp], [ip + 1]
+    add palette_16 + 1, [rb + tmp], [ip + 1]
     add [0], 0, [rb - 1]
     arb -1
     call printb
     out ';'
 
-    add palette_text_fg + 2, [rb + tmp], [ip + 1]
+    add palette_16 + 2, [rb + tmp], [ip + 1]
     add [0], 0, [rb - 1]
     arb -1
     call printb

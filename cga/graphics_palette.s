@@ -9,6 +9,9 @@
 .IMPORT color_palette
 .IMPORT color_selected
 
+# From text_palette.s
+.IMPORT palette_16
+
 ##########
 reinitialize_graphics_palette:
 .FRAME tmp
@@ -25,7 +28,21 @@ reinitialize_graphics_palette:
     add [0], 0, [palette_graphics]
 
     # TODO set also color_mappings
-    # TODO set background color: copy palette_text_fg[color_selected] into color 0 of palette_graphics
+
+    # Set background color in the palette to color_selected (from the 16 color palette)
+    mul [color_selected], 3, [rb + tmp]
+
+    add palette_16 + 0, [rb + tmp], [ip + 5]
+    add [palette_graphics], 0, [ip + 3]
+    add [0], 0, [0]                                         # palette_graphics[0][0] = palette_16[color_selected][0]
+
+    add palette_16 + 1, [rb + tmp], [ip + 5]
+    add [palette_graphics], 1, [ip + 3]
+    add [0], 0, [0]                                         # palette_graphics[0][1] = palette_16[color_selected][1]
+
+    add palette_16 + 2, [rb + tmp], [ip + 5]
+    add [palette_graphics], 2, [ip + 3]
+    add [0], 0, [0]                                         # palette_graphics[0][2] = palette_16[color_selected][2]
 
     arb 1
     ret 0
