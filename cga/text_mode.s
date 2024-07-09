@@ -231,13 +231,6 @@ write_memory_text_print:
     arb -2
     call output_character
 
-    # Reset all attributes
-    # TODO only reset when needed
-    out 0x1b
-    out '['
-    out '0'
-    out 'm'
-
 write_memory_text_done:
     arb 5
     ret 2
@@ -336,14 +329,21 @@ output_character_blink:
     out [0]
 
     add cp437_1, [rb + char], [ip + 1]
-    jz  [0], output_character_done
+    jz  [0], output_character_cleanup
     add cp437_1, [rb + char], [ip + 1]
     out [0]
 
     add cp437_2, [rb + char], [ip + 1]
-    jz  [0], output_character_done
+    jz  [0], output_character_cleanup
     add cp437_2, [rb + char], [ip + 1]
     out [0]
+
+output_character_cleanup:
+    # Reset all attributes
+    out 0x1b
+    out '['
+    out '0'
+    out 'm'
 
 output_character_done:
     arb 1
