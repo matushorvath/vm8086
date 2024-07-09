@@ -88,7 +88,7 @@ initialize_graphics_mode_done:
 
 ##########
 redraw_screen_graphics:
-.FRAME row, col, addr_row0, tmp
+.FRAME term_row, term_col, addr_row0, tmp
     arb -4
 
     # We are going to draw, is output enabled?
@@ -104,14 +104,14 @@ redraw_screen_graphics_enabled:
 
     # Initialize the row loop
     add [mem], 0xb8000, [rb + addr_row0]
-    add 0, 0, [rb + row]
+    add 0, 0, [rb + term_row]
 
 redraw_screen_graphics_row_loop:
     # Set cursor position for each row
     out 0x1b
     out '['
 
-    add [rb + row], 1, [rb - 1]
+    add [rb + term_row], 1, [rb - 1]
     arb -1
     call printb
 
@@ -120,7 +120,7 @@ redraw_screen_graphics_row_loop:
     out 'H'
 
     # Initialize the column loop
-    add 0, 0, [rb + col]
+    add 0, 0, [rb + term_col]
 
 redraw_screen_graphics_col_loop:
     # Build and output the two characters
@@ -138,11 +138,11 @@ redraw_screen_graphics_col_loop:
 
     # Next column
     add [rb + addr_row0], 1, [rb + addr_row0]               # 1 byte of CGA memory processed with every iteration
-    add [rb + col], 2, [rb + col]                           # 2 characters output with every iteration
+    add [rb + term_col], 2, [rb + term_col]                 # 2 characters output with every iteration
 
     # 320x200: 160 = 640 pixels / 4 pixels per terminal character
     # 640x200: 160 = 320 pixels / 2 pixels per terminal character
-    eq  [rb + col], 160, [rb + tmp]
+    eq  [rb + term_col], 160, [rb + tmp]
     jz  [rb + tmp], redraw_screen_graphics_col_loop
 
     # We have processed 4 rows of pixels (since each terminal character is 4 pixels high)
@@ -158,9 +158,9 @@ redraw_screen_graphics_col_loop:
 
     # Next row
     add [rb + addr_row0], 80, [rb + addr_row0]              # 80 = increment addr_row0 by one pixel row, as explained above
-    add [rb + row], 1, [rb + row]                           # 1 row of characters was output
+    add [rb + term_row], 1, [rb + term_row]                 # 1 row of characters was output
 
-    eq  [rb + row], 50, [rb + tmp]                          # 50 = 200 pixels / 4 pixels per terminal character
+    eq  [rb + term_row], 50, [rb + tmp]                     # 50 = 200 pixels / 4 pixels per terminal character
     jz  [rb + tmp], redraw_screen_graphics_row_loop
 
     # Reset all attributes
@@ -182,7 +182,7 @@ redraw_screen_graphics_done:
 
 ##########
 write_memory_graphics:
-.FRAME addr, value; row, col, addr_row0, tmp
+.FRAME addr, value; term_row, term_col, addr_row0, tmp
     arb -4
 
     # Update both characters affected by writing one byte to CGA memory
@@ -240,68 +240,77 @@ write_memory_graphics:
     jz  0, write_memory_graphics_done
 
 write_memory_graphics_enabled:
-    # Calculate text mode row and column from the memory address
-    # row = addr / 80, col = addr - row * 80
-    add div80, [rb + addr], [ip + 1]
-    add [0], 0, [rb + row]
-
-    mul [rb + row], -80, [rb + tmp]
-    add [rb + addr], [rb + tmp], [rb + col]
-
     # These comments are written for the 320x200 mode, with 640x200 values in
     # angle brackets whenever they differ
     #
-    # We are going to update two characters, 4x4 [8x4] pixels
+    # Calculate CGA pixel coordinates from the memory address that was updated:
     #
-    # First, transform the text mode coordinates to pixel coordinates:
-    # pixel_row = tm_row * 2 + odd      # apply interlacing
-    # pixel_col = tm_col * 4 [8]        # four [eight] pixels per one byte
+    # pixel_row = (addr / 80) * 2 + (odd ? 1 : 0)           # apply interlacing
+    # pixel_col = (addr % 80) * 4 [8]                       # four [eight] pixels per one byte
+    # 
+    # addr % 80 is calculated as (addr - (addr / 80) * 80)
     #
-    # Next calculate terminal character cordinates from CGA pixel coordinates:
-    # term_row0 = floor(pixel_row / pixel_rows_per_char) = floor(pixel_row / 4)
-    # term_col0 = floor(pixel_col / pixel_cols_per_char) = floor(pixel_col / 2 [4])
+    # Then calculate terminal character cordinates from CGA pixel coordinates:
+    # We are going to update two characters, 4x4 [8x4] pixels.
+    #
+    # term_row = floor(pixel_row / pixel_rows_per_char)
+    #          = floor(pixel_row / 4)
+    # term_col = floor(pixel_col / pixel_cols_per_char)
+    #          = floor(pixel_col / 2 [4])
     #
     # When put together, the result is the same for both modes:
-    # term_row0 = floor((tm_row * 2 + odd) / 4) = floor(tm_row / 2)
-    # term_col0 = floor((tm_col * 4 [8]) / 2 [4]) = tm_col * 2
-
-    # Calculate terminal character coordinates
-    add shr_1, [rb + row], [ip + 1]
-    add [0], 0, [rb + row]
-    mul [rb + col], 2, [rb + col]
-
+    #
+    # term_row = floor(((addr / 80) * 2 + odd) / 4)
+    #          = floor((addr / 80) / 2)
+    # term_col = floor((addr % 80) * 4 [8] / 2 [4])
+    #          = (addr % 80) * 2
+    #
     # Next calculate the memory address where first of the four pixel rows starts:
-    # pixel_row0 = term_row0 * pixel_rows_per_char = term_row0 * 4
-    # pixel_col0 = term_col0 * pixel_cols_per_char = term_col0 * 2 [4]
     #
-    # Interlaced rows (=2), 80 bytes per row, 4 [8] pixels per byte
-    # The first row of each character is always even
-    # addr = (pixel_row0 / 2) * 80 + (pixel_col0 / 4 [8])
-    #      = term_row0 * 4 / 2 * 80 + term_col0 * 2 [4] / 4 [8]
-    #      = (term_row0 * 160) + (term_col0 >> 1)
+    # pixel_row0 = term_row * pixel_rows_per_char = term_row * 4
+    # pixel_col0 = term_col * pixel_cols_per_char = term_col * 2 [4]
     #
-    # The resulting address is the same for both modes
+    # Interlaced rows (=2), 80 bytes per row, 4 [8] pixels per byte.
+    # The first row of each character is always even.
+    #
+    # addr_row0 = floor(pixel_row0 / 2) * 80 + floor(pixel_col0 / 4 [8])
+    #           = term_row * 4 / 2 * 80 + floor(term_col * 2 [4] / 4 [8])
+    #           = (term_row * 160) + floor(term_col / 2)
+    #           = (term_row * 160) + floor((addr % 80) * 2 / 2)
+    #           = (term_row * 160) + (addr % 80)
+    #
+    # The resulting address is also the same for both modes
 
-    mul [rb + row], 160, [rb + addr_row0]
-    # TODO this division seems unnecessary, we are multiplying col by 2 a few lines above
-    add shr_1, [rb + col], [ip + 1]
-    add [0], [rb + addr_row0], [rb + addr_row0]
+    # Calculate terminal character coordinates and the redraw address
+    add div80, [rb + addr], [ip + 1]
+    add [0], 0, [rb + term_row]                                 # term_row = addr / 80
+
+    mul [rb + term_row], -80, [rb + tmp]                        # tmp = term_row * (-80) = - (addr / 80) * 80
+    add [rb + addr], [rb + tmp], [rb + term_col]                # term_col = addr - (addr / 80) * 80 = addr % 80
+
+    add shr_1, [rb + term_row], [ip + 1]
+    add [0], 0, [rb + term_row]                                 # term_row = term_row / 2 = (addr / 80) / 2
+
+    mul [rb + term_row], 160, [rb + addr_row0]                  # addr_row0 = term_row * 160
+    add [rb + addr_row0], [rb + term_col], [rb + addr_row0]     # addr_row0 = addr_row0 + term_col = (term_row * 160) + (addr % 80)
+
+    mul [rb + term_col], 2, [rb + term_col]                     # term_col = term_col * 2 = (addr % 80) * 2
 
     # Convert the 8086 address to intcode address
     add [rb + addr_row0], [mem], [rb + addr_row0]
-    add [rb + addr_row0], 0xb8000, [rb + addr_row0]         # CGA memory start
+    add [rb + addr_row0], 0xb8000, [rb + addr_row0]             # CGA memory start
 
     # Set cursor position
     out 0x1b
     out '['
 
-    add [rb + row], 1, [rb - 1]
+    add [rb + term_row], 1, [rb - 1]
     arb -1
     call printb
 
     out ';'
 
-    add [rb + col], 1, [rb - 1]
+    add [rb + term_col], 1, [rb - 1]
     arb -1
     call printb
 
