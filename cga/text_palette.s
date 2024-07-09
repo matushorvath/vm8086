@@ -1,5 +1,6 @@
 .EXPORT reinitialize_text_palette
 
+.EXPORT palette_16
 .EXPORT palette_text_fg
 .EXPORT palette_text_bg_ptr
 
@@ -27,6 +28,7 @@ palette_text_bg_ptr:
 ##########
 # 24-bit color palettes
 
+palette_16:
 palette_text_fg:
 palette_text_bg_light:
     db    0,   0,   0                   # Black
