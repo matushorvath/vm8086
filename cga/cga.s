@@ -19,7 +19,7 @@
 .IMPORT mode_control_write
 .IMPORT color_control_write
 .IMPORT status_read
-.IMPORT reset_screen
+.IMPORT initialize_screen
 
 # TODO hide the cursor if running on a VM that supports extended console IO
 
@@ -69,8 +69,8 @@ init_cga:
     out 'l'
 
 init_cga_after_cursor:
-    # Reset the screen
-    call reset_screen
+    # Initialize the screen
+    call initialize_screen
 
     ret 0
 .ENDFRAME

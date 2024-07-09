@@ -135,14 +135,22 @@ mode_control_write_log_1_value:
 
 ##########
 mode_control_write_log_2:
-.FRAME reset, enable_disable;
+.FRAME reinitialize, redraw, enable;
     call log_start
 
-    add mode_control_write_log_2_reset, 0, [rb - 1]
+    add mode_control_write_log_2_reinitialize, 0, [rb - 1]
     arb -1
     call print_str
 
-    add [rb + reset], 0, [rb - 1]
+    add [rb + reinitialize], 0, [rb - 1]
+    arb -1
+    call print_num
+
+    add mode_control_write_log_2_redraw, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    add [rb + redraw], 0, [rb - 1]
     arb -1
     call print_num
 
@@ -150,7 +158,7 @@ mode_control_write_log_2:
     arb -1
     call print_str
 
-    add [rb + enable_disable], 0, [rb - 1]
+    add [rb + enable], 0, [rb - 1]
     arb -1
     call print_num
 
@@ -158,10 +166,12 @@ mode_control_write_log_2:
 
     call dump_cga_state
 
-    ret 2
+    ret 3
 
-mode_control_write_log_2_reset:
-    db  "cga mode write: reset ", 0
+mode_control_write_log_2_reinitialize:
+    db  "cga mode write: reinitialize ", 0
+mode_control_write_log_2_redraw:
+    db  " redraw ", 0
 mode_control_write_log_2_enable:
     db  " enable/disable ", 0
 .ENDFRAME

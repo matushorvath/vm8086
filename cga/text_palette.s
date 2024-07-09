@@ -1,4 +1,4 @@
-.EXPORT reinitialize_text_palette
+.EXPORT initialize_text_palette
 
 .EXPORT palette_16
 .EXPORT palette_text_fg
@@ -8,15 +8,15 @@
 .IMPORT mode_not_blinking
 
 ##########
-reinitialize_text_palette:
+initialize_text_palette:
 .FRAME
     # Select background palette
-    add reinitialize_text_palette_data, [mode_not_blinking], [ip + 1]
+    add initialize_text_palette_data, [mode_not_blinking], [ip + 1]
     add [0], 0, [palette_text_bg_ptr]
 
     ret 0
 
-reinitialize_text_palette_data:
+initialize_text_palette_data:
     db  palette_text_bg_blink
     db  palette_text_bg_light
 .ENDFRAME
