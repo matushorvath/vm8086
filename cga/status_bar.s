@@ -2,7 +2,9 @@
 
 .EXPORT set_disk_active
 .EXPORT set_disk_inactive
-.EXPORT disk_active
+
+.EXPORT set_speaker_active
+.EXPORT set_speaker_inactive
 
 .EXPORT redraw_status_bar
 
@@ -15,6 +17,24 @@
 
 # From libxib.a
 .IMPORT print_num_radix
+
+# Unicode icons
+#
+# Disk:
+#
+# These work on Windows only:
+# F0 9F 96 AB = U+1F5AB White Hard Shell Floppy Disk 🖫
+# F0 9F 96 AC = U+1F5AC Soft Shell Floppy Disk 🖬
+# F0 9F 96 B4 = U+1F5B4 Hard Disk 🖴
+#
+# These work on both Windows and Mac:
+# F0 9F 92 BE = U+1F4BE Floppy Disk Emoji 💾
+# E2 9B 81    = U+26C1  White Draughts King ⛁
+# E2 9B 83 	  = U+26C3  Black Draughts King ⛃
+#
+# Speaker:
+#
+# F0 9F 94 8A = U+1F50A Speaker with Three Sound Waves 🔊
 
 ##########
 post_status_write:
@@ -61,6 +81,38 @@ set_disk_inactive_done:
 .ENDFRAME
 
 ##########
+set_speaker_active:
+.FRAME unit;
+    # Do nothing if already active
+    jnz [speaker_active], set_disk_active_done
+
+    # Save the new value
+    add 1, 0, [speaker_active]
+
+    # Redraw just the speaker activity
+    call redraw_speaker_activity
+
+set_speaker_active_done:
+    ret 1
+.ENDFRAME
+
+##########
+set_speaker_inactive:
+.FRAME
+    # Do nothing if already inactive
+    jz  [speaker_active], set_speaker_inactive_done
+
+    # Save the new value
+    add 0, 0, [speaker_active]
+
+    # Redraw just the speaker activity
+    call redraw_speaker_activity
+
+set_speaker_inactive_done:
+    ret 0
+.ENDFRAME
+
+##########
 redraw_status_bar:
 .FRAME
     # Position the cursor to column 1, one row below the screen
@@ -82,7 +134,7 @@ redraw_status_bar:
     out 'K'
 
     # Print the POST status code, unless it's 00
-    jz  [post_status], redraw_status_bar_after_post
+    jz  [post_status], redraw_status_bar_icons
 
     add [post_status], 0, [rb - 1]
     add 16, 0, [rb - 2]
@@ -90,9 +142,58 @@ redraw_status_bar:
     arb -3
     call print_num_radix
 
-redraw_status_bar_after_post:
-    call redraw_disk_activity
+redraw_status_bar_icons:
+    # Position the cursor one row below the screen, right side
+    out 0x1b
+    out '['
 
+    add [screen_height_chars], 1, [rb - 1]
+    arb -1
+    call printb
+
+    out ';'
+
+    add [screen_width_chars], -3, [rb - 1]
+    arb -1
+    call printb
+
+    out 'H'
+
+    # Is the speaker active?
+    jz  [speaker_active], redraw_status_bar_speaker_blank
+
+    # Draw a speaker icon
+    out 0xf0
+    out 0x9f
+    out 0x94
+    out 0x8a
+
+    jz  0, redraw_status_bar_after_speaker
+
+redraw_status_bar_speaker_blank:
+    # Draw a blank space for no speaker activity
+    out ' '
+
+redraw_status_bar_after_speaker:
+    # The icons are double width, so we need a space between them
+    out ' '
+
+    # Is the disk active?
+    jz  [disk_active], redraw_status_bar_disk_blank
+
+    # Draw a diskette icon
+    out 0xf0
+    out 0x9f
+    out 0x92
+    out 0xbe
+
+    jz  0, redraw_status_bar_after_disk
+
+redraw_status_bar_disk_blank:
+    # Draw a blank space for no disk activity
+    out ' '
+
+redraw_status_bar_after_disk:
     ret 0
 .ENDFRAME
 
@@ -119,17 +220,6 @@ redraw_disk_activity:
     jz  [disk_active], redraw_disk_activity_blank
 
     # Draw a diskette icon
-
-    # These work on Windows only:
-    # F0 9F 96 AB = U+1F5AB White Hard Shell Floppy Disk 🖫
-    # F0 9F 96 AC = U+1F5AC Soft Shell Floppy Disk 🖬
-    # F0 9F 96 B4 = U+1F5B4 Hard Disk 🖴
-
-    # These work on both Windows and Mac:
-    # F0 9F 92 BE = U+1F4BE Floppy Disk Emoji 💾
-    # E2 9B 81    = U+26C1  White Draughts King ⛁
-    # E2 9B 83 	  = U+26C3  Black Draughts King ⛃
-
     out 0xf0
     out 0x9f
     out 0x92
@@ -146,10 +236,51 @@ redraw_disk_activity_done:
 .ENDFRAME
 
 ##########
+redraw_speaker_activity:
+.FRAME
+    # Position the cursor one row below the screen, right side
+    out 0x1b
+    out '['
+
+    add [screen_height_chars], 1, [rb - 1]
+    arb -1
+    call printb
+
+    out ';'
+
+    add [screen_width_chars], -3, [rb - 1]
+    arb -1
+    call printb
+
+    out 'H'
+
+    # Is the speaker active?
+    jz  [speaker_active], redraw_speaker_activity_blank
+
+    # Draw a speaker icon
+    out 0xf0
+    out 0x9f
+    out 0x94
+    out 0x8a
+
+    jz  0, redraw_speaker_activity_done
+
+redraw_speaker_activity_blank:
+    # Draw a blank space for no speaker activity
+    out ' '
+
+redraw_speaker_activity_done:
+    ret 0
+.ENDFRAME
+
+##########
 post_status:
     db  0
 
 disk_active:
+    db  0
+
+speaker_active:
     db  0
 
 .EOF
