@@ -8,6 +8,9 @@
 
 # From cga/status_bar.s
 .IMPORT set_disk_inactive
+.IMPORT set_speaker_inactive
+
+# TODO reset the inactive counter with every set_disk_active, same for speaker
 
 ##########
 vm_callback:
@@ -34,6 +37,16 @@ vm_callback:
 disk_inactive_decrement:
     add [disk_inactive_counter], -1, [disk_inactive_counter]
 
+    # Reset speaker activity every 256 timer counters
+    jnz [speaker_inactive_counter], speaker_inactive_decrement
+    add 256, 0, [speaker_inactive_counter]
+
+    # Remove the speaker activity icon
+    call set_speaker_inactive
+
+speaker_inactive_decrement:
+    add [speaker_inactive_counter], -1, [speaker_inactive_counter]
+
 vm_callback_decrement:
     add [vm_callback_counter], -1, [vm_callback_counter]
 
@@ -44,7 +57,11 @@ vm_callback_decrement:
 ##########
 vm_callback_counter:
     db  0
+
 disk_inactive_counter:
+    db  0
+
+speaker_inactive_counter:
     db  0
 
 .EOF
