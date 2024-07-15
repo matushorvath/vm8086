@@ -82,9 +82,9 @@ set_disk_inactive_done:
 
 ##########
 set_speaker_active:
-.FRAME unit;
+.FRAME
     # Do nothing if already active
-    jnz [speaker_active], set_disk_active_done
+    jnz [speaker_active], set_speaker_active_done
 
     # Save the new value
     add 1, 0, [speaker_active]
@@ -93,7 +93,7 @@ set_speaker_active:
     call redraw_speaker_activity
 
 set_speaker_active_done:
-    ret 1
+    ret 0
 .ENDFRAME
 
 ##########

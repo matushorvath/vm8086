@@ -10,6 +10,22 @@
 .EXPORT pit_gate_ch2
 .EXPORT pit_output_ch2
 
+# From ppi_8255a.s
+.IMPORT speaker_activity_callback
+
+##########
+# Action to perform when the channel triggers
+pit_trigger:
+.FRAME
+    # When channel 2 triggers, the PC speaker is active
+    jz  [speaker_activity_callback], pit_trigger_done
+    call [speaker_activity_callback]
+
+pit_trigger_done:
+    ret 0
+.ENDFRAME
+
+##########
 pit_data_read_ch2:
     jz  0, pit_data_read_common
 
@@ -28,9 +44,6 @@ pit_set_gate_ch2:
 # Configuration
 pit_channel:
     db  2
-
-pit_trigger_int0:
-    db  0
 
 # Gate status can be read using port 0x61 bit 0
 pit_gate_ch2:
