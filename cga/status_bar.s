@@ -50,7 +50,7 @@ post_status_write:
 
 ##########
 set_disk_active:
-.FRAME unit;
+.FRAME
     # Do nothing if already active
     jnz [disk_active], set_disk_active_done
 
@@ -61,7 +61,7 @@ set_disk_active:
     call redraw_disk_activity
 
 set_disk_active_done:
-    ret 1
+    ret 0
 .ENDFRAME
 
 ##########
