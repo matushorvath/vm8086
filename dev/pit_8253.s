@@ -42,12 +42,6 @@
 #    data: out pic_freq/400, pic_freq/554, pic_freq/277, pic_freq/370
 #              pic_freq/277, pic_freq/415, 1193 (= ~1000Hz)
 #    pic_freq = 1193182
-#
-# PC Speaker
-# - bit 0 port 0x61: write, 1 = speaker is controlled by PIT channel 2
-#                    (controls 8253 gate input for channel 2 only)
-# - bit 1 port 0x61: write, controls speaker directly
-# - bit 5 port 0x61: read, output of PIT channel 2
 
 ##########
 pit_ports:

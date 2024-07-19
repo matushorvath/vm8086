@@ -12,6 +12,8 @@
 
 # From timer.s
 .IMPORT vm_callback
+.IMPORT on_disk_active
+.IMPORT on_speaker_active
 
 # From cga/cga.s
 .IMPORT init_cga
@@ -26,17 +28,8 @@
 # From cpu/images.s
 .IMPORT init_images
 
-# From cga/status_bar.s
-.IMPORT set_disk_active
-
 # From dev/dma.s
 .IMPORT init_dma_8237a
-
-# From dev/fdc.s
-.IMPORT init_fdc
-
-# From dev/commands.s
-.IMPORT fdc_activity_callback
 
 # From dev/pic_8259a.s
 .IMPORT init_pic_8259a
@@ -46,6 +39,13 @@
 
 # From dev/ppi_8255a.s
 .IMPORT init_ppi_8255a
+.IMPORT speaker_activity_callback
+
+# From fdc/init.s
+.IMPORT init_fdc
+
+# From fdc/commands.s
+.IMPORT fdc_activity_callback
 
 ##########
 # Entry point
@@ -62,7 +62,8 @@
 main:
 .FRAME
     add vm_callback, 0, [execute_callback]
-    add set_disk_active, 0, [fdc_activity_callback]
+    add on_disk_active, 0, [fdc_activity_callback]
+    add on_speaker_active, 0, [speaker_activity_callback]
 
     # Initialize the ROM and floppy images
     add [bios_address], 0, [rb - 1]
