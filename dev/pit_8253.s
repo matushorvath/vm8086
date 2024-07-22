@@ -107,7 +107,7 @@ pit_mode_command_write_read_back:
     call report_error
 
 pit_mode_command_write_read_back_error:
-    db  "PIT WR: MC Error, read-back ", "command is not supported", 0
+    db  "PIT WR: MC Error, read-back command is not supported", 0
 .ENDFRAME
 
 .EOF

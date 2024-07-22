@@ -380,7 +380,7 @@ fdc_exec_read_deleted_data:
     call report_error
 
 fdc_exec_read_deleted_data_error:
-    db  "fdc: read deleted data command ", "is not supported", 0
+    db  "fdc: read deleted data command is not supported", 0
 .ENDFRAME
 
 ##########

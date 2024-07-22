@@ -267,7 +267,7 @@ register_region_overlap_error:
     call report_error
 
 register_region_overlap_message:
-    db  "Unable to register a memory region; ", "the regions must not overlap", 0
+    db  "Unable to register a memory region; the regions must not overlap", 0
 .ENDFRAME
 
 ##########
