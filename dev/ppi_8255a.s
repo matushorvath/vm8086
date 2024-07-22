@@ -69,7 +69,7 @@ ppi_mode_write_done:
     ret 2
 
 ppi_mode_write_error:
-    db  "PPI WR: MC Error,", " requested mode is not supported", 0
+    db  "PPI WR: MC Error, requested mode is not supported", 0
 .ENDFRAME
 
 ##########
