@@ -201,10 +201,10 @@ execute_xlat:
 
     # Wrap around the offset
     lt  [rb + value_offset], 0x10000, [rb + tmp]
-    jnz [rb + tmp], execute_xlat_no_overflow
+    jnz [rb + tmp], .no_overflow
     add [rb + value_offset], -0x10000, [rb + value_offset]
 
-execute_xlat_no_overflow:
+.no_overflow:
     # Read the value from memory to reg_al
     add [ds_segment_prefix], 1, [ip + 1]
     mul [0], 0x100, [rb - 1]

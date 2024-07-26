@@ -17,7 +17,7 @@ interrupt_request_log:
 .FRAME number;
     call log_start
 
-    add interrupt_request_log_start, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -28,7 +28,7 @@ interrupt_request_log:
     out 10
     ret 1
 
-interrupt_request_log_start:
+.msg:
     db  "pic irq ", 0
 .ENDFRAME
 
@@ -37,7 +37,7 @@ pic_command_write_log:
 .FRAME value;
     call log_start
 
-    add pic_command_write_log_start, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -48,7 +48,7 @@ pic_command_write_log:
     out 10
     ret 1
 
-pic_command_write_log_start:
+.msg:
     db  "pic command write: value 0x", 0
 .ENDFRAME
 
@@ -57,7 +57,7 @@ pic_data_write_log:
 .FRAME value;
     call log_start
 
-    add pic_data_write_log_start, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -68,7 +68,7 @@ pic_data_write_log:
     out 10
     ret 1
 
-pic_data_write_log_start:
+.msg:
     db  "pic data write: value 0x", 0
 .ENDFRAME
 
@@ -77,7 +77,7 @@ pic_status_read_log:
 .FRAME value;
     call log_start
 
-    add pic_status_read_log_start, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -88,7 +88,7 @@ pic_status_read_log:
     out 10
     ret 1
 
-pic_status_read_log_start:
+.msg:
     db  "pic status read: value 0x", 0
 .ENDFRAME
 
@@ -97,7 +97,7 @@ pic_data_read_log:
 .FRAME value;
     call log_start
 
-    add pic_data_read_log_start, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -108,7 +108,7 @@ pic_data_read_log:
     out 10
     ret 1
 
-pic_data_read_log_start:
+.msg:
     db  "pic data read: value 0x", 0
 .ENDFRAME
 

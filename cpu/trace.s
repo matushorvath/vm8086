@@ -73,14 +73,14 @@ print_trace:
     # Print parameters
     add 1, 0, [rb + index]
 
-print_trace_params_loop:
+.params_loop:
     mul [rb + opcode], 7, [rb + tmp]                        # one trace_data record is 7 bytes long
     add trace_data, [rb + tmp], [rb + tmp]
     add [rb + index], [rb + tmp], [ip + 1]                  # get index-th parameter, index starts at 1
     add [0], 0, [rb + param_type]
 
     # Zero parameter means no more parameters
-    jz  [rb + param_type], print_trace_params_done
+    jz  [rb + param_type], .params_done
 
     out ' '
 
@@ -100,9 +100,9 @@ print_trace_params_loop:
     call print_num_radix
 
     add [rb + index], 1, [rb + index]
-    jz  0, print_trace_params_loop
+    jz  0, .params_loop
 
-print_trace_params_done:
+.params_done:
     out 10
 
     arb 6

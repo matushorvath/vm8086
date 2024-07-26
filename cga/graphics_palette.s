@@ -19,7 +19,7 @@ initialize_graphics_palette:
     arb -1
 
     # The palette is only used by low resolution graphics
-    jnz [mode_high_res_graphics], initialize_graphics_done
+    jnz [mode_high_res_graphics], .done
 
     # Select graphics palette
     # tmp = 0b_<bright>_<b&w>_<palette>
@@ -28,7 +28,7 @@ initialize_graphics_palette:
     mul [rb + tmp], 2, [rb + tmp]
     add [rb + tmp], [color_palette], [rb + tmp]
 
-    add initialize_graphics_palette_data, [rb + tmp], [ip + 1]
+    add .palette_data, [rb + tmp], [ip + 1]
     add [0], 0, [palette_graphics]
 
     # TODO set also color_mappings
@@ -48,11 +48,11 @@ initialize_graphics_palette:
     add [palette_graphics], 2, [ip + 3]
     add [0], 0, [0]                                         # palette_graphics[0][2] = palette_16[color_selected][2]
 
-initialize_graphics_done:
+.done:
     arb 1
     ret 0
 
-initialize_graphics_palette_data:
+.palette_data:
     db  palette_graphics_lo_0           # lo, default, palette0
     db  palette_graphics_lo_1           # lo, default, palette1
     db  palette_graphics_lo_2           # lo, palette2, *

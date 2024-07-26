@@ -38,12 +38,12 @@ arg_mod_000_rm_w:
     add [rb - 4], 0, [rb + loff]
 
     # The REG field must be 0
-    jnz [rb - 5], arg_mod_000_rm_nonzero_reg
+    jnz [rb - 5], .nonzero_reg
 
     arb 2
     ret 0
 
-arg_mod_000_rm_nonzero_reg:
+.nonzero_reg:
     add nonzero_reg_message, 0, [rb - 1]
     arb -1
     call report_error
@@ -64,7 +64,7 @@ arg_mod_000_rm_immediate_b:
     add [rb - 4], 0, [rb + loff_dst]
 
     # The REG field must be 0
-    jnz [rb - 5], arg_mod_000_rm_immediate_b_nonzero_reg
+    jnz [rb - 5], .nonzero_reg
 
     # Return pointer to 8-bit immediate
     mul [reg_cs + 1], 0x100, [rb + lseg_src]
@@ -77,7 +77,7 @@ arg_mod_000_rm_immediate_b:
     arb 4
     ret 0
 
-arg_mod_000_rm_immediate_b_nonzero_reg:
+.nonzero_reg:
     add nonzero_reg_message, 0, [rb - 1]
     arb -1
     call report_error
@@ -98,7 +98,7 @@ arg_mod_000_rm_immediate_w:
     add [rb - 4], 0, [rb + loff_dst]
 
     # The REG field must be 0
-    jnz [rb - 5], arg_mod_000_rm_immediate_w_nonzero_reg
+    jnz [rb - 5], .nonzero_reg
 
     # Return pointer to 16-bit immediate
     mul [reg_cs + 1], 0x100, [rb + lseg_src]
@@ -111,7 +111,7 @@ arg_mod_000_rm_immediate_w:
     arb 4
     ret 0
 
-arg_mod_000_rm_immediate_w_nonzero_reg:
+.nonzero_reg:
     add nonzero_reg_message, 0, [rb - 1]
     arb -1
     call report_error

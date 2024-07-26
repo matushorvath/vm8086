@@ -31,17 +31,17 @@ read_b:
     call handle_memory_read
 
     # Should we read the value from main memory?
-    jnz [rb - 4], read_b_main_memory
+    jnz [rb - 4], .main_memory
 
     add [rb - 3], 0, [rb + value]
-    jz  0, read_b_done
+    jz  0, .done
 
-read_b_main_memory:
+.main_memory:
     # Regular memory read
     add [mem], [rb + addr], [ip + 1]
     add [0], 0, [rb + value]
 
-read_b_done:
+.done:
     arb 1
     ret 1
 .ENDFRAME
@@ -56,13 +56,13 @@ write_b:
     call handle_memory_write
 
     # Should we write the value to main memory?
-    jz  [rb - 4], write_b_done
+    jz  [rb - 4], .done
 
     # Write to main memory
     add [mem], [rb + addr], [ip + 3]
     add [rb + value], 0, [0]
 
-write_b_done:
+.done:
     ret 2
 .ENDFRAME
 
@@ -77,11 +77,11 @@ calc_addr_b:
 
     # Wrap around to 20 bits
     lt  [rb + addr], 0x100000, [rb + tmp]
-    jnz [rb + tmp], calc_addr_b_done
+    jnz [rb + tmp], .done
 
     add [rb + addr], -0x100000, [rb + addr]
 
-calc_addr_b_done:
+.done:
     arb 2
     ret 2
 .ENDFRAME
@@ -99,31 +99,31 @@ calc_addr_w:
 
     # Wrap around address of lo byte to 20 bits
     lt  [rb + addr_lo], 0x100000, [rb + tmp]
-    jnz [rb + tmp], calc_addr_w_addr_lo_done
+    jnz [rb + tmp], .addr_lo_done
 
     add [rb + addr_lo], -0x100000, [rb + addr_lo]
 
-calc_addr_w_addr_lo_done:
+.addr_lo_done:
     # Increment offset with wrap around to 16 bits
     add [rb + off], 1, [rb + off_hi]
 
     lt  [rb + off_hi], 0x10000, [rb + tmp]
-    jnz [rb + tmp], calc_addr_w_off_hi_done
+    jnz [rb + tmp], .off_hi_done
 
     add [rb + off_hi], -0x10000, [rb + off_hi]
 
-calc_addr_w_off_hi_done:
+.off_hi_done:
     # Calculate physical address of the hi byte
     mul [rb + seg], 0x10, [rb + addr_hi]
     add [rb + off_hi], [rb + addr_hi], [rb + addr_hi]
 
     # Wrap around address of hi byte to 20 bits
     lt  [rb + addr_hi], 0x100000, [rb + tmp]
-    jnz [rb + tmp], calc_addr_w_addr_hi_done
+    jnz [rb + tmp], .addr_hi_done
 
     add [rb + addr_hi], -0x100000, [rb + addr_hi]
 
-calc_addr_w_addr_hi_done:
+.addr_hi_done:
     arb 4
     ret 2
 .ENDFRAME
@@ -250,11 +250,11 @@ read_seg_off_dw:
     add [rb + off], 2, [rb + off]
 
     lt  [rb + off], 0x10000, [rb + tmp]
-    jnz [rb + tmp], read_seg_off_dw_hi_word_offset_done
+    jnz [rb + tmp], .hi_word_offset_done
 
     add [rb + off], -0x10000, [rb + off]
 
-read_seg_off_dw_hi_word_offset_done:
+.hi_word_offset_done:
     # Read the hi word
     add [rb + seg], 0, [rb - 1]
     add [rb + off], 0, [rb - 2]

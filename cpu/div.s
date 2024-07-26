@@ -48,20 +48,20 @@ execute_div_b:
     add [rb - 4], 0, [rb + dvr]
 
     # Raise #DE on division by zero
-    jnz [rb + dvr], execute_div_b_non_zero
+    jnz [rb + dvr], .non_zero
 
-    jz  [config_de_fault_as_286], execute_div_b_after_ip_adjust_zero
+    jz  [config_de_fault_as_286], .after_ip_adjust_zero
     add [exec_ip + 0], 0, [reg_ip + 0]
     add [exec_ip + 1], 0, [reg_ip + 1]
 
-execute_div_b_after_ip_adjust_zero:
+.after_ip_adjust_zero:
     add 0, 0, [rb - 1]
     arb -1
     call interrupt
 
-    jz  0, execute_div_b_done
+    jz  0, .done
 
-execute_div_b_non_zero:
+.non_zero:
     # Calculate the quotient and remainder
     add 2, 0, [rb - 1]
     add [reg_ah], 0, [rb - 4]
@@ -72,25 +72,25 @@ execute_div_b_non_zero:
 
     # Check if the quotient fits into a single byte
     lt  0xff, [rb - 8], [rb + tmp]
-    jz  [rb + tmp], execute_div_b_quotient_ok
+    jz  [rb + tmp], .quotient_ok
 
     # Raise #DE
-    jz  [config_de_fault_as_286], execute_div_b_after_ip_adjust_of
+    jz  [config_de_fault_as_286], .after_ip_adjust_of
     add [exec_ip + 0], 0, [reg_ip + 0]
     add [exec_ip + 1], 0, [reg_ip + 1]
 
-execute_div_b_after_ip_adjust_of:
+.after_ip_adjust_of:
     add 0, 0, [rb - 1]
     arb -1
     call interrupt
 
-    jz  0, execute_div_b_done
+    jz  0, .done
 
-execute_div_b_quotient_ok:
+.quotient_ok:
     add [rb - 8], 0, [reg_al]
     add [rb - 9], 0, [reg_ah]
 
-execute_div_b_done:
+.done:
     arb 2
     ret 2
 .ENDFRAME
@@ -108,20 +108,20 @@ execute_idiv_b:
     add [rb - 4], 0, [rb + dvr]
 
     # Raise #DE on division by zero
-    jnz [rb + dvr], execute_idiv_b_non_zero
+    jnz [rb + dvr], .non_zero
 
-    jz  [config_de_fault_as_286], execute_idiv_b_after_ip_adjust_zero
+    jz  [config_de_fault_as_286], .after_ip_adjust_zero
     add [exec_ip + 0], 0, [reg_ip + 0]
     add [exec_ip + 1], 0, [reg_ip + 1]
 
-execute_idiv_b_after_ip_adjust_zero:
+.after_ip_adjust_zero:
     add 0, 0, [rb - 1]
     arb -1
     call interrupt
 
-    jz  0, execute_idiv_b_done
+    jz  0, .done
 
-execute_idiv_b_non_zero:
+.non_zero:
     add [reg_al], 0, [rb + dvd_lo]
     add [reg_ah], 0, [rb + dvd_hi]
 
@@ -129,35 +129,35 @@ execute_idiv_b_non_zero:
     add 0, 0, [rb + mod_sign]
 
     # Check for REPZ/REPNZ
-    jz  [rep_prefix], execute_idiv_b_after_rep
+    jz  [rep_prefix], .after_rep
     eq  [rb + res_sign], 0, [rb + res_sign]
 
-execute_idiv_b_after_rep:
+.after_rep:
     # Convert both operands to positive numbers, remembering how many signs we flip
     lt  [rb + dvd_hi], 0x80, [rb + tmp]
-    jnz [rb + tmp], execute_idiv_b_dvd_positive_hi
+    jnz [rb + tmp], .dvd_positive_hi
     eq  [rb + res_sign], 0, [rb + res_sign]
     eq  [rb + mod_sign], 0, [rb + mod_sign]
 
-    jz  [rb + dvd_lo], execute_idiv_b_dvd_positive_lo
+    jz  [rb + dvd_lo], .dvd_positive_lo
     mul [rb + dvd_lo], -1, [rb + dvd_lo]
     add 0x100, [rb + dvd_lo], [rb + dvd_lo]
     add [rb + dvd_hi], 1, [rb + dvd_hi]
 
-execute_idiv_b_dvd_positive_lo:
-    jz  [rb + dvd_hi], execute_idiv_b_dvd_positive_hi
+.dvd_positive_lo:
+    jz  [rb + dvd_hi], .dvd_positive_hi
     mul [rb + dvd_hi], -1, [rb + dvd_hi]
     add 0x100, [rb + dvd_hi], [rb + dvd_hi]
 
-execute_idiv_b_dvd_positive_hi:
+.dvd_positive_hi:
     lt  [rb + dvr], 0x80, [rb + tmp]
-    jnz [rb + tmp], execute_idiv_b_dvr_positive
+    jnz [rb + tmp], .dvr_positive
     eq  [rb + res_sign], 0, [rb + res_sign]
 
     mul [rb + dvr], -1, [rb + dvr]
     add 0x100, [rb + dvr], [rb + dvr]
 
-execute_idiv_b_dvr_positive:
+.dvr_positive:
     # Calculate the quotient and remainder
     add 2, 0, [rb - 1]
     add [rb + dvd_hi], 0, [rb - 4]
@@ -170,39 +170,39 @@ execute_idiv_b_dvr_positive:
 
     # Check if the quotient is less than 0x7f
     lt  0x7f, [rb + res], [rb + tmp]
-    jz  [rb + tmp], execute_idiv_b_quotient_ok
+    jz  [rb + tmp], .quotient_ok
 
     # Raise #DE
-    jz  [config_de_fault_as_286], execute_idiv_b_after_ip_adjust_of
+    jz  [config_de_fault_as_286], .after_ip_adjust_of
     add [exec_ip + 0], 0, [reg_ip + 0]
     add [exec_ip + 1], 0, [reg_ip + 1]
 
-execute_idiv_b_after_ip_adjust_of:
+.after_ip_adjust_of:
     add 0, 0, [rb - 1]
     arb -1
     call interrupt
 
-    jz  0, execute_idiv_b_done
+    jz  0, .done
 
-execute_idiv_b_quotient_ok:
+.quotient_ok:
     # Negate the quotient based on the sign we calculated in the beginning
-    jz  [rb + res_sign], execute_idiv_b_res_done
-    jz  [rb + res], execute_idiv_b_res_done
+    jz  [rb + res_sign], .res_done
+    jz  [rb + res], .res_done
     mul [rb + res], -1, [rb + res]
     add 0x100, [rb + res], [rb + res]
 
-execute_idiv_b_res_done:
+.res_done:
     # Negate the remainder based on the sign we calculated in the beginning
-    jz  [rb + mod_sign], execute_idiv_b_mod_done
-    jz  [rb + mod], execute_idiv_b_mod_done
+    jz  [rb + mod_sign], .mod_done
+    jz  [rb + mod], .mod_done
     mul [rb + mod], -1, [rb + mod]
     add 0x100, [rb + mod], [rb + mod]
 
-execute_idiv_b_mod_done:
+.mod_done:
     add [rb + res], 0, [reg_al]
     add [rb + mod], 0, [reg_ah]
 
-execute_idiv_b_done:
+.done:
     arb 8
     ret 2
 .ENDFRAME
@@ -221,20 +221,20 @@ execute_div_w:
     add [rb - 4], [rb + dvr], [rb + dvr]
 
     # Raise #DE on division by zero
-    jnz [rb + dvr], execute_div_w_non_zero
+    jnz [rb + dvr], .non_zero
 
-    jz  [config_de_fault_as_286], execute_div_w_after_ip_adjust_zero
+    jz  [config_de_fault_as_286], .after_ip_adjust_zero
     add [exec_ip + 0], 0, [reg_ip + 0]
     add [exec_ip + 1], 0, [reg_ip + 1]
 
-execute_div_w_after_ip_adjust_zero:
+.after_ip_adjust_zero:
     add 0, 0, [rb - 1]
     arb -1
     call interrupt
 
-    jz  0, execute_div_w_done
+    jz  0, .done
 
-execute_div_w_non_zero:
+.non_zero:
     # Calculate the quotient and remainder
     add 4, 0, [rb - 1]
     add [reg_dh], 0, [rb - 2]
@@ -249,21 +249,21 @@ execute_div_w_non_zero:
 
     # Check if the quotient fits into two bytes
     lt  0xffff, [rb + res], [rb + tmp]
-    jz  [rb + tmp], execute_div_w_quotient_ok
+    jz  [rb + tmp], .quotient_ok
 
     # Raise #DE
-    jz  [config_de_fault_as_286], execute_div_w_after_ip_adjust_of
+    jz  [config_de_fault_as_286], .after_ip_adjust_of
     add [exec_ip + 0], 0, [reg_ip + 0]
     add [exec_ip + 1], 0, [reg_ip + 1]
 
-execute_div_w_after_ip_adjust_of:
+.after_ip_adjust_of:
     add 0, 0, [rb - 1]
     arb -1
     call interrupt
 
-    jz  0, execute_div_w_done
+    jz  0, .done
 
-execute_div_w_quotient_ok:
+.quotient_ok:
     # Split the quotient and remainder into bytes
     add [rb + res], 0, [rb - 1]
     arb -1
@@ -277,7 +277,7 @@ execute_div_w_quotient_ok:
     add [rb - 3], 0, [reg_dl]
     add [rb - 4], 0, [reg_dh]
 
-execute_div_w_done:
+.done:
     arb 4
     ret 2
 .ENDFRAME
@@ -296,20 +296,20 @@ execute_idiv_w:
     add [rb - 4], [rb + dvr], [rb + dvr]
 
     # Raise #DE on division by zero
-    jnz [rb + dvr], execute_idiv_w_non_zero
+    jnz [rb + dvr], .non_zero
 
-    jz  [config_de_fault_as_286], execute_idiv_w_after_ip_adjust_zero
+    jz  [config_de_fault_as_286], .after_ip_adjust_zero
     add [exec_ip + 0], 0, [reg_ip + 0]
     add [exec_ip + 1], 0, [reg_ip + 1]
 
-execute_idiv_w_after_ip_adjust_zero:
+.after_ip_adjust_zero:
     add 0, 0, [rb - 1]
     arb -1
     call interrupt
 
-    jz  0, execute_idiv_w_done
+    jz  0, .done
 
-execute_idiv_w_non_zero:
+.non_zero:
     add [reg_al], 0, [rb + dvd_0]
     add [reg_ah], 0, [rb + dvd_1]
     add [reg_dl], 0, [rb + dvd_2]
@@ -319,48 +319,48 @@ execute_idiv_w_non_zero:
     add 0, 0, [rb + mod_sign]
 
     # Check for REPZ/REPNZ
-    jz  [rep_prefix], execute_idiv_w_after_rep
+    jz  [rep_prefix], .after_rep
     eq  [rb + res_sign], 0, [rb + res_sign]
 
-execute_idiv_w_after_rep:
+.after_rep:
 
     # Convert both operands to positive numbers, remembering how many signs we flip
     lt  [rb + dvd_3], 0x80, [rb + tmp]
-    jnz [rb + tmp], execute_idiv_w_dvd_positive_3
+    jnz [rb + tmp], .dvd_positive_3
     eq  [rb + res_sign], 0, [rb + res_sign]
     eq  [rb + mod_sign], 0, [rb + mod_sign]
 
-    jz  [rb + dvd_0], execute_idiv_w_dvd_positive_0
+    jz  [rb + dvd_0], .dvd_positive_0
     mul [rb + dvd_0], -1, [rb + dvd_0]
     add 0x100, [rb + dvd_0], [rb + dvd_0]
     add [rb + dvd_1], 1, [rb + dvd_1]
 
-execute_idiv_w_dvd_positive_0:
-    jz  [rb + dvd_1], execute_idiv_w_dvd_positive_1
+.dvd_positive_0:
+    jz  [rb + dvd_1], .dvd_positive_1
     mul [rb + dvd_1], -1, [rb + dvd_1]
     add 0x100, [rb + dvd_1], [rb + dvd_1]
     add [rb + dvd_2], 1, [rb + dvd_2]
 
-execute_idiv_w_dvd_positive_1:
-    jz  [rb + dvd_2], execute_idiv_w_dvd_positive_2
+.dvd_positive_1:
+    jz  [rb + dvd_2], .dvd_positive_2
     mul [rb + dvd_2], -1, [rb + dvd_2]
     add 0x100, [rb + dvd_2], [rb + dvd_2]
     add [rb + dvd_3], 1, [rb + dvd_3]
 
-execute_idiv_w_dvd_positive_2:
-    jz  [rb + dvd_3], execute_idiv_w_dvd_positive_3
+.dvd_positive_2:
+    jz  [rb + dvd_3], .dvd_positive_3
     mul [rb + dvd_3], -1, [rb + dvd_3]
     add 0x100, [rb + dvd_3], [rb + dvd_3]
 
-execute_idiv_w_dvd_positive_3:
+.dvd_positive_3:
     lt  [rb + dvr], 0x8000, [rb + tmp]
-    jnz [rb + tmp], execute_idiv_w_dvr_positive
+    jnz [rb + tmp], .dvr_positive
     eq  [rb + res_sign], 0, [rb + res_sign]
 
     mul [rb + dvr], -1, [rb + dvr]
     add 0x10000, [rb + dvr], [rb + dvr]
 
-execute_idiv_w_dvr_positive:
+.dvr_positive:
     # Calculate the quotient and remainder
     add 4, 0, [rb - 1]
     add [rb + dvd_3], 0, [rb - 2]
@@ -375,35 +375,35 @@ execute_idiv_w_dvr_positive:
 
     # Check if the quotient is less than 0x7fff
     lt  0x7fff, [rb + res], [rb + tmp]
-    jz  [rb + tmp], execute_idiv_w_quotient_ok
+    jz  [rb + tmp], .quotient_ok
 
     # Raise #DE
-    jz  [config_de_fault_as_286], execute_idiv_w_after_ip_adjust_of
+    jz  [config_de_fault_as_286], .after_ip_adjust_of
     add [exec_ip + 0], 0, [reg_ip + 0]
     add [exec_ip + 1], 0, [reg_ip + 1]
 
-execute_idiv_w_after_ip_adjust_of:
+.after_ip_adjust_of:
     add 0, 0, [rb - 1]
     arb -1
     call interrupt
 
-    jz  0, execute_idiv_w_done
+    jz  0, .done
 
-execute_idiv_w_quotient_ok:
+.quotient_ok:
     # Negate the quotient based on the sign we calculated in the beginning
-    jz  [rb + res_sign], execute_idiv_w_res_done
-    jz  [rb + res], execute_idiv_w_res_done
+    jz  [rb + res_sign], .res_done
+    jz  [rb + res], .res_done
     mul [rb + res], -1, [rb + res]
     add 0x10000, [rb + res], [rb + res]
 
-execute_idiv_w_res_done:
+.res_done:
     # Negate the remainder based on the sign we calculated in the beginning
-    jz  [rb + mod_sign], execute_idiv_w_mod_done
-    jz  [rb + mod], execute_idiv_w_mod_done
+    jz  [rb + mod_sign], .mod_done
+    jz  [rb + mod], .mod_done
     mul [rb + mod], -1, [rb + mod]
     add 0x10000, [rb + mod], [rb + mod]
 
-execute_idiv_w_mod_done:
+.mod_done:
     # Split the quotient and remainder into bytes
     add [rb + res], 0, [rb - 1]
     arb -1
@@ -417,7 +417,7 @@ execute_idiv_w_mod_done:
     add [rb - 3], 0, [reg_dl]
     add [rb - 4], 0, [reg_dh]
 
-execute_idiv_w_done:
+.done:
     arb 10
     ret 2
 .ENDFRAME
@@ -433,7 +433,7 @@ divide:
     # Prepare a negative of the divisor for later
     mul [rb + dvr], -1, [rb + dvr_neg]
 
-divide_byte_loop:
+.byte_loop:
     add [rb + byte], -1, [rb + byte]
 
     # Get byte-th byte of the dividend
@@ -443,7 +443,7 @@ divide_byte_loop:
     add 8, 0, [rb + bit]
     add bit_7, 0x100, [rb + bit_table]
 
-divide_bit_loop:
+.bit_loop:
     add [rb + bit], -1, [rb + bit]
     add [rb + bit_table], -0x100, [rb + bit_table]
 
@@ -458,11 +458,11 @@ divide_bit_loop:
     # Anything larger than 16-bits will be a #DE, don't bother calculating it
     # Also, this avoids creating results that don't fit into a 32-bit signed int
     lt  0xffff, [rb + res], [rb + tmp]
-    jnz [rb + tmp], divide_done
+    jnz [rb + tmp], .done
 
     # Does the divisor fit into mod?
     lt  [rb + mod], [rb + dvr], [rb + tmp]
-    jnz [rb + tmp], divide_does_not_go_in
+    jnz [rb + tmp], .does_not_go_in
 
     # Divisor fits in mod, add a 1 to the result
     add [rb + res], 1, [rb + res]
@@ -470,14 +470,14 @@ divide_bit_loop:
     # Subtract divisor from mod
     add [rb + mod], [rb + dvr_neg], [rb + mod]
 
-divide_does_not_go_in:
+.does_not_go_in:
     # If this wasn't the last bit, loop
-    jnz [rb + bit], divide_bit_loop
+    jnz [rb + bit], .bit_loop
 
     # If this wasn't the last byte, loop
-    jnz [rb + byte], divide_byte_loop
+    jnz [rb + byte], .byte_loop
 
-divide_done:
+.done:
     arb 7
     ret 6
 .ENDFRAME

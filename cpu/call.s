@@ -54,19 +54,19 @@ execute_call_near:
 
     # Check for carry out of low byte
     lt  [reg_ip + 0], 0x100, [rb + tmp]
-    jnz [rb + tmp], execute_call_near_after_carry_lo
+    jnz [rb + tmp], .after_carry_lo
 
     add [reg_ip + 0], -0x100, [reg_ip + 0]
     add [reg_ip + 1], 1, [reg_ip + 1]
 
-execute_call_near_after_carry_lo:
+.after_carry_lo:
     # Check for carry out of high byte
     lt  [reg_ip + 1], 0x100, [rb + tmp]
-    jnz [rb + tmp], execute_call_near_after_carry_hi
+    jnz [rb + tmp], .after_carry_hi
 
     add [reg_ip + 1], -0x100, [reg_ip + 1]
 
-execute_call_near_after_carry_hi:
+.after_carry_hi:
     arb 3
     ret 0
 .ENDFRAME
@@ -135,10 +135,10 @@ execute_call_far:
     add [rb + offset_hi], 0, [reg_ip + 1]
 
     # Log CS change
-    jz  [config_log_cs_change], execute_call_far_after_log_cs_change
+    jz  [config_log_cs_change], .after_log_cs_change
     call log_cs_change
 
-execute_call_far_after_log_cs_change:
+.after_log_cs_change:
     arb 4
     ret 0
 .ENDFRAME
@@ -179,10 +179,10 @@ execute_call_far_indirect:
     add [rb + cs_hi], 0, [reg_cs + 1]
 
     # Log CS change
-    jz  [config_log_cs_change], execute_call_far_indirect_after_log_cs
+    jz  [config_log_cs_change], .after_log_cs
     call log_cs_change
 
-execute_call_far_indirect_after_log_cs:
+.after_log_cs:
     arb 4
     ret 2
 .ENDFRAME
@@ -219,19 +219,19 @@ execute_ret_near_immediate_w:
 
     # Check for carry out of low byte
     lt  [reg_sp + 0], 0x100, [rb + tmp]
-    jnz [rb + tmp], execute_ret_near_immediate_w_after_carry_lo
+    jnz [rb + tmp], .after_carry_lo
 
     add [reg_sp + 0], -0x100, [reg_sp + 0]
     add [reg_sp + 1], 1, [reg_sp + 1]
 
-execute_ret_near_immediate_w_after_carry_lo:
+.after_carry_lo:
     # Check for carry out of high byte
     lt  [reg_sp + 1], 0x100, [rb + tmp]
-    jnz [rb + tmp], execute_ret_near_immediate_w_after_carry_hi
+    jnz [rb + tmp], .after_carry_hi
 
     add [reg_sp + 1], -0x100, [reg_sp + 1]
 
-execute_ret_near_immediate_w_after_carry_hi:
+.after_carry_hi:
     arb 3
     ret 0
 .ENDFRAME
@@ -250,10 +250,10 @@ execute_ret_far_zero:
     add [rb - 3], 0, [reg_cs + 1]
 
     # Log CS change
-    jz  [config_log_cs_change], execute_ret_far_zero_after_log_cs_change
+    jz  [config_log_cs_change], .after_log_cs_change
     call log_cs_change
 
-execute_ret_far_zero_after_log_cs_change:
+.after_log_cs_change:
     ret 0
 .ENDFRAME
 
@@ -283,24 +283,24 @@ execute_ret_far_immediate_w:
 
     # Check for carry out of low byte
     lt  [reg_sp + 0], 0x100, [rb + tmp]
-    jnz [rb + tmp], execute_ret_far_immediate_w_after_carry_lo
+    jnz [rb + tmp], .after_carry_lo
 
     add [reg_sp + 0], -0x100, [reg_sp + 0]
     add [reg_sp + 1], 1, [reg_sp + 1]
 
-execute_ret_far_immediate_w_after_carry_lo:
+.after_carry_lo:
     # Check for carry out of high byte
     lt  [reg_sp + 1], 0x100, [rb + tmp]
-    jnz [rb + tmp], execute_ret_far_immediate_w_after_carry_hi
+    jnz [rb + tmp], .after_carry_hi
 
     add [reg_sp + 1], -0x100, [reg_sp + 1]
 
-execute_ret_far_immediate_w_after_carry_hi:
+.after_carry_hi:
     # Log CS change
-    jz  [config_log_cs_change], execute_ret_far_immediate_w_after_log_cs
+    jz  [config_log_cs_change], .after_log_cs
     call log_cs_change
 
-execute_ret_far_immediate_w_after_log_cs:
+.after_log_cs:
     arb 3
     ret 0
 .ENDFRAME

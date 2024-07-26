@@ -28,13 +28,13 @@
 interrupt_request:
 .FRAME number;
     # PIC logging
-    jz  [config_log_pic], interrupt_request_after_log
+    jz  [config_log_pic], .after_log
 
     add [rb + number], 0, [rb - 1]
     arb -1
     call interrupt_request_log
 
-interrupt_request_after_log:
+.after_log:
     # Save the interrupt request
     add pic_request_irqs, [rb + number], [ip + 3]
     add 1, 0, [0]
@@ -57,25 +57,25 @@ schedule_interrupt_requests:
 
     add -1, 0, [rb + number]
 
-decide_interrupts_loop:
+.loop:
     add [rb + number], 1, [rb + number]
 
     # Is there an unmasked request for this number?
     add pic_request_irqs, [rb + number], [ip + 1]
-    jz  [0], decide_interrupts_loop
+    jz  [0], .loop
     add pic_mask_irqs, [rb + number], [ip + 1]
-    jnz [0], decide_interrupts_loop
+    jnz [0], .loop
 
     # Yes, there is a request; are we already processing a request of same or higher priority?
     lt  [rb + number], [pic_lowest_irq_in_service], [rb + tmp]
     # Yes, and all numbers after this will also have lower priority, so we can skip them
-    jz  [rb + tmp], decide_interrupts_done
+    jz  [rb + tmp], .done
 
     # Not executing a request of same or higher priority, so this is the next IRQ to execute
     add 1, 0, [irq_need_to_execute]
     add [rb + number], 0, [irq_number_to_execute]
 
-decide_interrupts_done:
+.done:
     arb 2
     ret 0
 .ENDFRAME

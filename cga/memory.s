@@ -36,22 +36,22 @@ write_memory:
     add [rb + value], 0, [0]
 
     # Update the screen based on screen mode
-    jz  [mode_graphics], write_memory_text_mode
+    jz  [mode_graphics], .text_mode
 
     add [rb + addr], 0, [rb - 1]
     add [rb + value], 0, [rb - 2]
     arb -2
     call write_memory_graphics
 
-    jz  0, write_memory_done
+    jz  0, .done
 
-write_memory_text_mode:
+.text_mode:
     add [rb + addr], 0, [rb - 1]
     add [rb + value], 0, [rb - 2]
     arb -2
     call write_memory_text
 
-write_memory_done:
+.done:
     arb 2
     ret 2
 .ENDFRAME

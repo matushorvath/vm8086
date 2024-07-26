@@ -59,13 +59,13 @@ execute_int3:
 ##########
 execute_into:
 .FRAME
-    jz  [flag_overflow], execute_into_done
+    jz  [flag_overflow], .done
 
     add 4, 0, [rb - 1]
     arb -1
     call interrupt
 
-execute_into_done:
+.done:
     ret 0
 .ENDFRAME
 
@@ -94,32 +94,32 @@ interrupt:
     arb -2
 
     # Interrupt logging
-    jz  [config_log_int], interrupt_after_log_int
+    jz  [config_log_int], .after_log_int
 
     add [rb + type], 0, [rb - 1]
     arb -1
     call interrupt_log_int
 
-interrupt_after_log_int:
+.after_log_int:
     # Floppy controller logging
-    jz  [config_log_fdc], interrupt_after_log_fdc
+    jz  [config_log_fdc], .after_log_fdc
 
     eq  [rb + type], 0x13, [rb + tmp]
-    jz  [rb + tmp], interrupt_after_log_fdc_13
+    jz  [rb + tmp], .after_log_fdc_13
     call interrupt_log_fdc_13
 
-interrupt_after_log_fdc_13:
+.after_log_fdc_13:
     eq  [rb + type], 0x0e, [rb + tmp]
-    jz  [rb + tmp], interrupt_after_log_fdc
+    jz  [rb + tmp], .after_log_fdc
     call interrupt_log_fdc_0e
 
-interrupt_after_log_fdc:
+.after_log_fdc:
     # DOS function logging
-    jz  [config_log_dos], interrupt_after_log_dos
+    jz  [config_log_dos], .after_log_dos
 
     # Is this the DOS function call?
     eq  [rb + type], 0x21, [rb + tmp]
-    jz  [rb + tmp], interrupt_after_log_dos
+    jz  [rb + tmp], .after_log_dos
 
     # Save CS:IP that called DOS, so we can also log the return
     add [reg_cs + 0], 0, [dos_21_cs + 0]
@@ -129,7 +129,7 @@ interrupt_after_log_fdc:
 
     call log_dos_21_call
 
-interrupt_after_log_dos:
+.after_log_dos:
     # Push flags, then disable TF and IF
     call pushf
 
@@ -176,10 +176,10 @@ interrupt_after_log_dos:
     # TODO reset/halt for triple fault
 
     # Log CS change
-    jz  [config_log_cs_change], execute_interrupt_after_log_cs_change
+    jz  [config_log_cs_change], .after_log_cs_change
     call log_cs_change
 
-execute_interrupt_after_log_cs_change:
+.after_log_cs_change:
     arb 2
     ret 1
 .ENDFRAME
@@ -189,7 +189,7 @@ interrupt_log_int:
 .FRAME type;
     call log_start
 
-    add interrupt_log_int_type, 0, [rb - 1]
+    add .type_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -197,7 +197,7 @@ interrupt_log_int:
     arb -1
     call print_num_16_b
 
-    add interrupt_log_int_ax, 0, [rb - 1]
+    add .ax_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -209,9 +209,9 @@ interrupt_log_int:
     out 10
     ret 1
 
-interrupt_log_int_type:
+.type_msg:
     db  "int 0x", 0
-interrupt_log_int_ax:
+.ax_msg:
     db  ", ax=0x", 0
 .ENDFRAME
 
@@ -220,7 +220,7 @@ interrupt_log_fdc_13:
 .FRAME
     call log_start
 
-    add interrupt_log_fdc_13_start, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -231,7 +231,7 @@ interrupt_log_fdc_13:
     out 10
     ret 0
 
-interrupt_log_fdc_13_start:
+.msg:
     db  "int 0x13, fn 0x", 0
 .ENDFRAME
 
@@ -240,14 +240,14 @@ interrupt_log_fdc_0e:
 .FRAME
     call log_start
 
-    add interrupt_log_fdc_0e_start, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
     out 10
     ret 0
 
-interrupt_log_fdc_0e_start:
+.msg:
     db  "irq 6", 0
 .ENDFRAME
 
@@ -264,17 +264,17 @@ execute_iret:
     add [rb - 3], 0, [reg_cs + 1]
 
     # DOS function logging
-    jz  [config_log_dos], execute_iret_after_log_fdc
+    jz  [config_log_dos], .after_log_fdc
 
     # Only log if we are returning back from where DOS was called
     eq  [reg_ip + 0], [dos_21_ip + 0], [rb - 1]
-    jz  [rb - 1], execute_iret_after_log_fdc
+    jz  [rb - 1], .after_log_fdc
     eq  [reg_ip + 1], [dos_21_ip + 1], [rb - 1]
-    jz  [rb - 1], execute_iret_after_log_fdc
+    jz  [rb - 1], .after_log_fdc
     eq  [reg_cs + 0], [dos_21_cs + 0], [rb - 1]
-    jz  [rb - 1], execute_iret_after_log_fdc
+    jz  [rb - 1], .after_log_fdc
     eq  [reg_cs + 1], [dos_21_cs + 1], [rb - 1]
-    jz  [rb - 1], execute_iret_after_log_fdc
+    jz  [rb - 1], .after_log_fdc
 
     add -1, 0, [dos_21_ip + 0]
     add -1, 0, [dos_21_ip + 1]
@@ -283,15 +283,15 @@ execute_iret:
 
     call log_dos_21_iret
 
-execute_iret_after_log_fdc:
+.after_log_fdc:
     # Pop flags
     call popf
 
     # Log CS change
-    jz  [config_log_cs_change], execute_iret_after_log_cs_change
+    jz  [config_log_cs_change], .after_log_cs_change
     call log_cs_change
 
-execute_iret_after_log_cs_change:
+.after_log_cs_change:
     ret 0
 .ENDFRAME
 

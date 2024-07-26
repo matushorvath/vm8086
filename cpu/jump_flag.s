@@ -32,13 +32,13 @@
 ##########
 execute_jo:
 .FRAME
-    jnz [flag_overflow], execute_jo_taken
+    jnz [flag_overflow], .taken
 
     # Skip the pointer and don't jump
     call inc_ip_b
     ret 0
 
-execute_jo_taken:
+.taken:
     call execute_jmp_short
     ret 0
 .ENDFRAME
@@ -46,13 +46,13 @@ execute_jo_taken:
 ##########
 execute_jno:
 .FRAME
-    jz  [flag_overflow], execute_jno_taken
+    jz  [flag_overflow], .taken
 
     # Skip the pointer and don't jump
     call inc_ip_b
     ret 0
 
-execute_jno_taken:
+.taken:
     call execute_jmp_short
     ret 0
 .ENDFRAME
@@ -60,13 +60,13 @@ execute_jno_taken:
 ##########
 execute_jc:
 .FRAME
-    jnz [flag_carry], execute_jc_taken
+    jnz [flag_carry], .taken
 
     # Skip the pointer and don't jump
     call inc_ip_b
     ret 0
 
-execute_jc_taken:
+.taken:
     call execute_jmp_short
     ret 0
 .ENDFRAME
@@ -74,13 +74,13 @@ execute_jc_taken:
 ##########
 execute_jnc:
 .FRAME
-    jz  [flag_carry], execute_jnc_taken
+    jz  [flag_carry], .taken
 
     # Skip the pointer and don't jump
     call inc_ip_b
     ret 0
 
-execute_jnc_taken:
+.taken:
     call execute_jmp_short
     ret 0
 .ENDFRAME
@@ -88,13 +88,13 @@ execute_jnc_taken:
 ##########
 execute_jz:
 .FRAME
-    jnz [flag_zero], execute_jz_taken
+    jnz [flag_zero], .taken
 
     # Skip the pointer and don't jump
     call inc_ip_b
     ret 0
 
-execute_jz_taken:
+.taken:
     call execute_jmp_short
     ret 0
 .ENDFRAME
@@ -102,13 +102,13 @@ execute_jz_taken:
 ##########
 execute_jnz:
 .FRAME
-    jz  [flag_zero], execute_jnz_taken
+    jz  [flag_zero], .taken
 
     # Skip the pointer and don't jump
     call inc_ip_b
     ret 0
 
-execute_jnz_taken:
+.taken:
     call execute_jmp_short
     ret 0
 .ENDFRAME
@@ -117,13 +117,13 @@ execute_jnz_taken:
 execute_ja:
 .FRAME
     # CF or ZF == 0
-    jnz [flag_carry], execute_ja_not_taken
-    jnz [flag_zero], execute_ja_not_taken
+    jnz [flag_carry], .not_taken
+    jnz [flag_zero], .not_taken
 
     call execute_jmp_short
     ret 0
 
-execute_ja_not_taken:
+.not_taken:
     # Skip the pointer and don't jump
     call inc_ip_b
     ret 0
@@ -133,14 +133,14 @@ execute_ja_not_taken:
 execute_jna:
 .FRAME
     # CF or ZF == 1
-    jnz [flag_carry], execute_jna_taken
-    jnz [flag_zero], execute_jna_taken
+    jnz [flag_carry], .taken
+    jnz [flag_zero], .taken
 
     # Skip the pointer and don't jump
     call inc_ip_b
     ret 0
 
-execute_jna_taken:
+.taken:
     call execute_jmp_short
     ret 0
 .ENDFRAME
@@ -148,13 +148,13 @@ execute_jna_taken:
 ##########
 execute_js:
 .FRAME
-    jnz [flag_sign], execute_js_taken
+    jnz [flag_sign], .taken
 
     # Skip the pointer and don't jump
     call inc_ip_b
     ret 0
 
-execute_js_taken:
+.taken:
     call execute_jmp_short
     ret 0
 .ENDFRAME
@@ -162,13 +162,13 @@ execute_js_taken:
 ##########
 execute_jns:
 .FRAME
-    jz  [flag_sign], execute_jns_taken
+    jz  [flag_sign], .taken
 
     # Skip the pointer and don't jump
     call inc_ip_b
     ret 0
 
-execute_jns_taken:
+.taken:
     call execute_jmp_short
     ret 0
 .ENDFRAME
@@ -176,13 +176,13 @@ execute_jns_taken:
 ##########
 execute_jp:
 .FRAME
-    jnz [flag_parity], execute_jp_taken
+    jnz [flag_parity], .taken
 
     # Skip the pointer and don't jump
     call inc_ip_b
     ret 0
 
-execute_jp_taken:
+.taken:
     call execute_jmp_short
     ret 0
 .ENDFRAME
@@ -190,13 +190,13 @@ execute_jp_taken:
 ##########
 execute_jnp:
 .FRAME
-    jz  [flag_parity], execute_jnp_taken
+    jz  [flag_parity], .taken
 
     # Skip the pointer and don't jump
     call inc_ip_b
     ret 0
 
-execute_jnp_taken:
+.taken:
     call execute_jmp_short
     ret 0
 .ENDFRAME
@@ -208,16 +208,16 @@ execute_jl:
 
     # SF xor OF == 1
     eq  [flag_sign], [flag_overflow], [rb + tmp]
-    jz  [rb + tmp], execute_jl_taken
+    jz  [rb + tmp], .taken
 
     # Skip the pointer and don't jump
     call inc_ip_b
-    jz  0, execute_jl_done
+    jz  0, .done
 
-execute_jl_taken:
+.taken:
     call execute_jmp_short
 
-execute_jl_done:
+.done:
     arb 1
     ret 0
 .ENDFRAME
@@ -229,16 +229,16 @@ execute_jnl:
 
     # SF xor OF == 0
     eq  [flag_sign], [flag_overflow], [rb + tmp]
-    jnz [rb + tmp], execute_jnl_taken
+    jnz [rb + tmp], .taken
 
     # Skip the pointer and don't jump
     call inc_ip_b
-    jz  0, execute_jnl_done
+    jz  0, .done
 
-execute_jnl_taken:
+.taken:
     call execute_jmp_short
 
-execute_jnl_done:
+.done:
     arb 1
     ret 0
 .ENDFRAME
@@ -250,17 +250,17 @@ execute_jg:
 
     # (SF xor OF) or ZF == 0
     eq  [flag_sign], [flag_overflow], [rb + tmp]
-    jz  [rb + tmp], execute_jg_not_taken
-    jnz [flag_zero], execute_jg_not_taken
+    jz  [rb + tmp], .not_taken
+    jnz [flag_zero], .not_taken
 
     call execute_jmp_short
-    jz  0, execute_jg_done
+    jz  0, .done
 
-execute_jg_not_taken:
+.not_taken:
     # Skip the pointer and don't jump
     call inc_ip_b
 
-execute_jg_done:
+.done:
     arb 1
     ret 0
 .ENDFRAME
@@ -272,17 +272,17 @@ execute_jng:
 
     # (SF xor OF) or ZF == 1
     eq  [flag_sign], [flag_overflow], [rb + tmp]
-    jz  [rb + tmp], execute_jng_taken
-    jnz [flag_zero], execute_jng_taken
+    jz  [rb + tmp], .taken
+    jnz [flag_zero], .taken
 
     # Skip the pointer and don't jump
     call inc_ip_b
-    jz  0, execute_jng_done
+    jz  0, .done
 
-execute_jng_taken:
+.taken:
     call execute_jmp_short
 
-execute_jng_done:
+.done:
     arb 1
     ret 0
 .ENDFRAME

@@ -79,11 +79,11 @@ execute_subtract_b:
 
     # Check for carry
     lt  [rb + res], 0x00, [flag_carry]
-    jz  [flag_carry], execute_subtract_b_after_carry
+    jz  [flag_carry], .after_carry
 
     add [rb + res], 0x100, [rb + res]
 
-execute_subtract_b_after_carry:
+.after_carry:
     # Update flags
     lt  0x7f, [rb + res], [flag_sign]
     eq  [rb + res], 0, [flag_zero]
@@ -99,7 +99,7 @@ execute_subtract_b_after_carry:
     call update_overflow
 
     # Write the destination value if requested
-    jz  [rb + store], execute_subtract_b_end
+    jz  [rb + store], .end
 
     add [rb + lseg_dst], 0, [rb - 1]
     add [rb + loff_dst], 0, [rb - 2]
@@ -107,7 +107,7 @@ execute_subtract_b_after_carry:
     arb -3
     call write_location_b
 
-execute_subtract_b_end:
+.end:
     arb 5
     ret 4
 .ENDFRAME
@@ -165,19 +165,19 @@ execute_subtract_w:
 
     # Check for carry out of low byte
     lt  [rb + res_lo], 0x00, [rb + tmp]
-    jz  [rb + tmp], execute_subtract_w_after_carry_lo
+    jz  [rb + tmp], .after_carry_lo
 
     add [rb + res_lo], 0x100, [rb + res_lo]
     add [rb + res_hi], -1, [rb + res_hi]
 
-execute_subtract_w_after_carry_lo:
+.after_carry_lo:
     # Check for carry out of high byte
     lt  [rb + res_hi], 0x00, [flag_carry]
-    jz  [flag_carry], execute_subtract_w_after_carry_hi
+    jz  [flag_carry], .after_carry_hi
 
     add [rb + res_hi], 0x100, [rb + res_hi]
 
-execute_subtract_w_after_carry_hi:
+.after_carry_hi:
     # Update flags
     lt  0x7f, [rb + res_hi], [flag_sign]
 
@@ -195,7 +195,7 @@ execute_subtract_w_after_carry_hi:
     call update_overflow
 
     # Write the destination value if requested
-    jz  [rb + store], execute_subtract_w_end
+    jz  [rb + store], .end
 
     add [rb + lseg_dst], 0, [rb - 1]
     add [rb + loff_dst], 0, [rb - 2]
@@ -204,7 +204,7 @@ execute_subtract_w_after_carry_hi:
     arb -4
     call write_location_w
 
-execute_subtract_w_end:
+.end:
     arb 8
     ret 4
 .ENDFRAME

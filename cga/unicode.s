@@ -37,17 +37,17 @@ build_tables:
     add 0, 0, [rb + char_index]
     add 0, 0, [rb + position]
 
-build_tables_char_loop:
+.char_loop:
     add 0, 0, [rb + byte_index]
 
-build_tables_byte_loop:
+.byte_loop:
     # Read next byte
     add [rb + chars], [rb + position], [ip + 1]
     add [0], 0, [rb + byte]
     add [rb + position], 1, [rb + position]
 
     # End of character?
-    jz  [rb + byte], build_tables_byte_loop_done
+    jz  [rb + byte], .byte_loop_done
 
     # Output this byte
     mul [rb + byte_index], [rb + char_count], [rb + tmp]
@@ -57,19 +57,19 @@ build_tables_byte_loop:
 
     # Next byte
     add [rb + byte_index], 1, [rb + byte_index]
-    jz  0, build_tables_byte_loop
+    jz  0, .byte_loop
 
-build_tables_byte_loop_done:
+.byte_loop_done:
     # Update maximum character length
     lt  [table_count], [rb + byte_index], [rb + tmp]
-    jz  [rb + tmp], build_tables_after_table_count
+    jz  [rb + tmp], .after_table_count
     add [rb + byte_index], 0, [table_count]
 
-build_tables_after_table_count:
+.after_table_count:
     # Next char
     add [rb + char_index], 1, [rb + char_index]
     eq  [rb + char_index], [rb + char_count], [rb + tmp]
-    jz  [rb + tmp], build_tables_char_loop
+    jz  [rb + tmp], .char_loop
 
     arb 5
     ret 2
@@ -84,7 +84,7 @@ output_tables:
     add 16, 0, [gen_number_max]
     add 0, 0, [rb + part_index]
 
-output_tables_part_loop:
+.part_loop:
     # Part header
     out 10
     out 10
@@ -103,32 +103,32 @@ output_tables_part_loop:
     add 0, 0, [gen_number_count]
     add 0, 0, [rb + char_index]
 
-output_tables_char_loop:
+.char_loop:
     # Output a byte of this character
     add [tables], [rb + char_index], [ip + 1]
     add [0], 0, [rb - 1]
     add 16, 0, [rb - 2]
     add 2, 0, [rb - 3]
-    add output_tables_number_prefix, 0, [rb - 4]
+    add .number_prefix, 0, [rb - 4]
     arb -4
     call gen_number
 
     # Next character
     add [rb + char_index], 1, [rb + char_index]
     eq  [rb + char_index], [rb + char_count], [rb + tmp]
-    jz  [rb + tmp], output_tables_char_loop
+    jz  [rb + tmp], .char_loop
 
     # Next part
     add [tables], [rb + char_count], [tables]
 
     add [rb + part_index], 1, [rb + part_index]
     eq  [rb + part_index], [table_count], [rb + tmp]
-    jz  [rb + tmp], output_tables_part_loop
+    jz  [rb + tmp], .part_loop
 
     arb 3
     ret 2
 
-output_tables_number_prefix:
+.number_prefix:
     db  "0x", 0
 .ENDFRAME
 

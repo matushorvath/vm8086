@@ -31,20 +31,20 @@ write_shutdown_port:
 
     # Is the value 0x24?
     eq  [rb + value], 0x24, [rb + tmp]
-    jz  [rb + tmp], write_shutdown_port_done
+    jz  [rb + tmp], .done
 
     # Yes, print a message and shutdown
-    add write_shutdown_port_message, 0, [rb - 1]
+    add .message, 0, [rb - 1]
     arb -1
     call print_str
 
     add 1, 0, [halt]
 
-write_shutdown_port_done:
+.done:
     arb 1
     ret 2
 
-write_shutdown_port_message:
+.message:
     db  "Shutting down", 10, 0
 .ENDFRAME
 

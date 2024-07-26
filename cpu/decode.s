@@ -48,35 +48,35 @@ decode_mod_rm:
     arb -8
 
     # Decode the mod field
-    add decode_mod_rm_mod_table, [rb + mod], [ip + 2]
+    add .mod_table, [rb + mod], [ip + 2]
     jz  0, [0]
 
-decode_mod_rm_mod_table:
+.mod_table:
     # Map each MOD value to the label that handles it
-    db  decode_mod_rm_mem_mod00
-    db  decode_mod_rm_mem_disp8
-    db  decode_mod_rm_mem_disp16
-    db  decode_mod_rm_reg
+    db  .mem_mod00
+    db  .mem_disp8
+    db  .mem_disp16
+    db  .reg
 
-decode_mod_rm_mem_mod00:
+.mem_mod00:
     # Memory mode, no displacement; except when R/M is 0b110, then 16-bit displacement follows
     eq  [rb + rm], 0b110, [rb + tmp]
-    jz  [rb + tmp], decode_mod_rm_mem_no_disp
+    jz  [rb + tmp], .mem_no_disp
 
     # Handle the special case with a fake R/M value of 0b1000
     add 0b1000, 0, [rb + rm]
-    jz  0, decode_mod_rm_mem_disp16
+    jz  0, .mem_disp16
 
-decode_mod_rm_mem_no_disp:
+.mem_no_disp:
     # Memory mode with no displacement
     add 0, 0, [rb + disp_lo]
     add 0, 0, [rb + disp_hi]
 
     # Jump to handling of this R/M value
-    add decode_mod_rm_mem_table, [rb + rm], [ip + 2]
+    add .mem_table, [rb + rm], [ip + 2]
     jz  0, [0]
 
-decode_mod_rm_mem_disp8:
+.mem_disp8:
     # Memory mode with 8-bit displacement
 
     # Read 8-bit displacement
@@ -89,10 +89,10 @@ decode_mod_rm_mem_disp8:
     mul [rb + disp_hi], 0xff, [rb + disp_hi]
 
     # Jump to handling of this R/M value
-    add decode_mod_rm_mem_table, [rb + rm], [ip + 2]
+    add .mem_table, [rb + rm], [ip + 2]
     jz  0, [0]
 
-decode_mod_rm_mem_disp16:
+.mem_disp16:
     # Memory mode with 16-bit displacement
 
     # Read 16-bit displacement
@@ -102,22 +102,22 @@ decode_mod_rm_mem_disp16:
     call inc_ip_w
 
     # Jump to handling of this R/M value
-    add decode_mod_rm_mem_table, [rb + rm], [ip + 2]
+    add .mem_table, [rb + rm], [ip + 2]
     jz  0, [0]
 
-decode_mod_rm_mem_table:
+.mem_table:
     # Map each R/M value to the label that handles it
-    db  decode_mod_rm_memory_bx_si
-    db  decode_mod_rm_memory_bx_di
-    db  decode_mod_rm_memory_bp_si
-    db  decode_mod_rm_memory_bp_di
-    db  decode_mod_rm_memory_si
-    db  decode_mod_rm_memory_di
-    db  decode_mod_rm_memory_bp
-    db  decode_mod_rm_memory_bx
-    db  decode_mod_rm_memory_direct
+    db  .memory_bx_si
+    db  .memory_bx_di
+    db  .memory_bp_si
+    db  .memory_bp_di
+    db  .memory_si
+    db  .memory_di
+    db  .memory_bp
+    db  .memory_bx
+    db  .memory_direct
 
-decode_mod_rm_memory_bx_si:
+.memory_bx_si:
     # Segment to return
     add [ds_segment_prefix], 0, [ip + 1]
     add [0], 0, [rb + seg_lo]
@@ -128,9 +128,9 @@ decode_mod_rm_memory_bx_si:
     add [reg_bx + 0], [reg_si + 0], [rb + off_lo]
     add [reg_bx + 1], [reg_si + 1], [rb + off_hi]
 
-    jz  0, decode_mod_rm_mem_offset_carry
+    jz  0, .mem_offset_carry
 
-decode_mod_rm_memory_bx_di:
+.memory_bx_di:
     # Segment to return
     add [ds_segment_prefix], 0, [ip + 1]
     add [0], 0, [rb + seg_lo]
@@ -141,9 +141,9 @@ decode_mod_rm_memory_bx_di:
     add [reg_bx + 0], [reg_di + 0], [rb + off_lo]
     add [reg_bx + 1], [reg_di + 1], [rb + off_hi]
 
-    jz  0, decode_mod_rm_mem_offset_carry
+    jz  0, .mem_offset_carry
 
-decode_mod_rm_memory_bp_si:
+.memory_bp_si:
     # Segment to return
     add [ss_segment_prefix], 0, [ip + 1]
     add [0], 0, [rb + seg_lo]
@@ -154,9 +154,9 @@ decode_mod_rm_memory_bp_si:
     add [reg_bp + 0], [reg_si + 0], [rb + off_lo]
     add [reg_bp + 1], [reg_si + 1], [rb + off_hi]
 
-    jz  0, decode_mod_rm_mem_offset_carry
+    jz  0, .mem_offset_carry
 
-decode_mod_rm_memory_bp_di:
+.memory_bp_di:
     # Segment to return
     add [ss_segment_prefix], 0, [ip + 1]
     add [0], 0, [rb + seg_lo]
@@ -167,9 +167,9 @@ decode_mod_rm_memory_bp_di:
     add [reg_bp + 0], [reg_di + 0], [rb + off_lo]
     add [reg_bp + 1], [reg_di + 1], [rb + off_hi]
 
-    jz  0, decode_mod_rm_mem_offset_carry
+    jz  0, .mem_offset_carry
 
-decode_mod_rm_memory_si:
+.memory_si:
     # Segment to return
     add [ds_segment_prefix], 0, [ip + 1]
     add [0], 0, [rb + seg_lo]
@@ -180,9 +180,9 @@ decode_mod_rm_memory_si:
     add [reg_si + 0], 0, [rb + off_lo]
     add [reg_si + 1], 0, [rb + off_hi]
 
-    jz  0, decode_mod_rm_mem_disp
+    jz  0, .mem_disp
 
-decode_mod_rm_memory_di:
+.memory_di:
     # Segment to return
     add [ds_segment_prefix], 0, [ip + 1]
     add [0], 0, [rb + seg_lo]
@@ -193,9 +193,9 @@ decode_mod_rm_memory_di:
     add [reg_di + 0], 0, [rb + off_lo]
     add [reg_di + 1], 0, [rb + off_hi]
 
-    jz  0, decode_mod_rm_mem_disp
+    jz  0, .mem_disp
 
-decode_mod_rm_memory_bp:
+.memory_bp:
     # Segment to return
     add [ss_segment_prefix], 0, [ip + 1]
     add [0], 0, [rb + seg_lo]
@@ -206,9 +206,9 @@ decode_mod_rm_memory_bp:
     add [reg_bp + 0], 0, [rb + off_lo]
     add [reg_bp + 1], 0, [rb + off_hi]
 
-    jz  0, decode_mod_rm_mem_disp
+    jz  0, .mem_disp
 
-decode_mod_rm_memory_bx:
+.memory_bx:
     # Segment to return
     add [ds_segment_prefix], 0, [ip + 1]
     add [0], 0, [rb + seg_lo]
@@ -219,9 +219,9 @@ decode_mod_rm_memory_bx:
     add [reg_bx + 0], 0, [rb + off_lo]
     add [reg_bx + 1], 0, [rb + off_hi]
 
-    jz  0, decode_mod_rm_mem_disp
+    jz  0, .mem_disp
 
-decode_mod_rm_memory_direct:
+.memory_direct:
     # Segment to return
     add [ds_segment_prefix], 0, [ip + 1]
     add [0], 0, [rb + seg_lo]
@@ -232,51 +232,51 @@ decode_mod_rm_memory_direct:
     add 0, 0, [rb + off_lo]
     add 0, 0, [rb + off_hi]
 
-    jz  0, decode_mod_rm_mem_disp
+    jz  0, .mem_disp
 
-decode_mod_rm_mem_offset_carry:
+.mem_offset_carry:
     # Handle carry between off_lo and off_hi
 
     # Check for carry out of low byte
     lt  [rb + off_lo], 0x100, [rb + tmp]
-    jnz [rb + tmp], decode_mod_rm_mem_offset_after_carry_lo
+    jnz [rb + tmp], .mem_offset_after_carry_lo
 
     add [rb + off_lo], -0x100, [rb + off_lo]
     add [rb + off_hi], 1, [rb + off_hi]
 
-decode_mod_rm_mem_offset_after_carry_lo:
+.mem_offset_after_carry_lo:
     # Check for carry out of high byte
     lt  [rb + off_hi], 0x100, [rb + tmp]
-    jnz [rb + tmp], decode_mod_rm_mem_disp
+    jnz [rb + tmp], .mem_disp
 
     add [rb + off_hi], -0x100, [rb + off_hi]
 
-decode_mod_rm_mem_disp:
+.mem_disp:
     # Add displacement to offset and once again handle carry
     add [rb + off_lo], [rb + disp_lo], [rb + off_lo]
     add [rb + off_hi], [rb + disp_hi], [rb + off_hi]
 
     # Check for carry out of low byte
     lt  [rb + off_lo], 0x100, [rb + tmp]
-    jnz [rb + tmp], decode_mod_rm_mem_disp_after_carry_lo
+    jnz [rb + tmp], .mem_disp_after_carry_lo
 
     add [rb + off_lo], -0x100, [rb + off_lo]
     add [rb + off_hi], 1, [rb + off_hi]
 
-decode_mod_rm_mem_disp_after_carry_lo:
+.mem_disp_after_carry_lo:
     # Check for carry out of high byte
     lt  [rb + off_hi], 0x100, [rb + tmp]
-    jnz [rb + tmp], decode_mod_rm_mem_disp_after_carry_hi
+    jnz [rb + tmp], .mem_disp_after_carry_hi
 
     add [rb + off_hi], -0x100, [rb + off_hi]
 
-decode_mod_rm_mem_disp_after_carry_hi:
+.mem_disp_after_carry_hi:
     # Set regptr to 0, since we are returning seg:off
     add 0, 0, [rb + regptr]
 
-    jz  0, decode_mod_rm_end
+    jz  0, .end
 
-decode_mod_rm_reg:
+.reg:
     # Register mode, use the same algorithm that is used to decode REG
 
     add [rb + rm], 0, [rb - 1]
@@ -288,7 +288,7 @@ decode_mod_rm_reg:
     # We do not zero seg_* and off_* here to save some cycles,
     # but non-zero regptr means seg_* and off_* are not valid
 
-decode_mod_rm_end:
+.end:
     arb 8
     ret 3
 .ENDFRAME
@@ -304,13 +304,13 @@ decode_reg:
     # Map the REG value to an intcode address of the corresponding 8086 register
     mul [rb + w], 8, [rb + tmp]
     add [rb + tmp], [rb + reg], [rb + tmp]
-    add decode_reg_table, [rb + tmp], [ip + 1]
+    add .table, [rb + tmp], [ip + 1]
     add [0], 0, [rb + regptr]
 
     arb 2
     ret 2
 
-decode_reg_table:
+.table:
     # Map each w+reg value to the intcode address of corresponding register
     db  reg_al
     db  reg_cl
@@ -340,13 +340,13 @@ decode_sr:
     # Expect reg to be 0-7, w to be 0-1
 
     # Map the REG value to an intcode address of the corresponding 8086 segment register
-    add decode_sr_table, [rb + reg], [ip + 1]
+    add .table, [rb + reg], [ip + 1]
     add [0], 0, [rb + regptr]
 
     arb 2
     ret 1
 
-decode_sr_table:
+.table:
     # Map each reg value to the intcode address of corresponding segment register
     db  reg_es
     db  reg_cs

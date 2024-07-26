@@ -82,24 +82,24 @@ dma_receive_data:
     arb -4
 
     # Floppy controller logging
-    jz  [config_log_fdc], dma_receive_data_after_log_fdc
+    jz  [config_log_fdc], .after_log_fdc
     eq  [rb + channel], 0x02, [rb + tmp]
-    jz  [rb + tmp], dma_receive_data_after_log_fdc
+    jz  [rb + tmp], .after_log_fdc
 
     add [rb + count], 0, [rb - 1]
     arb -1
     call dma_receive_data_log_fdc
 
-dma_receive_data_after_log_fdc:
+.after_log_fdc:
     # Check the DMA controller
-    jnz [dma_disable_controller], dma_receive_data_disabled
+    jnz [dma_disable_controller], .disabled
 
     add dma_mask_channels, [rb + channel], [ip + 1]
-    jnz [dma_mask_channels], dma_receive_data_disabled
+    jnz [dma_mask_channels], .disabled
 
     add dma_transfer_type_channels, [rb + channel], [ip + 1]
     eq  [0], 1, [rb + tmp]                                  # transfer type must be write (1)
-    jz  [rb + tmp], dma_receive_data_disabled
+    jz  [rb + tmp], .disabled
 
     # TODO support single/block/demand modes
 
@@ -119,15 +119,15 @@ dma_receive_data_after_log_fdc:
     add dma_count_channels, [rb + channel], [ip + 1]
     add [0], 1, [rb + tmp]
     lt  [rb + tmp], [rb + count], [rb + tmp]
-    jz  [rb + tmp], dma_receive_data_move
+    jz  [rb + tmp], .move
 
     add dma_count_channels, [rb + channel], [ip + 1]
     add [0], 1, [rb + count]
 
-dma_receive_data_move:
+.move:
     add [rb + count], 0, [rb + index]
 
-dma_receive_data_loop:
+.loop:
     # Move the data
     add [rb + src_addr], 0, [ip + 5]
     add [rb + dst_addr], 0, [ip + 3]
@@ -140,7 +140,7 @@ dma_receive_data_loop:
 
     # Decrease index and loop
     add [rb + index], -1, [rb + index]
-    jnz [rb + index], dma_receive_data_loop
+    jnz [rb + index], .loop
 
     # Update the DMA counter, decrease it by count
     mul [rb + count], -1, [rb + tmp]
@@ -157,7 +157,7 @@ dma_receive_data_loop:
 
     # TODO handle dma_auto_init_channels (remember originally set values, reset them after dma_count_ch* goes to -1)
 
-dma_receive_data_disabled:
+.disabled:
     arb 4
     ret 3
 .ENDFRAME
@@ -167,7 +167,7 @@ dma_receive_data_log_fdc:
 .FRAME count;
     call log_start
 
-    add dma_receive_data_log_fdc_start, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -178,7 +178,7 @@ dma_receive_data_log_fdc:
     out 10
     ret 1
 
-dma_receive_data_log_fdc_start:
+.msg:
     db  "dma ch02, receive data, count ", 0
 .ENDFRAME
 
@@ -190,15 +190,15 @@ dma_mode_write:
     # Set DMA mode
 
     # Floppy controller logging
-    jz  [config_log_fdc], dma_mode_write_after_log_fdc
+    jz  [config_log_fdc], .after_log_fdc
     eq  [rb + channel], 0x02, [rb + tmp]
-    jz  [rb + tmp], dma_mode_write_after_log_fdc
+    jz  [rb + tmp], .after_log_fdc
 
     add [rb + value], 0, [rb - 1]
     arb -1
     call dma_mode_write_log_fdc
 
-dma_mode_write_after_log_fdc:
+.after_log_fdc:
     # Read channel number from bits 0 and 1
     add bit_1, [rb + value], [ip + 1]
     mul [0], 0b10, [rb + channel]
@@ -213,7 +213,7 @@ dma_mode_write_after_log_fdc:
 
     # Transfer type 0b11 is invalid
     eq  [rb + transfer_type], 0b11, [rb + tmp]
-    jnz [rb + tmp], dma_mode_write_done
+    jnz [rb + tmp], .done
 
     # Read DMA mode from bits 6 and 7
     add bit_7, [rb + value], [ip + 1]
@@ -223,7 +223,7 @@ dma_mode_write_after_log_fdc:
 
     # DMA mode 0b11 (cascade) is invalid
     eq  [rb + dma_mode], 0b11, [rb + tmp]
-    jnz [rb + tmp], dma_mode_write_done
+    jnz [rb + tmp], .done
 
     # Save transfer type
     add dma_transfer_type_channels, [rb + channel], [ip + 3]
@@ -245,7 +245,7 @@ dma_mode_write_after_log_fdc:
     add dma_decrement_channels, [rb + channel], [ip + 3]
     add [rb + tmp], 0, [0]
 
-dma_mode_write_done:
+.done:
     arb 4
     ret 2
 .ENDFRAME
@@ -255,7 +255,7 @@ dma_mode_write_log_fdc:
 .FRAME value;
     call log_start
 
-    add dma_mode_write_log_fdc_start, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -266,7 +266,7 @@ dma_mode_write_log_fdc:
     out 10
     ret 1
 
-dma_mode_write_log_fdc_start:
+.msg:
     db  "dma ch02, receive data, mode ", 0
 .ENDFRAME
 
@@ -293,10 +293,10 @@ dma_status_read:
 dma_master_reset_write:
 .FRAME addr, value;
     # Floppy controller logging
-    jz  [config_log_fdc], dma_master_reset_write_after_log_fdc
+    jz  [config_log_fdc], .after_log_fdc
     call dma_master_reset_write_log_fdc
 
-dma_master_reset_write_after_log_fdc:
+.after_log_fdc:
     # Set the flip-flop to access the low byte
     add 0, 0, [dma_flip_flop]
 
@@ -316,14 +316,14 @@ dma_master_reset_write_log_fdc:
 .FRAME
     call log_start
 
-    add dma_master_reset_write_log_fdc_start, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
     out 10
     ret 0
 
-dma_master_reset_write_log_fdc_start:
+.msg:
     db  "dma master reset", 0
 .ENDFRAME
 
@@ -429,10 +429,10 @@ dma_address_ch2_write:
     add [dma_address_ch2], [rb + value], [dma_address_ch2]
 
     # Floppy controller logging
-    jz  [config_log_fdc], dma_address_ch2_write_after_log_fdc
+    jz  [config_log_fdc], .after_log_fdc
     call dma_address_ch2_write_log_fdc
 
-dma_address_ch2_write_after_log_fdc:
+.after_log_fdc:
     eq  [dma_flip_flop], 0, [dma_flip_flop]
 
     arb 1
@@ -444,7 +444,7 @@ dma_address_ch2_write_log_fdc:
 .FRAME
     call log_start
 
-    add dma_address_ch2_write_log_fdc_start, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -459,7 +459,7 @@ dma_address_ch2_write_log_fdc:
     out 10
     ret 0
 
-dma_address_ch2_write_log_fdc_start:
+.msg:
     db  "dma ch02, write address 0x", 0
 .ENDFRAME
 
@@ -522,10 +522,10 @@ dma_count_ch2_write:
     add [dma_count_ch2], [rb + value], [dma_count_ch2]
 
     # Floppy controller logging
-    jz  [config_log_fdc], dma_count_ch2_write_after_log_fdc
+    jz  [config_log_fdc], .after_log_fdc
     call dma_count_ch2_write_log_fdc
 
-dma_count_ch2_write_after_log_fdc:
+.after_log_fdc:
     eq  [dma_flip_flop], 0, [dma_flip_flop]
 
     arb 1
@@ -537,7 +537,7 @@ dma_count_ch2_write_log_fdc:
 .FRAME
     call log_start
 
-    add dma_count_ch2_write_log_fdc_start, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -552,7 +552,7 @@ dma_count_ch2_write_log_fdc:
     out 10
     ret 0
 
-dma_count_ch2_write_log_fdc_start:
+.msg:
     db  "dma ch02, write count ", 0
 .ENDFRAME
 
@@ -621,10 +621,10 @@ dma_page_ch1_write:
 dma_page_ch2_write:
 .FRAME addr, value;
     # Floppy controller logging
-    jz  [config_log_fdc], dma_page_ch2_write_after_log_fdc
+    jz  [config_log_fdc], .after_log_fdc
     call dma_page_ch2_write_log_fdc
 
-dma_page_ch2_write_after_log_fdc:
+.after_log_fdc:
     add [rb + value], 0, [dma_page_ch2]
 
     ret 2
@@ -635,7 +635,7 @@ dma_page_ch2_write_log_fdc:
 .FRAME
     call log_start
 
-    add dma_page_ch2_write_log_fdc_start, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -646,7 +646,7 @@ dma_page_ch2_write_log_fdc:
     out 10
     ret 0
 
-dma_page_ch2_write_log_fdc_start:
+.msg:
     db  "dma ch02, write page 0x", 0
 .ENDFRAME
 

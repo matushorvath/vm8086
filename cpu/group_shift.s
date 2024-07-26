@@ -55,7 +55,7 @@
 execute_shift_1_b:
 .FRAME op, lseg, loff;
     # Determine which function to call
-    add execute_shift_1_b_table, [rb + op], [ip + 1]
+    add .table, [rb + op], [ip + 1]
     add [0], 0, [shift_function]
 
     # Call the function
@@ -66,7 +66,7 @@ execute_shift_1_b:
 
     ret 3
 
-execute_shift_1_b_table:
+.table:
     db  execute_rol_1_b
     db  execute_ror_1_b
     db  execute_rcl_1_b
@@ -81,7 +81,7 @@ execute_shift_1_b_table:
 execute_shift_1_w:
 .FRAME op, lseg, loff;
     # Determine which function to call
-    add execute_shift_1_w_table, [rb + op], [ip + 1]
+    add .table, [rb + op], [ip + 1]
     add [0], 0, [shift_function]
 
     # Call the function
@@ -92,7 +92,7 @@ execute_shift_1_w:
 
     ret 3
 
-execute_shift_1_w_table:
+.table:
     db  execute_rol_1_w
     db  execute_ror_1_w
     db  execute_rcl_1_w
@@ -107,7 +107,7 @@ execute_shift_1_w_table:
 execute_shift_cl_b:
 .FRAME op, lseg, loff;
     # Determine which function to call
-    add execute_shift_cl_b_table, [rb + op], [ip + 1]
+    add .table, [rb + op], [ip + 1]
     add [0], 0, [shift_function]
 
     # Call the function
@@ -118,7 +118,7 @@ execute_shift_cl_b:
 
     ret 3
 
-execute_shift_cl_b_table:
+.table:
     db  execute_rol_cl_b
     db  execute_ror_cl_b
     db  execute_rcl_cl_b
@@ -133,7 +133,7 @@ execute_shift_cl_b_table:
 execute_shift_cl_w:
 .FRAME op, lseg, loff;
     # Determine which function to call
-    add execute_shift_cl_w_table, [rb + op], [ip + 1]
+    add .table, [rb + op], [ip + 1]
     add [0], 0, [shift_function]
 
     # Call the function
@@ -144,7 +144,7 @@ execute_shift_cl_w:
 
     ret 3
 
-execute_shift_cl_w_table:
+.table:
     db  execute_rol_cl_w
     db  execute_ror_cl_w
     db  execute_rcl_cl_w
@@ -158,11 +158,11 @@ execute_shift_cl_w_table:
 ##########
 invalid_shift_op:
 .FRAME lseg, loff;
-    add invalid_shift_op_message, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call report_error
 
-invalid_shift_op_message:
+.msg:
     db  "invalid group shift operation", 0
 .ENDFRAME
 

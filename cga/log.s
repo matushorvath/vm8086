@@ -37,7 +37,7 @@ mc6845_address_read_log:
 .FRAME value;
     call log_start
 
-    add mc6845_address_read_log_start, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -48,7 +48,7 @@ mc6845_address_read_log:
     out 10
     ret 1
 
-mc6845_address_read_log_start:
+.msg:
     db  "cga address read: value ", 0
 .ENDFRAME
 
@@ -57,7 +57,7 @@ mc6845_address_write_log:
 .FRAME value;
     call log_start
 
-    add mc6845_address_write_log_start, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -68,7 +68,7 @@ mc6845_address_write_log:
     out 10
     ret 1
 
-mc6845_address_write_log_start:
+.msg:
     db  "cga address write: value ", 0
 .ENDFRAME
 
@@ -77,7 +77,7 @@ mc6845_data_read_log:
 .FRAME value;
     call log_start
 
-    add mc6845_data_read_log_start, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -88,7 +88,7 @@ mc6845_data_read_log:
     out 10
     ret 1
 
-mc6845_data_read_log_start:
+.msg:
     db  "cga data read: value ", 0
 .ENDFRAME
 
@@ -97,7 +97,7 @@ mc6845_data_write_log:
 .FRAME value;
     call log_start
 
-    add mc6845_data_write_log_start, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -108,7 +108,7 @@ mc6845_data_write_log:
     out 10
     ret 1
 
-mc6845_data_write_log_start:
+.msg:
     db  "cga data write: value ", 0
 .ENDFRAME
 
@@ -117,7 +117,7 @@ mode_control_write_log_1:
 .FRAME value;
     call log_start
 
-    add mode_control_write_log_1_value, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -129,7 +129,7 @@ mode_control_write_log_1:
 
     ret 1
 
-mode_control_write_log_1_value:
+.msg:
     db  "cga mode write: value ", 0
 .ENDFRAME
 
@@ -138,7 +138,7 @@ mode_control_write_log_2:
 .FRAME reinitialize, redraw, enable;
     call log_start
 
-    add mode_control_write_log_2_reinitialize, 0, [rb - 1]
+    add .reinitialize_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -146,7 +146,7 @@ mode_control_write_log_2:
     arb -1
     call print_num
 
-    add mode_control_write_log_2_redraw, 0, [rb - 1]
+    add .redraw_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -154,7 +154,7 @@ mode_control_write_log_2:
     arb -1
     call print_num
 
-    add mode_control_write_log_2_enable, 0, [rb - 1]
+    add .enable_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -168,11 +168,11 @@ mode_control_write_log_2:
 
     ret 3
 
-mode_control_write_log_2_reinitialize:
+.reinitialize_msg:
     db  "cga mode write: reinitialize ", 0
-mode_control_write_log_2_redraw:
+.redraw_msg:
     db  " redraw ", 0
-mode_control_write_log_2_enable:
+.enable_msg:
     db  " enable/disable ", 0
 .ENDFRAME
 
@@ -181,7 +181,7 @@ color_control_write_log:
 .FRAME value;
     call log_start
 
-    add color_control_write_log_start, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -195,7 +195,7 @@ color_control_write_log:
 
     ret 1
 
-color_control_write_log_start:
+.msg:
     db  "cga color write: value ", 0
 .ENDFRAME
 
@@ -204,7 +204,7 @@ status_read_log:
 .FRAME value;
     call log_start
 
-    add status_read_log_start, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -215,7 +215,7 @@ status_read_log:
     out 10
     ret 1
 
-status_read_log_start:
+.msg:
     db  "cga status read: value ", 0
 .ENDFRAME
 
@@ -224,14 +224,14 @@ redraw_screen_text_log:
 .FRAME
     call log_start
 
-    add redraw_screen_text_log_msg, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
     out 10
     ret 0
 
-redraw_screen_text_log_msg:
+.msg:
     db  "cga screen redraw, text", 0
 .ENDFRAME
 
@@ -240,14 +240,14 @@ redraw_screen_graphics_log:
 .FRAME
     call log_start
 
-    add redraw_screen_graphics_log_msg, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
     out 10
     ret 0
 
-redraw_screen_graphics_log_msg:
+.msg:
     db  "cga screen redraw, graphics", 0
 .ENDFRAME
 
@@ -256,11 +256,11 @@ dump_cga_state:
 .FRAME
     call log_start
 
-    add dump_cga_state_start, 0, [rb - 1]
+    add .start_msg, 0, [rb - 1]
     arb -1
     call print_str
 
-    add dump_cga_state_high_res_text, 0, [rb - 1]
+    add .high_res_text_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -268,7 +268,7 @@ dump_cga_state:
     arb -1
     call print_num
 
-    add dump_cga_state_graphics, 0, [rb - 1]
+    add .graphics_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -276,7 +276,7 @@ dump_cga_state:
     arb -1
     call print_num
 
-    add dump_cga_state_back_and_white, 0, [rb - 1]
+    add .back_and_white_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -284,7 +284,7 @@ dump_cga_state:
     arb -1
     call print_num
 
-    add dump_cga_state_enable_output, 0, [rb - 1]
+    add .enable_output_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -292,7 +292,7 @@ dump_cga_state:
     arb -1
     call print_num
 
-    add dump_cga_state_high_res_graphics, 0, [rb - 1]
+    add .high_res_graphics_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -300,7 +300,7 @@ dump_cga_state:
     arb -1
     call print_num
 
-    add dump_cga_state_blinking, 0, [rb - 1]
+    add .blinking_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -308,7 +308,7 @@ dump_cga_state:
     arb -1
     call print_num
 
-    add dump_cga_state_color_selected, 0, [rb - 1]
+    add .color_selected_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -316,7 +316,7 @@ dump_cga_state:
     arb -1
     call print_num
 
-    add dump_cga_state_bright, 0, [rb - 1]
+    add .bright_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -324,7 +324,7 @@ dump_cga_state:
     arb -1
     call print_num
 
-    add dump_cga_state_palette, 0, [rb - 1]
+    add .palette_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -336,25 +336,25 @@ dump_cga_state:
 
     ret 0
 
-dump_cga_state_start:
+.start_msg:
     db  "cga state:", 0
-dump_cga_state_high_res_text:
+.high_res_text_msg:
     db  " hi-text ", 0
-dump_cga_state_graphics:
+.graphics_msg:
     db  " gr ", 0
-dump_cga_state_back_and_white:
+.back_and_white_msg:
     db  " mono ", 0
-dump_cga_state_enable_output:
+.enable_output_msg:
     db  " output ", 0
-dump_cga_state_high_res_graphics:
+.high_res_graphics_msg:
     db  " hi-gr ", 0
-dump_cga_state_blinking:
+.blinking_msg:
     db  " blink ", 0
-dump_cga_state_color_selected:
+.color_selected_msg:
     db  " select ", 0
-dump_cga_state_bright:
+.bright_msg:
     db  " bright ", 0
-dump_cga_state_palette:
+.palette_msg:
     db  " palette ", 0
 .ENDFRAME
 

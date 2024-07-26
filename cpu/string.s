@@ -43,7 +43,7 @@
 execute_movs_b:
     arb -10
 
-    add execute_string_movsb, 0, [rb + operation]
+    add execute_string.movsb, 0, [rb + operation]
     add 1, 0, [rb + do_si]
     add 1, 0, [rb + do_di]
     add 1, 0, [rb + index_delta]
@@ -54,7 +54,7 @@ execute_movs_b:
 execute_movs_w:
     arb -10
 
-    add execute_string_movsw, 0, [rb + operation]
+    add execute_string.movsw, 0, [rb + operation]
     add 1, 0, [rb + do_si]
     add 1, 0, [rb + do_di]
     add 2, 0, [rb + index_delta]
@@ -65,7 +65,7 @@ execute_movs_w:
 execute_cmps_b:
     arb -10
 
-    add execute_string_cmpsb, 0, [rb + operation]
+    add execute_string.cmpsb, 0, [rb + operation]
     add 1, 0, [rb + do_si]
     add 1, 0, [rb + do_di]
     add 1, 0, [rb + index_delta]
@@ -76,7 +76,7 @@ execute_cmps_b:
 execute_cmps_w:
     arb -10
 
-    add execute_string_cmpsw, 0, [rb + operation]
+    add execute_string.cmpsw, 0, [rb + operation]
     add 1, 0, [rb + do_si]
     add 1, 0, [rb + do_di]
     add 2, 0, [rb + index_delta]
@@ -87,7 +87,7 @@ execute_cmps_w:
 execute_scas_b:
     arb -10
 
-    add execute_string_scasb, 0, [rb + operation]
+    add execute_string.scasb, 0, [rb + operation]
     add 0, 0, [rb + do_si]
     add 1, 0, [rb + do_di]
     add 1, 0, [rb + index_delta]
@@ -98,7 +98,7 @@ execute_scas_b:
 execute_scas_w:
     arb -10
 
-    add execute_string_scasw, 0, [rb + operation]
+    add execute_string.scasw, 0, [rb + operation]
     add 0, 0, [rb + do_si]
     add 1, 0, [rb + do_di]
     add 2, 0, [rb + index_delta]
@@ -109,7 +109,7 @@ execute_scas_w:
 execute_lods_b:
     arb -10
 
-    add execute_string_lodsb, 0, [rb + operation]
+    add execute_string.lodsb, 0, [rb + operation]
     add 1, 0, [rb + do_si]
     add 0, 0, [rb + do_di]
     add 1, 0, [rb + index_delta]
@@ -120,7 +120,7 @@ execute_lods_b:
 execute_lods_w:
     arb -10
 
-    add execute_string_lodsw, 0, [rb + operation]
+    add execute_string.lodsw, 0, [rb + operation]
     add 1, 0, [rb + do_si]
     add 0, 0, [rb + do_di]
     add 2, 0, [rb + index_delta]
@@ -131,7 +131,7 @@ execute_lods_w:
 execute_stos_b:
     arb -10
 
-    add execute_string_stosb, 0, [rb + operation]
+    add execute_string.stosb, 0, [rb + operation]
     add 0, 0, [rb + do_si]
     add 1, 0, [rb + do_di]
     add 1, 0, [rb + index_delta]
@@ -142,7 +142,7 @@ execute_stos_b:
 execute_stos_w:
     arb -10
 
-    add execute_string_stosw, 0, [rb + operation]
+    add execute_string.stosw, 0, [rb + operation]
     add 0, 0, [rb + do_si]
     add 1, 0, [rb + do_di]
     add 2, 0, [rb + index_delta]
@@ -155,51 +155,51 @@ execute_string:
     mul [rb + index_delta], [rb + tmp], [rb + index_delta]
 
     # Precalculate segment base addresses
-    jz [rb + do_si], execute_string_after_src_seg
+    jz [rb + do_si], .after_src_seg
 
     add [ds_segment_prefix], 1, [ip + 1]
     mul [0], 0x100, [rb + src_seg]
     add [ds_segment_prefix], 0, [ip + 1]
     add [0], [rb + src_seg], [rb + src_seg]
 
-execute_string_after_src_seg:
-    jz [rb + do_di], execute_string_after_dst_seg
+.after_src_seg:
+    jz [rb + do_di], .after_dst_seg
 
     mul [reg_es + 1], 0x100, [rb + dst_seg]
     add [reg_es + 0], [rb + dst_seg], [rb + dst_seg]
 
-execute_string_after_dst_seg:
+.after_dst_seg:
     # Check for REPZ/REPNZ
-    jz  [rep_prefix], execute_string_after_rep
+    jz  [rep_prefix], .after_rep
 
-execute_string_loop:
+.loop:
     # Stop if CX == 0
     add [reg_cx + 0], [reg_cx + 1], [rb + tmp]
-    jz  [rb + tmp], execute_string_done
+    jz  [rb + tmp], .done
 
     # TODO process pending IRQs
 
     call dec_cx
 
-execute_string_after_rep:
-    jz [rb + do_si], execute_string_after_src_off
+.after_rep:
+    jz [rb + do_si], .after_src_off
 
     # Calculate source offset
     mul [reg_si + 1], 0x100, [rb + src_off]
     add [reg_si + 0], [rb + src_off], [rb + src_off]
 
-execute_string_after_src_off:
-    jz [rb + do_di], execute_string_after_dst_off
+.after_src_off:
+    jz [rb + do_di], .after_dst_off
 
     # Calculate destination offset
     mul [reg_di + 1], 0x100, [rb + dst_off]
     add [reg_di + 0], [rb + dst_off], [rb + dst_off]
 
-execute_string_after_dst_off:
+.after_dst_off:
     # Execute the operation itself
     jz  0, [rb + operation]
 
-execute_string_cmpsb:
+.cmpsb:
     # Call execute_cmp_b with the two memory locations
     add [rb + dst_seg], 0, [rb - 1]
     add [rb + dst_off], 0, [rb - 2]
@@ -208,9 +208,9 @@ execute_string_cmpsb:
     arb -4
     call execute_cmp_b
 
-    jz  0, execute_string_after_operation
+    jz  0, .after_operation
 
-execute_string_cmpsw:
+.cmpsw:
     # Call execute_cmp_w with the two memory locations
     add [rb + dst_seg], 0, [rb - 1]
     add [rb + dst_off], 0, [rb - 2]
@@ -219,9 +219,9 @@ execute_string_cmpsw:
     arb -4
     call execute_cmp_w
 
-    jz  0, execute_string_after_operation
+    jz  0, .after_operation
 
-execute_string_scasb:
+.scasb:
     # Call execute_cmp_b with the memory and AL locations
     add [rb + dst_seg], 0, [rb - 1]
     add [rb + dst_off], 0, [rb - 2]
@@ -230,9 +230,9 @@ execute_string_scasb:
     arb -4
     call execute_cmp_b
 
-    jz  0, execute_string_after_operation
+    jz  0, .after_operation
 
-execute_string_scasw:
+.scasw:
     # Call execute_cmp_w with the memory and AX locations
     add [rb + dst_seg], 0, [rb - 1]
     add [rb + dst_off], 0, [rb - 2]
@@ -241,9 +241,9 @@ execute_string_scasw:
     arb -4
     call execute_cmp_w
 
-    jz  0, execute_string_after_operation
+    jz  0, .after_operation
 
-execute_string_lodsw:
+.lodsw:
     # Copy a word from source to AX
     add [rb + src_seg], 0, [rb - 1]
     add [rb + src_off], 0, [rb - 2]
@@ -252,9 +252,9 @@ execute_string_lodsw:
     add [rb - 4], 0, [reg_ax + 0]
     add [rb - 5], 0, [reg_ax + 1]
 
-    jz  0, execute_string_after_operation
+    jz  0, .after_operation
 
-execute_string_lodsb:
+.lodsb:
     # Copy a byte from source to AL
     add [rb + src_seg], 0, [rb - 1]
     add [rb + src_off], 0, [rb - 2]
@@ -262,9 +262,9 @@ execute_string_lodsb:
     call read_seg_off_b
     add [rb - 4], 0, [reg_al]
 
-    jz  0, execute_string_after_operation
+    jz  0, .after_operation
 
-execute_string_stosw:
+.stosw:
     # Copy a word from AX to destination
     add [rb + dst_seg], 0, [rb - 1]
     add [rb + dst_off], 0, [rb - 2]
@@ -273,9 +273,9 @@ execute_string_stosw:
     arb -4
     call write_seg_off_w
 
-    jz  0, execute_string_after_operation
+    jz  0, .after_operation
 
-execute_string_stosb:
+.stosb:
     # Copy a byte from AL to destination
     add [rb + dst_seg], 0, [rb - 1]
     add [rb + dst_off], 0, [rb - 2]
@@ -283,9 +283,9 @@ execute_string_stosb:
     arb -3
     call write_seg_off_b
 
-    jz  0, execute_string_after_operation
+    jz  0, .after_operation
 
-execute_string_movsw:
+.movsw:
     # Copy a word from source to destination
     add [rb + src_seg], 0, [rb - 1]
     add [rb + src_off], 0, [rb - 2]
@@ -299,9 +299,9 @@ execute_string_movsw:
     arb -4
     call write_seg_off_w
 
-    jz  0, execute_string_after_operation
+    jz  0, .after_operation
 
-execute_string_movsb:
+.movsb:
     # Copy a byte from source to destination
     add [rb + src_seg], 0, [rb - 1]
     add [rb + src_off], 0, [rb - 2]
@@ -314,102 +314,102 @@ execute_string_movsb:
     arb -3
     call write_seg_off_b
 
-execute_string_after_operation:
+.after_operation:
     # Are we incrementing or decrementing SI/DI?
-    jz  [flag_direction], execute_string_increment
+    jz  [flag_direction], .increment
 
-    jz  [rb + do_si], execute_string_decrement_si_done
+    jz  [rb + do_si], .decrement_si_done
 
     # Decrement SI
     add [reg_si + 0], [rb + index_delta], [reg_si + 0]
 
     # Check for borrow into low byte
     lt  [reg_si + 0], 0x00, [rb + tmp]
-    jz  [rb + tmp], execute_string_decrement_si_done
+    jz  [rb + tmp], .decrement_si_done
 
     add [reg_si + 0], 0x100, [reg_si + 0]
     add [reg_si + 1], -1, [reg_si + 1]
 
     # Check for borrow into high byte
     lt  [reg_si + 1], 0x00, [rb + tmp]
-    jz  [rb + tmp], execute_string_decrement_si_done
+    jz  [rb + tmp], .decrement_si_done
 
     add [reg_si + 1], 0x100, [reg_si + 1]
 
-execute_string_decrement_si_done:
-    jz  [rb + do_di], execute_string_after_si_di
+.decrement_si_done:
+    jz  [rb + do_di], .after_si_di
 
     # Decrement DI
     add [reg_di + 0], [rb + index_delta], [reg_di + 0]
 
     # Check for borrow into low byte
     lt  [reg_di + 0], 0x00, [rb + tmp]
-    jz  [rb + tmp], execute_string_after_si_di
+    jz  [rb + tmp], .after_si_di
 
     add [reg_di + 0], 0x100, [reg_di + 0]
     add [reg_di + 1], -1, [reg_di + 1]
 
     # Check for borrow into high byte
     lt  [reg_di + 1], 0x00, [rb + tmp]
-    jz  [rb + tmp], execute_string_after_si_di
+    jz  [rb + tmp], .after_si_di
 
     add [reg_di + 1], 0x100, [reg_di + 1]
 
-    jz  0, execute_string_after_si_di
+    jz  0, .after_si_di
 
-execute_string_increment:
-    jz  [rb + do_si], execute_string_increment_si_done
+.increment:
+    jz  [rb + do_si], .increment_si_done
 
     # Increment SI
     add [reg_si + 0], [rb + index_delta], [reg_si + 0]
 
     # Check for carry out of low byte
     lt  [reg_si + 0], 0x100, [rb + tmp]
-    jnz [rb + tmp], execute_string_increment_si_done
+    jnz [rb + tmp], .increment_si_done
 
     add [reg_si + 0], -0x100, [reg_si + 0]
     add [reg_si + 1], 1, [reg_si + 1]
 
     # Check for carry out of high byte
     lt  [reg_si + 1], 0x100, [rb + tmp]
-    jnz [rb + tmp], execute_string_increment_si_done
+    jnz [rb + tmp], .increment_si_done
 
     add [reg_si + 1], -0x100, [reg_si + 1]
 
-execute_string_increment_si_done:
-    jz  [rb + do_di], execute_string_after_si_di
+.increment_si_done:
+    jz  [rb + do_di], .after_si_di
 
     # Increment DI
     add [reg_di + 0], [rb + index_delta], [reg_di + 0]
 
     # Check for carry out of low byte
     lt  [reg_di + 0], 0x100, [rb + tmp]
-    jnz [rb + tmp], execute_string_after_si_di
+    jnz [rb + tmp], .after_si_di
 
     add [reg_di + 0], -0x100, [reg_di + 0]
     add [reg_di + 1], 1, [reg_di + 1]
 
     # Check for carry out of high byte
     lt  [reg_di + 1], 0x100, [rb + tmp]
-    jnz [rb + tmp], execute_string_after_si_di
+    jnz [rb + tmp], .after_si_di
 
     add [reg_di + 1], -0x100, [reg_di + 1]
 
-execute_string_after_si_di:
+.after_si_di:
     # If there is no REP prefix, we are done
-    jz  [rep_prefix], execute_string_done
+    jz  [rep_prefix], .done
 
     # If we don't need to check ZF, loop
-    jz  [rb + check_zf], execute_string_loop
+    jz  [rb + check_zf], .loop
 
     # Exit the loop if ZF does not match the REPZ/REPNZ prefix
     eq  [rep_prefix], '1', [rb + tmp]
     eq  [flag_zero], [rb + tmp], [rb + tmp]
-    jnz [rb + tmp], execute_string_done
+    jnz [rb + tmp], .done
 
-    jz  0, execute_string_loop
+    jz  0, .loop
 
-execute_string_done:
+.done:
     arb 10
     ret 0
 .ENDFRAME

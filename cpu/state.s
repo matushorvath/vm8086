@@ -137,18 +137,18 @@ inc_ip_b:
 
     # Check for carry out of low byte
     lt  [reg_ip + 0], 0x100, [rb + tmp]
-    jnz [rb + tmp], inc_ip_b_done
+    jnz [rb + tmp], .done
 
     add [reg_ip + 0], -0x100, [reg_ip + 0]
     add [reg_ip + 1], 1, [reg_ip + 1]
 
     # Check for carry out of high byte
     lt  [reg_ip + 1], 0x100, [rb + tmp]
-    jnz [rb + tmp], inc_ip_b_done
+    jnz [rb + tmp], .done
 
     add [reg_ip + 1], -0x100, [reg_ip + 1]
 
-inc_ip_b_done:
+.done:
     arb 1
     ret 0
 .ENDFRAME
@@ -164,18 +164,18 @@ inc_ip_w:
 
     # Check for carry out of low byte
     lt  [reg_ip + 0], 0x100, [rb + tmp]
-    jnz [rb + tmp], inc_ip_w_done
+    jnz [rb + tmp], .done
 
     add [reg_ip + 0], -0x100, [reg_ip + 0]
     add [reg_ip + 1], 1, [reg_ip + 1]
 
     # Check for carry out of high byte
     lt  [reg_ip + 1], 0x100, [rb + tmp]
-    jnz [rb + tmp], inc_ip_w_done
+    jnz [rb + tmp], .done
 
     add [reg_ip + 1], -0x100, [reg_ip + 1]
 
-inc_ip_w_done:
+.done:
     arb 1
     ret 0
 .ENDFRAME
