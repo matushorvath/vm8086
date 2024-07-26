@@ -60,38 +60,38 @@ pic_command_write:
     arb -1
 
     # PIC logging
-    jz  [config_log_pic], pic_command_write_after_log
+    jz  [config_log_pic], .after_log
 
     add [rb + value], 0, [rb - 1]
     arb -1
     call pic_command_write_log
 
-pic_command_write_after_log:
+.after_log:
     # If bit 4 is 1, this is ICW1
     add bit_4, [rb + value], [ip + 1]
-    jnz [0], pic_command_write_icw1
+    jnz [0], .icw1
 
     # Bit 4 is 0; if bit 3 is 0, this is OCW2
     add bit_3, [rb + value], [ip + 1]
-    jz  [0], pic_command_write_ocw2
+    jz  [0], .ocw2
 
     # Bit 3 is 1, this is OCW3
-    jz  0, pic_command_write_ocw3
+    jz  0, .ocw3
 
-pic_command_write_icw1:
+.icw1:
     # Receive ICW1
 
     # ICW4 is always required, since we only support the 8086/8088 mode
     add bit_0, [rb + value], [ip + 1]
-    jz  [0], pic_command_write_invalid_icw1
+    jz  [0], .invalid_icw1
 
     # No support for cascade mode, since there is just one PIC
     add bit_1, [rb + value], [ip + 1]
-    jz  [0], pic_command_write_invalid_icw1
+    jz  [0], .invalid_icw1
 
     # Only support edge triggered mode
     add bit_3, [rb + value], [ip + 1]
-    jnz [0], pic_command_write_invalid_icw1
+    jnz [0], .invalid_icw1
 
     # Clear the interrupt mask register
     add 0, 0, [pic_mask_irqs + 0]
@@ -111,40 +111,40 @@ pic_command_write_icw1:
 
     # Set up next state
     add S_EXPECT_ICW2, 0, [pic_state]
-    jz  0, pic_command_write_done
+    jz  0, .done
 
-pic_command_write_ocw2:
+.ocw2:
     # Receive OCW2
 
     # Decide what to do based on top 3 bits
     add shr_5, [rb + value], [ip + 1]
-    add [0], pic_command_write_ocw2_table, [ip + 2]
+    add [0], .ocw2_table, [ip + 2]
     jz  0, [0]
 
-pic_command_write_ocw2_table:
-    db  pic_command_write_ocw2_not_supported
-    db  pic_command_write_ocw2_non_specific_eoi
-    db  pic_command_write_ocw2_nop
-    db  pic_command_write_ocw2_not_supported
-    db  pic_command_write_ocw2_not_supported
-    db  pic_command_write_ocw2_not_supported
-    db  pic_command_write_ocw2_not_supported
-    db  pic_command_write_ocw2_not_supported
+.ocw2_table:
+    db  .ocw2_not_supported
+    db  .ocw2_non_specific_eoi
+    db  .ocw2_nop
+    db  .ocw2_not_supported
+    db  .ocw2_not_supported
+    db  .ocw2_not_supported
+    db  .ocw2_not_supported
+    db  .ocw2_not_supported
 
-pic_command_write_ocw2_nop:
+.ocw2_nop:
     # No operation
-    jz  0, pic_command_write_done
+    jz  0, .done
 
-pic_command_write_ocw2_not_supported:
+.ocw2_not_supported:
     # Unsupported operation
-    jz  0, pic_command_write_invalid_ocw2
+    jz  0, .invalid_ocw2
 
-pic_command_write_ocw2_non_specific_eoi:
+.ocw2_non_specific_eoi:
     # Non-specific end of interrupt
 
     # Is there an interrupt currently being processed?
     lt  [pic_lowest_irq_in_service], 8, [rb + tmp]
-    jz  [rb + tmp], pic_command_write_done
+    jz  [rb + tmp], .done
 
     # Yes, we are processing IRQ pic_lowest_irq_in_service
     # Reset the "in service" flag for that IRQ
@@ -155,72 +155,72 @@ pic_command_write_ocw2_non_specific_eoi:
     # (set to 8 if no interrupt is in service)
     add -1, 0, [pic_lowest_irq_in_service]
 
-pic_command_write_ocw2_ns_eoi_loop:
+.ocw2_ns_eoi_loop:
     add [pic_lowest_irq_in_service], 1, [pic_lowest_irq_in_service]
 
     eq  [pic_lowest_irq_in_service], 8, [rb + tmp]
-    jnz [rb + tmp], pic_command_write_ocw2_ns_eoi_after_loop
+    jnz [rb + tmp], .ocw2_ns_eoi_after_loop
 
     add pic_in_service_irqs, [pic_lowest_irq_in_service], [ip + 1]
-    jz  [0], pic_command_write_ocw2_ns_eoi_loop
+    jz  [0], .ocw2_ns_eoi_loop
 
-pic_command_write_ocw2_ns_eoi_after_loop:
+.ocw2_ns_eoi_after_loop:
     # Schedule which request will be executed next
     call schedule_interrupt_requests
 
-    jz  0, pic_command_write_done
+    jz  0, .done
 
-pic_command_write_ocw3:
+.ocw3:
     # Receive OCW3
 
     # Should we set the "read register" value?
     add bit_1, [rb + value], [ip + 1]
-    jz  [0], pic_command_write_ocw3_after_rr
+    jz  [0], .ocw3_after_rr
 
     # Yes, set the "read register" value
     add bit_0, [rb + value], [ip + 1]
     add [0], 0, [pic_read_in_service]
 
-pic_command_write_ocw3_after_rr:
+.ocw3_after_rr:
     # Should we set the "special mask mode" value?
     add bit_6, [rb + value], [ip + 1]
-    jz  [0], pic_command_write_ocw3_after_smm
+    jz  [0], .ocw3_after_smm
 
     # Yes, but we only support special mask mode off
     add bit_5, [rb + value], [ip + 1]
-    jnz [0], pic_command_write_invalid_ocw3
+    jnz [0], .invalid_ocw3
 
-pic_command_write_ocw3_after_smm:
+.ocw3_after_smm:
     # Poll mode is not supported
     add bit_2, [rb + value], [ip + 1]
-    jnz [0], pic_command_write_invalid_ocw3
+    jnz [0], .invalid_ocw3
 
-pic_command_write_done:
+.done:
     arb 1
     ret 2
 
-pic_command_write_invalid_icw1:
-    add pic_command_write_invalid_icw1_message, 0, [rb - 1]
+.invalid_icw1:
+    add .invalid_icw1_message, 0, [rb - 1]
     arb -1
     call report_error
 
-pic_command_write_invalid_icw1_message:
+.invalid_icw1_message:
     db  "PIC: invalid or unsupported ICW1 value", 0
 
-pic_command_write_invalid_ocw2:
-    add pic_command_write_invalid_ocw2_message, 0, [rb - 1]
+.invalid_ocw2:
+    add .invalid_ocw2_message, 0, [rb - 1]
     arb -1
     call report_error
 
-pic_command_write_invalid_ocw2_message:
+.invalid_ocw2_message:
     db  "PIC: invalid or unsupported OCW2 value", 0
 
-pic_command_write_invalid_ocw3:
-    add pic_command_write_invalid_ocw3_message, 0, [rb - 1]
+.invalid_ocw3:
+    add .invalid_ocw3_message, 0, [rb - 1]
     arb -1
     call report_error
 
-pic_command_write_invalid_ocw3_message:
+.invalid_ocw3_message:
     db  "PIC: invalid or unsupported OCW3 value", 0
 .ENDFRAME
 
@@ -230,23 +230,23 @@ pic_data_write:
     arb -1
 
     # PIC logging
-    jz  [config_log_pic], pic_data_write_after_log
+    jz  [config_log_pic], .after_log
 
     add [rb + value], 0, [rb - 1]
     arb -1
     call pic_data_write_log
 
-pic_data_write_after_log:
+.after_log:
     # Continue based on PIC state
-    add pic_data_write_table, [pic_state], [ip + 2]
+    add .table, [pic_state], [ip + 2]
     jz  0, [0]
 
-pic_data_write_table:
-    db  pic_data_write_default          # S_DEFAULT
-    db  pic_data_write_expect_icw2      # S_EXPECT_ICW2
-    db  pic_data_write_expect_icw4      # S_EXPECT_ICW4
+.table:
+    db  .default          # S_DEFAULT
+    db  .expect_icw2      # S_EXPECT_ICW2
+    db  .expect_icw4      # S_EXPECT_ICW4
 
-pic_data_write_default:
+.default:
     # Receive OCW1
 
     # Save individual bits of the interrupt mask register (IMR)
@@ -283,57 +283,57 @@ pic_data_write_default:
     # Reschedule which request will be executed next
     call schedule_interrupt_requests
 
-    jz  0, pic_data_write_done
+    jz  0, .done
 
-pic_data_write_expect_icw2:
+.expect_icw2:
     # Receive ICW2
 
     # Top 5 bits are the interrupt vector offset
     # We only support the offset of 8, which maps IRQ0-7 to interrupts 8-15
     add shr_3, [rb + value], [ip + 1]
     eq  [0], 0b00001, [rb + tmp]
-    jz  [rb + tmp], pic_data_write_invalid_icw2
+    jz  [rb + tmp], .invalid_icw2
 
     # Set up next state
     add S_EXPECT_ICW4, 0, [pic_state]
-    jz  0, pic_data_write_done
+    jz  0, .done
 
-pic_data_write_expect_icw4:
+.expect_icw4:
     # Receive ICW4
 
     # We only support the 8086/8088 mode
     add bit_0, [rb + value], [ip + 1]
-    jz  [0], pic_data_write_invalid_icw3
+    jz  [0], .invalid_icw3
 
     # No support for auto end of interrupt
     add bit_1, [rb + value], [ip + 1]
-    jnz [0], pic_data_write_invalid_icw3
+    jnz [0], .invalid_icw3
 
     # No support for special fully nested mode
     add bit_4, [rb + value], [ip + 1]
-    jnz [0], pic_data_write_invalid_icw3
+    jnz [0], .invalid_icw3
 
     # Set up next state
     add S_DEFAULT, 0, [pic_state]
 
-pic_data_write_done:
+.done:
     arb 1
     ret 2
 
-pic_data_write_invalid_icw2:
-    add pic_data_write_invalid_icw2_message, 0, [rb - 1]
+.invalid_icw2:
+    add .invalid_icw2_message, 0, [rb - 1]
     arb -1
     call report_error
 
-pic_data_write_invalid_icw2_message:
+.invalid_icw2_message:
     db  "PIC: invalid or unsupported ICW2 value", 0
 
-pic_data_write_invalid_icw3:
-    add pic_data_write_invalid_icw3_message, 0, [rb - 1]
+.invalid_icw3:
+    add .invalid_icw3_message, 0, [rb - 1]
     arb -1
     call report_error
 
-pic_data_write_invalid_icw3_message:
+.invalid_icw3_message:
     db  "PIC: invalid or unsupported ICW3 value", 0
 .ENDFRAME
 
@@ -343,7 +343,7 @@ pic_status_read:
     arb -1
 
     # Should we return the in-service register, or the interrupt request register?
-    jnz [pic_read_in_service], pic_status_read_in_service
+    jnz [pic_read_in_service], .in_service
 
     # Build the interrupt request register (IRR) from individual bits
     mul [pic_request_irqs + 7], 2, [rb + value]
@@ -361,9 +361,9 @@ pic_status_read:
     mul [rb + value], 2, [rb + value]
     add [pic_request_irqs + 0], 0, [rb + value]
 
-    jz  0, pic_status_read_done
+    jz  0, .done
 
-pic_status_read_in_service:
+.in_service:
     # Build the in-service register (ISR) from individual bits
     mul [pic_in_service_irqs + 7], 2, [rb + value]
     add [pic_in_service_irqs + 6], 0, [rb + value]
@@ -380,15 +380,15 @@ pic_status_read_in_service:
     mul [rb + value], 2, [rb + value]
     add [pic_in_service_irqs + 0], 0, [rb + value]
 
-pic_status_read_done:
+.done:
     # PIC logging
-    jz  [config_log_pic], pic_status_read_after_log
+    jz  [config_log_pic], .after_log
 
     add [rb + value], 0, [rb - 1]
     arb -1
     call pic_status_read_log
 
-pic_status_read_after_log:
+.after_log:
     arb 1
     ret 1
 .ENDFRAME
@@ -415,13 +415,13 @@ pic_data_read:
     add [pic_mask_irqs + 0], 0, [rb + value]
 
     # PIC logging
-    jz  [config_log_pic], pic_data_read_after_log
+    jz  [config_log_pic], .after_log
 
     add [rb + value], 0, [rb - 1]
     arb -1
     call pic_data_read_log
 
-pic_data_read_after_log:
+.after_log:
     arb 1
     ret 1
 .ENDFRAME

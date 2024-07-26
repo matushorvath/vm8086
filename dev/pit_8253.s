@@ -74,7 +74,7 @@ pit_mode_command_write:
     add bit_6, [rb + value], [ip + 1]
     add [0], [rb + channel], [rb + channel]
 
-    add pit_mode_command_write_table, [rb + channel], [ip + 1]
+    add .table, [rb + channel], [ip + 1]
     add [0], 0, [rb + handler]
 
     add [rb + value], 0, [rb - 1]
@@ -84,7 +84,7 @@ pit_mode_command_write:
     arb 3
     ret 2
 
-pit_mode_command_write_table:
+.table:
     db  pit_mode_command_write_ch0
     db  pit_mode_command_write_ch1
     db  pit_mode_command_write_ch2
@@ -102,11 +102,11 @@ pit_mode_command_write_ch1:
 pit_mode_command_write_read_back:
 .FRAME
     # Read back is not supported
-    add pit_mode_command_write_read_back_error, 0, [rb - 1]
+    add .read_back_error, 0, [rb - 1]
     arb -1
     call report_error
 
-pit_mode_command_write_read_back_error:
+.read_back_error:
     db  "PIT WR: MC Error, read-back command is not supported", 0
 .ENDFRAME
 

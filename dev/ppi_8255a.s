@@ -58,17 +58,17 @@ ppi_mode_write:
 
     # We only support one value
     eq  [rb + value], 0b10011001, [rb + tmp]
-    jnz [rb + tmp], ppi_mode_write_done
+    jnz [rb + tmp], .done
 
-    add ppi_mode_write_error, 0, [rb - 1]
+    add .error, 0, [rb - 1]
     arb -1
     call report_error
 
-ppi_mode_write_done:
+.done:
     arb 1
     ret 2
 
-ppi_mode_write_error:
+.error:
     db  "PPI WR: MC Error, requested mode is not supported", 0
 .ENDFRAME
 
@@ -136,13 +136,13 @@ ppi_port_b_write:
     call pit_set_gate_ch2
 
     # Set speaker active if bit 1 is set
-    jz  [speaker_activity_callback], ppi_port_b_write_after_speaker
+    jz  [speaker_activity_callback], .after_speaker
     add bit_1, [rb + value], [ip + 1]
-    jz  [0], ppi_port_b_write_after_speaker
+    jz  [0], .after_speaker
 
     call [speaker_activity_callback]
 
-ppi_port_b_write_after_speaker:
+.after_speaker:
     # Save the "read high switches" flag
     add bit_3, [rb + value], [ip + 1]
     add [0], 0, [ppi_read_high_switches]
@@ -173,22 +173,22 @@ ppi_port_c_read:
     # Upper four bits don't depend on ppi_read_high_switches
     mul [pit_output_ch2], 0b00100000, [rb + value]
 
-    jnz [ppi_read_high_switches], ppi_port_c_read_high_switches
+    jnz [ppi_read_high_switches], .high_switches
 
     # 0   : loop on post: 0 - no
     # 1   : coprocessor installed: 0 - no
     # 2, 3: RAM size: 11 - 640kB
     add [rb + value], 0b00001100, [rb + value]
 
-    jz  0, ppi_port_c_read_done
+    jz  0, .done
 
-ppi_port_c_read_high_switches:
+.high_switches:
     # 0, 1: display: 01 - color 40x25, 10 - color 80x25
     # 2, 3: number of drives: 00 - 1 drive
     add [rb + value], 0b00000001, [rb + value]
     add [rb + value], [config_boot_80x25], [rb + value]
 
-ppi_port_c_read_done:
+.done:
     arb 1
     ret 1
 .ENDFRAME
