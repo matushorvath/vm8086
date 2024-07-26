@@ -57,7 +57,7 @@
 initialize_graphics_mode:
 .FRAME
     # High resolution graphics mode?
-    jnz [mode_high_res_graphics], initialize_graphics_mode_hi
+    jnz [mode_high_res_graphics], .hi_res
 
     # Prepare constants for low resolution graphics
     add output_character_lo, 0, [output_character]
@@ -67,9 +67,9 @@ initialize_graphics_mode:
     add crumb_1, 0, [table_char1_hi]
     add crumb_0, 0, [table_char1_lo]
 
-    jz  0, initialize_graphics_mode_done
+    jz  0, .done
 
-initialize_graphics_mode_hi:
+.hi_res:
     # Prepare constants for high resolution graphics
     add output_character_hi, 0, [output_character]
 
@@ -78,7 +78,7 @@ initialize_graphics_mode_hi:
     add bit_2, 0, [table_char1_hi]
     add bit_0, 0, [table_char1_lo]
 
-initialize_graphics_mode_done:
+.done:
     ret 0
 .ENDFRAME
 
@@ -88,21 +88,21 @@ redraw_screen_graphics:
     arb -4
 
     # We are going to draw, is output enabled?
-    jnz [mode_enable_output], redraw_screen_graphics_enabled
+    jnz [mode_enable_output], .output_enabled
 
     # Drawing is disabled, screen contents will no longer match CGA memory
     add 1, 0, [screen_needs_redraw]
 
-    jz  0, redraw_screen_graphics_done
+    jz  0, .done
 
-redraw_screen_graphics_enabled:
+.output_enabled:
     # Redraw the whole screen by iterating over pairs of characters
 
     # Initialize the row loop
     add [mem], 0xb8000, [rb + addr_row0]
     add 0, 0, [rb + term_row]
 
-redraw_screen_graphics_row_loop:
+.row_loop:
     # Set cursor position for each row
     out 0x1b
     out '['
@@ -118,7 +118,7 @@ redraw_screen_graphics_row_loop:
     # Initialize the column loop
     add 0, 0, [rb + term_col]
 
-redraw_screen_graphics_col_loop:
+.col_loop:
     # Build and output the two characters
     add [rb + addr_row0], 0, [rb - 1]
     add [table_char0_hi], 0, [rb - 2]
@@ -139,7 +139,7 @@ redraw_screen_graphics_col_loop:
     # 320x200: 160 = 640 pixels / 4 pixels per terminal character
     # 640x200: 160 = 320 pixels / 2 pixels per terminal character
     eq  [rb + term_col], 160, [rb + tmp]
-    jz  [rb + tmp], redraw_screen_graphics_col_loop
+    jz  [rb + tmp], .col_loop
 
     # We have processed 4 rows of pixels (since each terminal character is 4 pixels high)
     # Because of interlacing, we only need to increment addr_row0 by two rows each iteration
@@ -157,7 +157,7 @@ redraw_screen_graphics_col_loop:
     add [rb + term_row], 1, [rb + term_row]                 # 1 row of characters was output
 
     eq  [rb + term_row], 50, [rb + tmp]                     # 50 = 200 pixels / 4 pixels per terminal character
-    jz  [rb + tmp], redraw_screen_graphics_row_loop
+    jz  [rb + tmp], .row_loop
 
     # Reset all attributes
     out 0x1b
@@ -168,10 +168,10 @@ redraw_screen_graphics_col_loop:
     add 0, 0, [screen_needs_redraw]
 
     # CGA logging
-    jz  [config_log_cga_debug], redraw_screen_graphics_done
+    jz  [config_log_cga_debug], .done
     call redraw_screen_graphics_log
 
-redraw_screen_graphics_done:
+.done:
     arb 4
     ret 0
 .ENDFRAME
@@ -225,17 +225,17 @@ write_memory_graphics:
 
     # Is the address too large to be on screen?
     lt  [rb + addr], 8000, [rb + tmp]
-    jz  [rb + tmp], write_memory_graphics_done
+    jz  [rb + tmp], .done
 
     # We are going to draw, is output enabled?
-    jnz [mode_enable_output], write_memory_graphics_enabled
+    jnz [mode_enable_output], .output_enabled
 
     # Drawing is disabled, screen contents will no longer match CGA memory
     add 1, 0, [screen_needs_redraw]
 
-    jz  0, write_memory_graphics_done
+    jz  0, .done
 
-write_memory_graphics_enabled:
+.output_enabled:
     # These comments are written for the 320x200 mode, with 640x200 values in
     # angle brackets whenever they differ
     #
@@ -333,7 +333,7 @@ write_memory_graphics_enabled:
 
     add 0, 0, [screen_needs_redraw]
 
-write_memory_graphics_done:
+.done:
     arb 4
     ret 2
 .ENDFRAME
@@ -418,34 +418,34 @@ output_character_lo:
     add colors + 0, [rb + max01], [ip + 5]
     add colors + 2, [rb + max23], [ip + 2]
     lt  [0], [0], [rb + tmp]
-    jz  [rb + tmp], output_character_lo_color_bg_01
+    jz  [rb + tmp], .color_bg_01
 
     # One of colors 2, 3 is color_bg, the other one could still be color_fg
     add [rb + max23], 2, [rb + color_bg]
     eq  [rb + max23], 0, [rb + max23]
-    jz  0, output_character_lo_after_color_bg
+    jz  0, .after_color_bg
 
-output_character_lo_color_bg_01:
+.color_bg_01:
     # One of colors 0, 1 is color_bg, the other one could still be color_fg
     add [rb + max01], 0, [rb + color_bg]
     eq  [rb + max01], 0, [rb + max01]
 
-output_character_lo_after_color_bg:
+.after_color_bg:
     # Find out color_fg
     add colors + 0, [rb + max01], [ip + 5]
     add colors + 2, [rb + max23], [ip + 2]
     lt  [0], [0], [rb + tmp]
-    jz  [rb + tmp], output_character_lo_color_fg_01
+    jz  [rb + tmp], .color_fg_01
 
     # One of colors 2, 3 is color_fg
     add [rb + max23], 2, [rb + color_fg]
-    jz  0, output_character_lo_after_color_fg
+    jz  0, .after_color_fg
 
-output_character_lo_color_fg_01:
+.color_fg_01:
     # One of colors 0, 1 is color_fg
     add [rb + max01], 0, [rb + color_fg]
 
-output_character_lo_after_color_fg:
+.after_color_fg:
     # Find the color mapping based on two most used colors
     mul [rb + color_bg], 4, [rb + tmp]
     add [rb + color_fg], [rb + tmp], [rb + tmp]
@@ -553,21 +553,21 @@ output_character_lo_after_color_fg:
     out [0]
 
     add blocks_4x2_1, [rb + char], [ip + 1]
-    jz  [0], output_character_lo_done
+    jz  [0], .done
     add blocks_4x2_1, [rb + char], [ip + 1]
     out [0]
 
     add blocks_4x2_2, [rb + char], [ip + 1]
-    jz  [0], output_character_lo_done
+    jz  [0], .done
     add blocks_4x2_2, [rb + char], [ip + 1]
     out [0]
 
     add blocks_4x2_3, [rb + char], [ip + 1]
-    jz  [0], output_character_lo_done
+    jz  [0], .done
     add blocks_4x2_3, [rb + char], [ip + 1]
     out [0]
 
-output_character_lo_done:
+.done:
     arb 7
     ret 3
 .ENDFRAME
@@ -689,21 +689,21 @@ output_character_hi:
     out [0]
 
     add blocks_4x2_1, [rb + char], [ip + 1]
-    jz  [0], output_character_hi_done
+    jz  [0], .done
     add blocks_4x2_1, [rb + char], [ip + 1]
     out [0]
 
     add blocks_4x2_2, [rb + char], [ip + 1]
-    jz  [0], output_character_hi_done
+    jz  [0], .done
     add blocks_4x2_2, [rb + char], [ip + 1]
     out [0]
 
     add blocks_4x2_3, [rb + char], [ip + 1]
-    jz  [0], output_character_hi_done
+    jz  [0], .done
     add blocks_4x2_3, [rb + char], [ip + 1]
     out [0]
 
-output_character_hi_done:
+.done:
     arb 2
     ret 3
 .ENDFRAME

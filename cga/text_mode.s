@@ -53,7 +53,7 @@ initialize_text_mode:
     add [negative_row_size], -80, [negative_row_size]
 
     # Right shift table used to divide address into rows, shr_1 for 80x25, shr_0 for 40x25
-    add initialize_text_mode_row_shr_tables, [mode_high_res_text], [ip + 1]
+    add .row_shr_tables, [mode_high_res_text], [ip + 1]
     add [0], 0, [row_shr_table]
 
     # Page size is 25 rows * 80/160 bytes per row = 2000/4000 bytes depending on column count
@@ -62,7 +62,7 @@ initialize_text_mode:
 
     ret 0
 
-initialize_text_mode_row_shr_tables:
+.row_shr_tables:
     db  shr_0
     db  shr_1
 .ENDFRAME
@@ -73,14 +73,14 @@ redraw_screen_text:
     arb -5
 
     # We are going to draw, is output enabled?
-    jnz [mode_enable_output], redraw_screen_text_enabled
+    jnz [mode_enable_output], .enabled
 
     # Drawing is disabled, screen contents will no longer match CGA memory
     add 1, 0, [screen_needs_redraw]
 
-    jz  0, redraw_screen_text_done
+    jz  0, .done
 
-redraw_screen_text_enabled:
+.enabled:
     # Redraw the whole screen by iterating over characters
 
     # Row length in terminal characters
@@ -92,7 +92,7 @@ redraw_screen_text_enabled:
     add [mem], 0xb8000, [rb + addr]
     add 0, 0, [rb + row]
 
-redraw_screen_text_row_loop:
+.row_loop:
     # Set cursor position for each row
     out 0x1b
     out '['
@@ -108,7 +108,7 @@ redraw_screen_text_row_loop:
     # Initialize the column loop
     add 0, 0, [rb + col]
 
-redraw_screen_text_col_loop:
+.col_loop:
     # Output the character
     add [rb + addr], 0, [ip + 1]
     add [0], 0, [rb - 1]
@@ -122,13 +122,13 @@ redraw_screen_text_col_loop:
     add [rb + col], 1, [rb + col]                           # 1 character output with every iteration
 
     eq  [rb + col], [rb + row_length], [rb + tmp]           # 80 or 40 terminal characters per row
-    jz  [rb + tmp], redraw_screen_text_col_loop
+    jz  [rb + tmp], .col_loop
 
     # Next row
     add [rb + row], 1, [rb + row]                           # 1 row of characters was output
 
     eq  [rb + row], 25, [rb + tmp]                          # 25 terminal rows
-    jz  [rb + tmp], redraw_screen_text_row_loop
+    jz  [rb + tmp], .row_loop
 
     # Reset all attributes
     out 0x1b
@@ -139,10 +139,10 @@ redraw_screen_text_col_loop:
     add 0, 0, [screen_needs_redraw]
 
     # CGA logging
-    jz  [config_log_cga_debug], redraw_screen_text_done
+    jz  [config_log_cga_debug], .done
     call redraw_screen_text_log
 
-redraw_screen_text_done:
+.done:
     arb 5
     ret 0
 .ENDFRAME
@@ -155,17 +155,17 @@ write_memory_text:
     # Is this inside the screen area?
     # TODO use start address of the screen buffer
     lt  [rb + addr], [page_size], [rb + tmp]
-    jz  [rb + tmp], write_memory_text_done
+    jz  [rb + tmp], .done
 
     # We are going to draw, is output enabled?
-    jnz [mode_enable_output], write_memory_text_enabled
+    jnz [mode_enable_output], .enabled
 
     # Drawing is disabled, screen contents will no longer match CGA memory
     add 1, 0, [screen_needs_redraw]
 
-    jz  0, write_memory_text_done
+    jz  0, .done
 
-write_memory_text_enabled:
+.enabled:
     # Divide the address by 80 or 160, depending on screen row size
     #  80: row = addr / 80, col = (addr - row * 80) / 2
     # 160: row = (addr / 80) / 2, col = (addr - row * 160) / 2
@@ -181,7 +181,7 @@ write_memory_text_enabled:
 
     # Is this the character or the attributes?
     add bit_0, [rb + col], [ip + 1]
-    jz  [0], write_memory_text_get_attr
+    jz  [0], .get_attr
 
     # These are the attributes, load the character from video memory
     add [rb + value], 0, [rb + attr]
@@ -190,9 +190,9 @@ write_memory_text_enabled:
     add [rb + tmp], [rb + addr], [ip + 1]
     add [0], 0, [rb + char]
 
-    jz  0, write_memory_text_print
+    jz  0, .print
 
-write_memory_text_get_attr:
+.get_attr:
     # This is the character, load the attributes from video memory
     add [rb + value], 0, [rb + char]
 
@@ -200,7 +200,7 @@ write_memory_text_get_attr:
     add [rb + tmp], [rb + addr], [ip + 1]
     add [0], 0, [rb + attr]
 
-write_memory_text_print:
+.print:
     # Each screen location occupies two bytes, so divide col by 2
     add shr_1, [rb + col], [ip + 1]
     add [0], 0, [rb + col]
@@ -227,7 +227,7 @@ write_memory_text_print:
     arb -2
     call output_character
 
-write_memory_text_done:
+.done:
     arb 5
     ret 2
 .ENDFRAME
@@ -239,7 +239,7 @@ output_character:
 
     # Set colors, unless it's the default white-on-black
     eq  [rb + attr], 0x07, [rb + tmp]
-    jnz [rb + tmp], output_character_after_color
+    jnz [rb + tmp], .after_color
 
     out 0x1b
     out '['
@@ -302,16 +302,16 @@ output_character:
 
     out 'm'
 
-output_character_after_color:
-    jnz [mode_high_res_text], output_character_double_width
+.after_color:
+    jnz [mode_high_res_text], .double_width
 
     # Select double width font for 40x25
     out 0x1b
     out '#'
     out '6'
 
-output_character_double_width:
-    jnz [mode_not_blinking], output_character_blink
+.double_width:
+    jnz [mode_not_blinking], .blink
 
     # Turn on blinking
     out 0x1b
@@ -319,29 +319,29 @@ output_character_double_width:
     out '5'
     out 'm'
 
-output_character_blink:
+.blink:
     # Print the character, converting from CP437 to UTF-8
     add cp437_0, [rb + char], [ip + 1]
     out [0]
 
     add cp437_1, [rb + char], [ip + 1]
-    jz  [0], output_character_cleanup
+    jz  [0], .cleanup
     add cp437_1, [rb + char], [ip + 1]
     out [0]
 
     add cp437_2, [rb + char], [ip + 1]
-    jz  [0], output_character_cleanup
+    jz  [0], .cleanup
     add cp437_2, [rb + char], [ip + 1]
     out [0]
 
-output_character_cleanup:
+.cleanup:
     # Reset all attributes
     out 0x1b
     out '['
     out '0'
     out 'm'
 
-output_character_done:
+.done:
     arb 1
     ret 2
 .ENDFRAME

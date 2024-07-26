@@ -52,7 +52,7 @@ post_status_write:
 set_disk_active:
 .FRAME
     # Do nothing if already active
-    jnz [disk_active], set_disk_active_done
+    jnz [disk_active], .done
 
     # Save the new value
     add 1, 0, [disk_active]
@@ -60,7 +60,7 @@ set_disk_active:
     # Redraw just the disk activity
     call redraw_disk_activity
 
-set_disk_active_done:
+.done:
     ret 0
 .ENDFRAME
 
@@ -68,7 +68,7 @@ set_disk_active_done:
 set_disk_inactive:
 .FRAME
     # Do nothing if already inactive
-    jz  [disk_active], set_disk_inactive_done
+    jz  [disk_active], .done
 
     # Save the new value
     add 0, 0, [disk_active]
@@ -76,7 +76,7 @@ set_disk_inactive:
     # Redraw just the disk activity
     call redraw_disk_activity
 
-set_disk_inactive_done:
+.done:
     ret 0
 .ENDFRAME
 
@@ -84,7 +84,7 @@ set_disk_inactive_done:
 set_speaker_active:
 .FRAME
     # Do nothing if already active
-    jnz [speaker_active], set_speaker_active_done
+    jnz [speaker_active], .done
 
     # Save the new value
     add 1, 0, [speaker_active]
@@ -92,7 +92,7 @@ set_speaker_active:
     # Redraw just the speaker activity
     call redraw_speaker_activity
 
-set_speaker_active_done:
+.done:
     ret 0
 .ENDFRAME
 
@@ -100,7 +100,7 @@ set_speaker_active_done:
 set_speaker_inactive:
 .FRAME
     # Do nothing if already inactive
-    jz  [speaker_active], set_speaker_inactive_done
+    jz  [speaker_active], .done
 
     # Save the new value
     add 0, 0, [speaker_active]
@@ -108,7 +108,7 @@ set_speaker_inactive:
     # Redraw just the speaker activity
     call redraw_speaker_activity
 
-set_speaker_inactive_done:
+.done:
     ret 0
 .ENDFRAME
 
@@ -134,7 +134,7 @@ redraw_status_bar:
     out 'K'
 
     # Print the POST status code, unless it's 00
-    jz  [post_status], redraw_status_bar_icons
+    jz  [post_status], .icons
 
     add [post_status], 0, [rb - 1]
     add 16, 0, [rb - 2]
@@ -142,7 +142,7 @@ redraw_status_bar:
     arb -3
     call print_num_radix
 
-redraw_status_bar_icons:
+.icons:
     # Position the cursor one row below the screen, right side
     out 0x1b
     out '['
@@ -160,7 +160,7 @@ redraw_status_bar_icons:
     out 'H'
 
     # Is the speaker active?
-    jz  [speaker_active], redraw_status_bar_speaker_blank
+    jz  [speaker_active], .speaker_blank
 
     # Draw a speaker icon
     out 0xf0
@@ -168,18 +168,18 @@ redraw_status_bar_icons:
     out 0x94
     out 0x8a
 
-    jz  0, redraw_status_bar_after_speaker
+    jz  0, .after_speaker
 
-redraw_status_bar_speaker_blank:
+.speaker_blank:
     # Draw a blank space for no speaker activity
     out ' '
 
-redraw_status_bar_after_speaker:
+.after_speaker:
     # The icons are double width, so we need a space between them
     out ' '
 
     # Is the disk active?
-    jz  [disk_active], redraw_status_bar_disk_blank
+    jz  [disk_active], .disk_blank
 
     # Draw a diskette icon
     out 0xf0
@@ -187,13 +187,13 @@ redraw_status_bar_after_speaker:
     out 0x92
     out 0xbe
 
-    jz  0, redraw_status_bar_after_disk
+    jz  0, .after_disk
 
-redraw_status_bar_disk_blank:
+.disk_blank:
     # Draw a blank space for no disk activity
     out ' '
 
-redraw_status_bar_after_disk:
+.after_disk:
     ret 0
 .ENDFRAME
 
@@ -217,7 +217,7 @@ redraw_disk_activity:
     out 'H'
 
     # Is the disk active?
-    jz  [disk_active], redraw_disk_activity_blank
+    jz  [disk_active], .blank
 
     # Draw a diskette icon
     out 0xf0
@@ -225,13 +225,13 @@ redraw_disk_activity:
     out 0x92
     out 0xbe
 
-    jz  0, redraw_disk_activity_done
+    jz  0, .done
 
-redraw_disk_activity_blank:
+.blank:
     # Draw a blank space for no disk activity
     out ' '
 
-redraw_disk_activity_done:
+.done:
     ret 0
 .ENDFRAME
 
@@ -255,7 +255,7 @@ redraw_speaker_activity:
     out 'H'
 
     # Is the speaker active?
-    jz  [speaker_active], redraw_speaker_activity_blank
+    jz  [speaker_active], .blank
 
     # Draw a speaker icon
     out 0xf0
@@ -263,13 +263,13 @@ redraw_speaker_activity:
     out 0x94
     out 0x8a
 
-    jz  0, redraw_speaker_activity_done
+    jz  0, .done
 
-redraw_speaker_activity_blank:
+.blank:
     # Draw a blank space for no speaker activity
     out ' '
 
-redraw_speaker_activity_done:
+.done:
     ret 0
 .ENDFRAME
 

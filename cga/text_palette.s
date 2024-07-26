@@ -11,12 +11,12 @@
 initialize_text_palette:
 .FRAME
     # Select background palette
-    add initialize_text_palette_data, [mode_not_blinking], [ip + 1]
+    add .data, [mode_not_blinking], [ip + 1]
     add [0], 0, [palette_text_bg_ptr]
 
     ret 0
 
-initialize_text_palette_data:
+.data:
     db  palette_text_bg_blink
     db  palette_text_bg_light
 .ENDFRAME

@@ -59,7 +59,7 @@ init_cga:
     call register_ports
 
     # Hide the cursor if requested
-    jz  [config_cga_hide_cursor], init_cga_after_cursor
+    jz  [config_cga_hide_cursor], .after_cursor
 
     out 0x1b
     out '['
@@ -68,7 +68,7 @@ init_cga:
     out '5'
     out 'l'
 
-init_cga_after_cursor:
+.after_cursor:
     # Initialize the screen
     call initialize_screen
 

@@ -52,20 +52,20 @@ mc6845_address_write:
     arb -1
 
     # CGA logging
-    jz  [config_log_cga_trace], mc6845_address_write_after_log
+    jz  [config_log_cga_trace], .after_log
 
     add [rb + value], 0, [rb - 1]
     arb -1
     call mc6845_address_write_log
 
-mc6845_address_write_after_log:
+.after_log:
     # Select one of 18 MC6845 registers to access
     lt  [rb + value], 18, [rb + tmp]
-    jz  [rb + tmp], mc6845_address_write_done
+    jz  [rb + tmp], .done
 
     add [rb + value], 0, [mc6845_address]
 
-mc6845_address_write_done:
+.done:
     arb 1
     ret 2
 .ENDFRAME
@@ -80,13 +80,13 @@ mc6845_data_read:
     add [0], 0, [rb + value]
 
     # CGA logging
-    jz  [config_log_cga_trace], mc6845_data_read_after_log
+    jz  [config_log_cga_trace], .after_log
 
     add [rb + value], 0, [rb - 1]
     arb -1
     call mc6845_data_read_log
 
-mc6845_data_read_after_log:
+.after_log:
     arb 1
     ret 1
 .ENDFRAME
@@ -95,13 +95,13 @@ mc6845_data_read_after_log:
 mc6845_data_write:
 .FRAME addr, value;
     # CGA logging
-    jz  [config_log_cga_trace], mc6845_data_write_after_log
+    jz  [config_log_cga_trace], .after_log
 
     add [rb + value], 0, [rb - 1]
     arb -1
     call mc6845_data_write_log
 
-mc6845_data_write_after_log:
+.after_log:
     # Write value to a MC6845 register
     add mc6845_registers, [mc6845_address], [ip + 3]
     add [rb + value], 0, [0]
@@ -115,13 +115,13 @@ mode_control_write:
     arb -4
 
     # CGA logging
-    jz  [config_log_cga_debug], mode_control_write_start
+    jz  [config_log_cga_debug], .start
 
     add [rb + value], 0, [rb - 1]
     arb -1
     call mode_control_write_log_1
 
-mode_control_write_start:
+.start:
     # Save text/graphics mode setting
     add [mode_graphics], 0, [rb + tmp]
     add bit_1, [rb + value], [ip + 1]
@@ -184,27 +184,27 @@ mode_control_write_start:
     add [rb + redraw], [rb + tmp], [rb + redraw]
 
     # Do we need to reinitialize the terminal?
-    jz  [rb + reinitialize], mode_control_write_redraw
+    jz  [rb + reinitialize], .redraw
 
     call initialize_screen
-    jz  0, mode_control_write_done
+    jz  0, .done
 
-mode_control_write_redraw:
+.redraw:
     # No need to reinitialize, do we need to redraw?
-    jz  [rb + redraw], mode_control_write_enable
+    jz  [rb + redraw], .enable
 
     call redraw_screen
-    jz  0, mode_control_write_done
+    jz  0, .done
 
-mode_control_write_enable:
+.enable:
     # No need to redraw, do we need to enable output?
-    jz  [rb + enable], mode_control_write_done
+    jz  [rb + enable], .done
 
     call enable_disable_screen
 
-mode_control_write_done:
+.done:
     # CGA logging
-    jz  [config_log_cga_debug], mode_control_write_after_log
+    jz  [config_log_cga_debug], .after_log
 
     add [rb + reinitialize], 0, [rb - 1]
     add [rb + redraw], 0, [rb - 2]
@@ -212,7 +212,7 @@ mode_control_write_done:
     arb -3
     call mode_control_write_log_2
 
-mode_control_write_after_log:
+.after_log:
     arb 4
     ret 2
 .ENDFRAME
@@ -264,19 +264,19 @@ color_control_write:
 
     # All these settings only affect the graphics mode
     mul [rb + redraw], [mode_graphics], [rb + redraw]
-    jz  [rb + redraw], color_control_write_done
+    jz  [rb + redraw], .done
 
     call redraw_screen
 
-color_control_write_done:
+.done:
     # CGA logging
-    jz  [config_log_cga_debug], color_control_write_after_log
+    jz  [config_log_cga_debug], .after_log
 
     add [rb + value], 0, [rb - 1]
     arb -1
     call color_control_write_log
 
-color_control_write_after_log:
+.after_log:
     arb 2
     ret 2
 .ENDFRAME
@@ -293,33 +293,33 @@ status_read:
     add 0b00000110, 0, [rb + value]
 
     # Is it time for simulated horizontal retrace?
-    jnz [horizontal_retrace_counter], status_read_after_horizontal
+    jnz [horizontal_retrace_counter], .after_horizontal
 
     # Yes, report horizontal retrace
     add [rb + value], 0b00000001, [rb + value]
     add 16, 0, [horizontal_retrace_counter]
 
-status_read_after_horizontal:
+.after_horizontal:
     add [horizontal_retrace_counter], -1, [horizontal_retrace_counter]
 
     # Is it time for simulated vertical retrace?
-    jnz [vertical_retrace_counter], status_read_after_vertical
+    jnz [vertical_retrace_counter], .after_vertical
 
     # Yes, report vertical retrace
     add [rb + value], 0b00001000, [rb + value]
     add 16, 0, [vertical_retrace_counter]
 
-status_read_after_vertical:
+.after_vertical:
     add [vertical_retrace_counter], -1, [vertical_retrace_counter]
 
     # CGA logging
-    jz  [config_log_cga_trace], status_read_after_log
+    jz  [config_log_cga_trace], .after_log
 
     add [rb + value], 0, [rb - 1]
     arb -1
     call status_read_log
 
-status_read_after_log:
+.after_log:
     arb 1
     ret 1
 .ENDFRAME
