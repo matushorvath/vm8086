@@ -36,7 +36,7 @@ log_dos_21_call:
 
     call log_start
 
-    add log_dos_21_call_start_msg, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -50,13 +50,13 @@ log_dos_21_call:
     # Do we have a function description?
     add dos_21_description_unknown, 0, [rb + description]
     lt  [reg_ah], DOS_21_FUNCTION_COUNT, [rb + tmp]
-    jz  [rb + tmp], log_dos_21_call_print_description
+    jz  [rb + tmp], .print_description
 
     # Yes, find description in the table
     mul [reg_ah], DOS_21_DESCRIPTION_LENGTH, [rb + description]
     add dos_21_descriptions, [rb + description], [rb + description]
 
-log_dos_21_call_print_description:
+.print_description:
     # Print description
     add [rb + description], 0, [rb - 1]
     arb -1
@@ -66,18 +66,18 @@ log_dos_21_call_print_description:
     add dos_21_log_handlers, [reg_ah], [ip + 1]
     add [0], 0, [rb + log_handler]
 
-    jz  [rb + log_handler], log_dos_21_call_done
+    jz  [rb + log_handler], .done
 
     # Yes, output the function-specific log
     call [rb + log_handler]
 
-log_dos_21_call_done:
+.done:
     out 10
 
     arb 3
     ret 0
 
-log_dos_21_call_start_msg:
+.msg:
     db  "dos call: int 21h fn ", 0
 .ENDFRAME
 
@@ -85,7 +85,7 @@ log_dos_21_call_start_msg:
 log_dos_21_select_disk:
 .FRAME
     # 0E Select disk
-    add log_dos_21_select_disk_msg, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -95,7 +95,7 @@ log_dos_21_select_disk:
 
     ret 0
 
-log_dos_21_select_disk_msg:
+.msg:
     db  ", drive ", 0
 .ENDFRAME
 
@@ -176,7 +176,7 @@ log_dos_21_set_time:
 log_dos_21_open_file_handle:
 .FRAME
     # 3D Open file using handle
-    add log_dos_21_open_file_handle_name_msg, 0, [rb - 1]
+    add .name_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -194,7 +194,7 @@ log_dos_21_open_file_handle:
     call print_str
 
     # Print the access mode
-    add log_dos_21_open_file_handle_access_msg, 0, [rb - 1]
+    add .access_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -204,9 +204,9 @@ log_dos_21_open_file_handle:
 
     ret 0
 
-log_dos_21_open_file_handle_name_msg:
+.name_msg:
     db  ", name ", 0
-log_dos_21_open_file_handle_access_msg:
+.access_msg:
     db  ", access ", 0
 .ENDFRAME
 
@@ -214,7 +214,7 @@ log_dos_21_open_file_handle_access_msg:
 log_dos_21_close_file_handle:
 .FRAME
     # 3E Close file using handle
-    add log_dos_21_close_file_handle_msg, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -225,7 +225,7 @@ log_dos_21_close_file_handle:
 
     ret 0
 
-log_dos_21_close_file_handle_msg:
+.msg:
     db  ", handle 0x", 0
 .ENDFRAME
 
@@ -233,7 +233,7 @@ log_dos_21_close_file_handle_msg:
 log_dos_21_read_file_handle:
 .FRAME
     # 3F Read file or device using handle
-    add log_dos_21_read_file_handle_msg, 0, [rb - 1]
+    add .handle_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -242,7 +242,7 @@ log_dos_21_read_file_handle:
     arb -1
     call print_num_16_w
 
-    add log_dos_21_read_file_handle_bytes_msg, 0, [rb - 1]
+    add .bytes_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -253,9 +253,9 @@ log_dos_21_read_file_handle:
 
     ret 0
 
-log_dos_21_read_file_handle_msg:
+.handle_msg:
     db  ", handle 0x", 0
-log_dos_21_read_file_handle_bytes_msg:
+.bytes_msg:
     db  ", bytes ", 0
 .ENDFRAME
 
@@ -263,7 +263,7 @@ log_dos_21_read_file_handle_bytes_msg:
 log_dos_21_force_duplicate_handle:
 .FRAME
     # 46 Force duplicate file handle
-    add log_dos_21_force_duplicate_handle_src_msg, 0, [rb - 1]
+    add .src_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -272,7 +272,7 @@ log_dos_21_force_duplicate_handle:
     arb -1
     call print_num_16_w
 
-    add log_dos_21_force_duplicate_handle_dst_msg, 0, [rb - 1]
+    add .dst_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -283,9 +283,9 @@ log_dos_21_force_duplicate_handle:
 
     ret 0
 
-log_dos_21_force_duplicate_handle_src_msg:
+.src_msg:
     db  ", src handle 0x", 0
-log_dos_21_force_duplicate_handle_dst_msg:
+.dst_msg:
     db  ", dst handle 0x", 0
 .ENDFRAME
 
@@ -293,7 +293,7 @@ log_dos_21_force_duplicate_handle_dst_msg:
 log_dos_21_exec_program:
 .FRAME
     # 4B EXEC load and execute program
-    add log_dos_21_exec_program_name_msg, 0, [rb - 1]
+    add .name_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -310,7 +310,7 @@ log_dos_21_exec_program:
     arb -1
     call print_str
 
-    add log_dos_21_exec_program_subfunction_msg, 0, [rb - 1]
+    add .subfunction_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -322,9 +322,9 @@ log_dos_21_exec_program:
 
     ret 0
 
-log_dos_21_exec_program_name_msg:
+.name_msg:
     db  ", name ", 0
-log_dos_21_exec_program_subfunction_msg:
+.subfunction_msg:
     db  ", subfunction ", 0
 .ENDFRAME
 
@@ -333,7 +333,7 @@ log_dos_21_iret:
 .FRAME
     call log_start
 
-    add log_dos_21_iret_ax_msg, 0, [rb - 1]
+    add .ax_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -342,7 +342,7 @@ log_dos_21_iret:
     arb -1
     call print_num_16_w
 
-    add log_dos_21_iret_cf_msg, 0, [rb - 1]
+    add .cf_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -352,9 +352,9 @@ log_dos_21_iret:
     out 10
     ret 0
 
-log_dos_21_iret_ax_msg:
+.ax_msg:
     db  "dos iret: ax=0x", 0
-log_dos_21_iret_cf_msg:
+.cf_msg:
     db  ", cf=", 0
 .ENDFRAME
 

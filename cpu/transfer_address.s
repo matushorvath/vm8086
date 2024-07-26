@@ -53,14 +53,14 @@ execute_lea:
     add [rb - 9], 0, [rb + off_hi]
 
     # Is this an 8086 register, or 8086 memory?
-    jz  [rb - 5], execute_lea_memory
+    jz  [rb - 5], .memory
 
     # It's a register, that is not supported
-    add execute_lea_register_message, 0, [rb - 1]
+    add .register_message, 0, [rb - 1]
     arb -1
     call report_error
 
-execute_lea_memory:
+.memory:
     # Decode REG
     add [rb + reg], 0, [rb - 1]
     add 1, 0, [rb - 2]
@@ -77,7 +77,7 @@ execute_lea_memory:
     arb 7
     ret 0
 
-execute_lea_register_message:
+.register_message:
     db  "cannot load effective address of a register", 0
 .ENDFRAME
 

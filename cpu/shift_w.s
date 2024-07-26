@@ -50,7 +50,7 @@ execute_shl_w:
 
     # If we are shifting more than 16 bits, use fixed values
     lt  [rb + count], 17, [rb + tmp]
-    jz  [rb + tmp], execute_shl_w_many
+    jz  [rb + tmp], .many
 
     # Read the value to shift
     add [rb + lseg], 0, [rb - 1]
@@ -61,17 +61,17 @@ execute_shl_w:
     add [rb - 5], 0, [rb + val_hi]
 
     # If we are shifting by 0, use a simplified algorithm
-    jz  [rb + count], execute_shl_w_0
+    jz  [rb + count], .by_0
 
     # If we are shifting by 8 or 16, use a simplified algorithm
     eq  [rb + count], 8, [rb + tmp]
-    jnz [rb + tmp], execute_shl_w_8
+    jnz [rb + tmp], .by_8
     eq  [rb + count], 16, [rb + tmp]
-    jnz [rb + tmp], execute_shl_w_16
+    jnz [rb + tmp], .by_16
 
     # If we are shifting by 1-7, we need to calculate both bytes
     lt  [rb + count], 8, [rb + tmp]
-    jz  [rb + tmp], execute_shl_w_8_to_15
+    jz  [rb + tmp], .by_8_to_15
 
     # Carry flag is the last bit shifted out of hi byte
     mul [rb + count], -1, [rb + tmp]
@@ -97,9 +97,9 @@ execute_shl_w:
     add [0], [rb + val_lo], [ip + 1]
     add [0], 0, [rb + val_lo]
 
-    jz  0, execute_shl_w_update_flags
+    jz  0, .update_flags
 
-execute_shl_w_8_to_15:
+.by_8_to_15:
     # Shifting by 8-15, shift the lo byte by (count - 8) and store it in hi byte
     add [rb + count], -8, [rb + count]
 
@@ -120,9 +120,9 @@ execute_shl_w_8_to_15:
     # Zero the lo value
     add 0, 0, [rb + val_lo]
 
-    jz  0, execute_shl_w_update_flags
+    jz  0, .update_flags
 
-execute_shl_w_8:
+.by_8:
     # If we are shifting by 8, update the flags, then move the lo byte to hi byte and zero the lo byte
     add bit_0, [rb + val_hi], [ip + 1]
     add [0], 0, [flag_carry]
@@ -130,7 +130,7 @@ execute_shl_w_8:
     add [rb + val_lo], 0, [rb + val_hi]
     add 0, 0, [rb + val_lo]
 
-execute_shl_w_update_flags:
+.update_flags:
     # Update flags
     lt  0x7f, [rb + val_hi], [flag_sign]
     add [rb + val_lo], [rb + val_hi], [rb + tmp]
@@ -143,16 +143,16 @@ execute_shl_w_update_flags:
     eq  [flag_carry], [flag_sign], [flag_overflow]
     eq  [flag_overflow], 0, [flag_overflow]
 
-    jz  0, execute_shl_w_store
+    jz  0, .store
 
-execute_shl_w_0:
+.by_0:
     # If we are shifting by 0, SF ZF and PF are not affected
     add 0, 0, [flag_carry]
     add 0, 0, [flag_overflow]
 
-    jz  0, execute_shl_w_done
+    jz  0, .done
 
-execute_shl_w_16:
+.by_16:
     # If we are shifting by 16, zero the value and use fixed flags except for CF
     add bit_0, [rb + val_lo], [ip + 1]
     add [0], 0, [flag_carry]
@@ -165,9 +165,9 @@ execute_shl_w_16:
     add 0, 0, [rb + val_lo]
     add 0, 0, [rb + val_hi]
 
-    jz  0, execute_shl_w_store
+    jz  0, .store
 
-execute_shl_w_many:
+.many:
     # If we are shifting by 17 or more bits, zero the value and use fixed flags
     add 0, 0, [flag_carry]
     add 0, 0, [flag_overflow]
@@ -178,7 +178,7 @@ execute_shl_w_many:
     add 0, 0, [rb + val_lo]
     add 0, 0, [rb + val_hi]
 
-execute_shl_w_store:
+.store:
     # Write the shifted value
     add [rb + lseg], 0, [rb - 1]
     add [rb + loff], 0, [rb - 2]
@@ -187,7 +187,7 @@ execute_shl_w_store:
     arb -4
     call write_location_w
 
-execute_shl_w_done:
+.done:
     arb 5
     ret 2
 .ENDFRAME
@@ -210,7 +210,7 @@ execute_shr_w:
 
     # If we are shifting more than 16 bits, use fixed values
     lt  [rb + count], 17, [rb + tmp]
-    jz  [rb + tmp], execute_shr_w_many
+    jz  [rb + tmp], .many
 
     # Read the value to shift
     add [rb + lseg], 0, [rb - 1]
@@ -221,13 +221,13 @@ execute_shr_w:
     add [rb - 5], 0, [rb + val_hi]
 
     # If we are shifting by 0, use a simplified algorithm
-    jz  [rb + count], execute_shr_w_0
+    jz  [rb + count], .by_0
 
     # If we are shifting by 8 or 16, use a simplified algorithm
     eq  [rb + count], 8, [rb + tmp]
-    jnz [rb + tmp], execute_shr_w_8
+    jnz [rb + tmp], .by_8
     eq  [rb + count], 16, [rb + tmp]
-    jnz [rb + tmp], execute_shr_w_16
+    jnz [rb + tmp], .by_16
 
     # Overflow flag is 1 when high order bit was changed,
     # and it will be changed to 0 if it is currently 1
@@ -235,7 +235,7 @@ execute_shr_w:
 
     # If we are shifting by 1-7, we need to calculate both bytes
     lt  [rb + count], 8, [rb + tmp]
-    jz  [rb + tmp], execute_shr_w_8_to_15
+    jz  [rb + tmp], .by_8_to_15
 
     # Carry flag is the last bit shifted out of lo byte
     add [rb + count], -1, [rb + tmp]
@@ -263,9 +263,9 @@ execute_shr_w:
     add [0], [rb + val_hi], [ip + 1]
     add [0], 0, [rb + val_hi]
 
-    jz  0, execute_shr_w_update_flags
+    jz  0, .update_flags
 
-execute_shr_w_8_to_15:
+.by_8_to_15:
     # Shifting by 8-15, shift the hi byte by (count - 8) and store it in lo byte
     add [rb + count], -8, [rb + count]
 
@@ -285,9 +285,9 @@ execute_shr_w_8_to_15:
     # Zero the hi value
     add 0, 0, [rb + val_hi]
 
-    jz  0, execute_shr_w_update_flags
+    jz  0, .update_flags
 
-execute_shr_w_8:
+.by_8:
     # If we are shifting by 8, update the flags, then move the hi byte to lo byte and zero the hi byte
     add bit_7, [rb + val_lo], [ip + 1]
     add [0], 0, [flag_carry]
@@ -295,7 +295,7 @@ execute_shr_w_8:
     add [rb + val_hi], 0, [rb + val_lo]
     add 0, 0, [rb + val_hi]
 
-execute_shr_w_update_flags:
+.update_flags:
     # Update flags
     lt  0x7f, [rb + val_hi], [flag_sign]
     add [rb + val_lo], [rb + val_hi], [rb + tmp]
@@ -304,16 +304,16 @@ execute_shr_w_update_flags:
     add parity, [rb + val_lo], [ip + 1]
     add [0], 0, [flag_parity]
 
-    jz  0, execute_shr_w_store
+    jz  0, .store
 
-execute_shr_w_0:
+.by_0:
     # If we are shifting by 0, SF ZF and PF are not affected
     add 0, 0, [flag_carry]
     add 0, 0, [flag_overflow]
 
-    jz  0, execute_shr_w_done
+    jz  0, .done
 
-execute_shr_w_16:
+.by_16:
     # If we are shifting by 16, zero the value and use fixed flags except for CF
     add bit_7, [rb + val_hi], [ip + 1]
     add [0], 0, [flag_carry]
@@ -326,9 +326,9 @@ execute_shr_w_16:
     add 0, 0, [rb + val_lo]
     add 0, 0, [rb + val_hi]
 
-    jz  0, execute_shr_w_store
+    jz  0, .store
 
-execute_shr_w_many:
+.many:
     # If we are shifting by 17 or more bits, zero the value and use fixed flags
     add 0, 0, [flag_carry]
     add 0, 0, [flag_overflow]
@@ -339,7 +339,7 @@ execute_shr_w_many:
     add 0, 0, [rb + val_lo]
     add 0, 0, [rb + val_hi]
 
-execute_shr_w_store:
+.store:
     # Write the shifted value
     add [rb + lseg], 0, [rb - 1]
     add [rb + loff], 0, [rb - 2]
@@ -348,7 +348,7 @@ execute_shr_w_store:
     arb -4
     call write_location_w
 
-execute_shr_w_done:
+.done:
     arb 5
     ret 2
 .ENDFRAME
@@ -378,24 +378,24 @@ execute_sar_w:
     add [rb - 5], 0, [rb + val_hi]
 
     # If we are shifting by 0, use a simplified algorithm
-    jz  [rb + count], execute_sar_w_0
+    jz  [rb + count], .by_0
 
     # Sign flag will remain unchanged
     lt  0x7f, [rb + val_hi], [flag_sign]
 
     # If we are shifting more than 16 bits, use fixed values
     lt  [rb + count], 17, [rb + tmp]
-    jz  [rb + tmp], execute_sar_w_many
+    jz  [rb + tmp], .many
 
     # If we are shifting by 8 or 16, use a simplified algorithm
     eq  [rb + count], 8, [rb + tmp]
-    jnz [rb + tmp], execute_sar_w_8
+    jnz [rb + tmp], .by_8
     eq  [rb + count], 16, [rb + tmp]
-    jnz [rb + tmp], execute_sar_w_16
+    jnz [rb + tmp], .by_16
 
     # If we are shifting by 1-7, we need to calculate both bytes
     lt  [rb + count], 8, [rb + tmp]
-    jz  [rb + tmp], execute_sar_w_8_to_15
+    jz  [rb + tmp], .by_8_to_15
 
     # Carry flag is the last bit shifted out of lo byte
     add [rb + count], -1, [rb + tmp]
@@ -428,9 +428,9 @@ execute_sar_w:
     mul [0], [flag_sign], [rb + tmp]
     add [rb + val_hi], [rb + tmp], [rb + val_hi]
 
-    jz  0, execute_sar_w_update_flags
+    jz  0, .update_flags
 
-execute_sar_w_8_to_15:
+.by_8_to_15:
     # Shifting by 8-15, shift the hi byte by (count - 8) and store it in lo byte
     add [rb + count], -8, [rb + count]
 
@@ -453,9 +453,9 @@ execute_sar_w_8_to_15:
     add [rb + val_lo], [rb + tmp], [rb + val_lo]
     mul [flag_sign], 0xff, [rb + val_hi]
 
-    jz  0, execute_sar_w_update_flags
+    jz  0, .update_flags
 
-execute_sar_w_8:
+.by_8:
     # If we are shifting by 8, update the flags, then move the hi byte to lo byte and sign-fill the hi byte
     add bit_7, [rb + val_lo], [ip + 1]
     add [0], 0, [flag_carry]
@@ -463,7 +463,7 @@ execute_sar_w_8:
     add [rb + val_hi], 0, [rb + val_lo]
     mul [flag_sign], 0xff, [rb + val_hi]
 
-execute_sar_w_update_flags:
+.update_flags:
     # Update flags
     add [rb + val_lo], [rb + val_hi], [rb + tmp]
     eq  [rb + tmp], 0, [flag_zero]
@@ -474,16 +474,16 @@ execute_sar_w_update_flags:
     # Overflow flag is always 0 because we never change the high order bit
     add 0, 0, [flag_overflow]
 
-    jz  0, execute_sar_w_store
+    jz  0, .store
 
-execute_sar_w_0:
+.by_0:
     # If we are shifting by 0, SF ZF and PF are not affected
     add 0, 0, [flag_carry]
     add 0, 0, [flag_overflow]
 
-    jz  0, execute_sar_w_done
+    jz  0, .done
 
-execute_sar_w_16:
+.by_16:
     # If we are shifting by 16, sign-fill the value and use fixed flags except for CF
     add bit_7, [rb + val_hi], [ip + 1]
     add [0], 0, [flag_carry]
@@ -495,9 +495,9 @@ execute_sar_w_16:
     mul [flag_sign], 0xff, [rb + val_lo]
     mul [flag_sign], 0xff, [rb + val_hi]
 
-    jz  0, execute_sar_w_store
+    jz  0, .store
 
-execute_sar_w_many:
+.many:
     # If we are shifting by 17 or more bits, sign-fill the value and use fixed flags
     add [flag_sign], 0, [flag_carry]
     add 0, 0, [flag_overflow]
@@ -507,7 +507,7 @@ execute_sar_w_many:
     mul [flag_sign], 0xff, [rb + val_lo]
     mul [flag_sign], 0xff, [rb + val_hi]
 
-execute_sar_w_store:
+.store:
     # Write the shifted value
     add [rb + lseg], 0, [rb - 1]
     add [rb + loff], 0, [rb - 2]
@@ -516,7 +516,7 @@ execute_sar_w_store:
     arb -4
     call write_location_w
 
-execute_sar_w_done:
+.done:
     arb 5
     ret 2
 .ENDFRAME

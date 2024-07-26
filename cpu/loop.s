@@ -17,14 +17,14 @@ execute_loop:
 .FRAME
     call dec_cx
 
-    jnz [reg_cx + 0], execute_loop_taken
-    jnz [reg_cx + 1], execute_loop_taken
+    jnz [reg_cx + 0], .taken
+    jnz [reg_cx + 1], .taken
 
     # Skip the pointer and don't jump
     call inc_ip_b
     ret 0
 
-execute_loop_taken:
+.taken:
     call execute_jmp_short
     ret 0
 .ENDFRAME
@@ -34,16 +34,16 @@ execute_loopz:
 .FRAME
     call dec_cx
 
-    jnz [reg_cx + 0], execute_loopz_taken
-    jnz [reg_cx + 1], execute_loopz_taken
+    jnz [reg_cx + 0], .taken
+    jnz [reg_cx + 1], .taken
 
-execute_loopz_not_taken:
+.not_taken:
     # Skip the pointer and don't jump
     call inc_ip_b
     ret 0
 
-execute_loopz_taken:
-    jz  [flag_zero], execute_loopz_not_taken
+.taken:
+    jz  [flag_zero], .not_taken
 
     call execute_jmp_short
     ret 0
@@ -54,16 +54,16 @@ execute_loopnz:
 .FRAME
     call dec_cx
 
-    jnz [reg_cx + 0], execute_loopnz_taken
-    jnz [reg_cx + 1], execute_loopnz_taken
+    jnz [reg_cx + 0], .taken
+    jnz [reg_cx + 1], .taken
 
-execute_loopnz_not_taken:
+.not_taken:
     # Skip the pointer and don't jump
     call inc_ip_b
     ret 0
 
-execute_loopnz_taken:
-    jnz [flag_zero], execute_loopnz_not_taken
+.taken:
+    jnz [flag_zero], .not_taken
 
     call execute_jmp_short
     ret 0
@@ -72,13 +72,13 @@ execute_loopnz_taken:
 ##########
 execute_jcxz:
 .FRAME
-    jnz [reg_cx + 0], execute_jcxz_not_taken
-    jnz [reg_cx + 1], execute_jcxz_not_taken
+    jnz [reg_cx + 0], .taken
+    jnz [reg_cx + 1], .taken
 
     call execute_jmp_short
     ret 0
 
-execute_jcxz_not_taken:
+.taken:
     # Skip the pointer and don't jump
     call inc_ip_b
     ret 0
@@ -94,18 +94,18 @@ dec_cx:
 
     # Check for borrow into low byte
     lt  [reg_cx + 0], 0, [rb + tmp]
-    jz  [rb + tmp], dec_cx_done
+    jz  [rb + tmp], .done
 
     add [reg_cx + 0], 0x100, [reg_cx + 0]
     add [reg_cx + 1], -1, [reg_cx + 1]
 
     # Check for borrow into high byte
     lt  [reg_cx + 1], 0, [rb + tmp]
-    jz  [rb + tmp], dec_cx_done
+    jz  [rb + tmp], .done
 
     add [reg_cx + 1], 0x100, [reg_cx + 1]
 
-dec_cx_done:
+.done:
     arb 1
     ret 0
 .ENDFRAME

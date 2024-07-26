@@ -28,7 +28,7 @@ read_location_b:
     arb -2
 
     eq  [rb + lseg], 0x10000, [rb + tmp]
-    jnz [rb + tmp], read_location_b_register
+    jnz [rb + tmp], .register
 
     # Read from an 8086 address
     add [rb + lseg], 0, [rb - 1]
@@ -37,14 +37,14 @@ read_location_b:
     call read_seg_off_b
     add [rb - 4], 0, [rb + value]
 
-    jz  0, read_location_b_done
+    jz  0, .done
 
-read_location_b_register:
+.register:
     # Read from an intcode address
     add [rb + loff], 0, [ip + 1]
     add [0], 0, [rb + value]
 
-read_location_b_done:
+.done:
     arb 2
     ret 2
 .ENDFRAME
@@ -55,7 +55,7 @@ read_location_w:
     arb -3
 
     eq  [rb + lseg], 0x10000, [rb + tmp]
-    jnz [rb + tmp], read_location_w_register
+    jnz [rb + tmp], .register
 
     # Read from an 8086 address
     add [rb + lseg], 0, [rb - 1]
@@ -65,9 +65,9 @@ read_location_w:
     add [rb - 4], 0, [rb + value_lo]
     add [rb - 5], 0, [rb + value_hi]
 
-    jz  0, read_location_w_done
+    jz  0, .done
 
-read_location_w_register:
+.register:
     # Read from an intcode address
     add [rb + loff], 0, [ip + 1]
     add [0], 0, [rb + value_lo]
@@ -75,7 +75,7 @@ read_location_w_register:
     add [rb + loff], 1, [ip + 1]
     add [0], 0, [rb + value_hi]
 
-read_location_w_done:
+.done:
     arb 3
     ret 2
 .ENDFRAME
@@ -86,7 +86,7 @@ read_location_dw:
     arb -5
 
     eq  [rb + lseg], 0x10000, [rb + tmp]
-    jnz [rb + tmp], read_location_dw_register
+    jnz [rb + tmp], .register
 
     # Read from an 8086 address
     add [rb + lseg], 0, [rb - 1]
@@ -98,19 +98,19 @@ read_location_dw:
     add [rb - 6], 0, [rb + value_hl]
     add [rb - 7], 0, [rb + value_hh]
 
-    jz  0, read_location_dw_done
+    jz  0, .done
 
-read_location_dw_register:
+.register:
     # The location must be 8086 memory, since we read 4 bytes from it
-    add read_location_dw_register_message, 0, [rb - 1]
+    add .register_message, 0, [rb - 1]
     arb -1
     call report_error
 
-read_location_dw_done:
+.done:
     arb 5
     ret 2
 
-read_location_dw_register_message:
+.register_message:
     db  "cannot read 4 bytes from a register", 0
 .ENDFRAME
 
@@ -120,7 +120,7 @@ write_location_b:
     arb -1
 
     eq  [rb + lseg], 0x10000, [rb + tmp]
-    jnz [rb + tmp], write_location_b_register
+    jnz [rb + tmp], .register
 
     # Write to an 8086 address
     add [rb + lseg], 0, [rb - 1]
@@ -129,14 +129,14 @@ write_location_b:
     arb -3
     call write_seg_off_b
 
-    jz  0, write_location_b_done
+    jz  0, .done
 
-write_location_b_register:
+.register:
     # Write to an intcode address
     add [rb + loff], 0, [ip + 3]
     add [rb + value], 0, [0]
 
-write_location_b_done:
+.done:
     arb 1
     ret 3
 .ENDFRAME
@@ -147,7 +147,7 @@ write_location_w:
     arb -1
 
     eq  [rb + lseg], 0x10000, [rb + tmp]
-    jnz [rb + tmp], write_location_w_register
+    jnz [rb + tmp], .register
 
     # Write to an 8086 address
     add [rb + lseg], 0, [rb - 1]
@@ -157,9 +157,9 @@ write_location_w:
     arb -4
     call write_seg_off_w
 
-    jz  0, write_location_w_done
+    jz  0, .done
 
-write_location_w_register:
+.register:
     # Write to an intcode address
     add [rb + loff], 0, [ip + 3]
     add [rb + value_lo], 0, [0]
@@ -167,7 +167,7 @@ write_location_w_register:
     add [rb + loff], 1, [ip + 3]
     add [rb + value_hi], 0, [0]
 
-write_location_w_done:
+.done:
     arb 1
     ret 4
 .ENDFRAME

@@ -19,23 +19,23 @@ log_cs_change:
     add [reg_cs + 0], [rb + cs], [rb + cs]
 
     eq  [rb + cs], [prev_cs], [rb + tmp]
-    jnz [rb + tmp], log_cs_change_done
+    jnz [rb + tmp], .done
     add [rb + cs], 0, [prev_cs]
 
     call log_start
 
     # Print the log message
-    add log_cs_change_msg, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
     out 10
 
-log_cs_change_done:
+.done:
     arb 2
     ret 0
 
-log_cs_change_msg:
+.msg:
     db  "CS changed", 0
 .ENDFRAME
 

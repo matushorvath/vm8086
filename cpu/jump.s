@@ -43,19 +43,19 @@ execute_jmp_short:
 
     # Check for carry out of low byte
     lt  [reg_ip + 0], 0x100, [rb + tmp]
-    jnz [rb + tmp], execute_jmp_short_after_carry_lo
+    jnz [rb + tmp], .after_carry_lo
 
     add [reg_ip + 0], -0x100, [reg_ip + 0]
     add [reg_ip + 1], 1, [reg_ip + 1]
 
-execute_jmp_short_after_carry_lo:
+.after_carry_lo:
     # Check for carry out of high byte
     lt  [reg_ip + 1], 0x100, [rb + tmp]
-    jnz [rb + tmp], execute_jmp_short_after_carry_hi
+    jnz [rb + tmp], .after_carry_hi
 
     add [reg_ip + 1], -0x100, [reg_ip + 1]
 
-execute_jmp_short_after_carry_hi:
+.after_carry_hi:
     arb 2
     ret 0
 .ENDFRAME
@@ -77,19 +77,19 @@ execute_jmp_near:
 
     # Check for carry out of low byte
     lt  [reg_ip + 0], 0x100, [rb + tmp]
-    jnz [rb + tmp], execute_jmp_near_after_carry_lo
+    jnz [rb + tmp], .after_carry_lo
 
     add [reg_ip + 0], -0x100, [reg_ip + 0]
     add [reg_ip + 1], 1, [reg_ip + 1]
 
-execute_jmp_near_after_carry_lo:
+.after_carry_lo:
     # Check for carry out of high byte
     lt  [reg_ip + 1], 0x100, [rb + tmp]
-    jnz [rb + tmp], execute_jmp_near_after_carry_hi
+    jnz [rb + tmp], .after_carry_hi
 
     add [reg_ip + 1], -0x100, [reg_ip + 1]
 
-execute_jmp_near_after_carry_hi:
+.after_carry_hi:
     arb 3
     ret 0
 .ENDFRAME
@@ -132,10 +132,10 @@ execute_jmp_far:
     add [rb + offset_hi], 0, [reg_ip + 1]
 
     # Log CS change
-    jz  [config_log_cs_change], execute_jmp_far_immediate_w_after_log_cs
+    jz  [config_log_cs_change], .after_log_cs
     call log_cs_change
 
-execute_jmp_far_immediate_w_after_log_cs:
+.after_log_cs:
     arb 4
     ret 0
 .ENDFRAME
@@ -154,10 +154,10 @@ execute_jmp_far_indirect:
     add [rb - 7], 0, [reg_cs + 1]
 
     # Log CS change
-    jz  [config_log_cs_change], execute_jmp_far_indirect_after_log_cs_change
+    jz  [config_log_cs_change], .after_log_cs_change
     call log_cs_change
 
-execute_jmp_far_indirect_after_log_cs_change:
+.after_log_cs_change:
     ret 2
 .ENDFRAME
 

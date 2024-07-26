@@ -67,7 +67,7 @@ execute_rol_cl_w:
 
 execute_rol_w:
     # Rotating by 0 is a no-operation, including flags
-    jz  [rb + count], execute_rol_w_done
+    jz  [rb + count], .done
 
     # Use the nibbles table to obtain count mod 16
     add nibble_0, [rb + count], [ip + 1]
@@ -82,34 +82,34 @@ execute_rol_w:
     add [rb - 5], 0, [rb + input_hi]
 
     # Jump to the label that handles this case
-    add execute_rol_w_table, [rb + count], [ip + 2]
+    add .table, [rb + count], [ip + 2]
     jz  0, [0]
 
-execute_rol_w_table:
-    db execute_rol_w_by_0
-    db execute_rol_w_by_1
-    db execute_rol_w_by_2
-    db execute_rol_w_by_3
-    db execute_rol_w_by_4
-    db execute_rol_w_by_5
-    db execute_rol_w_by_6
-    db execute_rol_w_by_7
-    db execute_rol_w_by_8
-    db execute_rol_w_by_9
-    db execute_rol_w_by_a
-    db execute_rol_w_by_b
-    db execute_rol_w_by_c
-    db execute_rol_w_by_d
-    db execute_rol_w_by_e
-    db execute_rol_w_by_f
+.table:
+    db .by_0
+    db .by_1
+    db .by_2
+    db .by_3
+    db .by_4
+    db .by_5
+    db .by_6
+    db .by_7
+    db .by_8
+    db .by_9
+    db .by_a
+    db .by_b
+    db .by_c
+    db .by_d
+    db .by_e
+    db .by_f
 
-execute_rol_w_by_0:
+.by_0:
     add [rb + input_lo], 0, [rb + output_lo]
     add [rb + input_hi], 0, [rb + output_hi]
 
-    jz  0, execute_rol_w_flags
+    jz  0, .flags
 
-execute_rol_w_by_1:
+.by_1:
     add shr_7, [rb + input_hi], [ip + 5]
     add shl_1, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
@@ -118,9 +118,9 @@ execute_rol_w_by_1:
     add shl_1, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
-    jz  0, execute_rol_w_flags
+    jz  0, .flags
 
-execute_rol_w_by_2:
+.by_2:
     add shr_6, [rb + input_hi], [ip + 5]
     add shl_2, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
@@ -129,9 +129,9 @@ execute_rol_w_by_2:
     add shl_2, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
-    jz  0, execute_rol_w_flags
+    jz  0, .flags
 
-execute_rol_w_by_3:
+.by_3:
     add shr_5, [rb + input_hi], [ip + 5]
     add shl_3, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
@@ -140,9 +140,9 @@ execute_rol_w_by_3:
     add shl_3, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
-    jz  0, execute_rol_w_flags
+    jz  0, .flags
 
-execute_rol_w_by_4:
+.by_4:
     add shr_4, [rb + input_hi], [ip + 5]
     add shl_4, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
@@ -151,9 +151,9 @@ execute_rol_w_by_4:
     add shl_4, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
-    jz  0, execute_rol_w_flags
+    jz  0, .flags
 
-execute_rol_w_by_5:
+.by_5:
     add shr_3, [rb + input_hi], [ip + 5]
     add shl_5, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
@@ -162,9 +162,9 @@ execute_rol_w_by_5:
     add shl_5, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
-    jz  0, execute_rol_w_flags
+    jz  0, .flags
 
-execute_rol_w_by_6:
+.by_6:
     add shr_2, [rb + input_hi], [ip + 5]
     add shl_6, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
@@ -173,9 +173,9 @@ execute_rol_w_by_6:
     add shl_6, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
-    jz  0, execute_rol_w_flags
+    jz  0, .flags
 
-execute_rol_w_by_7:
+.by_7:
     add shr_1, [rb + input_hi], [ip + 5]
     add shl_7, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
@@ -184,15 +184,15 @@ execute_rol_w_by_7:
     add shl_7, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
 
-    jz  0, execute_rol_w_flags
+    jz  0, .flags
 
-execute_rol_w_by_8:
+.by_8:
     add [rb + input_lo], 0, [rb + output_hi]
     add [rb + input_hi], 0, [rb + output_lo]
 
-    jz  0, execute_rol_w_flags
+    jz  0, .flags
 
-execute_rol_w_by_9:
+.by_9:
     add shr_7, [rb + input_hi], [ip + 5]
     add shl_1, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
@@ -201,9 +201,9 @@ execute_rol_w_by_9:
     add shl_1, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
-    jz  0, execute_rol_w_flags
+    jz  0, .flags
 
-execute_rol_w_by_a:
+.by_a:
     add shr_6, [rb + input_hi], [ip + 5]
     add shl_2, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
@@ -212,9 +212,9 @@ execute_rol_w_by_a:
     add shl_2, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
-    jz  0, execute_rol_w_flags
+    jz  0, .flags
 
-execute_rol_w_by_b:
+.by_b:
     add shr_5, [rb + input_hi], [ip + 5]
     add shl_3, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
@@ -223,9 +223,9 @@ execute_rol_w_by_b:
     add shl_3, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
-    jz  0, execute_rol_w_flags
+    jz  0, .flags
 
-execute_rol_w_by_c:
+.by_c:
     add shr_4, [rb + input_hi], [ip + 5]
     add shl_4, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
@@ -234,9 +234,9 @@ execute_rol_w_by_c:
     add shl_4, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
-    jz  0, execute_rol_w_flags
+    jz  0, .flags
 
-execute_rol_w_by_d:
+.by_d:
     add shr_3, [rb + input_hi], [ip + 5]
     add shl_5, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
@@ -245,9 +245,9 @@ execute_rol_w_by_d:
     add shl_5, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
-    jz  0, execute_rol_w_flags
+    jz  0, .flags
 
-execute_rol_w_by_e:
+.by_e:
     add shr_2, [rb + input_hi], [ip + 5]
     add shl_6, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
@@ -256,9 +256,9 @@ execute_rol_w_by_e:
     add shl_6, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
-    jz  0, execute_rol_w_flags
+    jz  0, .flags
 
-execute_rol_w_by_f:
+.by_f:
     add shr_1, [rb + input_hi], [ip + 5]
     add shl_7, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
@@ -267,7 +267,7 @@ execute_rol_w_by_f:
     add shl_7, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
 
-execute_rol_w_flags:
+.flags:
     # Update flags
     add bit_0, [rb + output_lo], [ip + 1]
     add [0], 0, [flag_carry]
@@ -284,7 +284,7 @@ execute_rol_w_flags:
     arb -4
     call write_location_w
 
-execute_rol_w_done:
+.done:
     arb 5
     ret 2
 .ENDFRAME
@@ -304,7 +304,7 @@ execute_ror_cl_w:
 
 execute_ror_w:
     # Rotating by 0 is a no-operation, including flags
-    jz  [rb + count], execute_ror_w_done
+    jz  [rb + count], .done
 
     # Use the nibbles table to obtain count mod 16
     add nibble_0, [rb + count], [ip + 1]
@@ -319,34 +319,34 @@ execute_ror_w:
     add [rb - 5], 0, [rb + input_hi]
 
     # Jump to the label that handles this case
-    add execute_ror_w_table, [rb + count], [ip + 2]
+    add .table, [rb + count], [ip + 2]
     jz  0, [0]
 
-execute_ror_w_table:
-    db execute_ror_w_by_0
-    db execute_ror_w_by_1
-    db execute_ror_w_by_2
-    db execute_ror_w_by_3
-    db execute_ror_w_by_4
-    db execute_ror_w_by_5
-    db execute_ror_w_by_6
-    db execute_ror_w_by_7
-    db execute_ror_w_by_8
-    db execute_ror_w_by_9
-    db execute_ror_w_by_a
-    db execute_ror_w_by_b
-    db execute_ror_w_by_c
-    db execute_ror_w_by_d
-    db execute_ror_w_by_e
-    db execute_ror_w_by_f
+.table:
+    db .by_0
+    db .by_1
+    db .by_2
+    db .by_3
+    db .by_4
+    db .by_5
+    db .by_6
+    db .by_7
+    db .by_8
+    db .by_9
+    db .by_a
+    db .by_b
+    db .by_c
+    db .by_d
+    db .by_e
+    db .by_f
 
-execute_ror_w_by_0:
+.by_0:
     add [rb + input_lo], 0, [rb + output_lo]
     add [rb + input_hi], 0, [rb + output_hi]
 
-    jz  0, execute_ror_w_flags
+    jz  0, .flags
 
-execute_ror_w_by_1:
+.by_1:
     add shl_7, [rb + input_lo], [ip + 5]
     add shr_1, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
@@ -355,9 +355,9 @@ execute_ror_w_by_1:
     add shr_1, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
 
-    jz  0, execute_ror_w_flags
+    jz  0, .flags
 
-execute_ror_w_by_2:
+.by_2:
     add shl_6, [rb + input_lo], [ip + 5]
     add shr_2, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
@@ -366,9 +366,9 @@ execute_ror_w_by_2:
     add shr_2, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
 
-    jz  0, execute_ror_w_flags
+    jz  0, .flags
 
-execute_ror_w_by_3:
+.by_3:
     add shl_5, [rb + input_lo], [ip + 5]
     add shr_3, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
@@ -377,9 +377,9 @@ execute_ror_w_by_3:
     add shr_3, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
 
-    jz  0, execute_ror_w_flags
+    jz  0, .flags
 
-execute_ror_w_by_4:
+.by_4:
     add shl_4, [rb + input_lo], [ip + 5]
     add shr_4, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
@@ -388,9 +388,9 @@ execute_ror_w_by_4:
     add shr_4, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
 
-    jz  0, execute_ror_w_flags
+    jz  0, .flags
 
-execute_ror_w_by_5:
+.by_5:
     add shl_3, [rb + input_lo], [ip + 5]
     add shr_5, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
@@ -399,9 +399,9 @@ execute_ror_w_by_5:
     add shr_5, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
 
-    jz  0, execute_ror_w_flags
+    jz  0, .flags
 
-execute_ror_w_by_6:
+.by_6:
     add shl_2, [rb + input_lo], [ip + 5]
     add shr_6, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
@@ -410,9 +410,9 @@ execute_ror_w_by_6:
     add shr_6, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
 
-    jz  0, execute_ror_w_flags
+    jz  0, .flags
 
-execute_ror_w_by_7:
+.by_7:
     add shl_1, [rb + input_lo], [ip + 5]
     add shr_7, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
@@ -421,15 +421,15 @@ execute_ror_w_by_7:
     add shr_7, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_lo]
 
-    jz  0, execute_ror_w_flags
+    jz  0, .flags
 
-execute_ror_w_by_8:
+.by_8:
     add [rb + input_hi], 0, [rb + output_lo]
     add [rb + input_lo], 0, [rb + output_hi]
 
-    jz  0, execute_ror_w_flags
+    jz  0, .flags
 
-execute_ror_w_by_9:
+.by_9:
     add shl_7, [rb + input_lo], [ip + 5]
     add shr_1, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
@@ -438,9 +438,9 @@ execute_ror_w_by_9:
     add shr_1, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
 
-    jz  0, execute_ror_w_flags
+    jz  0, .flags
 
-execute_ror_w_by_a:
+.by_a:
     add shl_6, [rb + input_lo], [ip + 5]
     add shr_2, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
@@ -449,9 +449,9 @@ execute_ror_w_by_a:
     add shr_2, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
 
-    jz  0, execute_ror_w_flags
+    jz  0, .flags
 
-execute_ror_w_by_b:
+.by_b:
     add shl_5, [rb + input_lo], [ip + 5]
     add shr_3, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
@@ -460,9 +460,9 @@ execute_ror_w_by_b:
     add shr_3, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
 
-    jz  0, execute_ror_w_flags
+    jz  0, .flags
 
-execute_ror_w_by_c:
+.by_c:
     add shl_4, [rb + input_lo], [ip + 5]
     add shr_4, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
@@ -471,9 +471,9 @@ execute_ror_w_by_c:
     add shr_4, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
 
-    jz  0, execute_ror_w_flags
+    jz  0, .flags
 
-execute_ror_w_by_d:
+.by_d:
     add shl_3, [rb + input_lo], [ip + 5]
     add shr_5, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
@@ -482,9 +482,9 @@ execute_ror_w_by_d:
     add shr_5, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
 
-    jz  0, execute_ror_w_flags
+    jz  0, .flags
 
-execute_ror_w_by_e:
+.by_e:
     add shl_2, [rb + input_lo], [ip + 5]
     add shr_6, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
@@ -493,9 +493,9 @@ execute_ror_w_by_e:
     add shr_6, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
 
-    jz  0, execute_ror_w_flags
+    jz  0, .flags
 
-execute_ror_w_by_f:
+.by_f:
     add shl_1, [rb + input_lo], [ip + 5]
     add shr_7, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
@@ -504,7 +504,7 @@ execute_ror_w_by_f:
     add shr_7, [rb + input_lo], [ip + 2]
     add [0], [0], [rb + output_hi]
 
-execute_ror_w_flags:
+.flags:
     # Update flags
     add bit_7, [rb + output_hi], [ip + 1]
     add [0], 0, [flag_carry]
@@ -521,7 +521,7 @@ execute_ror_w_flags:
     arb -4
     call write_location_w
 
-execute_ror_w_done:
+.done:
     arb 5
     ret 2
 .ENDFRAME
@@ -533,29 +533,29 @@ execute_ror_w_done:
 execute_rcl_1_w:
     arb -8
     add 1, 0, [rb + count]
-    add execute_rcl_w_table, 0, [rb + table]
-    add execute_rcl_w_flags, 0, [rb + overflow_algorithm]
+    add execute_rcl_rcr_w.rcl_table, 0, [rb + table]
+    add execute_rcl_rcr_w.rcl_flags, 0, [rb + overflow_algorithm]
     jz  0, execute_rcl_rcr_w
 
 execute_rcl_cl_w:
     arb -8
     add [reg_cl], 0, [rb + count]
-    add execute_rcl_w_table, 0, [rb + table]
-    add execute_rcl_w_flags, 0, [rb + overflow_algorithm]
+    add execute_rcl_rcr_w.rcl_table, 0, [rb + table]
+    add execute_rcl_rcr_w.rcl_flags, 0, [rb + overflow_algorithm]
     jz  0, execute_rcl_rcr_w
 
 execute_rcr_1_w:
     arb -8
     add 1, 0, [rb + count]
-    add execute_rcr_w_table, 0, [rb + table]
-    add execute_rcr_w_flags, 0, [rb + overflow_algorithm]
+    add execute_rcl_rcr_w.rcr_table, 0, [rb + table]
+    add execute_rcl_rcr_w.rcr_flags, 0, [rb + overflow_algorithm]
     jz  0, execute_rcl_rcr_w
 
 execute_rcr_cl_w:
     arb -8
     add [reg_cl], 0, [rb + count]
-    add execute_rcr_w_table, 0, [rb + table]
-    add execute_rcr_w_flags, 0, [rb + overflow_algorithm]
+    add execute_rcl_rcr_w.rcr_table, 0, [rb + table]
+    add execute_rcl_rcr_w.rcr_flags, 0, [rb + overflow_algorithm]
 
 execute_rcl_rcr_w:
     # Use the mod17 table to obtain count mod 17
@@ -563,7 +563,7 @@ execute_rcl_rcr_w:
     add [0], 0, [rb + count]
 
     # Rotating by 0 (mod 17) is a no-operation, including flags
-    jz  [rb + count], execute_rcl_rcr_w_done
+    jz  [rb + count], .done
 
     # Read the value to rotate
     add [rb + lseg], 0, [rb - 1]
@@ -577,45 +577,45 @@ execute_rcl_rcr_w:
     add [rb + table], [rb + count], [ip + 2]
     jz  0, [0]
 
-execute_rcl_w_table:
+.rcl_table:
     db 0
-    db execute_rcl_w_by_1
-    db execute_rcl_w_by_2
-    db execute_rcl_w_by_3
-    db execute_rcl_w_by_4
-    db execute_rcl_w_by_5
-    db execute_rcl_w_by_6
-    db execute_rcl_w_by_7
-    db execute_rcl_w_by_8
-    db execute_rcl_w_by_9
-    db execute_rcl_w_by_a
-    db execute_rcl_w_by_b
-    db execute_rcl_w_by_c
-    db execute_rcl_w_by_d
-    db execute_rcl_w_by_e
-    db execute_rcl_w_by_f
-    db execute_rcl_w_by_10
+    db .by_1
+    db .by_2
+    db .by_3
+    db .by_4
+    db .by_5
+    db .by_6
+    db .by_7
+    db .by_8
+    db .by_9
+    db .by_a
+    db .by_b
+    db .by_c
+    db .by_d
+    db .by_e
+    db .by_f
+    db .by_10
 
-execute_rcr_w_table:
+.rcr_table:
     db 0
-    db execute_rcl_w_by_10
-    db execute_rcl_w_by_f
-    db execute_rcl_w_by_e
-    db execute_rcl_w_by_d
-    db execute_rcl_w_by_c
-    db execute_rcl_w_by_b
-    db execute_rcl_w_by_a
-    db execute_rcl_w_by_9
-    db execute_rcl_w_by_8
-    db execute_rcl_w_by_7
-    db execute_rcl_w_by_6
-    db execute_rcl_w_by_5
-    db execute_rcl_w_by_4
-    db execute_rcl_w_by_3
-    db execute_rcl_w_by_2
-    db execute_rcl_w_by_1
+    db .by_10
+    db .by_f
+    db .by_e
+    db .by_d
+    db .by_c
+    db .by_b
+    db .by_a
+    db .by_9
+    db .by_8
+    db .by_7
+    db .by_6
+    db .by_5
+    db .by_4
+    db .by_3
+    db .by_2
+    db .by_1
 
-execute_rcl_w_by_1:
+.by_1:
     add shr_7, [rb + input_lo], [ip + 5]
     add shl_1, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
@@ -628,7 +628,7 @@ execute_rcl_w_by_1:
 
     jz  0, [rb + overflow_algorithm]
 
-execute_rcl_w_by_2:
+.by_2:
     add shr_6, [rb + input_lo], [ip + 5]
     add shl_2, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
@@ -645,7 +645,7 @@ execute_rcl_w_by_2:
 
     jz  0, [rb + overflow_algorithm]
 
-execute_rcl_w_by_3:
+.by_3:
     add shr_5, [rb + input_lo], [ip + 5]
     add shl_3, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
@@ -662,7 +662,7 @@ execute_rcl_w_by_3:
 
     jz  0, [rb + overflow_algorithm]
 
-execute_rcl_w_by_4:
+.by_4:
     add shr_4, [rb + input_lo], [ip + 5]
     add shl_4, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
@@ -679,7 +679,7 @@ execute_rcl_w_by_4:
 
     jz  0, [rb + overflow_algorithm]
 
-execute_rcl_w_by_5:
+.by_5:
     add shr_3, [rb + input_lo], [ip + 5]
     add shl_5, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
@@ -696,7 +696,7 @@ execute_rcl_w_by_5:
 
     jz  0, [rb + overflow_algorithm]
 
-execute_rcl_w_by_6:
+.by_6:
     add shr_2, [rb + input_lo], [ip + 5]
     add shl_6, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
@@ -713,7 +713,7 @@ execute_rcl_w_by_6:
 
     jz  0, [rb + overflow_algorithm]
 
-execute_rcl_w_by_7:
+.by_7:
     add shr_1, [rb + input_lo], [ip + 5]
     add shl_7, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_hi]
@@ -730,7 +730,7 @@ execute_rcl_w_by_7:
 
     jz  0, [rb + overflow_algorithm]
 
-execute_rcl_w_by_8:
+.by_8:
     add [rb + input_lo], 0, [rb + output_hi]
 
     mul [flag_carry], 0x80, [rb + tmp]
@@ -742,7 +742,7 @@ execute_rcl_w_by_8:
 
     jz  0, [rb + overflow_algorithm]
 
-execute_rcl_w_by_9:
+.by_9:
     add [rb + input_hi], 0, [rb + output_lo]
 
     add shl_1, [rb + input_lo], [ip + 1]
@@ -753,7 +753,7 @@ execute_rcl_w_by_9:
 
     jz  0, [rb + overflow_algorithm]
 
-execute_rcl_w_by_a:
+.by_a:
     add shr_7, [rb + input_lo], [ip + 5]
     add shl_1, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
@@ -770,7 +770,7 @@ execute_rcl_w_by_a:
 
     jz  0, [rb + overflow_algorithm]
 
-execute_rcl_w_by_b:
+.by_b:
     add shr_6, [rb + input_lo], [ip + 5]
     add shl_2, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
@@ -787,7 +787,7 @@ execute_rcl_w_by_b:
 
     jz  0, [rb + overflow_algorithm]
 
-execute_rcl_w_by_c:
+.by_c:
     add shr_5, [rb + input_lo], [ip + 5]
     add shl_3, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
@@ -804,7 +804,7 @@ execute_rcl_w_by_c:
 
     jz  0, [rb + overflow_algorithm]
 
-execute_rcl_w_by_d:
+.by_d:
     add shr_4, [rb + input_lo], [ip + 5]
     add shl_4, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
@@ -821,7 +821,7 @@ execute_rcl_w_by_d:
 
     jz  0, [rb + overflow_algorithm]
 
-execute_rcl_w_by_e:
+.by_e:
     add shr_3, [rb + input_lo], [ip + 5]
     add shl_5, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
@@ -838,7 +838,7 @@ execute_rcl_w_by_e:
 
     jz  0, [rb + overflow_algorithm]
 
-execute_rcl_w_by_f:
+.by_f:
     add shr_2, [rb + input_lo], [ip + 5]
     add shl_6, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
@@ -855,7 +855,7 @@ execute_rcl_w_by_f:
 
     jz  0, [rb + overflow_algorithm]
 
-execute_rcl_w_by_10:
+.by_10:
     add shr_1, [rb + input_lo], [ip + 5]
     add shl_7, [rb + input_hi], [ip + 2]
     add [0], [0], [rb + output_lo]
@@ -869,22 +869,22 @@ execute_rcl_w_by_10:
 
     jz  0, [rb + overflow_algorithm]
 
-execute_rcl_w_flags:
+.rcl_flags:
     # Update flags for rcl
     add bit_7, [rb + output_hi], [ip + 1]
     eq  [0], [flag_carry], [flag_overflow]
     eq  [flag_overflow], 0, [flag_overflow]
 
-    jz  0, execute_rcl_rcr_w_store
+    jz  0, .store
 
-execute_rcr_w_flags:
+.rcr_flags:
     # Update flags for rcr
     add bit_6, [rb + output_hi], [ip + 5]
     add bit_7, [rb + output_hi], [ip + 2]
     eq  [0], [0], [flag_overflow]
     eq  [flag_overflow], 0, [flag_overflow]
 
-execute_rcl_rcr_w_store:
+.store:
     # Write the rotated value
     add [rb + lseg], 0, [rb - 1]
     add [rb + loff], 0, [rb - 2]
@@ -893,7 +893,7 @@ execute_rcl_rcr_w_store:
     arb -4
     call write_location_w
 
-execute_rcl_rcr_w_done:
+.done:
     arb 8
     ret 2
 .ENDFRAME

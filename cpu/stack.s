@@ -203,19 +203,19 @@ inc_sp_w:
 
     # Check for carry out of low byte
     lt  [reg_sp + 0], 0x100, [rb + tmp]
-    jnz [rb + tmp], inc_2_sp_done
+    jnz [rb + tmp], .done
 
     add [reg_sp + 0], -0x100, [reg_sp + 0]
     add [reg_sp + 1], 1, [reg_sp + 1]
 
     # Check for carry out of high byte
     lt  [reg_sp + 1], 0x100, [rb + tmp]
-    jnz [rb + tmp], inc_2_sp_done
+    jnz [rb + tmp], .done
 
     # Overflow
     add [reg_sp + 1], -0x100, [reg_sp + 1]
 
-inc_2_sp_done:
+.done:
     arb 1
     ret 0
 .ENDFRAME
@@ -231,19 +231,19 @@ dec_sp_w:
 
     # Check for borrow into low byte
     lt  [reg_sp + 0], 0, [rb + tmp]
-    jz  [rb + tmp], dec_2_sp_done
+    jz  [rb + tmp], .done
 
     add [reg_sp + 0], 0x100, [reg_sp + 0]
     add [reg_sp + 1], -1, [reg_sp + 1]
 
     # Check for borrow into high byte
     lt  [reg_sp + 1], 0, [rb + tmp]
-    jz  [rb + tmp], dec_2_sp_done
+    jz  [rb + tmp], .done
 
     # Underflow
     add [reg_sp + 1], 0x100, [reg_sp + 1]
 
-dec_2_sp_done:
+.done:
     arb 1
     ret 0
 .ENDFRAME

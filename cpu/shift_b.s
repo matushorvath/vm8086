@@ -50,7 +50,7 @@ execute_shl_b:
 
     # If we are shifting more than 8 bits, use fixed values
     lt  [rb + count], 9, [rb + tmp]
-    jz  [rb + tmp], execute_shl_b_many
+    jz  [rb + tmp], .many
 
     # Read the value to shift
     add [rb + lseg], 0, [rb - 1]
@@ -60,11 +60,11 @@ execute_shl_b:
     add [rb - 4], 0, [rb + val]
 
     # If we are shifting by 0, use a simplified algorithm
-    jz  [rb + count], execute_shl_b_zero
+    jz  [rb + count], .zero
 
     # If we are shifting by 8, use a simplified algorithm
     eq  [rb + count], 8, [rb + tmp]
-    jnz [rb + tmp], execute_shl_b_eight
+    jnz [rb + tmp], .eight
 
     # Carry flag is the last bit shifted out
     mul [rb + count], -1, [rb + tmp]
@@ -91,16 +91,16 @@ execute_shl_b:
     eq  [flag_carry], [flag_sign], [flag_overflow]
     eq  [flag_overflow], 0, [flag_overflow]
 
-    jz  0, execute_shl_b_store
+    jz  0, .store
 
-execute_shl_b_zero:
+.zero:
     # If we are shifting by 0, SF ZF and PF are not affected
     add 0, 0, [flag_carry]
     add 0, 0, [flag_overflow]
 
-    jz  0, execute_shl_b_done
+    jz  0, .done
 
-execute_shl_b_eight:
+.eight:
     # If we are shifting by 8, zero the value and use fixed flags except for CF
     add bit_0, [rb + val], [ip + 1]
     add [0], 0, [flag_carry]
@@ -112,9 +112,9 @@ execute_shl_b_eight:
 
     add 0, 0, [rb + val]
 
-    jz  0, execute_shl_b_store
+    jz  0, .store
 
-execute_shl_b_many:
+.many:
     # If we are shifting by 9 or more bits, zero the value and use fixed flags
     add 0, 0, [flag_carry]
     add 0, 0, [flag_overflow]
@@ -124,7 +124,7 @@ execute_shl_b_many:
 
     add 0, 0, [rb + val]
 
-execute_shl_b_store:
+.store:
     # Write the shifted value
     add [rb + lseg], 0, [rb - 1]
     add [rb + loff], 0, [rb - 2]
@@ -132,7 +132,7 @@ execute_shl_b_store:
     arb -3
     call write_location_b
 
-execute_shl_b_done:
+.done:
     arb 3
     ret 2
 .ENDFRAME
@@ -155,7 +155,7 @@ execute_shr_b:
 
     # If we are shifting more than 8 bits, use fixed values
     lt  [rb + count], 9, [rb + tmp]
-    jz  [rb + tmp], execute_shr_b_many
+    jz  [rb + tmp], .many
 
     # Read the value to shift
     add [rb + lseg], 0, [rb - 1]
@@ -165,11 +165,11 @@ execute_shr_b:
     add [rb - 4], 0, [rb + val]
 
     # If we are shifting by 0, use a simplified algorithm
-    jz  [rb + count], execute_shr_b_zero
+    jz  [rb + count], .zero
 
     # If we are shifting by 8, use a simplified algorithm
     eq  [rb + count], 8, [rb + tmp]
-    jnz [rb + tmp], execute_shr_b_eight
+    jnz [rb + tmp], .eight
 
     # Overflow flag is 1 when high order bit was changed,
     # and it will be changed to 0 if it is currently 1
@@ -195,16 +195,16 @@ execute_shr_b:
     add parity, [rb + val], [ip + 1]
     add [0], 0, [flag_parity]
 
-    jz  0, execute_shr_b_store
+    jz  0, .store
 
-execute_shr_b_zero:
+.zero:
     # If we are shifting by 0, SF ZF and PF are not affected
     add 0, 0, [flag_carry]
     add 0, 0, [flag_overflow]
 
-    jz  0, execute_shr_b_done
+    jz  0, .done
 
-execute_shr_b_eight:
+.eight:
     # If we are shifting by 8, zero the value and use fixed flags except for CF
     add bit_7, [rb + val], [ip + 1]
     add [0], 0, [flag_carry]
@@ -216,9 +216,9 @@ execute_shr_b_eight:
 
     add 0, 0, [rb + val]
 
-    jz  0, execute_shr_b_store
+    jz  0, .store
 
-execute_shr_b_many:
+.many:
     # If we are shifting by 9 or more bits, zero the value and use fixed flags
     add 0, 0, [flag_carry]
     add 0, 0, [flag_overflow]
@@ -228,7 +228,7 @@ execute_shr_b_many:
 
     add 0, 0, [rb + val]
 
-execute_shr_b_store:
+.store:
     # Write the shifted value
     add [rb + lseg], 0, [rb - 1]
     add [rb + loff], 0, [rb - 2]
@@ -236,7 +236,7 @@ execute_shr_b_store:
     arb -3
     call write_location_b
 
-execute_shr_b_done:
+.done:
     arb 3
     ret 2
 .ENDFRAME
@@ -265,18 +265,18 @@ execute_sar_b:
     add [rb - 4], 0, [rb + val]
 
     # If we are shifting by 0, use a simplified algorithm
-    jz  [rb + count], execute_sar_b_zero
+    jz  [rb + count], .zero
 
     # Sign flag will remain unchanged
     lt  0x7f, [rb + val], [flag_sign]
 
     # If we are shifting more than 8 bits, use fixed values
     lt  [rb + count], 9, [rb + tmp]
-    jz  [rb + tmp], execute_sar_b_many
+    jz  [rb + tmp], .many
 
     # If we are shifting by 8, use a simplified algorithm
     eq  [rb + count], 8, [rb + tmp]
-    jnz [rb + tmp], execute_sar_b_eight
+    jnz [rb + tmp], .eight
 
     # Carry flag is the last bit shifted out
     add [rb + count], -1, [rb + tmp]
@@ -305,16 +305,16 @@ execute_sar_b:
     # Overflow flag is always 0 because we never change the high order bit
     add 0, 0, [flag_overflow]
 
-    jz  0, execute_sar_b_store
+    jz  0, .store
 
-execute_sar_b_zero:
+.zero:
     # If we are shifting by 0, SF ZF and PF are not affected
     add 0, 0, [flag_carry]
     add 0, 0, [flag_overflow]
 
-    jz  0, execute_sar_b_done
+    jz  0, .done
 
-execute_sar_b_eight:
+.eight:
     # If we are shifting by 8, sign-fill the value and use fixed flags except for CF
     add bit_7, [rb + val], [ip + 1]
     add [0], 0, [flag_carry]
@@ -325,9 +325,9 @@ execute_sar_b_eight:
 
     mul [flag_sign], 0xff, [rb + val]
 
-    jz  0, execute_sar_b_store
+    jz  0, .store
 
-execute_sar_b_many:
+.many:
     # If we are shifting by 9 or more bits, sign-fill the value and use fixed flags
     add [flag_sign], 0, [flag_carry]
     add 0, 0, [flag_overflow]
@@ -336,7 +336,7 @@ execute_sar_b_many:
 
     mul [flag_sign], 0xff, [rb + val]
 
-execute_sar_b_store:
+.store:
     # Write the shifted value
     add [rb + lseg], 0, [rb - 1]
     add [rb + loff], 0, [rb - 2]
@@ -344,7 +344,7 @@ execute_sar_b_store:
     arb -3
     call write_location_b
 
-execute_sar_b_done:
+.done:
     arb 3
     ret 2
 .ENDFRAME
