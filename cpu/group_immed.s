@@ -45,60 +45,60 @@ execute_immed_b:
     add [rb + loff_dst], 0, [rb - 4]
 
     # Execute the operation
-    add execute_immed_b_table, [rb + op], [ip + 2]
+    add .table, [rb + op], [ip + 2]
     jz  0, [0]
 
-execute_immed_b_table:
+.table:
     # Map each OP value to the label that handles it
-    db  execute_immed_b_add
-    db  execute_immed_b_or
-    db  execute_immed_b_adc
-    db  execute_immed_b_sbb
-    db  execute_immed_b_and
-    db  execute_immed_b_sub
-    db  execute_immed_b_xor
-    db  execute_immed_b_cmp
+    db  .add
+    db  .or
+    db  .adc
+    db  .sbb
+    db  .and
+    db  .sub
+    db  .xor
+    db  .cmp
 
-execute_immed_b_add:
+.add:
     arb -4
     call execute_add_b
-    jz  0, execute_immed_b_end
+    jz  0, .end
 
-execute_immed_b_or:
+.or:
     arb -4
     call execute_or_b
-    jz  0, execute_immed_b_end
+    jz  0, .end
 
-execute_immed_b_adc:
+.adc:
     arb -4
     call execute_adc_b
-    jz  0, execute_immed_b_end
+    jz  0, .end
 
-execute_immed_b_sbb:
+.sbb:
     arb -4
     call execute_sbb_b
-    jz  0, execute_immed_b_end
+    jz  0, .end
 
-execute_immed_b_and:
+.and:
     arb -4
     call execute_and_b
-    jz  0, execute_immed_b_end
+    jz  0, .end
 
-execute_immed_b_sub:
+.sub:
     arb -4
     call execute_sub_b
-    jz  0, execute_immed_b_end
+    jz  0, .end
 
-execute_immed_b_xor:
+.xor:
     arb -4
     call execute_xor_b
-    jz  0, execute_immed_b_end
+    jz  0, .end
 
-execute_immed_b_cmp:
+.cmp:
     arb -4
     call execute_cmp_b
 
-execute_immed_b_end:
+.end:
     ret 5
 .ENDFRAME
 
@@ -112,60 +112,60 @@ execute_immed_w:
     add [rb + loff_dst], 0, [rb - 4]
 
     # Execute the operation
-    add execute_immed_w_table, [rb + op], [ip + 2]
+    add .table, [rb + op], [ip + 2]
     jz  0, [0]
 
-execute_immed_w_table:
+.table:
     # Map each OP value to the label that handles it
-    db  execute_immed_w_add
-    db  execute_immed_w_or
-    db  execute_immed_w_adc
-    db  execute_immed_w_sbb
-    db  execute_immed_w_and
-    db  execute_immed_w_sub
-    db  execute_immed_w_xor
-    db  execute_immed_w_cmp
+    db  .add
+    db  .or
+    db  .adc
+    db  .sbb
+    db  .and
+    db  .sub
+    db  .xor
+    db  .cmp
 
-execute_immed_w_add:
+.add:
     arb -4
     call execute_add_w
-    jz  0, execute_immed_w_end
+    jz  0, .end
 
-execute_immed_w_or:
+.or:
     arb -4
     call execute_or_w
-    jz  0, execute_immed_w_end
+    jz  0, .end
 
-execute_immed_w_adc:
+.adc:
     arb -4
     call execute_adc_w
-    jz  0, execute_immed_w_end
+    jz  0, .end
 
-execute_immed_w_sbb:
+.sbb:
     arb -4
     call execute_sbb_w
-    jz  0, execute_immed_w_end
+    jz  0, .end
 
-execute_immed_w_and:
+.and:
     arb -4
     call execute_and_w
-    jz  0, execute_immed_w_end
+    jz  0, .end
 
-execute_immed_w_sub:
+.sub:
     arb -4
     call execute_sub_w
-    jz  0, execute_immed_w_end
+    jz  0, .end
 
-execute_immed_w_xor:
+.xor:
     arb -4
     call execute_xor_w
-    jz  0, execute_immed_w_end
+    jz  0, .end
 
-execute_immed_w_cmp:
+.cmp:
     arb -4
     call execute_cmp_w
 
-execute_immed_w_end:
+.end:
     ret 5
 .ENDFRAME
 

@@ -110,28 +110,28 @@ pack_flags_lo:
 
     # ----ODIT SZ-A-P-C
 
-    jz  [flag_carry], pack_flags_lo_after_carry
+    jz  [flag_carry], .after_carry
     add [rb + flags_lo], 0b00000001, [rb + flags_lo]
-pack_flags_lo_after_carry:
+.after_carry:
 
     # set bit 1 to match bochs (which emulates the 32-bit eflags)
     add [rb + flags_lo], 0b00000010, [rb + flags_lo]
 
-    jz  [flag_parity], pack_flags_lo_after_parity
+    jz  [flag_parity], .after_parity
     add [rb + flags_lo], 0b00000100, [rb + flags_lo]
-pack_flags_lo_after_parity:
+.after_parity:
 
-    jz  [flag_auxiliary_carry], pack_flags_lo_after_auxiliary_carry
+    jz  [flag_auxiliary_carry], .after_auxiliary_carry
     add [rb + flags_lo], 0b00010000, [rb + flags_lo]
-pack_flags_lo_after_auxiliary_carry:
+.after_auxiliary_carry:
 
-    jz  [flag_zero], pack_flags_lo_after_zero
+    jz  [flag_zero], .after_zero
     add [rb + flags_lo], 0b01000000, [rb + flags_lo]
-pack_flags_lo_after_zero:
+.after_zero:
 
-    jz  [flag_sign], pack_flags_lo_after_sign
+    jz  [flag_sign], .after_sign
     add [rb + flags_lo], 0b10000000, [rb + flags_lo]
-pack_flags_lo_after_sign:
+.after_sign:
 
     arb 1
     ret 0
@@ -180,39 +180,39 @@ unpack_flags_lo:
     # ----ODIT SZ-A-P-C
 
     lt  0b01111111, [rb + flags_lo], [flag_sign]
-    jz  [flag_sign], unpack_flags_lo_after_sign
+    jz  [flag_sign], .after_sign
     add [rb + flags_lo], -0b10000000, [rb + flags_lo]
-unpack_flags_lo_after_sign:
+.after_sign:
 
     lt  0b00111111, [rb + flags_lo], [flag_zero]
-    jz  [flag_zero], unpack_flags_lo_after_zero
+    jz  [flag_zero], .after_zero
     add [rb + flags_lo], -0b01000000, [rb + flags_lo]
-unpack_flags_lo_after_zero:
+.after_zero:
 
     lt  0b00011111, [rb + flags_lo], [rb + tmp]
-    jz  [rb + tmp], unpack_flags_lo_after_bit5
+    jz  [rb + tmp], .after_bit5
     add [rb + flags_lo], -0b00100000, [rb + flags_lo]
-unpack_flags_lo_after_bit5:
+.after_bit5:
 
     lt  0b00001111, [rb + flags_lo], [flag_auxiliary_carry]
-    jz  [flag_auxiliary_carry], unpack_flags_lo_after_auxiliary_carry
+    jz  [flag_auxiliary_carry], .after_auxiliary_carry
     add [rb + flags_lo], -0b00010000, [rb + flags_lo]
-unpack_flags_lo_after_auxiliary_carry:
+.after_auxiliary_carry:
 
     lt  0b00000111, [rb + flags_lo], [rb + tmp]
-    jz  [rb + tmp], unpack_flags_lo_after_bit3
+    jz  [rb + tmp], .after_bit3
     add [rb + flags_lo], -0b00001000, [rb + flags_lo]
-unpack_flags_lo_after_bit3:
+.after_bit3:
 
     lt  0b00000011, [rb + flags_lo], [flag_parity]
-    jz  [flag_parity], unpack_flags_lo_after_parity
+    jz  [flag_parity], .after_parity
     add [rb + flags_lo], -0b00000100, [rb + flags_lo]
-unpack_flags_lo_after_parity:
+.after_parity:
 
     lt  0b00000001, [rb + flags_lo], [rb + tmp]
-    jz  [rb + tmp], unpack_flags_lo_after_bit1
+    jz  [rb + tmp], .after_bit1
     add [rb + flags_lo], -0b00000010, [rb + flags_lo]
-unpack_flags_lo_after_bit1:
+.after_bit1:
 
     lt  0, [rb + flags_lo], [flag_carry]
 
@@ -228,39 +228,39 @@ unpack_flags_hi:
     # ----ODIT SZ-A-P-C
 
     lt  0b01111111, [rb + flags_hi], [rb + tmp]
-    jz  [rb + tmp], unpack_flags_hi_after_bit7
+    jz  [rb + tmp], .after_bit7
     add [rb + flags_hi], -0b10000000, [rb + flags_hi]
-unpack_flags_hi_after_bit7:
+.after_bit7:
 
     lt  0b00111111, [rb + flags_hi], [rb + tmp]
-    jz  [rb + tmp], unpack_flags_hi_after_bit6
+    jz  [rb + tmp], .after_bit6
     add [rb + flags_hi], -0b01000000, [rb + flags_hi]
-unpack_flags_hi_after_bit6:
+.after_bit6:
 
     lt  0b00011111, [rb + flags_hi], [rb + tmp]
-    jz  [rb + tmp], unpack_flags_hi_after_bit5
+    jz  [rb + tmp], .after_bit5
     add [rb + flags_hi], -0b00100000, [rb + flags_hi]
-unpack_flags_hi_after_bit5:
+.after_bit5:
 
     lt  0b00001111, [rb + flags_hi], [rb + tmp]
-    jz  [rb + tmp], unpack_flags_hi_after_bit4
+    jz  [rb + tmp], .after_bit4
     add [rb + flags_hi], -0b00010000, [rb + flags_hi]
-unpack_flags_hi_after_bit4:
+.after_bit4:
 
     lt  0b00000111, [rb + flags_hi], [flag_overflow]
-    jz  [flag_overflow], unpack_flags_hi_after_overflow
+    jz  [flag_overflow], .after_overflow
     add [rb + flags_hi], -0b00001000, [rb + flags_hi]
-unpack_flags_hi_after_overflow:
+.after_overflow:
 
     lt  0b00000011, [rb + flags_hi], [flag_direction]
-    jz  [flag_direction], unpack_flags_hi_after_direction
+    jz  [flag_direction], .after_direction
     add [rb + flags_hi], -0b00000100, [rb + flags_hi]
-unpack_flags_hi_after_direction:
+.after_direction:
 
     lt  0b00000001, [rb + flags_hi], [flag_interrupt]
-    jz  [flag_interrupt], unpack_flags_hi_after_interrupt
+    jz  [flag_interrupt], .after_interrupt
     add [rb + flags_hi], -0b00000010, [rb + flags_hi]
-unpack_flags_hi_after_interrupt:
+.after_interrupt:
 
     lt  0, [rb + flags_hi], [flag_trap]
 

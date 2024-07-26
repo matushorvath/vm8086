@@ -51,71 +51,71 @@ execute:
 
     # If there is no trigger address, tracing is always triggered
     add 0, 0, [rb + tracing_triggered]
-    jnz [config_tracing_cs], execute_loop
-    jnz [config_tracing_ip], execute_loop
+    jnz [config_tracing_cs], .loop
+    jnz [config_tracing_ip], .loop
     add 1, 0, [rb + tracing_triggered]
 
-execute_loop:
+.loop:
     # Skip tracing if disabled
-    jz  [config_enable_tracing], execute_tracing_done
+    jz  [config_enable_tracing], .tracing_done
 
     # If tracing was already triggered, jump directly to it
-    jnz [rb + tracing_triggered], execute_tracing_triggered
+    jnz [rb + tracing_triggered], .tracing_triggered
 
     # Check if we have reached the trigger address
     mul [reg_ip + 1], 0x100, [rb + tmp]
     add [reg_ip + 0], [rb + tmp], [rb + tmp]
     eq  [config_tracing_ip], [rb + tmp], [rb + tmp]
-    jz  [rb + tmp], execute_tracing_done
+    jz  [rb + tmp], .tracing_done
 
     mul [reg_cs + 1], 0x100, [rb + tmp]
     add [reg_cs + 0], [rb + tmp], [rb + tmp]
     eq  [config_tracing_cs], [rb + tmp], [rb + tmp]
-    jz  [rb + tmp], execute_tracing_done
+    jz  [rb + tmp], .tracing_done
 
     # Trigger address match
     add 1, 0, [rb + tracing_triggered]
 
-execute_tracing_triggered:
+.tracing_triggered:
     call print_trace
 
-execute_tracing_done:
+.tracing_done:
     # Handle prefixes; first check if they were consumed (prefix_valid == 0)
-    jz  [prefix_valid], execute_prefix_done
+    jz  [prefix_valid], .prefix_done
 
     # Decrease prefix lifetime
     add [prefix_valid], -1, [prefix_valid]
 
     # If prefix_valid == 0, we have just used the prefixes, reset them to defaults
-    jnz [prefix_valid], execute_prefix_done
+    jnz [prefix_valid], .prefix_done
 
     add reg_ds, 0, [ds_segment_prefix]
     add reg_ss, 0, [ss_segment_prefix]
     add 0, 0, [rep_prefix]
 
-execute_prefix_done:
+.prefix_done:
     # Process IRQs one is scheduled, the IF flag is set and there are no pending prefixes
-    jz  [irq_need_to_execute], execute_irq_done
-    jz  [flag_interrupt], execute_irq_done
-    jnz [irq_delay_execution], execute_irq_done
-    jnz [prefix_valid], execute_irq_done
+    jz  [irq_need_to_execute], .irq_done
+    jz  [flag_interrupt], .irq_done
+    jnz [irq_delay_execution], .irq_done
+    jnz [prefix_valid], .irq_done
 
     call irq_execute
 
-execute_irq_done:
+.irq_done:
     # If we skipped IRQ processing, we can do it before next instruction
     add 0, 0, [irq_delay_execution]
 
     # Call the callback if enabled
-    jz  [execute_callback], execute_callback_done
+    jz  [execute_callback], .callback_done
 
     call [execute_callback]
-    jnz [rb - 2], execute_callback_done
+    jnz [rb - 2], .callback_done
 
     # Callback returned 0, stop the VM
-    jz  0, execute_done
+    jz  0, .done
 
-execute_callback_done:
+.callback_done:
     add [reg_ip + 0], 0, [exec_ip + 0]
     add [reg_ip + 1], 0, [exec_ip + 1]
 
@@ -130,16 +130,16 @@ execute_callback_done:
     mul [rb + op], 3, [rb + tmp]                            # one record is 3 bytes long
 
     add instructions + 0, [rb + tmp], [ip + 1]              # exec function is at index 0 in the record
-    add [0], 0, [execute_exec_fn]
+    add [0], 0, [.exec_fn]
 
     add instructions + 1, [rb + tmp], [ip + 1]              # args function is at index 1 in the record
-    add [0], 0, [execute_args_fn]
+    add [0], 0, [.args_fn]
 
     # If there is an args_fn, call it; then call exec_fn
-    jz  [execute_args_fn], execute_no_args_fn
+    jz  [.args_fn], .no_args_fn
 
     add instructions + 2, [rb + tmp], [ip + 1]              # args count is at index 2 in the record
-    mul [0], -1, [execute_args_count]
+    mul [0], -1, [.args_count]
 
     # Each args_fn passes a different number of arguments to the exec_fn. We can avoid having to copy them
     # all on the stack, because the return values from args_fn happen to land just one stack position below
@@ -147,10 +147,10 @@ execute_callback_done:
     # Of course we also need to adjust rb to match the number of exec_fn parameters, so we still need
     # to know how many there are, which is the args_count number from the instructions table.
 
-    call [execute_args_fn]
+    call [.args_fn]
 
     # Warning: Messed up stack below this line
-    arb [execute_args_count]            # execute_args_count is already negative, see the "mul [0], -1" above
+    arb [.args_count]            # .args_count is already negative, see the "mul [0], -1" above
     arb -1                              # adjust rb as explained above
 
     # Another issue here is that we need to read the exec_fn pointer after doing an arb -(args_count - 1).
@@ -158,27 +158,27 @@ execute_callback_done:
     # It is possible to do, but since this function isn't reentrant, we instead use global variables to store
     # args_fn, exec_fn and args_count. Those don't depend on rb, so we can easily access them with messed up stack.
 
-    call [execute_exec_fn]
+    call [.exec_fn]
     arb 1                               # undo the adjustment explained above, stack is now safe to use
 
-    jz  [halt], execute_loop
-    jz  0, execute_done
+    jz  [halt], .loop
+    jz  0, .done
 
-execute_no_args_fn:
+.no_args_fn:
     # No args_fn, just call exec_fn with no parameters
-    call [execute_exec_fn]
+    call [.exec_fn]
 
-    jz  [halt], execute_loop
+    jz  [halt], .loop
 
-execute_done:
+.done:
     arb 3
     ret 0
 
-execute_exec_fn:
+.exec_fn:
     db  0
-execute_args_fn:
+.args_fn:
     db  0
-execute_args_count:
+.args_count:
     db  0
 .ENDFRAME
 

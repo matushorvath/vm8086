@@ -39,12 +39,12 @@ execute_inc_b:
 
     # Check for carry
     lt  [rb + value], 0x100, [rb + tmp]
-    jnz [rb + tmp], execute_inc_b_after_carry
+    jnz [rb + tmp], .after_carry
 
     # Documentation says this does not update CF
     add [rb + value], -0x100, [rb + value]
 
-execute_inc_b_after_carry:
+.after_carry:
     # Update flags
     lt  0x7f, [rb + value], [flag_sign]
     eq  [rb + value], 0, [flag_zero]
@@ -89,19 +89,19 @@ execute_inc_w:
 
     # Check for carry out of low byte
     lt  [rb + value_lo], 0x100, [rb + tmp]
-    jnz [rb + tmp], execute_inc_w_after_carry
+    jnz [rb + tmp], .after_carry
 
     add [rb + value_lo], -0x100, [rb + value_lo]
     add [rb + value_hi], 1, [rb + value_hi]
 
     # Check for carry out of high byte
     lt  [rb + value_hi], 0x100, [rb + tmp]
-    jnz [rb + tmp], execute_inc_w_after_carry
+    jnz [rb + tmp], .after_carry
 
     # Documentation says this does not update CF
     add [rb + value_hi], -0x100, [rb + value_hi]
 
-execute_inc_w_after_carry:
+.after_carry:
     # Update flags
     lt  0x7f, [rb + value_hi], [flag_sign]
 
@@ -151,12 +151,12 @@ execute_dec_b:
 
     # Check for borrow
     lt  [rb + value], 0, [rb + tmp]
-    jz  [rb + tmp], execute_dec_b_after_borrow
+    jz  [rb + tmp], .after_borrow
 
     # Documentation says this does not update CF
     add [rb + value], 0x100, [rb + value]
 
-execute_dec_b_after_borrow:
+.after_borrow:
     # Update flags
     lt  0x7f, [rb + value], [flag_sign]
     eq  [rb + value], 0, [flag_zero]
@@ -201,19 +201,19 @@ execute_dec_w:
 
     # Check for borrow into low byte
     lt  [rb + value_lo], 0, [rb + tmp]
-    jz  [rb + tmp], execute_dec_w_after_borrow
+    jz  [rb + tmp], .after_borrow
 
     add [rb + value_lo], 0x100, [rb + value_lo]
     add [rb + value_hi], -1, [rb + value_hi]
 
     # Check for borrow into high byte
     lt  [rb + value_hi], 0, [rb + tmp]
-    jz  [rb + tmp], execute_dec_w_after_borrow
+    jz  [rb + tmp], .after_borrow
 
     # Documentation says this does not update CF
     add [rb + value_hi], 0x100, [rb + value_hi]
 
-execute_dec_w_after_borrow:
+.after_borrow:
     # Update flags
     lt  0x7f, [rb + value_hi], [flag_sign]
 

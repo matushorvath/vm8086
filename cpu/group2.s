@@ -33,35 +33,35 @@ execute_group2_b:
     add [rb + loff], 0, [rb - 2]
 
     # Execute the operation
-    add execute_group2_b_table, [rb + op], [ip + 2]
+    add .table, [rb + op], [ip + 2]
     jz  0, [0]
 
-execute_group2_b_table:
+.table:
     # Map each OP value to the label that handles it
-    db  execute_group2_b_inc
-    db  execute_group2_b_dec
-    db  execute_group2_b_invalid_op
-    db  execute_group2_b_invalid_op
-    db  execute_group2_b_invalid_op
-    db  execute_group2_b_invalid_op
-    db  execute_group2_b_invalid_op
-    db  execute_group2_b_invalid_op
+    db  .inc
+    db  .dec
+    db  .invalid_op
+    db  .invalid_op
+    db  .invalid_op
+    db  .invalid_op
+    db  .invalid_op
+    db  .invalid_op
 
-execute_group2_b_invalid_op:
+.invalid_op:
     add invalid_op_message, 0, [rb - 1]
     arb -1
     call report_error
 
-execute_group2_b_inc:
+.inc:
     arb -2
     call execute_inc_b
-    jz  0, execute_group2_b_end
+    jz  0, .end
 
-execute_group2_b_dec:
+.dec:
     arb -2
     call execute_dec_b
 
-execute_group2_b_end:
+.end:
     ret 3
 .ENDFRAME
 
@@ -83,60 +83,60 @@ execute_group2_w:
     add [rb + loff], 0, [rb - 2]
 
     # Execute the operation
-    add execute_group2_w_table, [rb + op], [ip + 2]
+    add .table, [rb + op], [ip + 2]
     jz  0, [0]
 
-execute_group2_w_table:
+.table:
     # Map each OP value to the label that handles it
-    db  execute_group2_w_inc
-    db  execute_group2_w_dec
-    db  execute_group2_w_call_near
-    db  execute_group2_w_call_far
-    db  execute_group2_w_jmp_near
-    db  execute_group2_w_jmp_far
-    db  execute_group2_w_push_w
-    db  execute_group2_w_invalid_op
+    db  .inc
+    db  .dec
+    db  .call_near
+    db  .call_far
+    db  .jmp_near
+    db  .jmp_far
+    db  .push_w
+    db  .invalid_op
 
-execute_group2_w_invalid_op:
+.invalid_op:
     add invalid_op_message, 0, [rb - 1]
     arb -1
     call report_error
 
-execute_group2_w_inc:
+.inc:
     arb -2
     call execute_inc_w
-    jz  0, execute_group2_w_end
+    jz  0, .end
 
-execute_group2_w_dec:
+.dec:
     arb -2
     call execute_dec_w
-    jz  0, execute_group2_w_end
+    jz  0, .end
 
-execute_group2_w_call_near:
+.call_near:
     arb -2
     call execute_call_near_indirect
-    jz  0, execute_group2_w_end
+    jz  0, .end
 
-execute_group2_w_call_far:
+.call_far:
     arb -2
     call execute_call_far_indirect
-    jz  0, execute_group2_w_end
+    jz  0, .end
 
-execute_group2_w_jmp_near:
+.jmp_near:
     arb -2
     call execute_jmp_near_indirect
-    jz  0, execute_group2_w_end
+    jz  0, .end
 
-execute_group2_w_jmp_far:
+.jmp_far:
     arb -2
     call execute_jmp_far_indirect
-    jz  0, execute_group2_w_end
+    jz  0, .end
 
-execute_group2_w_push_w:
+.push_w:
     arb -2
     call execute_push_w
 
-execute_group2_w_end:
+.end:
     ret 3
 .ENDFRAME
 

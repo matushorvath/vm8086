@@ -67,11 +67,11 @@ execute_in_ax_immediate_b:
     add [rb + port], 1, [rb + port]
 
     lt  [rb + port], 0x100, [rb + tmp]
-    jnz [rb + tmp], execute_in_ax_immediate_b_after_inc
+    jnz [rb + tmp], .after_inc
 
     add [rb + port], -0x100, [rb + port]
 
-execute_in_ax_immediate_b_after_inc:
+.after_inc:
     add [rb + port], 0, [rb - 1]
     add 0, 0, [rb - 2]
     arb -2
@@ -115,17 +115,17 @@ execute_in_ax_dx:
     add [rb + port_lo], 1, [rb + port_lo]
 
     lt  [rb + port_lo], 0x100, [rb + tmp]
-    jnz [rb + tmp], execute_in_ax_dx_after_inc
+    jnz [rb + tmp], .after_inc
 
     add [rb + port_lo], -0x100, [rb + port_lo]
     add [rb + port_hi], 1, [rb + port_hi]
 
     lt  [rb + port_hi], 0x100, [rb + tmp]
-    jnz [rb + tmp], execute_in_ax_dx_after_inc
+    jnz [rb + tmp], .after_inc
 
     add [rb + port_hi], -0x100, [rb + port_hi]
 
-execute_in_ax_dx_after_inc:
+.after_inc:
     add [rb + port_lo], 0, [rb - 1]
     add [rb + port_hi], 0, [rb - 2]
     arb -2
@@ -178,11 +178,11 @@ execute_out_ax_immediate_b:
     add [rb + port], 1, [rb + port]
 
     lt  [rb + port], 0x100, [rb + tmp]
-    jnz [rb + tmp], execute_out_ax_immediate_b_after_inc
+    jnz [rb + tmp], .after_inc
 
     add [rb + port], -0x100, [rb + port]
 
-execute_out_ax_immediate_b_after_inc:
+.after_inc:
     add [rb + port], 0, [rb - 1]
     add 0, 0, [rb - 2]
     add [reg_ax + 1], 0, [rb - 3]
@@ -226,17 +226,17 @@ execute_out_ax_dx:
     add [rb + port_lo], 1, [rb + port_lo]
 
     lt  [rb + port_lo], 0x100, [rb + tmp]
-    jnz [rb + tmp], execute_out_ax_dx_after_inc
+    jnz [rb + tmp], .after_inc
 
     add [rb + port_lo], -0x100, [rb + port_lo]
     add [rb + port_hi], 1, [rb + port_hi]
 
     lt  [rb + port_hi], 0x100, [rb + tmp]
-    jnz [rb + tmp], execute_out_ax_dx_after_inc
+    jnz [rb + tmp], .after_inc
 
     add [rb + port_hi], -0x100, [rb + port_hi]
 
-execute_out_ax_dx_after_inc:
+.after_inc:
     add [rb + port_lo], 0, [rb - 1]
     add [rb + port_hi], 0, [rb - 2]
     add [reg_ax + 1], 0, [rb - 3]

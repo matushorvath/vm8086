@@ -48,26 +48,26 @@ execute_group1_b:
     arb -2
 
     # Execute the operation
-    add execute_group1_b_table, [rb + op], [ip + 2]
+    add .table, [rb + op], [ip + 2]
     jz  0, [0]
 
-execute_group1_b_table:
+.table:
     # Map each OP value to the label that handles it
-    db  execute_group1_b_test
-    db  execute_group1_b_invalid_op
-    db  execute_group1_b_not
-    db  execute_group1_b_neg
-    db  execute_group1_b_mul
-    db  execute_group1_b_imul
-    db  execute_group1_b_div
-    db  execute_group1_b_idiv
+    db  .test
+    db  .invalid_op
+    db  .not
+    db  .neg
+    db  .mul
+    db  .imul
+    db  .div
+    db  .idiv
 
-execute_group1_b_invalid_op:
+.invalid_op:
     add invalid_op_message, 0, [rb - 1]
     arb -1
     call report_error
 
-execute_group1_b_test:
+.test:
     # TEST has an additional IMMED8 parameter
     mul [reg_cs + 1], 0x100, [rb + lseg_imm]
     add [reg_cs + 0], [rb + lseg_imm], [rb + lseg_imm]
@@ -84,55 +84,55 @@ execute_group1_b_test:
     arb -4
     call execute_test_b
 
-    jz  0, execute_group1_b_end
+    jz  0, .end
 
-execute_group1_b_not:
+.not:
     add [rb + lseg], 0, [rb - 1]
     add [rb + loff], 0, [rb - 2]
     arb -2
     call execute_not_b
 
-    jz  0, execute_group1_b_end
+    jz  0, .end
 
-execute_group1_b_neg:
+.neg:
     add [rb + lseg], 0, [rb - 1]
     add [rb + loff], 0, [rb - 2]
     arb -2
     call execute_neg_b
 
-    jz  0, execute_group1_b_end
+    jz  0, .end
 
-execute_group1_b_mul:
+.mul:
     add [rb + lseg], 0, [rb - 1]
     add [rb + loff], 0, [rb - 2]
     arb -2
     call execute_mul_b
 
-    jz  0, execute_group1_b_end
+    jz  0, .end
 
-execute_group1_b_imul:
+.imul:
     add [rb + lseg], 0, [rb - 1]
     add [rb + loff], 0, [rb - 2]
     arb -2
     call execute_imul_b
 
-    jz  0, execute_group1_b_end
+    jz  0, .end
 
-execute_group1_b_div:
+.div:
     add [rb + lseg], 0, [rb - 1]
     add [rb + loff], 0, [rb - 2]
     arb -2
     call execute_div_b
 
-    jz  0, execute_group1_b_end
+    jz  0, .end
 
-execute_group1_b_idiv:
+.idiv:
     add [rb + lseg], 0, [rb - 1]
     add [rb + loff], 0, [rb - 2]
     arb -2
     call execute_idiv_b
 
-execute_group1_b_end:
+.end:
     arb 2
     ret 3
 .ENDFRAME
@@ -143,26 +143,26 @@ execute_group1_w:
     arb -2
 
     # Execute the operation
-    add execute_group1_w_table, [rb + op], [ip + 2]
+    add .table, [rb + op], [ip + 2]
     jz  0, [0]
 
-execute_group1_w_table:
+.table:
     # Map each OP value to the label that handles it
-    db  execute_group1_w_test
-    db  execute_group1_w_invalid_op
-    db  execute_group1_w_not
-    db  execute_group1_w_neg
-    db  execute_group1_w_mul
-    db  execute_group1_w_imul
-    db  execute_group1_w_div
-    db  execute_group1_w_idiv
+    db  .test
+    db  .invalid_op
+    db  .not
+    db  .neg
+    db  .mul
+    db  .imul
+    db  .div
+    db  .idiv
 
-execute_group1_w_invalid_op:
+.invalid_op:
     add invalid_op_message, 0, [rb - 1]
     arb -1
     call report_error
 
-execute_group1_w_test:
+.test:
     # TEST has an additional IMMED16 parameter
     mul [reg_cs + 1], 0x100, [rb + lseg_imm]
     add [reg_cs + 0], [rb + lseg_imm], [rb + lseg_imm]
@@ -179,55 +179,55 @@ execute_group1_w_test:
     arb -4
     call execute_test_w
 
-    jz  0, execute_group1_w_end
+    jz  0, .end
 
-execute_group1_w_not:
+.not:
     add [rb + lseg], 0, [rb - 1]
     add [rb + loff], 0, [rb - 2]
     arb -2
     call execute_not_w
 
-    jz  0, execute_group1_w_end
+    jz  0, .end
 
-execute_group1_w_neg:
+.neg:
     add [rb + lseg], 0, [rb - 1]
     add [rb + loff], 0, [rb - 2]
     arb -2
     call execute_neg_w
 
-    jz  0, execute_group1_w_end
+    jz  0, .end
 
-execute_group1_w_mul:
+.mul:
     add [rb + lseg], 0, [rb - 1]
     add [rb + loff], 0, [rb - 2]
     arb -2
     call execute_mul_w
 
-    jz  0, execute_group1_w_end
+    jz  0, .end
 
-execute_group1_w_imul:
+.imul:
     add [rb + lseg], 0, [rb - 1]
     add [rb + loff], 0, [rb - 2]
     arb -2
     call execute_imul_w
 
-    jz  0, execute_group1_w_end
+    jz  0, .end
 
-execute_group1_w_div:
+.div:
     add [rb + lseg], 0, [rb - 1]
     add [rb + loff], 0, [rb - 2]
     arb -2
     call execute_div_w
 
-    jz  0, execute_group1_w_end
+    jz  0, .end
 
-execute_group1_w_idiv:
+.idiv:
     add [rb + lseg], 0, [rb - 1]
     add [rb + loff], 0, [rb - 2]
     arb -2
     call execute_idiv_w
 
-execute_group1_w_end:
+.end:
     arb 2
     ret 3
 .ENDFRAME
