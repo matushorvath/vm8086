@@ -199,9 +199,9 @@ init_memory:
     add 0, 0, [rb + index]
     add [init_mem_length], 0, [rb + count]
 
-init_memory_loop:
+.loop:
     eq  [rb + index], [rb + count], [rb + tmp]
-    jnz [rb + tmp], init_memory_done
+    jnz [rb + tmp], .done
 
     # Read address and value for this location
     mul [rb + index], 2, [rb + tmp]
@@ -215,9 +215,9 @@ init_memory_loop:
     add [rb + value], 0, [0]
 
     add [rb + index], 1, [rb + index]
-    jz  0, init_memory_loop
+    jz  0, .loop
 
-init_memory_done:
+.done:
     arb 5
     ret 0
 .ENDFRAME

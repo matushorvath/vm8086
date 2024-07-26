@@ -27,7 +27,6 @@ port_in_debug:
 
     out 10
 
-port_in_done:
     arb 1
     ret 1
 .ENDFRAME

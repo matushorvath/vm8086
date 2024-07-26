@@ -14,26 +14,26 @@ vm_callback:
     add 1, 0, [rb + continue]
 
     # Is this the first time this callback is called?
-    jz  [vm_callback_was_called], vm_callback_first_call
+    jz  [.was_called], .first_call
 
     # No, do we have an active prefix? If a prefix was the last thing executed,
     # we are still waiting for the first instruction.
-    jnz [prefix_valid], vm_callback_done
+    jnz [prefix_valid], .done
 
     # We already executed something and it wasn't a prefix,
     # we must have already executed an instruction
     add 0, 0, [rb + continue]
-    jz  0, vm_callback_done
+    jz  0, .done
 
-vm_callback_first_call:
+.first_call:
     # This is the first time we are called, before executing anything
-    add 1, 0, [vm_callback_was_called]
+    add 1, 0, [.was_called]
 
-vm_callback_done:
+.done:
     arb 1
     ret 0
 
-vm_callback_was_called:
+.was_called:
     db  0
 .ENDFRAME
 

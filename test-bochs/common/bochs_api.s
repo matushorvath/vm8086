@@ -19,31 +19,31 @@ bochs_shutdown:
 .FRAME port, value; tmp
     arb -1
 
-    add bochs_shutdown_string, [bochs_shutdown_state], [ip + 1]
+    add .string, [.state], [ip + 1]
     eq  [0], [rb + value], [rb + tmp]
-    jnz [rb + tmp], bochs_shutdown_advance_state
+    jnz [rb + tmp], .advance_state
 
     # Wrong character, reset the state
-    add 0, 0, [bochs_shutdown_state]
-    jz  0, bochs_shutdown_done
+    add 0, 0, [.state]
+    jz  0, .done
 
-bochs_shutdown_advance_state:
-    add [bochs_shutdown_state], 1, [bochs_shutdown_state]
+.advance_state:
+    add [.state], 1, [.state]
 
     # If we are not at the end of the string, return
-    add bochs_shutdown_string, [bochs_shutdown_state], [ip + 1]
-    jnz [0], bochs_shutdown_done
+    add .string, [.state], [ip + 1]
+    jnz [0], .done
 
     # Halt the VM
     add 1, 0, [halt]
 
-bochs_shutdown_done:
+.done:
     arb 1
     ret 2
 
-bochs_shutdown_state:
+.state:
     db  0
-bochs_shutdown_string:
+.string:
     db  "Shutdown", 0
 .ENDFRAME
 

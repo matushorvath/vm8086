@@ -271,9 +271,9 @@ dump_stack:
 
     add 0, 0, [rb + index]
 
-dump_stack_loop:
+.loop:
     lt  [rb + index], DUMP_STACK_BYTES, [rb + tmp]
-    jz  [rb + tmp], dump_stack_end
+    jz  [rb + tmp], .end
 
     out ' '
 
@@ -287,10 +287,10 @@ dump_stack_loop:
     add [rb + index], [rb + offset], [rb + offset]
 
     lt  [rb + offset], 0x10000, [rb + tmp]
-    jnz [rb + tmp], dump_stack_after_overflow
+    jnz [rb + tmp], .after_overflow
     add [rb + offset], -0x10000, [rb + offset]
 
-dump_stack_after_overflow:
+.after_overflow:
     add [rb + segment], 0, [rb - 1]
     add [rb + offset], 0, [rb - 2]
     arb -2
@@ -304,9 +304,9 @@ dump_stack_after_overflow:
     call print_num_radix
 
     add [rb + index], 2, [rb + index]
-    jz  0, dump_stack_loop
+    jz  0, .loop
 
-dump_stack_end:
+.end:
     arb 4
     ret 0
 .ENDFRAME

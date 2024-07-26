@@ -176,9 +176,9 @@ print_memory:
     add 0, 0, [rb + index]
     add [result_mem_length], 0, [rb + count]
 
-print_memory_loop:
+.loop:
     eq  [rb + index], [rb + count], [rb + tmp]
-    jnz [rb + tmp], print_memory_done
+    jnz [rb + tmp], .done
 
     # Read address from the record
     add [rb + result_data], [rb + index], [ip + 1]
@@ -189,10 +189,10 @@ print_memory_loop:
     add [0], 0, [rb + value]
 
     # Print a comma unless it's the first item
-    jz  [rb + index], print_memory_skip_comma
+    jz  [rb + index], .skip_comma
     out ','
 
-print_memory_skip_comma:
+.skip_comma:
     out '['
 
     # Print the address and value
@@ -213,9 +213,9 @@ print_memory_skip_comma:
     out ']'
 
     add [rb + index], 1, [rb + index]
-    jz  0, print_memory_loop
+    jz  0, .loop
 
-print_memory_done:
+.done:
     arb 6
     ret 0
 .ENDFRAME
