@@ -206,7 +206,7 @@ arg_mod_rm_generic:
     call decode_mod_rm
 
     # Is this an 8086 register or 8086 memory?
-    jnz [rb - 5], arg_mod_rm_generic_register
+    jnz [rb - 5], .register
 
     # It's 8086 memory, return segment and offset
     mul [rb - 7], 0x100, [rb + lseg_rm]
@@ -214,14 +214,14 @@ arg_mod_rm_generic:
     mul [rb - 9], 0x100, [rb + loff_rm]
     add [rb - 8], [rb + loff_rm], [rb + loff_rm]
 
-    jz  0, arg_mod_rm_generic_done
+    jz  0, .done
 
-arg_mod_rm_generic_register:
+.register:
     # It's an 8086 register
     add 0x10000, 0, [rb + lseg_rm]
     add [rb - 5], 0, [rb + loff_rm]
 
-arg_mod_rm_generic_done:
+.done:
     arb 6
     ret 1
 .ENDFRAME

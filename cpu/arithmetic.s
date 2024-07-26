@@ -36,11 +36,11 @@ execute_neg_b:
     add [rb - 4], 0, [rb + val]
 
     # Negate the value
-    jz  [rb + val], execute_neg_b_zero
+    jz  [rb + val], .zero
     mul [rb + val], -1, [rb + val]
     add 0x100, [rb + val], [rb + val]
 
-execute_neg_b_zero:
+.zero:
     # Update flags
     lt  0x7f, [rb + val], [flag_sign]
     eq  [rb + val], 0, [flag_zero]
@@ -82,17 +82,17 @@ execute_neg_w:
     add [rb - 5], 0, [rb + val_hi]
 
     # Negate the value
-    jz  [rb + val_lo], execute_neg_b_zero_lo
+    jz  [rb + val_lo], .zero_lo
     mul [rb + val_lo], -1, [rb + val_lo]
     add 0x100, [rb + val_lo], [rb + val_lo]
     add [rb + val_hi], 1, [rb + val_hi]                     # calculating (0 - N), so there's always carry from lo to hi
 
-execute_neg_b_zero_lo:
-    jz  [rb + val_hi], execute_neg_b_zero_hi
+.zero_lo:
+    jz  [rb + val_hi], .zero_hi
     mul [rb + val_hi], -1, [rb + val_hi]
     add 0x100, [rb + val_hi], [rb + val_hi]
 
-execute_neg_b_zero_hi:
+.zero_hi:
     # Update flags
     lt  0x7f, [rb + val_hi], [flag_sign]
     add [rb + val_lo], [rb + val_hi], [rb + tmp]
@@ -137,18 +137,18 @@ update_overflow:
     lt  0x7f, [rb + res], [rb + res]
 
     eq  [rb + a], [rb + b], [rb + tmp]
-    jnz [rb + tmp], update_overflow_same_sign
+    jnz [rb + tmp], .same_sign
 
     # When operands are different signs, overflow is always false
     add 0, 0, [flag_overflow]
-    jz  0, update_overflow_done
+    jz  0, .done
 
-update_overflow_same_sign:
+.same_sign:
     # When operands are the same sign but different than the result, overflow is true
     eq  [rb + a], [rb + res], [rb + tmp]
     eq  [rb + tmp], 0, [flag_overflow]
 
-update_overflow_done:
+.done:
     arb 1
     ret 3
 .ENDFRAME

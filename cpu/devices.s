@@ -26,13 +26,13 @@ register_ports:
 
     add [rb + ports], 0, [rb + record]
 
-register_ports_loop:
+.loop:
     # Load next record and register the port
     add [rb + record], 0, [ip + 1]
     add [0], 0, [rb - 1]
 
     eq  [rb - 1], -1, [rb + tmp]
-    jnz [rb + tmp], register_ports_done
+    jnz [rb + tmp], .done
 
     add [rb + record], 1, [ip + 1]
     add [0], 0, [rb - 2]
@@ -46,9 +46,9 @@ register_ports_loop:
 
     add [rb + record], 4, [rb + record]
 
-    jz  0, register_ports_loop
+    jz  0, .loop
 
-register_ports_done:
+.done:
     arb 2
     ret 1
 .ENDFRAME
@@ -59,7 +59,7 @@ register_port:
     arb -2
 
     # Is there any table at all?
-    jnz [device_ports], register_port_have_first_table
+    jnz [device_ports], .have_first_table
 
     # No, create one
     add 0x100, 0, [rb - 1]
@@ -72,12 +72,12 @@ register_port:
     arb -2
     call zeromem
 
-register_port_have_first_table:
+.have_first_table:
     # Is there a second level table?
     add [device_ports], [rb + port_hi], [ip + 1]
     add [0], 0, [rb + table]
 
-    jnz [rb + table], register_port_have_second_table
+    jnz [rb + table], .have_second_table
 
     # No, create one
     add 0x200, 0, [rb - 1]
@@ -94,7 +94,7 @@ register_port_have_first_table:
     add [device_ports], [rb + port_hi], [ip + 3]
     add [rb + table], 0, [0]
 
-register_port_have_second_table:
+.have_second_table:
     # Save read callback
     mul [rb + port_lo], 2, [rb + ptr]
     add [rb + table], [rb + ptr], [ip + 3]
@@ -115,20 +115,20 @@ handle_port_read:
     arb -4
 
     # Is there any table at all?
-    jz  [device_ports], handle_port_read_unmapped
+    jz  [device_ports], .unmapped
 
     # Is there a second level table?
     add [device_ports], [rb + port_hi], [ip + 1]
     add [0], 0, [rb + table]
 
-    jz  [rb + table], handle_port_read_unmapped
+    jz  [rb + table], .unmapped
 
     # Is there a read callback?
     mul [rb + port_lo], 2, [rb + tmp]
     add [rb + table], [rb + tmp], [ip + 1]
     add [0], 0, [rb + callback]
 
-    jz  [rb + callback], handle_port_read_unmapped
+    jz  [rb + callback], .unmapped
 
     # Call the read callback
     mul [rb + port_hi], 0x100, [rb - 1]
@@ -137,13 +137,13 @@ handle_port_read:
     call [rb + callback + 1]
     add [rb - 3], 0, [rb + value]
 
-    jz  0, handle_port_read_done
+    jz  0, .done
 
-handle_port_read_unmapped:
+.unmapped:
     # Input a constant for unmapped ports
     add 0xff, 0, [rb + value]
 
-handle_port_read_done:
+.done:
     arb 4
     ret 2
 .ENDFRAME
@@ -154,13 +154,13 @@ handle_port_write:
     arb -3
 
     # Is there any table at all?
-    jz  [device_ports], handle_port_write_done
+    jz  [device_ports], .done
 
     # Is there a second level table?
     add [device_ports], [rb + port_hi], [ip + 1]
     add [0], 0, [rb + table]
 
-    jz  [rb + table], handle_port_write_done
+    jz  [rb + table], .done
 
     # Is there a write callback?
     mul [rb + port_lo], 2, [rb + tmp]
@@ -168,7 +168,7 @@ handle_port_write:
     add 1, [rb + tmp], [ip + 1]
     add [0], 0, [rb + callback]
 
-    jz  [rb + callback], handle_port_write_done
+    jz  [rb + callback], .done
 
     # Call the write callback
     mul [rb + port_hi], 0x100, [rb - 1]
@@ -177,7 +177,7 @@ handle_port_write:
     arb -2
     call [rb + callback + 2]
 
-handle_port_write_done:
+.done:
     arb 3
     ret 3
 .ENDFRAME
@@ -192,41 +192,41 @@ register_region:
     add 0, 0, [rb + prev_record]
     add [device_regions], 0, [rb + curr_record]
 
-register_region_loop:
-    jz  [rb + curr_record], register_region_search_done
+.loop:
+    jz  [rb + curr_record], .search_done
 
     # Loop while start address of current region is lower than the region we are adding
     add [rb + curr_record], 1, [ip + 1]
     add [0], 0, [rb + curr_start_addr]
 
     lt  [rb + curr_start_addr], [rb + start_addr], [rb + tmp]
-    jz  [rb + tmp], register_region_search_done
+    jz  [rb + tmp], .search_done
 
     # Next record
     add [rb + curr_record], 0, [rb + prev_record]
     add [rb + curr_record], 0, [ip + 1]
     add [0], 0, [rb + curr_record]
 
-    jz  0, register_region_loop
+    jz  0, .loop
 
-register_region_search_done:
+.search_done:
     # Check that the region we're adding does not overlap previous region
-    jz  [rb + prev_record], register_region_after_prev_check
+    jz  [rb + prev_record], .after_prev_check
 
     add [rb + prev_record], 2, [ip + 1]
     add [0], 0, [rb + prev_stop_addr]
 
     lt  [rb + start_addr], [rb + prev_stop_addr], [rb + tmp]
-    jnz [rb + tmp], register_region_overlap_error
+    jnz [rb + tmp], .overlap_error
 
-register_region_after_prev_check:
+.after_prev_check:
     # Check that the region we're adding does not overlap current region
-    jz  [rb + curr_record], register_region_after_curr_check
+    jz  [rb + curr_record], .after_curr_check
 
     lt  [rb + curr_start_addr], [rb + stop_addr], [rb + tmp]
-    jnz [rb + tmp], register_region_overlap_error
+    jnz [rb + tmp], .overlap_error
 
-register_region_after_curr_check:
+.after_curr_check:
     # Create and fill a new region record
     add 5, 0, [rb - 1]
     arb -1
@@ -243,17 +243,17 @@ register_region_after_curr_check:
     add [rb + write_callback], 0, [0]
 
     # If there is a previous record, link it
-    jnz [rb + prev_record], register_region_link_prev
+    jnz [rb + prev_record], .link_prev
 
     # Otherwise link the root of the list
     add [rb + new_record], 0, [device_regions]
-    jz  0, register_region_link_next
+    jz  0, .link_next
 
-register_region_link_prev:
+.link_prev:
     add [rb + prev_record], 0, [ip + 3]
     add [rb + new_record], 0, [0]
 
-register_region_link_next:
+.link_next:
     # Link the next record (which could be zero)
     add [rb + new_record], 0, [ip + 3]
     add [rb + curr_record], 0, [0]
@@ -261,12 +261,12 @@ register_region_link_next:
     arb 6
     ret 4
 
-register_region_overlap_error:
-    add register_region_overlap_message, 0, [rb - 1]
+.overlap_error:
+    add .overlap_message, 0, [rb - 1]
     arb -1
     call report_error
 
-register_region_overlap_message:
+.overlap_message:
     db  "Unable to register a memory region; the regions must not overlap", 0
 .ENDFRAME
 
@@ -279,38 +279,38 @@ handle_memory_read:
     add 1, 0, [rb + read_through]
 
     # Is there any table at all?
-    jz  [device_regions], handle_memory_read_done
+    jz  [device_regions], .done
     add [device_regions], 0, [rb + record]
 
-handle_memory_read_loop:
-    jz  [rb + record], handle_memory_read_done
+.loop:
+    jz  [rb + record], .done
 
     # Loop while the stop address of current region is lower or equal than the search address
     add [rb + record], 2, [ip + 1]
     add [0], 0, [rb + stop_addr]
 
     lt  [rb + addr], [rb + stop_addr], [rb + tmp]
-    jnz [rb + tmp], handle_memory_read_found
+    jnz [rb + tmp], .found
 
     # Next record
     add [rb + record], 0, [ip + 1]
     add [0], 0, [rb + record]
 
-    jz  0, handle_memory_read_loop
+    jz  0, .loop
 
-handle_memory_read_found:
+.found:
     # Check if start address of the current region is lower or equal then the search address
     add [rb + record], 1, [ip + 1]
     add [0], 0, [rb + start_addr]
 
     lt  [rb + addr], [rb + start_addr], [rb + tmp]
-    jnz [rb + tmp], handle_memory_read_done
+    jnz [rb + tmp], .done
 
     # Address is in this region, get the read callback
     add [rb + record], 3, [ip + 1]
     add [0], 0, [rb + callback]
 
-    jz  [rb + callback], handle_memory_read_done
+    jz  [rb + callback], .done
 
     # Call the callback
     add [rb + addr], 0, [rb - 1]
@@ -319,7 +319,7 @@ handle_memory_read_found:
     add [rb - 3], 0, [rb + value]
     add [rb - 4], 0, [rb + read_through]
 
-handle_memory_read_done:
+.done:
     arb 7
     ret 1
 .ENDFRAME
@@ -333,38 +333,38 @@ handle_memory_write:
     add 1, 0, [rb + write_through]
 
     # Is there any table at all?
-    jz  [device_regions], handle_memory_write_done
+    jz  [device_regions], .done
     add [device_regions], 0, [rb + record]
 
-handle_memory_write_loop:
-    jz  [rb + record], handle_memory_write_done
+.loop:
+    jz  [rb + record], .done
 
     # Loop while the stop address of current region is lower or equal than the search address
     add [rb + record], 2, [ip + 1]
     add [0], 0, [rb + stop_addr]
 
     lt  [rb + addr], [rb + stop_addr], [rb + tmp]
-    jnz [rb + tmp], handle_memory_write_found
+    jnz [rb + tmp], .found
 
     # Next record
     add [rb + record], 0, [ip + 1]
     add [0], 0, [rb + record]
 
-    jz  0, handle_memory_write_loop
+    jz  0, .loop
 
-handle_memory_write_found:
+.found:
     # Check if start address of the current region is lower or equal then the search address
     add [rb + record], 1, [ip + 1]
     add [0], 0, [rb + start_addr]
 
     lt  [rb + addr], [rb + start_addr], [rb + tmp]
-    jnz [rb + tmp], handle_memory_write_done
+    jnz [rb + tmp], .done
 
     # Address is in this range, get the write callback
     add [rb + record], 4, [ip + 1]
     add [0], 0, [rb + callback]
 
-    jz  [rb + callback], handle_memory_write_done
+    jz  [rb + callback], .done
 
     # Call the callback
     add [rb + addr], 0, [rb - 1]
@@ -373,7 +373,7 @@ handle_memory_write_found:
     call [rb + callback + 2]
     add [rb - 4], 0, [rb + write_through]
 
-handle_memory_write_done:
+.done:
     arb 6
     ret 2
 .ENDFRAME

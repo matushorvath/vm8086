@@ -64,11 +64,11 @@ execute_adc_b:
 
     # Check for carry
     lt  0xff, [rb + res], [flag_carry]
-    jz  [flag_carry], execute_adc_b_after_carry
+    jz  [flag_carry], .after_carry
 
     add [rb + res], -0x100, [rb + res]
 
-execute_adc_b_after_carry:
+.after_carry:
     # Update flags
     lt  0x7f, [rb + res], [flag_sign]
     eq  [rb + res], 0, [flag_zero]
@@ -134,19 +134,19 @@ execute_adc_w:
 
     # Check for carry out of low byte
     lt  0xff, [rb + res_lo], [rb + tmp]
-    jz  [rb + tmp], execute_adc_w_after_carry_lo
+    jz  [rb + tmp], .after_carry_lo
 
     add [rb + res_lo], -0x100, [rb + res_lo]
     add [rb + res_hi], 1, [rb + res_hi]
 
-execute_adc_w_after_carry_lo:
+.after_carry_lo:
     # Check for carry out of high byte
     lt  0xff, [rb + res_hi], [flag_carry]
-    jz  [flag_carry], execute_adc_w_after_carry_hi
+    jz  [flag_carry], .after_carry_hi
 
     add [rb + res_hi], -0x100, [rb + res_hi]
 
-execute_adc_w_after_carry_hi:
+.after_carry_hi:
     # Update flags
     lt  0x7f, [rb + res_hi], [flag_sign]
 

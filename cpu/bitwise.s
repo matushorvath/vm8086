@@ -90,7 +90,7 @@ execute_bitwise_b:
     add [0], 0, [flag_parity]
 
     # Write the destination value if requested
-    jz  [rb + store], execute_bitwise_b_end
+    jz  [rb + store], .done
 
     add [rb + lseg_dst], 0, [rb - 1]
     add [rb + loff_dst], 0, [rb - 2]
@@ -98,7 +98,7 @@ execute_bitwise_b:
     arb -3
     call write_location_b
 
-execute_bitwise_b_end:
+.done:
     arb 6
     ret 4
 .ENDFRAME
@@ -174,7 +174,7 @@ execute_bitwise_w:
     add [0], 0, [flag_parity]
 
     # Write the destination value if requested
-    jz  [rb + store], execute_bitwise_w_end
+    jz  [rb + store], .done
 
     add [rb + lseg_dst], 0, [rb - 1]
     add [rb + loff_dst], 0, [rb - 2]
@@ -183,7 +183,7 @@ execute_bitwise_w:
     arb -4
     call write_location_w
 
-execute_bitwise_w_end:
+.done:
     arb 9
     ret 4
 .ENDFRAME
@@ -198,7 +198,7 @@ and_b:
     add 8, 0, [rb + bit]
     add bit_7, 0, [rb + table]
 
-and_b_loop:
+.loop:
     mul [rb + res], 2, [rb + res]                           # res << 1
 
     add [rb + table], [rb + a], [ip + 5]
@@ -211,7 +211,7 @@ and_b_loop:
     add [rb + bit], -1, [rb + bit]
     add [rb + table], -0x100, [rb + table]
 
-    jnz [rb + bit], and_b_loop
+    jnz [rb + bit], .loop
 
     arb 4
     ret 2
@@ -227,7 +227,7 @@ or_b:
     add 8, 0, [rb + bit]
     add bit_7, 0, [rb + table]
 
-or_b_loop:
+.loop:
     mul [rb + res], 2, [rb + res]                           # res << 1
 
     add [rb + table], [rb + a], [ip + 5]
@@ -240,7 +240,7 @@ or_b_loop:
     add [rb + bit], -1, [rb + bit]
     add [rb + table], -0x100, [rb + table]
 
-    jnz [rb + bit], or_b_loop
+    jnz [rb + bit], .loop
 
     arb 4
     ret 2
@@ -256,7 +256,7 @@ xor_b:
     add 8, 0, [rb + bit]
     add bit_7, 0, [rb + table]
 
-xor_b_loop:
+.loop:
     mul [rb + res], 2, [rb + res]                           # res << 1
 
     add [rb + table], [rb + a], [ip + 5]
@@ -269,7 +269,7 @@ xor_b_loop:
     add [rb + bit], -1, [rb + bit]
     add [rb + table], -0x100, [rb + table]
 
-    jnz [rb + bit], xor_b_loop
+    jnz [rb + bit], .loop
 
     arb 4
     ret 2
