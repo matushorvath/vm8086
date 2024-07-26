@@ -24,7 +24,7 @@ vm_callback:
     add 1, 0, [rb + continue]
 
     # Run the timer every 64 instructions
-    jnz [vm_callback_counter], vm_callback_decrement
+    jnz [vm_callback_counter], .decrement
     add 64, 0, [vm_callback_counter]
 
     # Trigger PIT channels
@@ -32,24 +32,24 @@ vm_callback:
     call pit_vm_callback_ch2
 
     # Hide the disk activity icon after 256 timer counters
-    jz  [disk_inactive_counter], vm_callback_after_disk
+    jz  [disk_inactive_counter], .after_disk
 
     add [disk_inactive_counter], -1, [disk_inactive_counter]
-    jnz [disk_inactive_counter], vm_callback_after_disk
+    jnz [disk_inactive_counter], .after_disk
 
     call set_disk_inactive
 
-vm_callback_after_disk:
+.after_disk:
     # Hide the speaker activity icon after 256 timer counters
-    jz  [speaker_inactive_counter], vm_callback_after_speaker
+    jz  [speaker_inactive_counter], .after_speaker
 
     add [speaker_inactive_counter], -1, [speaker_inactive_counter]
-    jnz [speaker_inactive_counter], vm_callback_after_speaker
+    jnz [speaker_inactive_counter], .after_speaker
 
     call set_speaker_inactive
 
-vm_callback_after_speaker:
-vm_callback_decrement:
+.after_speaker:
+.decrement:
     add [vm_callback_counter], -1, [vm_callback_counter]
 
     arb 1

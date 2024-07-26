@@ -5,6 +5,8 @@
 
 # A simple mechanism for allocating memory, inspired by the UNIX brk/sbrk syscalls
 
+# TODO use brk/sbrk from libxib.a
+
 ##########
 brk:
 .FRAME addr;

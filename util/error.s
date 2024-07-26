@@ -11,7 +11,7 @@
 ##########
 report_error:
 .FRAME message;
-    add report_error_msg_start, 0, [rb - 1]
+    add .start_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -19,7 +19,7 @@ report_error:
     arb -1
     call print_str
 
-    add report_error_msg_cs_ip, 0, [rb - 1]
+    add .cs_ip_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -39,7 +39,7 @@ report_error:
     arb -3
     call print_num_radix
 
-    add report_error_msg_end, 0, [rb - 1]
+    add .end_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -47,11 +47,11 @@ report_error:
 
     hlt
 
-report_error_msg_start:
+.start_msg:
     db  "vm8086 error: ", 0
-report_error_msg_cs_ip:
+.cs_ip_msg:
     db  " (cs:ip ", 0
-report_error_msg_end:
+.end_msg:
     db  ")", 0
 .ENDFRAME
 

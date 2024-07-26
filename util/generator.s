@@ -13,7 +13,7 @@
 ##########
 gen_number_times:
 .FRAME value, radix, width, prefix, times;
-gen_number_times_loop:
+.loop:
     # Generate the number
     add [rb + value], 0, [rb - 1]
     add [rb + radix], 0, [rb - 2]
@@ -23,7 +23,7 @@ gen_number_times_loop:
     call gen_number
 
     add [rb + times], -1, [rb + times]
-    jnz [rb + times], gen_number_times_loop
+    jnz [rb + times], .loop
 
     ret 5
 .ENDFRAME
@@ -31,22 +31,22 @@ gen_number_times_loop:
 ##########
 gen_number:
 .FRAME value, radix, width, prefix;
-    jnz [gen_number_count], gen_number_have_line
+    jnz [gen_number_count], .have_line
 
     # Start a new line
-    add gen_number_line_start, 0, [rb - 1]
+    add .line_start, 0, [rb - 1]
     arb -1
     call print_str
 
     add [gen_number_max], 0, [gen_number_count]
-    jz  0, gen_number_print_number
+    jz  0, .print_number
 
-gen_number_have_line:
+.have_line:
     # Continue an existing line
     out ','
     out ' '
 
-gen_number_print_number:
+.print_number:
     # Print the number
     add [rb + prefix], 0, [rb - 1]
     arb -1
@@ -62,7 +62,7 @@ gen_number_print_number:
 
     ret 4
 
-gen_number_line_start:
+.line_start:
     db  10, "    db  ", 0
 .ENDFRAME
 
