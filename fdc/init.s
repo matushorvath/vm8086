@@ -86,14 +86,14 @@ init_unit:
 
     # Skip disconnected and empty drives
     add fdc_config_connected_units, [rb + unit], [ip + 1]
-    jz  [0], init_unit_done
+    jz  [0], .done
     add fdc_config_inserted_units, [rb + unit], [ip + 1]
     add [0], 0, [rb + type]
-    jz  [rb + type], init_unit_done
+    jz  [rb + type], .done
 
     # Fill in floppy parameters; currently only 1.44MB 3.5" floppies are supported
     eq  [rb + type], 25, [rb + tmp]
-    jz  [rb + tmp], init_unit_unsupported_type
+    jz  [rb + tmp], .unsupported_type
 
     # Set floppy parameters based on floppy type
     # TODO support more floppy types
@@ -104,16 +104,16 @@ init_unit:
     add fdc_medium_sectors_units, [rb + unit], [ip + 3]
     add 18, 0, [0]
 
-init_unit_done:
+.done:
     arb 2
     ret 1
 
-init_unit_unsupported_type:
-    add init_unit_unsupported_type_message, 0, [rb - 1]
+.unsupported_type:
+    add .unsupported_type_message, 0, [rb - 1]
     arb -1
     call report_error
 
-init_unit_unsupported_type_message:
+.unsupported_type_message:
     db  "fdd unit type is not supported", 0
 .ENDFRAME
 

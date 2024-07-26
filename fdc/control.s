@@ -43,13 +43,13 @@ fdc_dor_write:
     arb -1
 
     # Floppy controller logging
-    jz  [config_log_fdc], fdc_dor_write_after_log_fdc
+    jz  [config_log_fdc], .after_log_fdc
 
     add [rb + value], 0, [rb - 1]
     arb -1
     call fdc_dor_write_log_fdc
 
-fdc_dor_write_after_log_fdc:
+.after_log_fdc:
     # Save the original fdc_dor_reset value before changing it
     eq  [fdc_dor_reset], 0, [rb + tmp]
     add bit_2, [rb + value], [ip + 1]
@@ -58,22 +58,22 @@ fdc_dor_write_after_log_fdc:
 
     # If fdc_dor_reset was low and now is high, reset the floppy controller
     eq  [rb + tmp], 2, [rb + tmp]
-    jz  [rb + tmp], fdc_dor_write_after_reset
+    jz  [rb + tmp], .after_reset
     call fdc_d765ac_reset
 
-fdc_dor_write_after_reset:
+.after_reset:
     # Save the other bits
     add bit_0, [rb + value], [ip + 1]
     add [0], 0, [fdc_dor_drive_a_select]
 
     add bit_3, [rb + value], [ip + 1]
-    jnz [0], fdc_dor_write_dma_enabled
+    jnz [0], .dma_enabled
 
     add fdc_error_non_dma, 0, [rb - 1]
     arb -1
     call report_error
 
-fdc_dor_write_dma_enabled:
+.dma_enabled:
     add bit_4, [rb + value], [ip + 1]
     add [0], 0, [fdc_dor_enable_motor_unit0]
 
@@ -89,7 +89,7 @@ fdc_dor_write_log_fdc:
 .FRAME value;
     call log_start
 
-    add fdc_dor_write_log_fdc_start, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -100,7 +100,7 @@ fdc_dor_write_log_fdc:
     out 10
     ret 1
 
-fdc_dor_write_log_fdc_start:
+.msg:
     db  "fdc dor write, value ", 0
 .ENDFRAME
 
@@ -130,13 +130,13 @@ fdc_status_read:
     add [rb + value], 0b10000000, [rb + value]
 
     # Floppy controller logging
-    jz  [config_log_fdc], fdc_status_read_after_log_fdc
+    jz  [config_log_fdc], .after_log_fdc
 
     add [rb + value], 0, [rb - 1]
     arb -1
     call fdc_status_read_log_fdc
 
-fdc_status_read_after_log_fdc:
+.after_log_fdc:
     arb 2
     ret 1
 .ENDFRAME
@@ -146,7 +146,7 @@ fdc_status_read_log_fdc:
 .FRAME value;
     call log_start
 
-    add fdc_status_read_log_fdc_start, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -157,7 +157,7 @@ fdc_status_read_log_fdc:
     out 10
     ret 1
 
-fdc_status_read_log_fdc_start:
+.msg:
     db  "fdc status read, value ", 0
 .ENDFRAME
 
@@ -193,10 +193,10 @@ fdc_d765ac_reset:
     # also don't touch SRT HUT HLT in Specify command
 
     # Floppy controller logging
-    jz  [config_log_fdc], fdc_d765ac_reset_after_log_fdc
+    jz  [config_log_fdc], .after_log_fdc
     call fdc_d765ac_reset_log_fdc
 
-fdc_d765ac_reset_after_log_fdc:
+.after_log_fdc:
     # After reset both units have changed ready status, following sense interrupt status
     # will return ST0 with bits 6 and 7 set
     add 0b11000000, 0, [fdc_cmd_st0]
@@ -209,7 +209,6 @@ fdc_d765ac_reset_after_log_fdc:
     arb -1
     call interrupt_request
 
-fdc_d765ac_reset_done:
     ret 0
 .ENDFRAME
 
@@ -218,14 +217,14 @@ fdc_d765ac_reset_log_fdc:
 .FRAME
     call log_start
 
-    add fdc_d765ac_reset_log_fdc_start, 0, [rb - 1]
+    add .msg, 0, [rb - 1]
     arb -1
     call print_str
 
     out 10
     ret 0
 
-fdc_d765ac_reset_log_fdc_start:
+.msg:
     db  "fdc reset controller", 0
 .ENDFRAME
 

@@ -96,23 +96,23 @@ fdc_exec_read_data:
 
     # Is the unit connected?
     add fdc_config_connected_units, [fdc_cmd_unit_selected], [ip + 1]
-    jz  [0], fdc_exec_read_data_no_floppy
+    jz  [0], .no_floppy
 
     # Is a floppy inserted?
     add fdc_config_inserted_units, [fdc_cmd_unit_selected], [ip + 1]
-    jz  [0], fdc_exec_read_data_no_floppy
+    jz  [0], .no_floppy
 
     # Is the motor running?
     add fdc_dor_enable_motor_units, [fdc_cmd_unit_selected], [ip + 1]
-    jz  [0], fdc_exec_read_data_no_floppy
+    jz  [0], .no_floppy
 
     # Floppy is accessible, report disk activity
-    jz  [fdc_activity_callback], fdc_exec_read_data_after_callback
+    jz  [fdc_activity_callback], .after_callback
     add [fdc_cmd_unit_selected], 0, [rb - 1]
     arb -1
     call [fdc_activity_callback]
 
-fdc_exec_read_data_after_callback:
+.after_callback:
     # Load floppy parameters
     add fdc_medium_heads_units, [fdc_cmd_unit_selected], [ip + 1]
     add [0], 0, [rb + heads]
@@ -121,29 +121,29 @@ fdc_exec_read_data_after_callback:
 
     # Cylinder number must match the cylinder we are on
     eq  [fdc_cmd_cylinder], [fdc_present_cylinder_units], [rb + tmp]
-    jz  [rb + tmp], fdc_exec_read_data_bad_input
+    jz  [rb + tmp], .bad_input
 
     # Head number must be in range
     lt  [fdc_cmd_head], 0, [rb + tmp]
-    jnz [rb + tmp], fdc_exec_read_data_bad_input
+    jnz [rb + tmp], .bad_input
     lt  [fdc_cmd_head], [rb + heads], [rb + tmp]
-    jz  [rb + tmp], fdc_exec_read_data_bad_input
+    jz  [rb + tmp], .bad_input
 
     # Sector number must be in range (1-based)
     lt  [fdc_cmd_sector], 1, [rb + tmp]
-    jnz [rb + tmp], fdc_exec_read_data_bad_input
+    jnz [rb + tmp], .bad_input
     lt  [rb + sectors], [fdc_cmd_sector], [rb + tmp]
-    jnz [rb + tmp], fdc_exec_read_data_bad_input
+    jnz [rb + tmp], .bad_input
 
     # Check the DMA controller
-    jnz [dma_disable_controller], fdc_exec_read_data_no_dma
-    jnz [dma_mask_ch2], fdc_exec_read_data_no_dma
+    jnz [dma_disable_controller], .no_dma
+    jnz [dma_mask_ch2], .no_dma
 
     eq  [dma_transfer_type_ch2], 1, [rb + tmp]              # transfer type must be write (1)
-    jz  [rb + tmp], fdc_exec_read_data_no_dma
+    jz  [rb + tmp], .no_dma
 
     eq  [dma_mode_ch2], 1, [rb + tmp]                       # only single mode is supported (1)
-    jz  [rb + tmp], fdc_exec_read_data_no_dma
+    jz  [rb + tmp], .no_dma
 
     # DMA is set up, start reading at head H sector S up to end of the track/cylinder,
     # or until the DMA controller has enough data
@@ -155,10 +155,10 @@ fdc_exec_read_data_after_callback:
     mul [rb + addr_c], 512, [rb + addr_c]
     add [floppy], [rb + addr_c], [rb + addr_c]
 
-fdc_exec_read_data_loop:
+.loop:
     # Does the DMA controller expect more data?
     eq  [dma_count_ch2], -1, [rb + tmp]
-    jnz [rb + tmp], fdc_exec_read_data_all_data_read
+    jnz [rb + tmp], .all_data_read
 
     # Calculate sector address in intcode memory:
     # addr_s = addr_c + (head * sectors + sector - 1) * 512
@@ -181,46 +181,46 @@ fdc_exec_read_data_loop:
 
     # Did we reach end of track?
     lt  [rb + sectors], [fdc_cmd_sector], [rb + tmp]
-    jz  [rb + tmp], fdc_exec_read_data_loop
+    jz  [rb + tmp], .loop
 
     # End of track, move to sector 1
     add 1, 0, [fdc_cmd_sector]
 
     # Is this a multi-track operation?
-    jnz [fdc_cmd_multi_track], fdc_exec_read_data_multi_track
+    jnz [fdc_cmd_multi_track], .multi_track
 
     # Single track operation is finished, move to the same head on next cylinder
     add [fdc_cmd_cylinder], 1, [fdc_cmd_cylinder]
-    jz  0, fdc_exec_read_data_all_data_read
+    jz  0, .all_data_read
 
-fdc_exec_read_data_multi_track:
+.multi_track:
     # Multi-track operation, move to next side
     add [fdc_cmd_head], 1, [fdc_cmd_head]
 
     # Does this side actually exist on the disk?
     lt  [fdc_cmd_head], [rb + heads], [rb + tmp]
-    jnz [rb + tmp], fdc_exec_read_data_loop
+    jnz [rb + tmp], .loop
 
     # No, end of cylinder, move to head 0 on next cylinder
     add 0, 0, [fdc_cmd_head]
     add [fdc_cmd_cylinder], 1, [fdc_cmd_cylinder]
 
-fdc_exec_read_data_all_data_read:
+.all_data_read:
     # The DMA controller does not want more data, or there is no more data available
     # Respond with ST0 (see above) ST1 ST2, and C H R N that was set up above
     add 0, 0, [fdc_cmd_st1]
     add 0, 0, [fdc_cmd_st2]
 
     # Floppy disk logging
-    jz  [config_log_fdd], fdc_exec_read_data_terminated
+    jz  [config_log_fdd], .terminated
 
     add [rb + dma_count], 0, [rb - 1]
     arb -1
     call fdc_exec_read_data_log
 
-    jz  0, fdc_exec_read_data_terminated
+    jz  0, .terminated
 
-fdc_exec_read_data_no_dma:
+.no_dma:
     # Floppy is accessible, but the DMA controller is not ready to accept data
     # Set up ST0 (abnormal termination), ST1, ST2; keep head, cylinder or sector
     add 0b01000000, [fdc_cmd_st0], [fdc_cmd_st0]
@@ -228,15 +228,15 @@ fdc_exec_read_data_no_dma:
     add 0, 0, [fdc_cmd_st2]
 
     # Floppy disk logging
-    jz  [config_log_fdd], fdc_exec_read_data_terminated
+    jz  [config_log_fdd], .terminated
 
     add [rb + dma_count], 0, [rb - 1]
     arb -1
     call fdc_exec_read_data_log
 
-    jz  0, fdc_exec_read_data_terminated
+    jz  0, .terminated
 
-fdc_exec_read_data_bad_input:
+.bad_input:
     # Floppy is accessible, but input parameters are invalid
     # Set up ST0 (abnormal termination), ST1 (end of cylinder, no data), ST2
     # TODO only set ST1 bit 7 when sector is wrong
@@ -246,21 +246,21 @@ fdc_exec_read_data_bad_input:
     add 0, 0, [fdc_cmd_st2]
 
     # Floppy disk logging
-    jz  [config_log_fdd], fdc_exec_read_data_bad_input_after_log
+    jz  [config_log_fdd], .bad_input_after_log
 
     add [rb + dma_count], 0, [rb - 1]
     arb -1
     call fdc_exec_read_data_log
 
-fdc_exec_read_data_bad_input_after_log:
+.bad_input_after_log:
     # Zero out cylinder, head and sector
     add 0, 0, [fdc_cmd_cylinder]
     add 0, 0, [fdc_cmd_head]
     add 0, 0, [fdc_cmd_sector]
 
-    jz  0, fdc_exec_read_data_terminated
+    jz  0, .terminated
 
-fdc_exec_read_data_no_floppy:
+.no_floppy:
     # Floppy is not accessible
     # Set up ST0 (not ready, abnormal termination), ST1 (missing address mark, no data), ST2
     add 0b01001000, [fdc_cmd_st0], [fdc_cmd_st0]
@@ -268,19 +268,19 @@ fdc_exec_read_data_no_floppy:
     add 0, 0, [fdc_cmd_st2]
 
     # Floppy disk logging
-    jz  [config_log_fdd], fdc_exec_read_data_no_floppy_after_log
+    jz  [config_log_fdd], .no_floppy_after_log
 
     add [rb + dma_count], 0, [rb - 1]
     arb -1
     call fdc_exec_read_data_log
 
-fdc_exec_read_data_no_floppy_after_log:
+.no_floppy_after_log:
     # Zero out cylinder, head and sector
     add 0, 0, [fdc_cmd_cylinder]
     add 0, 0, [fdc_cmd_head]
     add 0, 0, [fdc_cmd_sector]
 
-fdc_exec_read_data_terminated:
+.terminated:
     # Trigger IRQ6
     add 1, 0, [fdc_interrupt_pending]
 
@@ -299,12 +299,12 @@ fdc_exec_read_data_log:
 
     call log_start
 
-    add fdc_exec_read_data_log_start, 0, [rb - 1]
+    add .start_msg, 0, [rb - 1]
     arb -1
     call print_str
 
     lt  [fdc_cmd_st0], 64, [rb + tmp]
-    add fdc_exec_read_data_log_result, [rb + tmp], [ip + 1]
+    add .result_msg, [rb + tmp], [ip + 1]
     add [0], 0, [rb - 1]
     arb -1
     call print_str
@@ -327,14 +327,14 @@ fdc_exec_read_data_log:
     arb -1
     call print_num
 
-    jz  [fdc_cmd_multi_track], fdc_exec_read_data_log_no_mt
+    jz  [fdc_cmd_multi_track], .no_mt
 
-    add fdc_exec_read_data_log_mt, 0, [rb - 1]
+    add .mt_msg, 0, [rb - 1]
     arb -1
     call print_str
 
-fdc_exec_read_data_log_no_mt:
-    add fdc_exec_read_data_log_cnt_f, 0, [rb - 1]
+.no_mt:
+    add .cnt_f_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -342,7 +342,7 @@ fdc_exec_read_data_log_no_mt:
     arb -1
     call print_num
 
-    add fdc_exec_read_data_log_cnt_t, 0, [rb - 1]
+    add .cnt_t_msg, 0, [rb - 1]
     arb -1
     call print_str
 
@@ -355,31 +355,31 @@ fdc_exec_read_data_log_no_mt:
     arb 1
     ret 1
 
-fdc_exec_read_data_log_start:
+.start_msg:
     db  "fdd read data: ", 0
-fdc_exec_read_data_log_mt:
+.mt_msg:
     db  ", multi-track", 0
-fdc_exec_read_data_log_cnt_f:
+.cnt_f_msg:
     db  ", bytes ", 0
-fdc_exec_read_data_log_cnt_t:
+.cnt_t_msg:
     db  " -> ", 0
-fdc_exec_read_data_log_result:
-    db  fdc_exec_read_data_log_failure
-    db  fdc_exec_read_data_log_success
-fdc_exec_read_data_log_failure:
+.result_msg:
+    db  .failure_msg
+    db  .success_msg
+.failure_msg:
     db  "FAILURE", 0
-fdc_exec_read_data_log_success:
+.success_msg:
     db  "SUCCESS", 0
 .ENDFRAME
 
 ##########
 fdc_exec_read_deleted_data:
 .FRAME
-    add fdc_exec_read_deleted_data_error, 0, [rb - 1]
+    add .error, 0, [rb - 1]
     arb -1
     call report_error
 
-fdc_exec_read_deleted_data_error:
+.error:
     db  "fdc: read deleted data command is not supported", 0
 .ENDFRAME
 
@@ -399,22 +399,22 @@ fdc_exec_write_data:
 #
 #    ret 0
 
-    add fdc_exec_write_data_error, 0, [rb - 1]
+    add .error, 0, [rb - 1]
     arb -1
     call report_error
 
-fdc_exec_write_data_error:
+.error:
     db  "fdc: write data command ","is not implemented", 0
 .ENDFRAME
 
 ##########
 fdc_exec_write_deleted_data:
 .FRAME
-    add fdc_exec_write_deleted_data_error, 0, [rb - 1]
+    add .error, 0, [rb - 1]
     arb -1
     call report_error
 
-fdc_exec_write_deleted_data_error:
+.error:
     db  "fdc: write deleted data command ","is not supported", 0
 .ENDFRAME
 
@@ -433,11 +433,11 @@ fdc_exec_read_track:
 #
 #    ret 0
 
-    add fdc_exec_read_track_error, 0, [rb - 1]
+    add .error, 0, [rb - 1]
     arb -1
     call report_error
 
-fdc_exec_read_track_error:
+.error:
     db  "fdc: read track command ","is not implemented", 0
 .ENDFRAME
 
@@ -452,15 +452,15 @@ fdc_exec_read_id:
 
     # Is the unit connected?
     add fdc_config_connected_units, [fdc_cmd_unit_selected], [ip + 1]
-    jz  [0], fdc_exec_read_id_no_floppy
+    jz  [0], .no_floppy
 
     # Is a floppy inserted?
     add fdc_config_inserted_units, [fdc_cmd_unit_selected], [ip + 1]
-    jz  [0], fdc_exec_read_id_no_floppy
+    jz  [0], .no_floppy
 
     # Is the motor running?
     add fdc_dor_enable_motor_units, [fdc_cmd_unit_selected], [ip + 1]
-    jz  [0], fdc_exec_read_id_no_floppy
+    jz  [0], .no_floppy
 
     # TODO validate C H S is in range
 
@@ -482,18 +482,18 @@ fdc_exec_read_id:
 
     # Wrap around reported sector to 0 if we overflow
     eq  [fdc_cmd_sector], [rb + sector_count], [rb + tmp]
-    jz  [rb + tmp], fdc_exec_read_id_after_sector_wraparound
+    jz  [rb + tmp], .after_sector_wraparound
     add 0, 0, [fdc_cmd_sector]
     # TODO this is wrong, sectors are numbered starting 1 (both the 1 and the wraparound condition)
 
-fdc_exec_read_id_after_sector_wraparound:
+.after_sector_wraparound:
     # Save new present sector
     add fdc_present_sector_units, [fdc_cmd_unit_selected], [ip + 3]
     add [fdc_cmd_sector], 0, [0]
 
-    jz  0, fdc_exec_read_id_terminated
+    jz  0, .terminated
 
-fdc_exec_read_id_no_floppy:
+.no_floppy:
     # Floppy is not accessible, set up ST0 (not ready, abnormal termination),
     # ST1 (missing address mark, no data), ST2
     add 0b01001000, [fdc_cmd_st0], [fdc_cmd_st0]
@@ -505,7 +505,7 @@ fdc_exec_read_id_no_floppy:
     add 0, 0, [fdc_cmd_head]
     add 0, 0, [fdc_cmd_sector]
 
-fdc_exec_read_id_terminated:
+.terminated:
     # Trigger IRQ6
     add 1, 0, [fdc_interrupt_pending]
 
@@ -513,7 +513,7 @@ fdc_exec_read_id_terminated:
     arb -1
     call interrupt_request
 
-fdc_exec_read_id_after_irq:
+.after_irq:
     arb 2
     ret 0
 .ENDFRAME
@@ -534,11 +534,11 @@ fdc_exec_format_track:
 #
 #    ret 0
 
-    add fdc_exec_format_track_error, 0, [rb - 1]
+    add .error, 0, [rb - 1]
     arb -1
     call report_error
 
-fdc_exec_format_track_error:
+.error:
     db  "fdc: format track command ","is not implemented", 0
 .ENDFRAME
 
@@ -557,11 +557,11 @@ fdc_exec_scan_equal:
 #
 #    ret 0
 
-    add fdc_exec_scan_equal_error, 0, [rb - 1]
+    add .error, 0, [rb - 1]
     arb -1
     call report_error
 
-fdc_exec_scan_equal_error:
+.error:
     db  "fdc: scan equal command ","is not implemented", 0
 .ENDFRAME
 
@@ -580,11 +580,11 @@ fdc_exec_scan_low_or_equal:
 #
 #    ret 0
 
-    add fdc_exec_scan_low_or_equal_error, 0, [rb - 1]
+    add .error, 0, [rb - 1]
     arb -1
     call report_error
 
-fdc_exec_scan_low_or_equal_error:
+.error:
     db  "fdc: scan low or equal command ","is not implemented", 0
 .ENDFRAME
 
@@ -603,11 +603,11 @@ fdc_exec_scan_high_or_equal:
 #
 #    ret 0
 
-    add fdc_exec_scan_high_or_equal_error, 0, [rb - 1]
+    add .error, 0, [rb - 1]
     arb -1
     call report_error
 
-fdc_exec_scan_high_or_equal_error:
+.error:
     db  "fdc: scan high or equal command ","is not implemented", 0
 .ENDFRAME
 
@@ -620,15 +620,15 @@ fdc_exec_recalibrate:
 
     # Is the unit connected?
     add fdc_config_connected_units, [fdc_cmd_unit_selected], [ip + 1]
-    jz  [0], fdc_exec_recalibrate_no_floppy
+    jz  [0], .no_floppy
 
     # Is a floppy inserted?
     add fdc_config_inserted_units, [fdc_cmd_unit_selected], [ip + 1]
-    jz  [0], fdc_exec_recalibrate_no_floppy
+    jz  [0], .no_floppy
 
     # Is the motor running?
     add fdc_dor_enable_motor_units, [fdc_cmd_unit_selected], [ip + 1]
-    jz  [0], fdc_exec_recalibrate_no_floppy
+    jz  [0], .no_floppy
 
     # Floppy is accessible, retract the head to cylinder 0
     add fdc_present_cylinder_units, [fdc_cmd_unit_selected], [ip + 3]
@@ -640,13 +640,13 @@ fdc_exec_recalibrate:
     # Set up STO to report a successful seek (seek end)
     add 0b00100000, [fdc_cmd_st0], [fdc_cmd_st0]
 
-    jz  0, fdc_exec_recalibrate_terminated
+    jz  0, .terminated
 
-fdc_exec_recalibrate_no_floppy:
+.no_floppy:
     # Floppy is not inserted, set up ST0 (not ready, seek end, abnormal termination)
     add 0b01101000, [fdc_cmd_st0], [fdc_cmd_st0]
 
-fdc_exec_recalibrate_terminated:
+.terminated:
     # Trigger IRQ6
     add 1, 0, [fdc_interrupt_pending]
 
@@ -654,7 +654,7 @@ fdc_exec_recalibrate_terminated:
     arb -1
     call interrupt_request
 
-fdc_exec_recalibrate_after_irq:
+.after_irq:
     ret 0
 .ENDFRAME
 
@@ -663,11 +663,11 @@ fdc_exec_specify:
 .FRAME
     # We ignore all the timings, but verify that ND (bit 0) is zero for DMA mode
     add bit_0, [fdc_cmd_hlt_nd], [ip + 1]
-    jnz [0], fdc_exec_specify_non_dma
+    jnz [0], .non_dma
 
     ret 0
 
-fdc_exec_specify_non_dma:
+.non_dma:
     add fdc_error_non_dma, 0, [rb - 1]
     arb -1
     call report_error
@@ -679,11 +679,11 @@ fdc_exec_sense_drive_status:
     # TODO implement sense drive status
     #ret 0
 
-    add fdc_exec_sense_drive_status_error, 0, [rb - 1]
+    add .error, 0, [rb - 1]
     arb -1
     call report_error
 
-fdc_exec_sense_drive_status_error:
+.error:
     db  "fdc: sense drive status command ","is not implemented", 0
 .ENDFRAME
 
@@ -698,15 +698,15 @@ fdc_exec_seek:
 
     # Is the unit connected?
     add fdc_config_connected_units, [fdc_cmd_unit_selected], [ip + 1]
-    jz  [0], fdc_exec_seek_no_floppy
+    jz  [0], .no_floppy
 
     # Is a floppy inserted?
     add fdc_config_inserted_units, [fdc_cmd_unit_selected], [ip + 1]
-    jz  [0], fdc_exec_seek_no_floppy
+    jz  [0], .no_floppy
 
     # Is the motor running?
     add fdc_dor_enable_motor_units, [fdc_cmd_unit_selected], [ip + 1]
-    jz  [0], fdc_exec_seek_no_floppy
+    jz  [0], .no_floppy
 
     # Floppy is accessible, load cylinder count
     add fdc_medium_cylinders_units, [fdc_cmd_unit_selected], [ip + 1]
@@ -714,17 +714,17 @@ fdc_exec_seek:
 
     # Requested cylinder number must be in range
     lt  [fdc_cmd_cylinder], 0, [rb + tmp]
-    jnz [rb + tmp], fdc_exec_seek_bad_input
+    jnz [rb + tmp], .bad_input
     lt  [fdc_cmd_cylinder], [rb + cylinders], [rb + tmp]
-    jz  [rb + tmp], fdc_exec_seek_bad_input
+    jz  [rb + tmp], .bad_input
 
     # Report disk activity
-    jz  [fdc_activity_callback], fdc_exec_seek_after_callback
+    jz  [fdc_activity_callback], .after_callback
     add [fdc_cmd_unit_selected], 0, [rb - 1]
     arb -1
     call [fdc_activity_callback]
 
-fdc_exec_seek_after_callback:
+.after_callback:
     # Set present cylinder to the requested cylinder
     add fdc_present_cylinder_units, [fdc_cmd_unit_selected], [ip + 3]
     add [fdc_cmd_cylinder], 0, [0]
@@ -735,19 +735,19 @@ fdc_exec_seek_after_callback:
     # Set up STO to report a successful seek (seek end)
     add 0b00100000, [fdc_cmd_st0], [fdc_cmd_st0]
 
-    jz  0, fdc_exec_seek_terminated
+    jz  0, .terminated
 
-fdc_exec_seek_bad_input:
+.bad_input:
     # Floppy is accessible, but input parameters are invalid; set up ST0 (seek end, abnormal termination)
     add 0b01100000, [fdc_cmd_st0], [fdc_cmd_st0]
 
-    jz  0, fdc_exec_seek_terminated
+    jz  0, .terminated
 
-fdc_exec_seek_no_floppy:
+.no_floppy:
     # Floppy is not inserted, set up ST0 (not ready, seek end, abnormal termination)
     add 0b01101000, [fdc_cmd_st0], [fdc_cmd_st0]
 
-fdc_exec_seek_terminated:
+.terminated:
     # Trigger IRQ6
     add 1, 0, [fdc_interrupt_pending]
 
