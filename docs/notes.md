@@ -274,3 +274,21 @@ Text602 3.0
 
 Matus Horvath
 TK376658
+
+Profiling
+=========
+
+handle_memory_read
+read_b
+handle_memory_read, different part
+read_cs_ip_b
+vm_callback
+read_location_b
+read_cs_ip_w
+write_b
+handle_memory_write
+
+TODO:
+ - merge read_b and handle_memory_read, write_n and handle_memory_write
+ - inline calc_addr_b
+ - optimize calc_addr_w, perhaps inline that as well

@@ -272,24 +272,22 @@ register_region:
 
 ##########
 handle_memory_read:
-.FRAME addr; value, read_through, record, start_addr, stop_addr, callback, tmp                      # returns value, read_through
-    arb -7
+.FRAME addr; value, read_through, record, callback, tmp     # returns value, read_through
+    arb -5
+
+    # This function is hit very heavily and needs to be optimized as much as possible
 
     # Default is to read the value from main memory
     add 1, 0, [rb + read_through]
 
-    # Is there any table at all?
-    jz  [device_regions], .done
     add [device_regions], 0, [rb + record]
 
 .loop:
     jz  [rb + record], .done
 
     # Loop while the stop address of current region is lower or equal than the search address
-    add [rb + record], 2, [ip + 1]
-    add [0], 0, [rb + stop_addr]
-
-    lt  [rb + addr], [rb + stop_addr], [rb + tmp]
+    add [rb + record], 2, [ip + 2]
+    lt  [rb + addr], [0], [rb + tmp]
     jnz [rb + tmp], .found
 
     # Next record
@@ -300,10 +298,8 @@ handle_memory_read:
 
 .found:
     # Check if start address of the current region is lower or equal then the search address
-    add [rb + record], 1, [ip + 1]
-    add [0], 0, [rb + start_addr]
-
-    lt  [rb + addr], [rb + start_addr], [rb + tmp]
+    add [rb + record], 1, [ip + 2]
+    lt  [rb + addr], [0], [rb + tmp]
     jnz [rb + tmp], .done
 
     # Address is in this region, get the read callback
@@ -320,30 +316,28 @@ handle_memory_read:
     add [rb - 4], 0, [rb + read_through]
 
 .done:
-    arb 7
+    arb 5
     ret 1
 .ENDFRAME
 
 ##########
 handle_memory_write:
-.FRAME addr, value; write_through, record, start_addr, stop_addr, callback, tmp                     # returns write_through
-    arb -6
+.FRAME addr, value; write_through, record, callback, tmp    # returns write_through
+    arb -4
+
+    # This function is hit very heavily and needs to be optimized as much as possible
 
     # Default is to write the value to main memory
     add 1, 0, [rb + write_through]
 
-    # Is there any table at all?
-    jz  [device_regions], .done
     add [device_regions], 0, [rb + record]
 
 .loop:
     jz  [rb + record], .done
 
     # Loop while the stop address of current region is lower or equal than the search address
-    add [rb + record], 2, [ip + 1]
-    add [0], 0, [rb + stop_addr]
-
-    lt  [rb + addr], [rb + stop_addr], [rb + tmp]
+    add [rb + record], 2, [ip + 2]
+    lt  [rb + addr], [0], [rb + tmp]
     jnz [rb + tmp], .found
 
     # Next record
@@ -354,10 +348,8 @@ handle_memory_write:
 
 .found:
     # Check if start address of the current region is lower or equal then the search address
-    add [rb + record], 1, [ip + 1]
-    add [0], 0, [rb + start_addr]
-
-    lt  [rb + addr], [rb + start_addr], [rb + tmp]
+    add [rb + record], 1, [ip + 2]
+    lt  [rb + addr], [0], [rb + tmp]
     jnz [rb + tmp], .done
 
     # Address is in this range, get the write callback
@@ -374,7 +366,7 @@ handle_memory_write:
     add [rb - 4], 0, [rb + write_through]
 
 .done:
-    arb 6
+    arb 4
     ret 2
 .ENDFRAME
 
