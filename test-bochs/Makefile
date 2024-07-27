@@ -1,7 +1,7 @@
 VMDIR = $(abspath ..)
 
 ICDIR ?= $(abspath $(VMDIR)/../xzintbit)
-include $(VMDIR)/intcode.mk
+include $(ICDIR)/intcode.mk
 
 TESTDIRS = $(sort $(dir $(wildcard */Makefile)))
 export TESTLOG = $(abspath test.log)

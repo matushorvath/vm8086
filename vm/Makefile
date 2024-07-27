@@ -1,7 +1,7 @@
 VMDIR = $(abspath ..)
 
 ICDIR ?= $(abspath $(VMDIR)/../xzintbit)
-include $(VMDIR)/intcode.mk
+include $(ICDIR)/intcode.mk
 
 ifeq ($(BIOS),pcxtbios)
 	BIOS_BIN ?= $(abspath $(VMDIR)/../pcxtbios/eproms/2764/pcxtbios.rom)
