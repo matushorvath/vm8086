@@ -28,7 +28,6 @@ TODO
 ====
 
 - Make sure makefiles display and delete output files when compilation fails.
-- https://wiki.osdev.org/APM APM for poweroff, FreeDOS should support it
 - higher level floppy logging (read CHS+count -> target buffer)
 
 VM:
@@ -260,3 +259,11 @@ non-blocking input options:
 https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html
 https://c-faq.com/osdep/cbreak.html
 https://digitalmars.com/rtl/conio.html#_kbhit
+
+Shutdown and Reboot
+===================
+
+https://gitlab.com/FreeDOS/base/fdapm
+gttps://wiki.osdev.org/APM
+
+reboot via keyboard controller: port 64h <- 0feh

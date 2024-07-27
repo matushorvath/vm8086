@@ -41,6 +41,9 @@
 .IMPORT init_ppi_8255a
 .IMPORT speaker_activity_callback
 
+# From dev/ps2_8042.s
+.IMPORT init_ps2_8042
+
 # From fdc/init.s
 .IMPORT init_fdc
 
@@ -85,6 +88,7 @@ main:
     call init_pic_8259a
     call init_pit_8253
     call init_ppi_8255a
+    call init_ps2_8042
     call init_dma_8237a
     call init_cga
     call init_fdc
