@@ -268,3 +268,9 @@ gttps://wiki.osdev.org/APM
 
 https://wiki.osdev.org/%228042%22_PS/2_Controller
 reboot via keyboard controller: port 64h <- 0feh
+
+Text602 3.0
+===========
+
+Matus Horvath
+TK376658

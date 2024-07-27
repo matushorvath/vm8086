@@ -1,4 +1,4 @@
-# apt install 7zip mtools wget
+# apt install 7zip mtools wget xdelta
 #
 # download:
 #  - https://vetusware.com/download/Norton%20Commander%203.0%203.0 -> nc.7z
@@ -90,13 +90,14 @@ msdos-min.img: msdos.img
 	rm -rf T602-1
 	mcopy -D o -i $@ autoexec-t602-1.bat ::AUTOEXEC.BAT
 
-# TODO Text602 3.0 asks for information when it is started for the first time
-
 %-t602-3.img: %-min.img t602-3.zip autoexec-t602-3.bat
 	rm -rf T602-3
 	mkdir -p T602-3
 	7zz -y x t602-3.zip -oT602-3
 	rm T602-3/T602/K602.EXE T602-3/T602/K602.HLP T602-3/T602/CESKY.SLO
+	cp T602-3/T602/T602.EXE T602.EXE.tmp
+	xdelta patch t602-3.xdelta T602.EXE.tmp T602-3/T602/T602.EXE
+	rm -f T602.EXE.tmp
 	cp $< $@
 	mcopy -D o -s -i $@ T602-3/T602 ::T602
 	rm -rf T602-3
