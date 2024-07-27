@@ -1,6 +1,3 @@
-.EXPORT read_b
-.EXPORT write_b
-
 .EXPORT read_seg_off_b
 .EXPORT read_seg_off_w
 .EXPORT read_seg_off_dw
@@ -12,59 +9,12 @@
 .EXPORT read_cs_ip_w
 
 # From devices.s
-.IMPORT handle_memory_read
-.IMPORT handle_memory_write
+.IMPORT read_memory_b
+.IMPORT write_memory_b
 
 # From state.s
-.IMPORT mem
 .IMPORT reg_cs
 .IMPORT reg_ip
-
-##########
-read_b:
-.FRAME addr; value                                          # returns value
-    arb -1
-
-    # Try devices with mapped memory first
-    add [rb + addr], 0, [rb - 1]
-    arb -1
-    call handle_memory_read
-
-    # Should we read the value from main memory?
-    jnz [rb - 4], .main_memory
-
-    add [rb - 3], 0, [rb + value]
-    jz  0, .done
-
-.main_memory:
-    # Regular memory read
-    add [mem], [rb + addr], [ip + 1]
-    add [0], 0, [rb + value]
-
-.done:
-    arb 1
-    ret 1
-.ENDFRAME
-
-##########
-write_b:
-.FRAME addr, value;
-    # Try devices with mapped memory first
-    add [rb + addr], 0, [rb - 1]
-    add [rb + value], 0, [rb - 2]
-    arb -2
-    call handle_memory_write
-
-    # Should we write the value to main memory?
-    jz  [rb - 4], .done
-
-    # Write to main memory
-    add [mem], [rb + addr], [ip + 3]
-    add [rb + value], 0, [0]
-
-.done:
-    ret 2
-.ENDFRAME
 
 ##########
 calc_addr_b:
@@ -142,7 +92,7 @@ read_cs_ip_b:
 
     add [rb - 4], 0, [rb - 1]
     arb -1
-    call read_b
+    call read_memory_b
     add [rb - 3], 0, [rb + value]
 
     arb 1
@@ -165,12 +115,12 @@ read_cs_ip_w:
 
     add [rb + addr_lo], 0, [rb - 1]
     arb -1
-    call read_b
+    call read_memory_b
     add [rb - 3], 0, [rb + value_lo]
 
     add [rb + addr_hi], 0, [rb - 1]
     arb -1
-    call read_b
+    call read_memory_b
     add [rb - 3], 0, [rb + value_hi]
 
     arb 4
@@ -189,7 +139,7 @@ read_seg_off_b:
 
     add [rb - 4], 0, [rb - 1]
     arb -1
-    call read_b
+    call read_memory_b
     add [rb - 3], 0, [rb + value]
 
     arb 1
@@ -210,12 +160,12 @@ read_seg_off_w:
 
     add [rb + addr_lo], 0, [rb - 1]
     arb -1
-    call read_b
+    call read_memory_b
     add [rb - 3], 0, [rb + value_lo]
 
     add [rb + addr_hi], 0, [rb - 1]
     arb -1
-    call read_b
+    call read_memory_b
     add [rb - 3], 0, [rb + value_hi]
 
     arb 4
@@ -237,12 +187,12 @@ read_seg_off_dw:
 
     add [rb + addr_lo], 0, [rb - 1]
     arb -1
-    call read_b
+    call read_memory_b
     add [rb - 3], 0, [rb + value_ll]
 
     add [rb + addr_hi], 0, [rb - 1]
     arb -1
-    call read_b
+    call read_memory_b
     add [rb - 3], 0, [rb + value_lh]
 
     # Calculate offset of the hi word
@@ -265,12 +215,12 @@ read_seg_off_dw:
 
     add [rb + addr_lo], 0, [rb - 1]
     arb -1
-    call read_b
+    call read_memory_b
     add [rb - 3], 0, [rb + value_hl]
 
     add [rb + addr_hi], 0, [rb - 1]
     arb -1
-    call read_b
+    call read_memory_b
     add [rb - 3], 0, [rb + value_hh]
 
     arb 7
@@ -288,7 +238,7 @@ write_seg_off_b:
     add [rb - 4], 0, [rb - 1]
     add [rb + value], 0, [rb - 2]
     arb -2
-    call write_b
+    call write_memory_b
 
     ret 3
 .ENDFRAME
@@ -308,12 +258,12 @@ write_seg_off_w:
     add [rb + addr_lo], 0, [rb - 1]
     add [rb + value_lo], 0, [rb - 2]
     arb -2
-    call write_b
+    call write_memory_b
 
     add [rb + addr_hi], 0, [rb - 1]
     add [rb + value_hi], 0, [rb - 2]
     arb -2
-    call write_b
+    call write_memory_b
 
     arb 2
     ret 4

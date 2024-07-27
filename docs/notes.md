@@ -13,7 +13,7 @@ Instruction encoding 4-22 p259
 Possible Optimizations
 ======================
 
-- Use macros for inc_ip_b, inc_ip_w, inc_sp_w, dec_sp_w, execute_inc, execute_dec, read_b, write_b. The same algorithm is in many places.
+- Use macros for inc_ip_b, inc_ip_w, inc_sp_w, dec_sp_w, execute_inc, execute_dec. The same algorithm is in many places.
 - Use macros for all the arg_* functions, there's a lot of copy pasta there.
 - Look at the most used path in decode_mod_rm, make sure it is fast.
 
@@ -289,6 +289,12 @@ write_b
 handle_memory_write
 
 TODO:
- - merge read_b and handle_memory_read, write_n and handle_memory_write
+ - OK merge read_b and handle_memory_read, write_b and handle_memory_write
  - inline calc_addr_b
  - optimize calc_addr_w, perhaps inline that as well
+ - read_location_b and write_location_b should directly call read_memory_b and write_memory_b
+ - find a design that avoids searching a list for every byte access
+    - could use some kind of table (use segment as a key?)
+    - could cache last used region registration, so we can reuse it for multiple operations
+      - or at least cache it for word-sized operations, currently those get split to two bytes
+    - could use a fixed number of region registrations, currently 2 would be probably enough

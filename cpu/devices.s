@@ -4,11 +4,15 @@
 
 .EXPORT handle_port_read
 .EXPORT handle_port_write
-.EXPORT handle_memory_read
-.EXPORT handle_memory_write
+
+.EXPORT read_memory_b
+.EXPORT write_memory_b
 
 # From brk.s
 .IMPORT sbrk
+
+# From state.s
+.IMPORT mem
 
 # From util/error.s
 .IMPORT report_error
@@ -271,19 +275,16 @@ register_region:
 .ENDFRAME
 
 ##########
-handle_memory_read:
-.FRAME addr; value, read_through, record, callback, tmp     # returns value, read_through
-    arb -5
+read_memory_b:
+.FRAME addr; value, record, callback, tmp                   # returns value
+    arb -4
 
     # This function is hit very heavily and needs to be optimized as much as possible
-
-    # Default is to read the value from main memory
-    add 1, 0, [rb + read_through]
 
     add [device_regions], 0, [rb + record]
 
 .loop:
-    jz  [rb + record], .done
+    jz  [rb + record], .no_handler
 
     # Loop while the stop address of current region is lower or equal than the search address
     add [rb + record], 2, [ip + 2]
@@ -300,40 +301,44 @@ handle_memory_read:
     # Check if start address of the current region is lower or equal then the search address
     add [rb + record], 1, [ip + 2]
     lt  [rb + addr], [0], [rb + tmp]
-    jnz [rb + tmp], .done
+    jnz [rb + tmp], .no_handler
 
     # Address is in this region, get the read callback
     add [rb + record], 3, [ip + 1]
     add [0], 0, [rb + callback]
 
-    jz  [rb + callback], .done
+    jz  [rb + callback], .no_handler
 
     # Call the callback
     add [rb + addr], 0, [rb - 1]
     arb -1
     call [rb + callback + 1]
     add [rb - 3], 0, [rb + value]
-    add [rb - 4], 0, [rb + read_through]
+
+    # Should we read the value from main memory anyway?
+    jz  [rb - 4], .done
+
+.no_handler:
+    # Read the value from main memory
+    add [mem], [rb + addr], [ip + 1]
+    add [0], 0, [rb + value]
 
 .done:
-    arb 5
+    arb 4
     ret 1
 .ENDFRAME
 
 ##########
-handle_memory_write:
-.FRAME addr, value; write_through, record, callback, tmp    # returns write_through
-    arb -4
+write_memory_b:
+.FRAME addr, value; record, callback, tmp
+    arb -3
 
     # This function is hit very heavily and needs to be optimized as much as possible
-
-    # Default is to write the value to main memory
-    add 1, 0, [rb + write_through]
 
     add [device_regions], 0, [rb + record]
 
 .loop:
-    jz  [rb + record], .done
+    jz  [rb + record], .no_handler
 
     # Loop while the stop address of current region is lower or equal than the search address
     add [rb + record], 2, [ip + 2]
@@ -350,23 +355,30 @@ handle_memory_write:
     # Check if start address of the current region is lower or equal then the search address
     add [rb + record], 1, [ip + 2]
     lt  [rb + addr], [0], [rb + tmp]
-    jnz [rb + tmp], .done
+    jnz [rb + tmp], .no_handler
 
-    # Address is in this range, get the write callback
+    # Address is in this region, get the write callback
     add [rb + record], 4, [ip + 1]
     add [0], 0, [rb + callback]
 
-    jz  [rb + callback], .done
+    jz  [rb + callback], .no_handler
 
     # Call the callback
     add [rb + addr], 0, [rb - 1]
     add [rb + value], 0, [rb - 2]
     arb -2
     call [rb + callback + 2]
-    add [rb - 4], 0, [rb + write_through]
+
+    # Should we read the value from main memory anyway?
+    jz  [rb - 4], .done
+
+.no_handler:
+    # Write the value to main memory
+    add [mem], [rb + addr], [ip + 3]
+    add [rb + value], 0, [0]
 
 .done:
-    arb 4
+    arb 3
     ret 2
 .ENDFRAME
 
