@@ -17,15 +17,16 @@ build-all: checksum freedos msdos
 build: $(BUILD_TARGET)
 
 .PHONY: checksum
-checksum: hash.md5 av.zip freedos.zip freedos-simple.img.xz msdos.7z nc.7z prince.zip t602-1.zip t602-3.zip
+checksum: hash.md5 av.zip freedos.zip freedos-simple.img.xz msdos.7z nc.7z prince.zip \
+	t602-1.zip t602-3.zip
 	md5sum -c < $<
 
 .PHONY: freedos
-freedos: freedos-simple.img freedos.img freedos-poweroff.img freedos-nc.img freedos-t602-1.img \
-	freedos-t602-3.img freedos-av.img freedos-prince.img
+freedos: freedos-simple.img freedos.img freedos-min.img freedos-poweroff.img freedos-nc.img \
+	freedos-t602-1.img freedos-t602-3.img freedos-av.img freedos-prince.img
 
 .PHONY: msdos
-msdos: msdos.img msdos-nc.img msdos-t602-1.img msdos-av.img msdos-prince.img
+msdos: msdos.img msdos-min.img msdos-nc.img msdos-t602-1.img msdos-av.img msdos-prince.img
 
 # https://github.com/codercowboy/freedosbootdisks - a boot disk we can boot in CI/CD, without mtools
 freedos-simple.img.xz:
@@ -43,7 +44,7 @@ freedos.zip:
 freedos.img: freedos.zip
 	7zz -y e $< -r 144m/x86BOOT.img -so > $@
 	mdel -i $@ FDAUTO.BAT FDCONFIG.SYS SETUP.BAT
-	mcopy -D o -i $@ autoexec-freedos.bat ::AUTOEXEC.BAT
+	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
 	mcopy -D o -i $@ config-freedos.sys ::CONFIG.SYS
 
 # https://winworldpc.com/product/ms-dos/331
@@ -52,6 +53,19 @@ msdos.7z:
 
 msdos.img: msdos.7z
 	7zz -y e $< -r Disk1.img -so > $@
+
+# freedos image with as much free space as possible
+freedos-min.img: freedos.img
+	cp $< $@
+	mcopy -D o -i $@ ::/FREEDOS/BIN/COMMAND.COM ::/
+	mdeltree -i $@ ::/FREEDOS
+	mdel -i $@ ::/CONFIG.SYS
+
+# msdos image with as much free space as possible
+msdos-min.img: msdos.img
+	cp $< $@
+	mdeltree -i $@ $$(mdir -i $@ -ab | grep -v -e 'COMMAND\.COM' -e 'IO\.SYS' -e 'MSDOS\.SYS')
+	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
 
 %-poweroff.img: %.img autoexec-poweroff.bat
 	cp $< $@
@@ -76,10 +90,9 @@ msdos.img: msdos.7z
 	rm -rf T602-1
 	mcopy -D o -i $@ autoexec-t602-1.bat ::AUTOEXEC.BAT
 
-# TODO Text602 3.0 is too large to fit on one disk with full MS-DOS
 # TODO Text602 3.0 asks for information when it is started for the first time
 
-%-t602-3.img: %.img t602-3.zip autoexec-t602-3.bat
+%-t602-3.img: %-min.img t602-3.zip autoexec-t602-3.bat
 	rm -rf T602-3
 	mkdir -p T602-3
 	7zz -y x t602-3.zip -oT602-3
@@ -109,7 +122,7 @@ msdos.img: msdos.7z
 
 .PHONY: clean
 clean:
-	rm -rf *.img AV NC PRINCE T602
+	rm -rf *.img AV NC PRINCE T602-1 T602-3
 
 .PHONY: very-clean
 very-clean: clean
