@@ -20,7 +20,8 @@ checksum: hash.md5 av.zip freedos.zip freedos-simple.img.xz msdos.7z nc.7z princ
 	md5sum -c < $<
 
 .PHONY: freedos
-freedos: freedos-simple.img freedos.img freedos-nc.img freedos-t602-1.img freedos-av.img freedos-prince.img 
+freedos: freedos-simple.img freedos.img freedos-poweroff.img freedos-nc.img freedos-t602-1.img \
+	freedos-av.img freedos-prince.img
 
 .PHONY: msdos
 msdos: msdos.img msdos-nc.img msdos-t602-1.img msdos-av.img msdos-prince.img
@@ -50,6 +51,10 @@ msdos.7z:
 
 msdos.img: msdos.7z
 	7zz -y e $< -r Disk1.img -so > $@
+
+%-poweroff.img: %.img autoexec-poweroff.bat
+	cp $< $@
+	mcopy -D o -i $@ autoexec-poweroff.bat ::AUTOEXEC.BAT
 
 %-nc.img: %.img nc.7z autoexec-nc.bat nc.ini
 	rm -rf NC
