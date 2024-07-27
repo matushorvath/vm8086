@@ -1,5 +1,5 @@
 ICDIR ?= $(abspath ../xzintbit)
-include intcode.mk
+include $(ICDIR)/intcode.mk
 
 BINDIR ?= bin
 OBJDIR ?= obj

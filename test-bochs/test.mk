@@ -1,7 +1,7 @@
 VMDIR = $(abspath ../..)
 
 ICDIR ?= $(abspath ../../../xzintbit)
-include $(VMDIR)/intcode.mk
+include $(ICDIR)/intcode.mk
 
 RESDIR ?= res
 OBJDIR ?= obj
