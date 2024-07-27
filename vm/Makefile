@@ -11,7 +11,7 @@ else
 	BIOS_ADDRESS ?= fc000
 endif
 
-FLOPPY ?= freedos
+FLOPPY ?= freedos-simple
 FLOPPY_BIN = $(abspath $(VMDIR)/img/$(FLOPPY).img)
 
 BINDIR ?= $(VMDIR)/bin

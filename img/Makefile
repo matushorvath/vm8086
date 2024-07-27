@@ -6,7 +6,7 @@
 #  - https://www.myabandonware.com/game/prince-of-persia-pd -> prince.zip
 #  - https://vetusware.com/download/Text602 _T602_ 1.00 %231090 CZ -> t602-1.zip
 
-FLOPPY ?= freedos
+FLOPPY ?= freedos-simple
 BUILD_TARGET=$(FLOPPY).img
 
 .PHONY: build-all
@@ -16,23 +16,33 @@ build-all: checksum freedos msdos
 build: $(BUILD_TARGET)
 
 .PHONY: checksum
-checksum: hash.md5 av.zip freedos.img.xz msdos.7z nc.7z prince.zip t602-1.zip
+checksum: hash.md5 av.zip freedos.zip freedos-simple.img.xz msdos.7z nc.7z prince.zip t602-1.zip
 	md5sum -c < $<
 
 .PHONY: freedos
-freedos: freedos.img freedos-nc.img freedos-t602-1.img freedos-av.img freedos-prince.img 
+freedos: freedos-simple.img freedos.img freedos-nc.img freedos-t602-1.img freedos-av.img freedos-prince.img 
 
 .PHONY: msdos
 msdos: msdos.img msdos-nc.img msdos-t602-1.img msdos-av.img msdos-prince.img
 
-# https://github.com/codercowboy/freedosbootdisks
-freedos.img.xz:
+# https://github.com/codercowboy/freedosbootdisks - a boot disk we can boot in CI/CD, without mtools
+freedos-simple.img.xz:
 	wget 'https://github.com/codercowboy/freedosbootdisks/raw/master/bootdisks/freedos.boot.disk.1.4MB.img' -O - | xz > $@
 
-freedos.img: freedos.img.xz
+freedos-simple.img: freedos-simple.img.xz
 	xz -dkf $<
 	# ignore errors, since this is just cosmetic and CI/CD has no mtools
 	mdeltree -i $@ FSEVEN~1 || true
+
+# https://www.freedos.org/download
+freedos.zip:
+	wget 'https://www.ibiblio.org/pub/micro/pc-stuff/freedos/files/distributions/1.3/official/FD13-FloppyEdition.zip' -O $@
+
+freedos.img: freedos.zip
+	7zz -y e $< -r 144m/x86BOOT.img -so > $@
+	mdel -i $@ FDAUTO.BAT FDCONFIG.SYS SETUP.BAT
+	mcopy -D o -i $@ autoexec-freedos.bat ::AUTOEXEC.BAT
+	mcopy -D o -i $@ config-freedos.sys ::CONFIG.SYS
 
 # https://winworldpc.com/product/ms-dos/331
 msdos.7z:
