@@ -1,2 +1,3 @@
 /test-bochs/*/*.txt text eol=lf
 /img/*.bat text eol=crlf
+/img/*.sys text eol=crlf

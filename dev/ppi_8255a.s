@@ -31,6 +31,8 @@
 # - bit 1 port 0x61: write, controls speaker directly
 # - bit 5 port 0x61: read, output of PIT channel 2
 
+# See IBM_5155_5160_Technical_Reference_6280089_MAR86.pdf, page 1-27
+
 ##########
 ppi_ports:
     db  0x60, 0x00, ppi_port_a_read, 0                      # Keyboard scan code/switch settings

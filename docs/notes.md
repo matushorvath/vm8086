@@ -28,13 +28,17 @@ TODO
 ====
 
 - Make sure makefiles display and delete output files when compilation fails.
-- https://wiki.osdev.org/APM APM for poweroff, FreeDOS should support it
 - higher level floppy logging (read CHS+count -> target buffer)
-- indicate pc speaker sounds on the status bar
 
 VM:
 - nmi_mask_reg
 - keyboard controller (8242) ppi_pb_reg; also read ppi_pb_reg
+
+- support missing floppy commands
+
+- support CGA paging (affects start address where we read CGA data from mem)
+- investigate whether we can speed up full redraw by switching to alternate buffer
+- consider using strings for the palettes, avoid printb to speed up; e.g. string "170;170;0;" for yellow
 
 Emulators
 =========
@@ -252,71 +256,15 @@ non-blocking input options:
     - needs to be synchronous, only generate on stdout if there is a request, avoid buffering - can that be done?
  - think about fallbacks - running with standard ICVM (disable keyboard?), running without filter (how to even detect that?)
 
-Next Steps
-==========
+https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html
+https://c-faq.com/osdep/cbreak.html
+https://digitalmars.com/rtl/conio.html#_kbhit
 
-simple:
-- support CGA paging (affects start address where we read CGA data from mem)
+Shutdown and Reboot
+===================
 
-complex:
-- debug and fix Prince graphics
-- support missing floppy commands
-- investigate whether we can speed up full redraw by switching to alternate buffer
+https://gitlab.com/FreeDOS/base/fdapm
+gttps://wiki.osdev.org/APM
 
-TODO consider using strings for the palettes, avoid printb to speed up; e.g. string "170;170;0;" for yellow
-
-Prince of Persia
-================
-
-Graphics mode not available.
-
-(3002:4189) cga address write: value 00001111
-(3002:418b) cga data read: value 10111000000000000000
-(3002:418e) cga data write: value 01010101
-(3002:4194) cga data read: value 10111000000000000000
-(3002:4199) cga data write: value 10111000000000000000
-
-reads R15 from MC6845
-writes 0x55 to R15
-reads R15, compares it with 0x55, expects equal
-writes original value back to R15
-
-screen blinking after a sword hit and during the demo, clears the screen but it shouldn't
-
-(f000:e0ea) cga mode write: value 00000000 reset 1
-(f000:e0ea) cga state: hi-text 0 gr 0 mono 0 output 0 hi-gr 0 blink 0 select 0 bright 0 palette 0
-(f000:f129) cga mode write: value 00000000 reset 0
-(f000:f129) cga state: hi-text 0 gr 0 mono 0 output 0 hi-gr 0 blink 0 select 0 bright 0 palette 0
-(f000:f17e) cga mode write: value 00101001 reset 2
-(f000:f17e) cga state: hi-text 1 gr 0 mono 0 output 1 hi-gr 0 blink 1 select 0 bright 0 palette 0
-(f000:f18f) cga color write: value 00110000
-(f000:f18f) cga state: hi-text 1 gr 0 mono 0 output 1 hi-gr 0 blink 1 select 0 bright 1 palette 1
-(f000:f129) cga mode write: value 00000000 reset 2
-(f000:f129) cga state: hi-text 0 gr 0 mono 0 output 0 hi-gr 0 blink 0 select 0 bright 1 palette 1
-(f000:f17e) cga mode write: value 00101010 reset 1
-(f000:f17e) cga state: hi-text 0 gr 1 mono 0 output 1 hi-gr 0 blink 1 select 0 bright 1 palette 1
-(f000:f18f) cga color write: value 00110000
-<blinking starts here>
-(f000:f18f) cga state: hi-text 0 gr 1 mono 0 output 1 hi-gr 0 blink 1 select 0 bright 1 palette 1
-(f000:f642) cga color write: value 00111111
-(f000:f642) cga state: hi-text 0 gr 1 mono 0 output 1 hi-gr 0 blink 1 select 15 bright 1 palette 1
-(f000:f642) cga color write: value 00110000
-(f000:f642) cga state: hi-text 0 gr 1 mono 0 output 1 hi-gr 0 blink 1 select 0 bright 1 palette 1
-(f000:f642) cga color write: value 00111111
-(f000:f642) cga state: hi-text 0 gr 1 mono 0 output 1 hi-gr 0 blink 1 select 15 bright 1 palette 1
-(f000:f642) cga color write: value 00110000
-(f000:f642) cga state: hi-text 0 gr 1 mono 0 output 1 hi-gr 0 blink 1 select 0 bright 1 palette 1
-(f000:f642) cga color write: value 00111111
-(f000:f642) cga state: hi-text 0 gr 1 mono 0 output 1 hi-gr 0 blink 1 select 15 bright 1 palette 1
-(f000:f642) cga color write: value 00110000
-(f000:f642) cga state: hi-text 0 gr 1 mono 0 output 1 hi-gr 0 blink 1 select 0 bright 1 palette 1
-(f000:f642) cga color write: value 00111111
-(f000:f642) cga state: hi-text 0 gr 1 mono 0 output 1 hi-gr 0 blink 1 select 15 bright 1 palette 1
-(f000:f642) cga color write: value 00110000
-(f000:f642) cga state: hi-text 0 gr 1 mono 0 output 1 hi-gr 0 blink 1 select 0 bright 1 palette 1
-(f000:f642) cga color write: value 00111111
-(f000:f642) cga state: hi-text 0 gr 1 mono 0 output 1 hi-gr 0 blink 1 select 15 bright 1 palette 1
-(f000:f642) cga color write: value 00110000
-(f000:f642) cga state: hi-text 0 gr 1 mono 0 output 1 hi-gr 0 blink 1 select 0 bright 1 palette 1
-
-repeatedly sets background and border to (intensity, r, g, b) = (1, 1, 1, 1)
+https://wiki.osdev.org/%228042%22_PS/2_Controller
+reboot via keyboard controller: port 64h <- 0feh

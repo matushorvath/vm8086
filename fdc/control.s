@@ -66,14 +66,9 @@ fdc_dor_write:
     add bit_0, [rb + value], [ip + 1]
     add [0], 0, [fdc_dor_drive_a_select]
 
-    add bit_3, [rb + value], [ip + 1]
-    jnz [0], .dma_enabled
+    # Here we should make sure DMA is enabled (bit 3 of value is set),
+    # but that crashes FreeDOS when rebooting using FDAPM
 
-    add fdc_error_non_dma, 0, [rb - 1]
-    arb -1
-    call report_error
-
-.dma_enabled:
     add bit_4, [rb + value], [ip + 1]
     add [0], 0, [fdc_dor_enable_motor_unit0]
 
