@@ -1,6 +1,6 @@
 %include "common.inc"
 
-; See also common/devices.s, where all these ports are set up in the VM
+; See also common/ports.s, where all these ports are set up in the VM
 
 
 section .text

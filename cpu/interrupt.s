@@ -10,9 +10,6 @@
 .IMPORT config_log_fdc
 .IMPORT config_log_int
 
-# From devices.s
-.IMPORT read_memory_b
-
 # From log_cs_change.s
 .IMPORT log_cs_change
 
@@ -21,6 +18,9 @@
 .IMPORT log_dos_21_iret
 
 # From memory.s
+.IMPORT read_memory_b
+
+# From regions.s
 .IMPORT read_cs_ip_b
 
 # From stack.s

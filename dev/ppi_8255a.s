@@ -1,7 +1,7 @@
 .EXPORT init_ppi_8255a
 .EXPORT speaker_activity_callback
 
-# From cpu/devices.s
+# From cpu/ports.s
 .IMPORT register_ports
 
 # From cpu/error.s

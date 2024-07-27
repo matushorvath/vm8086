@@ -1,6 +1,6 @@
 .EXPORT init_pit_8253
 
-# From cpu/devices.s
+# From cpu/ports.s
 .IMPORT register_ports
 
 # From util/error.s

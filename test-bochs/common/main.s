@@ -1,7 +1,7 @@
 .EXPORT irq_execute
 .EXPORT irq_need_to_execute
 
-# From cpu/devices.s
+# From devices.s
 .IMPORT register_devices
 
 # From cpu/execute.s

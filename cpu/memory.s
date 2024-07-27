@@ -8,7 +8,7 @@
 .EXPORT read_cs_ip_b
 .EXPORT read_cs_ip_w
 
-# From devices.s
+# From regions.s
 .IMPORT read_memory_b
 .IMPORT write_memory_b
 

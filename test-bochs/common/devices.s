@@ -4,7 +4,7 @@
 .IMPORT bochs_shutdown
 .IMPORT bochs_out_char
 
-# From cpu/devices.s
+# From cpu/ports.s
 .IMPORT register_ports
 
 # From cpu/dump_state.s
