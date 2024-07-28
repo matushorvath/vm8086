@@ -67,11 +67,11 @@ read_cs_ip_b:
 
     mul [reg_cs + 1], 0x100, [rb - 1]
     add [reg_cs + 0], [rb - 1], [rb - 1]
-    mul [reg_ip + 1], 0x100, [rb - 2]
-    add [reg_ip + 0], [rb - 2], [rb - 2]
-
     mul [rb - 1], 0x10, [rb + addr]
-    add [rb - 2], [rb + addr], [rb + addr]
+
+    mul [reg_ip + 1], 0x100, [rb - 1]
+    add [reg_ip + 0], [rb - 1], [rb - 1]
+    add [rb - 1], [rb + addr], [rb + addr]
 
     # Wrap around to 20 bits
     lt  [rb + addr], 0x100000, [rb + tmp]
@@ -122,20 +122,17 @@ read_seg_off_b:
 .FRAME seg, off; value, addr, tmp                           # returns value
     arb -3
 
-    # TODO simplify
-
     # Calculate the physical address
-    mul [rb + seg], 0x10, [rb + addr]
-    add [rb + off], [rb + addr], [rb + addr]
+    mul [rb + seg], 0x10, [rb - 1]
+    add [rb + off], [rb - 1], [rb - 1]
 
     # Wrap around to 20 bits
-    lt  [rb + addr], 0x100000, [rb + tmp]
+    lt  [rb - 1], 0x100000, [rb + tmp]
     jnz [rb + tmp], .done
 
-    add [rb + addr], -0x100000, [rb + addr]
+    add [rb - 1], -0x100000, [rb - 1]
 
 .done:
-    add [rb + addr], 0, [rb - 1]
     arb -1
     call read_memory_b
     add [rb - 3], 0, [rb + value]
@@ -230,20 +227,17 @@ write_seg_off_b:
 .FRAME seg, off, value; addr, tmp
     arb -2
 
-    # TODO simplify
-
     # Calculate the physical address
-    mul [rb + seg], 0x10, [rb + addr]
-    add [rb + off], [rb + addr], [rb + addr]
+    mul [rb + seg], 0x10, [rb - 1]
+    add [rb + off], [rb - 1], [rb - 1]
 
     # Wrap around to 20 bits
-    lt  [rb + addr], 0x100000, [rb + tmp]
+    lt  [rb - 1], 0x100000, [rb + tmp]
     jnz [rb + tmp], .done
 
-    add [rb + addr], -0x100000, [rb + addr]
+    add [rb - 1], -0x100000, [rb - 1]
 
 .done:
-    add [rb + addr], 0, [rb - 1]
     add [rb + value], 0, [rb - 2]
     arb -2
     call write_memory_b
