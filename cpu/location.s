@@ -8,8 +8,8 @@
 .IMPORT report_error
 
 # From memory.s
+.IMPORT calc_addr_w
 .IMPORT read_seg_off_w
-.IMPORT read_seg_off_dw
 .IMPORT write_seg_off_w
 
 # From regions.s
@@ -98,21 +98,59 @@ read_location_w:
 
 ##########
 read_location_dw:
-.FRAME lseg, loff; value_ll, value_lh, value_hl, value_hh, tmp                  # returns value_*
-    arb -5
+.FRAME lseg, loff; value_ll, value_lh, value_hl, value_hh, addr_lo, addr_hi, tmp                    # returns value_*
+    arb -7
 
     eq  [rb + lseg], 0x10000, [rb + tmp]
     jnz [rb + tmp], .register
 
     # Read from an 8086 address
+
+    # Read the lo word
     add [rb + lseg], 0, [rb - 1]
     add [rb + loff], 0, [rb - 2]
     arb -2
-    call read_seg_off_dw
-    add [rb - 4], 0, [rb + value_ll]
-    add [rb - 5], 0, [rb + value_lh]
-    add [rb - 6], 0, [rb + value_hl]
-    add [rb - 7], 0, [rb + value_hh]
+    call calc_addr_w
+    add [rb - 4], 0, [rb + addr_lo]
+    add [rb - 5], 0, [rb + addr_hi]
+
+    add [rb + addr_lo], 0, [rb - 1]
+    arb -1
+    call read_memory_b
+    add [rb - 3], 0, [rb + value_ll]
+
+    add [rb + addr_hi], 0, [rb - 1]
+    arb -1
+    call read_memory_b
+    add [rb - 3], 0, [rb + value_lh]
+
+    # Calculate offset of the hi word
+    # TODO separate algorithm to calculate the double word addressess
+    add [rb + loff], 2, [rb + loff]
+
+    lt  [rb + loff], 0x10000, [rb + tmp]
+    jnz [rb + tmp], .hi_word_offset_done
+
+    add [rb + loff], -0x10000, [rb + loff]
+
+.hi_word_offset_done:
+    # Read the hi word
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
+    arb -2
+    call calc_addr_w
+    add [rb - 4], 0, [rb + addr_lo]
+    add [rb - 5], 0, [rb + addr_hi]
+
+    add [rb + addr_lo], 0, [rb - 1]
+    arb -1
+    call read_memory_b
+    add [rb - 3], 0, [rb + value_hl]
+
+    add [rb + addr_hi], 0, [rb - 1]
+    arb -1
+    call read_memory_b
+    add [rb - 3], 0, [rb + value_hh]
 
     jz  0, .done
 
@@ -123,7 +161,7 @@ read_location_dw:
     call report_error
 
 .done:
-    arb 5
+    arb 7
     ret 2
 
 .register_message:

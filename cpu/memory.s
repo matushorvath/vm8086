@@ -1,6 +1,7 @@
+.EXPORT calc_addr_w
+
 .EXPORT read_seg_off_b
 .EXPORT read_seg_off_w
-.EXPORT read_seg_off_dw
 
 .EXPORT write_seg_off_b
 .EXPORT write_seg_off_w
@@ -171,61 +172,6 @@ read_seg_off_w:
     add [rb - 3], 0, [rb + value_hi]
 
     arb 4
-    ret 2
-.ENDFRAME
-
-##########
-read_seg_off_dw:
-.FRAME seg, off; value_ll, value_lh, value_hl, value_hh, addr_lo, addr_hi, tmp                      # returns value_*
-    arb -7
-
-    # Read the lo word
-    add [rb + seg], 0, [rb - 1]
-    add [rb + off], 0, [rb - 2]
-    arb -2
-    call calc_addr_w
-    add [rb - 4], 0, [rb + addr_lo]
-    add [rb - 5], 0, [rb + addr_hi]
-
-    add [rb + addr_lo], 0, [rb - 1]
-    arb -1
-    call read_memory_b
-    add [rb - 3], 0, [rb + value_ll]
-
-    add [rb + addr_hi], 0, [rb - 1]
-    arb -1
-    call read_memory_b
-    add [rb - 3], 0, [rb + value_lh]
-
-    # Calculate offset of the hi word
-    # TODO separate algorithm to calculate the double word addressess
-    add [rb + off], 2, [rb + off]
-
-    lt  [rb + off], 0x10000, [rb + tmp]
-    jnz [rb + tmp], .hi_word_offset_done
-
-    add [rb + off], -0x10000, [rb + off]
-
-.hi_word_offset_done:
-    # Read the hi word
-    add [rb + seg], 0, [rb - 1]
-    add [rb + off], 0, [rb - 2]
-    arb -2
-    call calc_addr_w
-    add [rb - 4], 0, [rb + addr_lo]
-    add [rb - 5], 0, [rb + addr_hi]
-
-    add [rb + addr_lo], 0, [rb - 1]
-    arb -1
-    call read_memory_b
-    add [rb - 3], 0, [rb + value_hl]
-
-    add [rb + addr_hi], 0, [rb - 1]
-    arb -1
-    call read_memory_b
-    add [rb - 3], 0, [rb + value_hh]
-
-    arb 7
     ret 2
 .ENDFRAME
 
