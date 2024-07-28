@@ -652,21 +652,29 @@ output_character_hi:
     mul [color_selected], 3, [rb + tmp]
 
     add palette_16 + 0, [rb + tmp], [ip + 1]
-    add [0], 0, [rb - 1]
-    arb -1
-    call printb
-    out ';'
-
+    out [0]
     add palette_16 + 1, [rb + tmp], [ip + 1]
-    add [0], 0, [rb - 1]
-    arb -1
-    call printb
-    out ';'
-
+    out [0]
     add palette_16 + 2, [rb + tmp], [ip + 1]
-    add [0], 0, [rb - 1]
-    arb -1
-    call printb
+    out [0]
+    add palette_16 + 3, [rb + tmp], [ip + 1]
+    out [0]
+    add palette_16 + 4, [rb + tmp], [ip + 1]
+    out [0]
+    add palette_16 + 5, [rb + tmp], [ip + 1]
+    out [0]
+    add palette_16 + 6, [rb + tmp], [ip + 1]
+    out [0]
+    add palette_16 + 7, [rb + tmp], [ip + 1]
+    out [0]
+    add palette_16 + 8, [rb + tmp], [ip + 1]
+    out [0]
+    add palette_16 + 9, [rb + tmp], [ip + 1]
+    out [0]
+    add palette_16 + 10, [rb + tmp], [ip + 1]
+    out [0]
+    add palette_16 + 11, [rb + tmp], [ip + 1]
+    out [0]
 
     out ';'
     out '4'

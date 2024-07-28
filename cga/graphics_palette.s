@@ -73,42 +73,44 @@ color_mappings:
 ##########
 # 24-bit color palettes
 
+# Each palette record is 12 characters long
 # TODO verify RGB values for palette 0 and 2
+
 palette_graphics_lo_0:
-    db    0,   0,   0                   # <background>
-    db  170,   0,   0                   # Red
-    db    0, 170,   0                   # Green
-    db  170, 170,   0                   # Yellow
+    db  "0,0,0"    ,0,0,0,0,0,0,0       # <background>
+    db  "170,0,0"      ,0,0,0,0,0       # Red
+    db  "0,170,0"      ,0,0,0,0,0       # Green
+    db  "170,170,0"        ,0,0,0       # Yellow
 
 palette_graphics_hi_0:
-    db    0,   0,   0                   # <background>
-    db  255,  85,  85                   # Red
-    db   85, 255,  85                   # Green
-    db  255, 255,  85                   # Yellow
+    db  "0,0,0"    ,0,0,0,0,0,0,0       # <background>
+    db  "255,85,85"        ,0,0,0       # Red
+    db  "85,255,85"        ,0,0,0       # Green
+    db  "255,255,85"         ,0,0       # Yellow
 
 palette_graphics_lo_1:
-    db    0,   0,   0                   # <background>
-    db  170,   0, 170                   # Magenta
-    db    0, 170, 170                   # Cyan
-    db  170, 170, 170                   # White
+    db  "0,0,0"    ,0,0,0,0,0,0,0       # <background>
+    db  "170,0,170"        ,0,0,0       # Magenta
+    db  "0,170,170"        ,0,0,0       # Cyan
+    db  "170,170,170"          ,0       # White
 
 palette_graphics_hi_1:
-    db    0,   0,   0                   # <background>
-    db  255,  85, 255                   # Magenta
-    db   85, 255, 255                   # Cyan
-    db  255, 255, 255                   # White
+    db  "0,0,0"    ,0,0,0,0,0,0,0       # <background>
+    db  "255,85,255"         ,0,0       # Magenta
+    db  "85,255,255"         ,0,0       # Cyan
+    db  "255,255,255"          ,0       # White
 
 palette_graphics_lo_2:
-    db    0,   0,   0                   # <background>
-    db  170,   0,   0                   # Red
-    db    0, 170, 170                   # Cyan
-    db  170, 170, 170                   # White
+    db  "0,0,0"    ,0,0,0,0,0,0,0       # <background>
+    db  "170,0,0"      ,0,0,0,0,0       # Red
+    db  "0,170,170"        ,0,0,0       # Cyan
+    db  "170,170,170"          ,0       # White
 
 palette_graphics_hi_2:
-    db    0,   0,   0                   # <background>
-    db  255,  85,  85                   # Red
-    db   85, 255, 255                   # Cyan
-    db  255, 255, 255                   # White
+    db  "0,0,0"    ,0,0,0,0,0,0,0       # <background>
+    db  "255,85,85"        ,0,0,0       # Red
+    db  "85,255,255"         ,0,0       # Cyan
+    db  "255,255,255"          ,0       # White
 
 # Every terminal character can have two colors at most, but it contains 8 pixels
 # If those pixels use more than two colors, we need to map them to a different color
