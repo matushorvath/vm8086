@@ -17,26 +17,6 @@
 .IMPORT reg_ip
 
 ##########
-calc_addr_b:
-.FRAME seg, off; addr, tmp                                  # returns addr
-    arb -2
-
-    # Calculate the physical address
-    mul [rb + seg], 0x10, [rb + addr]
-    add [rb + off], [rb + addr], [rb + addr]
-
-    # Wrap around to 20 bits
-    lt  [rb + addr], 0x100000, [rb + tmp]
-    jnz [rb + tmp], .done
-
-    add [rb + addr], -0x100000, [rb + addr]
-
-.done:
-    arb 2
-    ret 2
-.ENDFRAME
-
-##########
 calc_addr_w:
 .FRAME seg, off; addr_lo, addr_hi, off_hi, tmp              # returns addr_lo, addr_hi
     arb -4
@@ -80,22 +60,32 @@ calc_addr_w:
 
 ##########
 read_cs_ip_b:
-.FRAME value                                                # returns value
-    arb -1
+.FRAME value, addr, tmp                                     # returns value
+    arb -3
+
+    # TODO simplify
 
     mul [reg_cs + 1], 0x100, [rb - 1]
     add [reg_cs + 0], [rb - 1], [rb - 1]
     mul [reg_ip + 1], 0x100, [rb - 2]
     add [reg_ip + 0], [rb - 2], [rb - 2]
-    arb -2
-    call calc_addr_b
 
-    add [rb - 4], 0, [rb - 1]
+    mul [rb - 1], 0x10, [rb + addr]
+    add [rb - 2], [rb + addr], [rb + addr]
+
+    # Wrap around to 20 bits
+    lt  [rb + addr], 0x100000, [rb + tmp]
+    jnz [rb + tmp], .done
+
+    add [rb + addr], -0x100000, [rb + addr]
+
+.done:
+    add [rb + addr], 0, [rb - 1]
     arb -1
     call read_memory_b
     add [rb - 3], 0, [rb + value]
 
-    arb 1
+    arb 3
     ret 0
 .ENDFRAME
 
@@ -131,6 +121,8 @@ read_cs_ip_w:
 read_seg_off_b:
 .FRAME seg, off; value, addr, tmp                           # returns value
     arb -3
+
+    # TODO simplify
 
     # Calculate the physical address
     mul [rb + seg], 0x10, [rb + addr]
@@ -237,6 +229,8 @@ read_seg_off_dw:
 write_seg_off_b:
 .FRAME seg, off, value; addr, tmp
     arb -2
+
+    # TODO simplify
 
     # Calculate the physical address
     mul [rb + seg], 0x10, [rb + addr]
