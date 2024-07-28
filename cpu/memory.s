@@ -63,24 +63,20 @@ read_cs_ip_b:
 .FRAME value, addr, tmp                                     # returns value
     arb -3
 
-    # TODO simplify
-
-    mul [reg_cs + 1], 0x100, [rb - 1]
+    mul [reg_cs + 1], 0x10, [rb - 1]
+    add [reg_ip + 1], [rb - 1], [rb - 1]
+    mul [rb - 1], 0x10, [rb - 1]
     add [reg_cs + 0], [rb - 1], [rb - 1]
-    mul [rb - 1], 0x10, [rb + addr]
-
-    mul [reg_ip + 1], 0x100, [rb - 1]
+    mul [rb - 1], 0x10, [rb - 1]
     add [reg_ip + 0], [rb - 1], [rb - 1]
-    add [rb - 1], [rb + addr], [rb + addr]
 
     # Wrap around to 20 bits
-    lt  [rb + addr], 0x100000, [rb + tmp]
+    lt  [rb - 1], 0x100000, [rb + tmp]
     jnz [rb + tmp], .done
 
-    add [rb + addr], -0x100000, [rb + addr]
+    add [rb - 1], -0x100000, [rb - 1]
 
 .done:
-    add [rb + addr], 0, [rb - 1]
     arb -1
     call read_memory_b
     add [rb - 3], 0, [rb + value]
