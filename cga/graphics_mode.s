@@ -651,6 +651,12 @@ output_character_hi:
     # Foreground color uses the 16 color palette
     mul [color_selected], 3, [rb + tmp]
 
+    # Skip to the beginning of the string
+    add palette_16 + 0, [rb + tmp], [ip + 1]
+    add [0], .palette_out, 
+    jz  0, 
+
+.palette_out:
     add palette_16 + 0, [rb + tmp], [ip + 1]
     out [0]
     add palette_16 + 1, [rb + tmp], [ip + 1]
