@@ -16,6 +16,8 @@
 .IMPORT reg_cs
 .IMPORT reg_ip
 
+# TODO optimize and inline calc_addr_w
+
 ##########
 calc_addr_w:
 .FRAME seg, off; addr_lo, addr_hi, off_hi, tmp              # returns addr_lo, addr_hi
@@ -63,6 +65,11 @@ read_cs_ip_b:
 .FRAME value                                                # returns value
     arb -1
 
+    # 32107654321076543210
+    # |cs__hi||cs__lo|
+    #     |ip__hi||ip__lo|
+
+    # Calculate the physical address
     mul [reg_cs + 1], 0x10, [rb - 1]
     add [reg_ip + 1], [rb - 1], [rb - 1]
     mul [rb - 1], 0x10, [rb - 1]
@@ -72,11 +79,11 @@ read_cs_ip_b:
 
     # Wrap around to 20 bits
     lt  [rb - 1], 0x100000, [rb - 2]
-    jnz [rb - 2], .done
+    jnz [rb - 2], .after_mod
 
     add [rb - 1], -0x100000, [rb - 1]
 
-.done:
+.after_mod:
     arb -1
     call read_memory_b
     add [rb - 3], 0, [rb + value]
@@ -118,17 +125,21 @@ read_seg_off_b:
 .FRAME seg, off; value                                      # returns value
     arb -1
 
+    # 32107654321076543210
+    # |-----seg------|
+    #     |-----off------|
+
     # Calculate the physical address
     mul [rb + seg], 0x10, [rb - 1]
     add [rb + off], [rb - 1], [rb - 1]
 
     # Wrap around to 20 bits
     lt  [rb - 1], 0x100000, [rb - 2]
-    jnz [rb - 2], .done
+    jnz [rb - 2], .after_mod
 
     add [rb - 1], -0x100000, [rb - 1]
 
-.done:
+.after_mod:
     arb -1
     call read_memory_b
     add [rb - 3], 0, [rb + value]
@@ -221,17 +232,21 @@ read_seg_off_dw:
 ##########
 write_seg_off_b:
 .FRAME seg, off, value;
+    # 32107654321076543210
+    # |-----seg------|
+    #     |-----off------|
+
     # Calculate the physical address
     mul [rb + seg], 0x10, [rb - 1]
     add [rb + off], [rb - 1], [rb - 1]
 
     # Wrap around to 20 bits
     lt  [rb - 1], 0x100000, [rb - 2]
-    jnz [rb - 2], .done
+    jnz [rb - 2], .after_mod
 
     add [rb - 1], -0x100000, [rb - 1]
 
-.done:
+.after_mod:
     add [rb + value], 0, [rb - 2]
     arb -2
     call write_memory_b
