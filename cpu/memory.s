@@ -17,8 +17,6 @@
 .IMPORT reg_cs
 .IMPORT reg_ip
 
-# TODO optimize and inline calc_addr_w
-
 ##########
 calc_addr_w:
 .FRAME seg, off; addr_lo, addr_hi, off_hi, tmp              # returns addr_lo, addr_hi

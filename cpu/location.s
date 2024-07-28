@@ -9,8 +9,6 @@
 
 # From memory.s
 .IMPORT calc_addr_w
-.IMPORT read_seg_off_w
-.IMPORT write_seg_off_w
 
 # From regions.s
 .IMPORT read_memory_b
@@ -67,8 +65,8 @@ read_location_b:
 
 ##########
 read_location_w:
-.FRAME lseg, loff; value_lo, value_hi, tmp                  # returns value_*
-    arb -3
+.FRAME lseg, loff; value_lo, value_hi, addr_lo, addr_hi, tmp                    # returns value_*
+    arb -5
 
     eq  [rb + lseg], 0x10000, [rb + tmp]
     jnz [rb + tmp], .register
@@ -77,9 +75,19 @@ read_location_w:
     add [rb + lseg], 0, [rb - 1]
     add [rb + loff], 0, [rb - 2]
     arb -2
-    call read_seg_off_w
-    add [rb - 4], 0, [rb + value_lo]
-    add [rb - 5], 0, [rb + value_hi]
+    call calc_addr_w
+    add [rb - 4], 0, [rb + addr_lo]
+    add [rb - 5], 0, [rb + addr_hi]
+
+    add [rb + addr_lo], 0, [rb - 1]
+    arb -1
+    call read_memory_b
+    add [rb - 3], 0, [rb + value_lo]
+
+    add [rb + addr_hi], 0, [rb - 1]
+    arb -1
+    call read_memory_b
+    add [rb - 3], 0, [rb + value_hi]
 
     jz  0, .done
 
@@ -92,7 +100,7 @@ read_location_w:
     add [0], 0, [rb + value_hi]
 
 .done:
-    arb 3
+    arb 5
     ret 2
 .ENDFRAME
 
@@ -211,8 +219,8 @@ write_location_b:
 
 ##########
 write_location_w:
-.FRAME lseg, loff, value_lo, value_hi; tmp
-    arb -1
+.FRAME lseg, loff, value_lo, value_hi; addr_lo, addr_hi, tmp
+    arb -3
 
     eq  [rb + lseg], 0x10000, [rb + tmp]
     jnz [rb + tmp], .register
@@ -220,10 +228,20 @@ write_location_w:
     # Write to an 8086 address
     add [rb + lseg], 0, [rb - 1]
     add [rb + loff], 0, [rb - 2]
-    add [rb + value_lo], 0, [rb - 3]
-    add [rb + value_hi], 0, [rb - 4]
-    arb -4
-    call write_seg_off_w
+    arb -2
+    call calc_addr_w
+    add [rb - 4], 0, [rb + addr_lo]
+    add [rb - 5], 0, [rb + addr_hi]
+
+    add [rb + addr_lo], 0, [rb - 1]
+    add [rb + value_lo], 0, [rb - 2]
+    arb -2
+    call write_memory_b
+
+    add [rb + addr_hi], 0, [rb - 1]
+    add [rb + value_hi], 0, [rb - 2]
+    arb -2
+    call write_memory_b
 
     jz  0, .done
 
@@ -236,7 +254,7 @@ write_location_w:
     add [rb + value_hi], 0, [0]
 
 .done:
-    arb 1
+    arb 3
     ret 4
 .ENDFRAME
 

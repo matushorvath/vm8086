@@ -292,8 +292,8 @@ TODO:
  - OK merge read_b and handle_memory_read, write_b and handle_memory_write
  - OK inline calc_addr_b
  - optimize calc_addr_w, perhaps inline that as well
- - read_location_b and write_location_b should directly call read_memory_b and write_memory_b
- - read_location_w and write_location_w should directly call read_memory_b and write_memory_b
+ - OK read_location_b and write_location_b should directly call read_memory_b and write_memory_b
+ - OK read_location_w and write_location_w should directly call read_memory_b and write_memory_b
  - find a design that avoids searching the list of regions for every memory access
     - could use some kind of table (use segment as a key?)
     - could cache last used region registration, so we can reuse it for multiple operations
