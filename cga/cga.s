@@ -3,10 +3,6 @@
 # From the config file
 .IMPORT config_cga_hide_cursor
 
-# From cpu/devices.s
-.IMPORT register_region
-.IMPORT register_ports
-
 # From memory.s
 .IMPORT write_memory_b8000
 .IMPORT read_memory_bc000
@@ -20,6 +16,12 @@
 .IMPORT color_control_write
 .IMPORT status_read
 .IMPORT initialize_screen
+
+# From cpu/ports.s
+.IMPORT register_ports
+
+# From cpu/regions.s
+.IMPORT register_region
 
 # TODO hide the cursor if running on a VM that supports extended console IO
 

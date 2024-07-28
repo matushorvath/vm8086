@@ -18,7 +18,7 @@
 # From cga/cga.s
 .IMPORT init_cga
 
-# From cpu/devices.s
+# From cpu/regions.s
 .IMPORT register_region
 
 # From cpu/execute.s

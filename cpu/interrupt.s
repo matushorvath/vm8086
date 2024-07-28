@@ -18,7 +18,9 @@
 .IMPORT log_dos_21_iret
 
 # From memory.s
-.IMPORT read_b
+.IMPORT read_memory_b
+
+# From regions.s
 .IMPORT read_cs_ip_b
 
 # From stack.s
@@ -148,12 +150,12 @@ interrupt:
     # Load new CS from [vector + 2]
     add [rb + vector], 2, [rb - 1]
     arb -1
-    call read_b
+    call read_memory_b
     add [rb - 3], 0, [reg_cs + 0]
 
     add [rb + vector], 3, [rb - 1]
     arb -1
-    call read_b
+    call read_memory_b
     add [rb - 3], 0, [reg_cs + 1]
 
     # Push IP
@@ -165,12 +167,12 @@ interrupt:
     # Load new IP from [vector]
     add [rb + vector], 0, [rb - 1]
     arb -1
-    call read_b
+    call read_memory_b
     add [rb - 3], 0, [reg_ip + 0]
 
     add [rb + vector], 1, [rb - 1]
     arb -1
-    call read_b
+    call read_memory_b
     add [rb - 3], 0, [reg_ip + 1]
 
     # TODO reset/halt for triple fault

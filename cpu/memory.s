@@ -1,9 +1,7 @@
-.EXPORT read_b
-.EXPORT write_b
+.EXPORT calc_addr_w
 
 .EXPORT read_seg_off_b
 .EXPORT read_seg_off_w
-.EXPORT read_seg_off_dw
 
 .EXPORT write_seg_off_b
 .EXPORT write_seg_off_w
@@ -11,80 +9,13 @@
 .EXPORT read_cs_ip_b
 .EXPORT read_cs_ip_w
 
-# From devices.s
-.IMPORT handle_memory_read
-.IMPORT handle_memory_write
+# From regions.s
+.IMPORT read_memory_b
+.IMPORT write_memory_b
 
 # From state.s
-.IMPORT mem
 .IMPORT reg_cs
 .IMPORT reg_ip
-
-##########
-read_b:
-.FRAME addr; value                                          # returns value
-    arb -1
-
-    # Try devices with mapped memory first
-    add [rb + addr], 0, [rb - 1]
-    arb -1
-    call handle_memory_read
-
-    # Should we read the value from main memory?
-    jnz [rb - 4], .main_memory
-
-    add [rb - 3], 0, [rb + value]
-    jz  0, .done
-
-.main_memory:
-    # Regular memory read
-    add [mem], [rb + addr], [ip + 1]
-    add [0], 0, [rb + value]
-
-.done:
-    arb 1
-    ret 1
-.ENDFRAME
-
-##########
-write_b:
-.FRAME addr, value;
-    # Try devices with mapped memory first
-    add [rb + addr], 0, [rb - 1]
-    add [rb + value], 0, [rb - 2]
-    arb -2
-    call handle_memory_write
-
-    # Should we write the value to main memory?
-    jz  [rb - 4], .done
-
-    # Write to main memory
-    add [mem], [rb + addr], [ip + 3]
-    add [rb + value], 0, [0]
-
-.done:
-    ret 2
-.ENDFRAME
-
-##########
-calc_addr_b:
-.FRAME seg, off; addr, tmp                                  # returns addr
-    arb -2
-
-    # Calculate the physical address
-    mul [rb + seg], 0x10, [rb + addr]
-    add [rb + off], [rb + addr], [rb + addr]
-
-    # Wrap around to 20 bits
-    lt  [rb + addr], 0x100000, [rb + tmp]
-    jnz [rb + tmp], .done
-
-    add [rb + addr], -0x100000, [rb + addr]
-
-.done:
-    arb 2
-    ret 2
-.ENDFRAME
 
 ##########
 calc_addr_w:
@@ -133,16 +64,27 @@ read_cs_ip_b:
 .FRAME value                                                # returns value
     arb -1
 
-    mul [reg_cs + 1], 0x100, [rb - 1]
-    add [reg_cs + 0], [rb - 1], [rb - 1]
-    mul [reg_ip + 1], 0x100, [rb - 2]
-    add [reg_ip + 0], [rb - 2], [rb - 2]
-    arb -2
-    call calc_addr_b
+    # 32107654321076543210
+    # |cs__hi||cs__lo|
+    #     |ip__hi||ip__lo|
 
-    add [rb - 4], 0, [rb - 1]
+    # Calculate the physical address
+    mul [reg_cs + 1], 0x10, [rb - 1]
+    add [reg_ip + 1], [rb - 1], [rb - 1]
+    mul [rb - 1], 0x10, [rb - 1]
+    add [reg_cs + 0], [rb - 1], [rb - 1]
+    mul [rb - 1], 0x10, [rb - 1]
+    add [reg_ip + 0], [rb - 1], [rb - 1]
+
+    # Wrap around to 20 bits
+    lt  [rb - 1], 0x100000, [rb - 2]
+    jnz [rb - 2], .after_mod
+
+    add [rb - 1], -0x100000, [rb - 1]
+
+.after_mod:
     arb -1
-    call read_b
+    call read_memory_b
     add [rb - 3], 0, [rb + value]
 
     arb 1
@@ -165,12 +107,12 @@ read_cs_ip_w:
 
     add [rb + addr_lo], 0, [rb - 1]
     arb -1
-    call read_b
+    call read_memory_b
     add [rb - 3], 0, [rb + value_lo]
 
     add [rb + addr_hi], 0, [rb - 1]
     arb -1
-    call read_b
+    call read_memory_b
     add [rb - 3], 0, [rb + value_hi]
 
     arb 4
@@ -182,14 +124,23 @@ read_seg_off_b:
 .FRAME seg, off; value                                      # returns value
     arb -1
 
-    add [rb + seg], 0, [rb - 1]
-    add [rb + off], 0, [rb - 2]
-    arb -2
-    call calc_addr_b
+    # 32107654321076543210
+    # |-----seg------|
+    #     |-----off------|
 
-    add [rb - 4], 0, [rb - 1]
+    # Calculate the physical address
+    mul [rb + seg], 0x10, [rb - 1]
+    add [rb + off], [rb - 1], [rb - 1]
+
+    # Wrap around to 20 bits
+    lt  [rb - 1], 0x100000, [rb - 2]
+    jnz [rb - 2], .after_mod
+
+    add [rb - 1], -0x100000, [rb - 1]
+
+.after_mod:
     arb -1
-    call read_b
+    call read_memory_b
     add [rb - 3], 0, [rb + value]
 
     arb 1
@@ -210,12 +161,12 @@ read_seg_off_w:
 
     add [rb + addr_lo], 0, [rb - 1]
     arb -1
-    call read_b
+    call read_memory_b
     add [rb - 3], 0, [rb + value_lo]
 
     add [rb + addr_hi], 0, [rb - 1]
     arb -1
-    call read_b
+    call read_memory_b
     add [rb - 3], 0, [rb + value_hi]
 
     arb 4
@@ -223,72 +174,26 @@ read_seg_off_w:
 .ENDFRAME
 
 ##########
-read_seg_off_dw:
-.FRAME seg, off; value_ll, value_lh, value_hl, value_hh, addr_lo, addr_hi, tmp                      # returns value_*
-    arb -7
-
-    # Read the lo word
-    add [rb + seg], 0, [rb - 1]
-    add [rb + off], 0, [rb - 2]
-    arb -2
-    call calc_addr_w
-    add [rb - 4], 0, [rb + addr_lo]
-    add [rb - 5], 0, [rb + addr_hi]
-
-    add [rb + addr_lo], 0, [rb - 1]
-    arb -1
-    call read_b
-    add [rb - 3], 0, [rb + value_ll]
-
-    add [rb + addr_hi], 0, [rb - 1]
-    arb -1
-    call read_b
-    add [rb - 3], 0, [rb + value_lh]
-
-    # Calculate offset of the hi word
-    # TODO separate algorithm to calculate the double word addressess
-    add [rb + off], 2, [rb + off]
-
-    lt  [rb + off], 0x10000, [rb + tmp]
-    jnz [rb + tmp], .hi_word_offset_done
-
-    add [rb + off], -0x10000, [rb + off]
-
-.hi_word_offset_done:
-    # Read the hi word
-    add [rb + seg], 0, [rb - 1]
-    add [rb + off], 0, [rb - 2]
-    arb -2
-    call calc_addr_w
-    add [rb - 4], 0, [rb + addr_lo]
-    add [rb - 5], 0, [rb + addr_hi]
-
-    add [rb + addr_lo], 0, [rb - 1]
-    arb -1
-    call read_b
-    add [rb - 3], 0, [rb + value_hl]
-
-    add [rb + addr_hi], 0, [rb - 1]
-    arb -1
-    call read_b
-    add [rb - 3], 0, [rb + value_hh]
-
-    arb 7
-    ret 2
-.ENDFRAME
-
-##########
 write_seg_off_b:
 .FRAME seg, off, value;
-    add [rb + seg], 0, [rb - 1]
-    add [rb + off], 0, [rb - 2]
-    arb -2
-    call calc_addr_b
+    # 32107654321076543210
+    # |-----seg------|
+    #     |-----off------|
 
-    add [rb - 4], 0, [rb - 1]
+    # Calculate the physical address
+    mul [rb + seg], 0x10, [rb - 1]
+    add [rb + off], [rb - 1], [rb - 1]
+
+    # Wrap around to 20 bits
+    lt  [rb - 1], 0x100000, [rb - 2]
+    jnz [rb - 2], .after_mod
+
+    add [rb - 1], -0x100000, [rb - 1]
+
+.after_mod:
     add [rb + value], 0, [rb - 2]
     arb -2
-    call write_b
+    call write_memory_b
 
     ret 3
 .ENDFRAME
@@ -308,12 +213,12 @@ write_seg_off_w:
     add [rb + addr_lo], 0, [rb - 1]
     add [rb + value_lo], 0, [rb - 2]
     arb -2
-    call write_b
+    call write_memory_b
 
     add [rb + addr_hi], 0, [rb - 1]
     add [rb + value_hi], 0, [rb - 2]
     arb -2
-    call write_b
+    call write_memory_b
 
     arb 2
     ret 4

@@ -1,6 +1,6 @@
 .EXPORT init_vm_ports
 
-# From cpu/devices.s
+# From cpu/ports.s
 .IMPORT register_ports
 
 # From cga/status_bar.s

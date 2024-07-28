@@ -8,7 +8,7 @@
 .EXPORT execute_out_al_dx
 .EXPORT execute_out_ax_dx
 
-# From devices.s
+# From ports.s
 .IMPORT handle_port_read
 .IMPORT handle_port_write
 

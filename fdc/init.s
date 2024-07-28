@@ -20,7 +20,7 @@
 .IMPORT fdc_data_read
 .IMPORT fdc_data_write
 
-# From cpu/devices.s
+# From cpu/ports.s
 .IMPORT register_ports
 
 # From cpu/error.s

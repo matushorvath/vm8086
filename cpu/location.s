@@ -8,11 +8,11 @@
 .IMPORT report_error
 
 # From memory.s
-.IMPORT read_seg_off_b
-.IMPORT read_seg_off_w
-.IMPORT read_seg_off_dw
-.IMPORT write_seg_off_b
-.IMPORT write_seg_off_w
+.IMPORT calc_addr_w
+
+# From regions.s
+.IMPORT read_memory_b
+.IMPORT write_memory_b
 
 # Location is a generalized data item:
 #
@@ -31,11 +31,25 @@ read_location_b:
     jnz [rb + tmp], .register
 
     # Read from an 8086 address
-    add [rb + lseg], 0, [rb - 1]
-    add [rb + loff], 0, [rb - 2]
-    arb -2
-    call read_seg_off_b
-    add [rb - 4], 0, [rb + value]
+
+    # 32107654321076543210
+    # |-----seg------|
+    #     |-----off------|
+
+    # Calculate the physical address
+    mul [rb + lseg], 0x10, [rb - 1]
+    add [rb + loff], [rb - 1], [rb - 1]
+
+    # Wrap around to 20 bits
+    lt  [rb - 1], 0x100000, [rb - 2]
+    jnz [rb - 2], .after_mod
+
+    add [rb - 1], -0x100000, [rb - 1]
+
+.after_mod:
+    arb -1
+    call read_memory_b
+    add [rb - 3], 0, [rb + value]
 
     jz  0, .done
 
@@ -51,8 +65,8 @@ read_location_b:
 
 ##########
 read_location_w:
-.FRAME lseg, loff; value_lo, value_hi, tmp                  # returns value_*
-    arb -3
+.FRAME lseg, loff; value_lo, value_hi, addr_lo, addr_hi, tmp                    # returns value_*
+    arb -5
 
     eq  [rb + lseg], 0x10000, [rb + tmp]
     jnz [rb + tmp], .register
@@ -61,9 +75,19 @@ read_location_w:
     add [rb + lseg], 0, [rb - 1]
     add [rb + loff], 0, [rb - 2]
     arb -2
-    call read_seg_off_w
-    add [rb - 4], 0, [rb + value_lo]
-    add [rb - 5], 0, [rb + value_hi]
+    call calc_addr_w
+    add [rb - 4], 0, [rb + addr_lo]
+    add [rb - 5], 0, [rb + addr_hi]
+
+    add [rb + addr_lo], 0, [rb - 1]
+    arb -1
+    call read_memory_b
+    add [rb - 3], 0, [rb + value_lo]
+
+    add [rb + addr_hi], 0, [rb - 1]
+    arb -1
+    call read_memory_b
+    add [rb - 3], 0, [rb + value_hi]
 
     jz  0, .done
 
@@ -76,27 +100,65 @@ read_location_w:
     add [0], 0, [rb + value_hi]
 
 .done:
-    arb 3
+    arb 5
     ret 2
 .ENDFRAME
 
 ##########
 read_location_dw:
-.FRAME lseg, loff; value_ll, value_lh, value_hl, value_hh, tmp                  # returns value_*
-    arb -5
+.FRAME lseg, loff; value_ll, value_lh, value_hl, value_hh, addr_lo, addr_hi, tmp                    # returns value_*
+    arb -7
 
     eq  [rb + lseg], 0x10000, [rb + tmp]
     jnz [rb + tmp], .register
 
     # Read from an 8086 address
+
+    # Read the lo word
     add [rb + lseg], 0, [rb - 1]
     add [rb + loff], 0, [rb - 2]
     arb -2
-    call read_seg_off_dw
-    add [rb - 4], 0, [rb + value_ll]
-    add [rb - 5], 0, [rb + value_lh]
-    add [rb - 6], 0, [rb + value_hl]
-    add [rb - 7], 0, [rb + value_hh]
+    call calc_addr_w
+    add [rb - 4], 0, [rb + addr_lo]
+    add [rb - 5], 0, [rb + addr_hi]
+
+    add [rb + addr_lo], 0, [rb - 1]
+    arb -1
+    call read_memory_b
+    add [rb - 3], 0, [rb + value_ll]
+
+    add [rb + addr_hi], 0, [rb - 1]
+    arb -1
+    call read_memory_b
+    add [rb - 3], 0, [rb + value_lh]
+
+    # Calculate offset of the hi word
+    # TODO separate algorithm to calculate the double word addressess
+    add [rb + loff], 2, [rb + loff]
+
+    lt  [rb + loff], 0x10000, [rb + tmp]
+    jnz [rb + tmp], .hi_word_offset_done
+
+    add [rb + loff], -0x10000, [rb + loff]
+
+.hi_word_offset_done:
+    # Read the hi word
+    add [rb + lseg], 0, [rb - 1]
+    add [rb + loff], 0, [rb - 2]
+    arb -2
+    call calc_addr_w
+    add [rb - 4], 0, [rb + addr_lo]
+    add [rb - 5], 0, [rb + addr_hi]
+
+    add [rb + addr_lo], 0, [rb - 1]
+    arb -1
+    call read_memory_b
+    add [rb - 3], 0, [rb + value_hl]
+
+    add [rb + addr_hi], 0, [rb - 1]
+    arb -1
+    call read_memory_b
+    add [rb - 3], 0, [rb + value_hh]
 
     jz  0, .done
 
@@ -107,7 +169,7 @@ read_location_dw:
     call report_error
 
 .done:
-    arb 5
+    arb 7
     ret 2
 
 .register_message:
@@ -123,11 +185,25 @@ write_location_b:
     jnz [rb + tmp], .register
 
     # Write to an 8086 address
-    add [rb + lseg], 0, [rb - 1]
-    add [rb + loff], 0, [rb - 2]
-    add [rb + value], 0, [rb - 3]
-    arb -3
-    call write_seg_off_b
+
+    # 32107654321076543210
+    # |-----seg------|
+    #     |-----off------|
+
+    # Calculate the physical address
+    mul [rb + lseg], 0x10, [rb - 1]
+    add [rb + loff], [rb - 1], [rb - 1]
+
+    # Wrap around to 20 bits
+    lt  [rb - 1], 0x100000, [rb - 2]
+    jnz [rb - 2], .after_mod
+
+    add [rb - 1], -0x100000, [rb - 1]
+
+.after_mod:
+    add [rb + value], 0, [rb - 2]
+    arb -2
+    call write_memory_b
 
     jz  0, .done
 
@@ -143,8 +219,8 @@ write_location_b:
 
 ##########
 write_location_w:
-.FRAME lseg, loff, value_lo, value_hi; tmp
-    arb -1
+.FRAME lseg, loff, value_lo, value_hi; addr_lo, addr_hi, tmp
+    arb -3
 
     eq  [rb + lseg], 0x10000, [rb + tmp]
     jnz [rb + tmp], .register
@@ -152,10 +228,20 @@ write_location_w:
     # Write to an 8086 address
     add [rb + lseg], 0, [rb - 1]
     add [rb + loff], 0, [rb - 2]
-    add [rb + value_lo], 0, [rb - 3]
-    add [rb + value_hi], 0, [rb - 4]
-    arb -4
-    call write_seg_off_w
+    arb -2
+    call calc_addr_w
+    add [rb - 4], 0, [rb + addr_lo]
+    add [rb - 5], 0, [rb + addr_hi]
+
+    add [rb + addr_lo], 0, [rb - 1]
+    add [rb + value_lo], 0, [rb - 2]
+    arb -2
+    call write_memory_b
+
+    add [rb + addr_hi], 0, [rb - 1]
+    add [rb + value_hi], 0, [rb - 2]
+    arb -2
+    call write_memory_b
 
     jz  0, .done
 
@@ -168,7 +254,7 @@ write_location_w:
     add [rb + value_hi], 0, [0]
 
 .done:
-    arb 1
+    arb 3
     ret 4
 .ENDFRAME
 

@@ -17,7 +17,7 @@
 .IMPORT pic_status_read_log
 .IMPORT pic_data_read_log
 
-# From cpu/devices.s
+# From cpu/ports.s
 .IMPORT register_ports
 
 # From cpu/error.s

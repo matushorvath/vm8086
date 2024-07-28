@@ -1,6 +1,6 @@
 .EXPORT init_ps2_8042
 
-# From cpu/devices.s
+# From cpu/ports.s
 .IMPORT register_ports
 
 # From cpu/execute.s

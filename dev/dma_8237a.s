@@ -10,7 +10,7 @@
 # From the config file
 .IMPORT config_log_fdc
 
-# From cpu/devices.s
+# From cpu/ports.s
 .IMPORT register_ports
 
 # From cpu/state.s
