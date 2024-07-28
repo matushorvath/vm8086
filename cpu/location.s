@@ -8,11 +8,13 @@
 .IMPORT report_error
 
 # From memory.s
-.IMPORT read_seg_off_b
 .IMPORT read_seg_off_w
 .IMPORT read_seg_off_dw
-.IMPORT write_seg_off_b
 .IMPORT write_seg_off_w
+
+# From regions.s
+.IMPORT read_memory_b
+.IMPORT write_memory_b
 
 # Location is a generalized data item:
 #
@@ -31,11 +33,25 @@ read_location_b:
     jnz [rb + tmp], .register
 
     # Read from an 8086 address
-    add [rb + lseg], 0, [rb - 1]
-    add [rb + loff], 0, [rb - 2]
-    arb -2
-    call read_seg_off_b
-    add [rb - 4], 0, [rb + value]
+
+    # 32107654321076543210
+    # |-----seg------|
+    #     |-----off------|
+
+    # Calculate the physical address
+    mul [rb + lseg], 0x10, [rb - 1]
+    add [rb + loff], [rb - 1], [rb - 1]
+
+    # Wrap around to 20 bits
+    lt  [rb - 1], 0x100000, [rb - 2]
+    jnz [rb - 2], .after_mod
+
+    add [rb - 1], -0x100000, [rb - 1]
+
+.after_mod:
+    arb -1
+    call read_memory_b
+    add [rb - 3], 0, [rb + value]
 
     jz  0, .done
 
@@ -123,11 +139,25 @@ write_location_b:
     jnz [rb + tmp], .register
 
     # Write to an 8086 address
-    add [rb + lseg], 0, [rb - 1]
-    add [rb + loff], 0, [rb - 2]
-    add [rb + value], 0, [rb - 3]
-    arb -3
-    call write_seg_off_b
+
+    # 32107654321076543210
+    # |-----seg------|
+    #     |-----off------|
+
+    # Calculate the physical address
+    mul [rb + lseg], 0x10, [rb - 1]
+    add [rb + loff], [rb - 1], [rb - 1]
+
+    # Wrap around to 20 bits
+    lt  [rb - 1], 0x100000, [rb - 2]
+    jnz [rb - 2], .after_mod
+
+    add [rb - 1], -0x100000, [rb - 1]
+
+.after_mod:
+    add [rb + value], 0, [rb - 2]
+    arb -2
+    call write_memory_b
 
     jz  0, .done
 
