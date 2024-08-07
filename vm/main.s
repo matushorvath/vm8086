@@ -61,7 +61,13 @@
     jz  0, init
 
 extended_init:
-    # extended VM starts here
+    # extended VM starts here; check for required features
+    db  110, 10, tmp                    # check for ftr instruction; ftr 10, [res]
+    jz  [tmp], init
+    db  110, 13, tmp                    # check for ina instruction; ftr 13, [res]
+    jz  [tmp], init
+
+    # running on extended VM and all required features are present
     add 1, 0, [extended_vm]
 
 init:
@@ -127,6 +133,8 @@ write_rom:
 
 ##########
 extended_vm:
+    db  0
+tmp:
     db  0
 
 ##########
