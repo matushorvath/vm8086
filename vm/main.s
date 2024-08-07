@@ -6,16 +6,16 @@
 # From bios_address.template
 .IMPORT bios_address
 
+# From callback.s
+.IMPORT vm_callback
+.IMPORT on_disk_active
+.IMPORT on_speaker_active
+
 # From floppy.o
 .IMPORT floppy_image
 
 # From ports.s
 .IMPORT init_vm_ports
-
-# From timer.s
-.IMPORT vm_callback
-.IMPORT on_disk_active
-.IMPORT on_speaker_active
 
 # From cga/cga.s
 .IMPORT init_cga

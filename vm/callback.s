@@ -14,8 +14,6 @@
 .IMPORT set_speaker_active
 .IMPORT set_speaker_inactive
 
-# TODO reset the inactive counter with every set_disk_active, same for speaker
-
 ##########
 vm_callback:
 .FRAME continue                         # returns continue
