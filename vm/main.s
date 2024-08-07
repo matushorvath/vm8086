@@ -1,3 +1,5 @@
+.EXPORT extended_vm
+
 # From bios.o
 .IMPORT bios_image
 
@@ -52,6 +54,17 @@
 
 ##########
 # Entry point
+    # magic instruction; extended VM starts at extended_init
+    jnz 0, extended_init
+
+    # standard VM starts here
+    jz  0, init
+
+extended_init:
+    # extended VM starts here
+    add 1, 0, [extended_vm]
+
+init:
     arb stack
 
     # Overwrite the first instruction with 'hlt', so in case
@@ -111,6 +124,10 @@ write_rom:
     arb 1
     ret 2
 .ENDFRAME
+
+##########
+extended_vm:
+    db  0
 
 ##########
     ds  1000, 0
