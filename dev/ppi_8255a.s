@@ -91,8 +91,8 @@ ppi_port_a_read:
 .FRAME addr; value
     arb -1
 
-    # TODO keyboard support
-    add  0xff, 0, [rb + value]
+    # Return port A value, the keyboard character buffer
+    add [ppi_a], 0, [rb + value]
 
     arb 1
     ret 1
@@ -103,21 +103,8 @@ ppi_port_b_read:
 .FRAME addr; value
     arb -1
 
-    # Build the value from bits
-    mul [ppi_b_bit_7], 2, [rb + value]
-    add [rb + value], [ppi_b_bit_6], [rb + value]
-    mul [rb + value], 2, [rb + value]
-    add [rb + value], [ppi_b_bit_5], [rb + value]
-    mul [rb + value], 2, [rb + value]
-    add [rb + value], [ppi_b_bit_4], [rb + value]
-    mul [rb + value], 2, [rb + value]
-    add [rb + value], [ppi_read_high_switches], [rb + value]
-    mul [rb + value], 2, [rb + value]
-    add [rb + value], [ppi_b_bit_2], [rb + value]
-    mul [rb + value], 2, [rb + value]
-    add [rb + value], [ppi_b_bit_1], [rb + value]
-    mul [rb + value], 2, [rb + value]
-    add [rb + value], [pit_gate_ch2], [rb + value]
+    # Return the port B value
+    add [ppi_b], 0, [rb + value]
 
     arb 1
     ret 1
@@ -130,6 +117,11 @@ ppi_port_b_write:
     # 0: 8253 channel 2 gate
     # 1: control the PC speaker
     # 3: read high switches/low switches
+    # 7: clear keyboard
+
+    # Save the value, so we can return it when reading port B
+    # TODO this is probably not the correct value to read from port B
+    add [rb + value], 0, [ppi_b]
 
     # Set/reset PIT channel 2 gate
     add bit_0, [rb + value], [ip + 1]
@@ -149,21 +141,12 @@ ppi_port_b_write:
     add bit_3, [rb + value], [ip + 1]
     add [0], 0, [ppi_read_high_switches]
 
-    # Save the other bits so we can return them later
-    # TODO probably these are not the correct values to read from port b
-    add bit_1, [rb + value], [ip + 1]
-    add [0], 0, [ppi_b_bit_1]
-    add bit_2, [rb + value], [ip + 1]
-    add [0], 0, [ppi_b_bit_2]
-    add bit_4, [rb + value], [ip + 1]
-    add [0], 0, [ppi_b_bit_4]
-    add bit_5, [rb + value], [ip + 1]
-    add [0], 0, [ppi_b_bit_5]
-    add bit_6, [rb + value], [ip + 1]
-    add [0], 0, [ppi_b_bit_6]
+    # Clear the keyboard buffer if requested
     add bit_7, [rb + value], [ip + 1]
-    add [0], 0, [ppi_b_bit_7]
+    jz  [0], .after_clear_keyboard
+    add 0, 0, [ppi_a]
 
+.after_clear_keyboard:
     ret 2
 .ENDFRAME
 
@@ -196,20 +179,12 @@ ppi_port_c_read:
 .ENDFRAME
 
 ##########
-ppi_read_high_switches:
+ppi_a:
+    db  0
+ppi_b:
     db  0
 
-ppi_b_bit_1:
-    db  0
-ppi_b_bit_2:
-    db  0
-ppi_b_bit_4:
-    db  0
-ppi_b_bit_5:
-    db  0
-ppi_b_bit_6:
-    db  0
-ppi_b_bit_7:
+ppi_read_high_switches:
     db  0
 
 speaker_activity_callback:
