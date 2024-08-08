@@ -65,7 +65,7 @@ handle_keyboard:
 
 .output_make_break_shift:
     # Output the make code for the last character
-    add scancode + 2, [last_char_x3], [ip + 1]
+    add scancode + 1, [last_char_x3], [ip + 1]
     add [0], 0, [ppi_a]
 
     # Follow up with the break code and then release shift
