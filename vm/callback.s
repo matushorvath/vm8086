@@ -48,7 +48,7 @@ vm_callback:
     add 1, 0, [rb + continue]
 
     # High frequency tasks, every 64 instructions
-    jnz [vm_callback_hf_counter], .decrement
+    jnz [vm_callback_hf_counter], .decrement_hf
     add 64, 0, [vm_callback_hf_counter]
 
     # Trigger PIT channels
@@ -56,16 +56,18 @@ vm_callback:
     call pit_vm_callback_ch2
 
     # Low frequerncy tasks, every 64 * 256 instructions
-    jz  [extended_vm], .after_lf                            # optimization, since keyboard is the only low frequency task
+    jz  [extended_vm], .decrement_lf                        # optimization, since keyboard is the only low frequency task
 
-    jnz [vm_callback_lf_counter], .after_lf
+    jnz [vm_callback_lf_counter], .decrement_lf
     add 256, 0, [vm_callback_lf_counter]
 
     # Handle keyboard input, if running on an extended VM
-    jnz [ppi_a], .after_lf                                  # optimization, avoid the function call until BIOS reads the previous scan code
+    jnz [ppi_a], .decrement_lf                              # optimization, avoid the function call until BIOS reads the previous scan code
     call handle_keyboard
 
-.after_lf:
+.decrement_lf:
+    add [vm_callback_lf_counter], -1, [vm_callback_lf_counter]
+
     # Hide the disk activity icon after 256 timer counters
     jz  [disk_inactive_counter], .after_disk
 
@@ -84,7 +86,7 @@ vm_callback:
     call set_speaker_inactive
 
 .after_speaker:
-.decrement:
+.decrement_hf:
     add [vm_callback_hf_counter], -1, [vm_callback_hf_counter]
 
     arb 1
