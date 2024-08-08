@@ -36,9 +36,9 @@ VM:
 
 - support missing floppy commands
 
+- support CGA text mode cursor on/off (currently it's always off)
 - support CGA paging (affects start address where we read CGA data from mem)
 - investigate whether we can speed up full redraw by switching to alternate buffer
-- consider using strings for the palettes, avoid printb to speed up; e.g. string "170;170;0;" for yellow
 
 Emulators
 =========

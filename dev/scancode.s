@@ -84,7 +84,8 @@ scancode:
     db 0, 0x1b, 0x9b                    # 93 ]
     db 1, 0x07, 0x87                    # 94 ^
     db 1, 0x0c, 0x8c                    # 95 _
-    db 0, 0x29, 0xa9                    # 96 `
+    # TODO correct is db 0, 0x29, 0xa9                    # 96 `
+    db 0, 0x1c, 0x9c                    # 96 ` TODO actually temporarily enter
     db 0, 0x1e, 0x9e                    # 97 a
     db 0, 0x30, 0xb0                    # 98 b
     db 0, 0x2e, 0xae                    # 99 c
