@@ -16,6 +16,7 @@
 .EXPORT config_log_int
 .EXPORT config_log_pic
 .EXPORT config_log_pit
+.EXPORT config_log_ppi
 
 # Tracing (0 - disabled, 1 - enabled)
 config_enable_tracing:
@@ -90,6 +91,8 @@ config_log_int:
 config_log_pic:
     db  0
 config_log_pit:
+    db  0
+config_log_ppi:
     db  0
 
 .EOF

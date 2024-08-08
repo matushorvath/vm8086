@@ -14,7 +14,7 @@ build-prep:
 	mkdir -p "$(BINDIR)" "$(OBJDIR)"
 
 DEV_OBJS = dma_8237a.o keyboard.o pic_8259a_execute.o pic_8259a_log.o pic_8259a_ports.o \
-	pit_8253.o pit_8253_ch0.o pit_8253_ch2.o ppi_8255a.o ps2_8042.o scancode.o
+	pit_8253.o pit_8253_ch0.o pit_8253_ch2.o ppi_8255a.o ppi_8255a_log.o ps2_8042.o scancode.o
 
 $(BINDIR)/libdev.a: $(DEV_OBJS:%.o=$(OBJDIR)/%.o)
 	$(run-intcode-ar)
