@@ -7,8 +7,9 @@
 
 .EXPORT config_log_cs_change
 .EXPORT config_log_dos
-.EXPORT config_log_int
 .EXPORT config_log_fdc
+.EXPORT config_log_int
+.EXPORT config_log_kbd
 
 # Tracing (0 - disabled, 1 - enabled)
 config_enable_tracing:
@@ -40,6 +41,8 @@ config_log_dos:
 config_log_fdc:
     db  0
 config_log_int:
+    db  0
+config_log_kbd:
     db  0
 
 .EOF

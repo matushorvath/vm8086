@@ -14,6 +14,7 @@
 .EXPORT config_log_fdc
 .EXPORT config_log_fdd
 .EXPORT config_log_int
+.EXPORT config_log_kbd
 .EXPORT config_log_pic
 .EXPORT config_log_pit
 .EXPORT config_log_ppi
@@ -87,6 +88,8 @@ config_log_fdc:
 config_log_fdd:
     db  0
 config_log_int:
+    db  0
+config_log_kbd:
     db  0
 config_log_pic:
     db  0
