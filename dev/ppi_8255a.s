@@ -1,4 +1,5 @@
 .EXPORT init_ppi_8255a
+.EXPORT ppi_a
 .EXPORT speaker_activity_callback
 
 # From cpu/ports.s

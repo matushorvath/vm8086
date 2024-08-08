@@ -1,6 +1,20 @@
+.EXPORT init_vm_callback
 .EXPORT vm_callback
-.EXPORT on_disk_active
-.EXPORT on_speaker_active
+
+# From main.s
+.IMPORT extended_vm
+
+# From cga/status_bar.s
+.IMPORT set_disk_active
+.IMPORT set_disk_inactive
+.IMPORT set_speaker_active
+.IMPORT set_speaker_inactive
+
+# From cpu/execute.s
+.IMPORT execute_callback
+
+# From dev/keyboard.s
+.IMPORT handle_keyboard
 
 # From dev/pit_8253_ch0.s
 .IMPORT pit_vm_callback_ch0
@@ -8,11 +22,23 @@
 # From dev/pit_8253_ch2.s
 .IMPORT pit_vm_callback_ch2
 
-# From cga/status_bar.s
-.IMPORT set_disk_active
-.IMPORT set_disk_inactive
-.IMPORT set_speaker_active
-.IMPORT set_speaker_inactive
+# From dev/ppi_8255a.s
+.IMPORT ppi_a
+.IMPORT speaker_activity_callback
+
+# From fdc/commands.s
+.IMPORT fdc_activity_callback
+
+##########
+init_vm_callback:
+.FRAME
+    # Set up callbacks
+    add vm_callback, 0, [execute_callback]
+    add on_disk_active, 0, [fdc_activity_callback]
+    add on_speaker_active, 0, [speaker_activity_callback]
+
+    ret 0
+.ENDFRAME
 
 ##########
 vm_callback:
@@ -21,14 +47,25 @@ vm_callback:
 
     add 1, 0, [rb + continue]
 
-    # Run the timer every 64 instructions
-    jnz [vm_callback_counter], .decrement
-    add 64, 0, [vm_callback_counter]
+    # High frequency tasks, every 64 instructions
+    jnz [vm_callback_hf_counter], .decrement
+    add 64, 0, [vm_callback_hf_counter]
 
     # Trigger PIT channels
     call pit_vm_callback_ch0
     call pit_vm_callback_ch2
 
+    # Low frequerncy tasks, every 64 * 256 instructions
+    jz  [extended_vm], .after_lf                            # optimization, since keyboard is the only low frequency task
+
+    jnz [vm_callback_lf_counter], .after_lf
+    add 256, 0, [vm_callback_lf_counter]
+
+    # Handle keyboard input, if running on an extended VM
+    jnz [ppi_a], .after_lf                                  # optimization, avoid the function call until BIOS reads the previous scan code
+    call handle_keyboard
+
+.after_lf:
     # Hide the disk activity icon after 256 timer counters
     jz  [disk_inactive_counter], .after_disk
 
@@ -48,7 +85,7 @@ vm_callback:
 
 .after_speaker:
 .decrement:
-    add [vm_callback_counter], -1, [vm_callback_counter]
+    add [vm_callback_hf_counter], -1, [vm_callback_hf_counter]
 
     arb 1
     ret 0
@@ -79,7 +116,9 @@ on_speaker_active:
 .ENDFRAME
 
 ##########
-vm_callback_counter:
+vm_callback_hf_counter:
+    db  0
+vm_callback_lf_counter:
     db  0
 
 disk_inactive_counter:

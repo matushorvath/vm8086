@@ -7,9 +7,7 @@
 .IMPORT bios_address
 
 # From callback.s
-.IMPORT vm_callback
-.IMPORT on_disk_active
-.IMPORT on_speaker_active
+.IMPORT init_vm_callback
 
 # From floppy.o
 .IMPORT floppy_image
@@ -25,7 +23,6 @@
 
 # From cpu/execute.s
 .IMPORT execute
-.IMPORT execute_callback
 
 # From cpu/images.s
 .IMPORT init_images
@@ -41,16 +38,12 @@
 
 # From dev/ppi_8255a.s
 .IMPORT init_ppi_8255a
-.IMPORT speaker_activity_callback
 
 # From dev/ps2_8042.s
 .IMPORT init_ps2_8042
 
 # From fdc/init.s
 .IMPORT init_fdc
-
-# From fdc/commands.s
-.IMPORT fdc_activity_callback
 
 ##########
 # Entry point
@@ -83,9 +76,7 @@ init:
 ##########
 main:
 .FRAME
-    add vm_callback, 0, [execute_callback]
-    add on_disk_active, 0, [fdc_activity_callback]
-    add on_speaker_active, 0, [speaker_activity_callback]
+    call init_vm_callback
 
     # Initialize the ROM and floppy images
     add [bios_address], 0, [rb - 1]
