@@ -13,6 +13,23 @@
 # TODO avoid pressing and releasing shift unless necessary (remember shift state)
 # TODO consider moving outside of dev/ to kbd/
 
+
+# 0x3b-0x44 = f1-f10
+#
+# 1b 4f 50 = f1
+# 1b 4f 51 = f2
+# 1b 4f 52 = f3
+# 1b 4f 53 = f4
+#
+# 1b 5b 31 35 7e = f5
+# 1b 5b 31 37 7e = f6
+# 1b 5b 31 38 7e = f7
+# 1b 5b 31 39 7e = f8
+#
+# 1b 5b 32 30 7e = f9
+# 1b 5b 32 31 7e = f10
+
+
 ##########
 handle_keyboard:
 .FRAME tmp
@@ -28,53 +45,60 @@ handle_keyboard:
     # Previous input is fully processed, start from scratch
 
     # Read a new character, if available
-    db  13, last_char                   # ina [last_char]
-    eq  [last_char], -1, [rb + tmp]
+    db  13, current_char                # ina [current_char]
+    eq  [current_char], -1, [rb + tmp]
     jnz [rb + tmp], .done
 
-    mul [last_char], 3, [last_char_x3]
+    mul [current_char], 3, [current_char_x3]
 
-    # There is a character, should we simulate a pressed shift?
-    add scancode + 0, [last_char_x3], [ip + 1]
-    jz  [0], .initial_make
+    # There is a character, what should we do with it?
+    add scancode + 0, [current_char_x3], [ip + 1]
+    add [0], .initial_table, [ip + 2]
+    jz  0, [0]
 
-    # Yes, output the left right shift scan code
-    add 0x36, 0, [ppi_a]
+.initial_table:
+    db  .done                           # 0, ignore this character
+    db  .initial_lowercase              # 1, lowercase character, output the make code
+    db  .initial_uppercase              # 2, uppercase character, output shift make code
 
-    # Follow up with make code, break code and release shift
-    add .output_make_break_shift, 0, [keyboard_state]
-    jz  0, .raise_irq1
-
-.initial_make:
-    # No shift, output the make code
-    add scancode + 1, [last_char_x3], [ip + 1]
+.initial_lowercase:
+    # Output make code for current character
+    add scancode + 1, [current_char_x3], [ip + 1]
     add [0], 0, [ppi_a]
 
-    # Follow up with break code
+    # Follow up with the break code
     add .output_break, 0, [keyboard_state]
     jz  0, .raise_irq1
 
 .output_break:
-    # Output the break code for the last character
-    add scancode + 2, [last_char_x3], [ip + 1]
+    # Output break code for current character
+    add scancode + 2, [current_char_x3], [ip + 1]
     add [0], 0, [ppi_a]
 
     # We are done with this character
     add .initial, 0, [keyboard_state]
     jz  0, .raise_irq1
 
-.output_make_break_shift:
-    # Output the make code for the last character
-    add scancode + 1, [last_char_x3], [ip + 1]
+.initial_uppercase:
+    # Output make code for right shift
+    add 0x36, 0, [ppi_a]
+
+    # Follow up with make code, break code and release shift
+    add .output_make_break_release_shift, 0, [keyboard_state]
+    jz  0, .raise_irq1
+
+.output_make_break_release_shift:
+    # Output make code for current character
+    add scancode + 1, [current_char_x3], [ip + 1]
     add [0], 0, [ppi_a]
 
     # Follow up with the break code and then release shift
-    add .output_break_shift, 0, [keyboard_state]
+    add .output_break_release_shift, 0, [keyboard_state]
     jz  0, .raise_irq1
 
-.output_break_shift:
-    # Output the break code for the last character
-    add scancode + 2, [last_char_x3], [ip + 1]
+.output_break_release_shift:
+    # Output break code for current character
+    add scancode + 2, [current_char_x3], [ip + 1]
     add [0], 0, [ppi_a]
 
     # Follow up with releasing shift
@@ -82,7 +106,7 @@ handle_keyboard:
     jz  0, .raise_irq1
 
 .output_release_shift:
-    # Output the break code for right shift
+    # Output break code for right shift
     add 0xb6, 0, [ppi_a]
 
     # We are done with this character
@@ -102,9 +126,9 @@ handle_keyboard:
 ##########
 keyboard_state:
     db  handle_keyboard.initial
-last_char:
+current_char:
     db  -1
-last_char_x3:
+current_char_x3:
     db  -1
 
 .EOF
