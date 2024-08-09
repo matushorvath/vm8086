@@ -18,6 +18,9 @@
 # From libxib.a
 .IMPORT print_num_radix
 
+# From the linked binary
+.IMPORT extended_vm
+
 # Unicode icons
 #
 # Disk:
@@ -35,6 +38,13 @@
 # Speaker:
 #
 # F0 9F 94 8A = U+1F50A Speaker with Three Sound Waves 🔊
+#
+# Extended VM:
+#
+# E2 9A A1    = U+26A1  High Voltage Sign ⚡
+# F0 9F 94 A5 = U+1F525 Fire 🔥
+# F0 9F 94 B7 = U+1F537 Large Blue Diamond 🔷
+# F0 9F 94 B9 = U+1F539 Small Blue Diamond 🔹
 
 ##########
 post_status_write:
@@ -133,6 +143,16 @@ redraw_status_bar:
     out '2'
     out 'K'
 
+    # Print the extended VM symbol if running under an extended VM
+    jz  [extended_vm], .after_extended_vm
+
+    # Draw the symbol
+    out 0xe2
+    out 0x9a
+    out 0xa1
+    out ' '
+
+.after_extended_vm:
     # Print the POST status code, unless it's 00
     jz  [post_status], .icons
 

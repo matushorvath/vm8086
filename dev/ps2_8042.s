@@ -50,7 +50,7 @@ ps2_command_write:
     ret 2
 
 .reboot_msg:
-    db  10, "vm8086: software triggered reboot, shutting down", 10, 10, 0
+    db  10, 13, "vm8086: software triggered reboot, shutting down", 10, 13, 10, 13, 0
 .ENDFRAME
 
 .EOF

@@ -1,19 +1,19 @@
+.EXPORT extended_vm
+
 # From bios.o
 .IMPORT bios_image
 
 # From bios_address.template
 .IMPORT bios_address
 
+# From callback.s
+.IMPORT init_vm_callback
+
 # From floppy.o
 .IMPORT floppy_image
 
 # From ports.s
 .IMPORT init_vm_ports
-
-# From timer.s
-.IMPORT vm_callback
-.IMPORT on_disk_active
-.IMPORT on_speaker_active
 
 # From cga/cga.s
 .IMPORT init_cga
@@ -23,7 +23,6 @@
 
 # From cpu/execute.s
 .IMPORT execute
-.IMPORT execute_callback
 
 # From cpu/images.s
 .IMPORT init_images
@@ -39,7 +38,6 @@
 
 # From dev/ppi_8255a.s
 .IMPORT init_ppi_8255a
-.IMPORT speaker_activity_callback
 
 # From dev/ps2_8042.s
 .IMPORT init_ps2_8042
@@ -47,11 +45,25 @@
 # From fdc/init.s
 .IMPORT init_fdc
 
-# From fdc/commands.s
-.IMPORT fdc_activity_callback
-
 ##########
 # Entry point
+    # magic instruction; extended VM starts at extended_init
+    jnz 0, extended_init
+
+    # standard VM starts here
+    jz  0, init
+
+extended_init:
+    # extended VM starts here; check for required features
+    db  110, 10, tmp                    # check for ftr instruction; ftr 10, [res]
+    jz  [tmp], init
+    db  110, 13, tmp                    # check for ina instruction; ftr 13, [res]
+    jz  [tmp], init
+
+    # running on extended VM and all required features are present
+    add 1, 0, [extended_vm]
+
+init:
     arb stack
 
     # Overwrite the first instruction with 'hlt', so in case
@@ -64,9 +76,7 @@
 ##########
 main:
 .FRAME
-    add vm_callback, 0, [execute_callback]
-    add on_disk_active, 0, [fdc_activity_callback]
-    add on_speaker_active, 0, [speaker_activity_callback]
+    call init_vm_callback
 
     # Initialize the ROM and floppy images
     add [bios_address], 0, [rb - 1]
@@ -111,6 +121,12 @@ write_rom:
     arb 1
     ret 2
 .ENDFRAME
+
+##########
+extended_vm:
+    db  0
+tmp:
+    db  0
 
 ##########
     ds  1000, 0

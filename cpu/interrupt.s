@@ -9,6 +9,7 @@
 .IMPORT config_log_dos
 .IMPORT config_log_fdc
 .IMPORT config_log_int
+.IMPORT config_log_kbd
 
 # From log_cs_change.s
 .IMPORT log_cs_change
@@ -116,6 +117,14 @@ interrupt:
     call interrupt_log_fdc_0e
 
 .after_log_fdc:
+    # Keyboard logging
+    jz  [config_log_kbd], .after_log_kbd
+
+    eq  [rb + type], 0x09, [rb + tmp]
+    jz  [rb + tmp], .after_log_kbd
+    call interrupt_log_kbd_09
+
+.after_log_kbd:
     # DOS function logging
     jz  [config_log_dos], .after_log_dos
 
@@ -251,6 +260,22 @@ interrupt_log_fdc_0e:
 
 .msg:
     db  "irq 6", 0
+.ENDFRAME
+
+##########
+interrupt_log_kbd_09:
+.FRAME
+    call log_start
+
+    add .msg, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    out 10
+    ret 0
+
+.msg:
+    db  "irq 1", 0
 .ENDFRAME
 
 ##########

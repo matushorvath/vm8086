@@ -56,7 +56,7 @@
 # From fdc_init.s
 .IMPORT fdc_error_non_dma
 
-# From pic_8259a_execute.s
+# From dev/pic_8259a_execute.s
 .IMPORT interrupt_request
 
 # From cpu/error.s
