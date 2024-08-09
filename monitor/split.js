@@ -16,7 +16,7 @@
 // Run the VM with logs redirected to less:
 // - mkfifo log.pipe
 // - less -f log.pipe
-// - make run | ./monitor/split 2> log.pipe
+// - make run | ./monitor/split 2> ../log.pipe
 
 import '@ungap/with-resolvers';
 

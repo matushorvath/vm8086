@@ -36,9 +36,9 @@ VM:
 
 - support missing floppy commands
 
+- support CGA text mode cursor on/off (currently it's always off)
 - support CGA paging (affects start address where we read CGA data from mem)
 - investigate whether we can speed up full redraw by switching to alternate buffer
-- consider using strings for the palettes, avoid printb to speed up; e.g. string "170;170;0;" for yellow
 
 Emulators
 =========
@@ -300,3 +300,65 @@ TODO:
     - could cache last used region registration, so we can reuse it for multiple operations
       - or at least cache it for word-sized operations, currently those get split to two bytes
     - could use a fixed number of region registrations, currently 2 would be probably enough
+
+Keyboard Hardware
+=================
+
+int_09 (IRQ1)
+int_16 (BIOS functions)
+
+in	al, 60h ; get keyboard data / scancode
+
+in	al, 61h
+out 61h, (al | 0b10000000) ; clear keyboard (set bit 7)
+out 61h, (al & 0b01111111) ; unset clear keyboard (unset bit 7)
+
+(scancode in al)
+cmp	al,0FFh			; check for overrun
+cmp	al,0EEh			; echo response?
+cmp	al,0FAh			; acknowledge?
+ -> sets a bit in BIOS
+cmp	al,0FEh			; resend command?
+ -> sets a bit in BIOS
+
+; check for 0E0h and 0E1h scancodes, set flags in kbd_flags_3
+cmp	al,0E0h
+cmp	al,0E1h
+ -> these set some E0/E1 flag in BIOS
+
+; translate keyboard scan code to ASCII and BIOS scan code
+call	scan_xlat
+
+=> when char is available, trigger IRQ1, then subsequent in 60h will return the char
+maybe like this
+
+handle_keyboard:
+   ina [rb + char]
+   eq  [rb + char], -1, [rb + tmp]
+   jnz [rb + tmp], .done
+
+   add [rb + char], 0, [keyboard_char]
+   add 1, 0, [interrrupt_pending] (or whatever is the interface to triger IRQ1)
+
+.done:
+
+then to handle the IN 60h instruction
+
+read_port_60:
+   # read the rest of the input - it might be an ANSI sequence or something, multiple bytes
+   # the first byte is already read in [keyboard_char]
+
+   # translate the whole ANSI sequence to scancodes, perhaps with a FSM
+   # the FSM might result in multiple scancodes, like 'A' byte will generate press shift, press A, release A, release shift
+   # then we maybe need to generate multiple IRQ1s?
+
+   # also, ABC should probably generate press shift, p+r A, p+r B, p+r C, release shift - not 3 shift presses, just one
+
+
+also, bit 7 on port 61 is to acknowledge character and get next?
+
+The PPI will hold a byte in its input buffer indefinitely until the software acknowledges that it has completed the read. The acknowledgment procedure is to briefly strobe the high bit of I/O port 61h on, then off. When this occurs, the keyboard controller resets its buffer status and resumes reading from the keyboard.
+
+Scancodes arrive one byte at a time, and one interrupt at a time, even if it is a multi-byte code. 
+
+https://cosmodoc.org/topics/keyboard-functions/
