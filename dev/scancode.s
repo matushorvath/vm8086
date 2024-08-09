@@ -35,9 +35,15 @@ scancode:
 
     db  1, 0x1c, 0x9c                   # 13 enter
 
-    ds  18, 0                           # 14-31
-    ds  18, 0
-    ds  18, 0
+    ds  13, 0                           # 14-26
+    ds  13, 0
+    ds  13, 0
+
+    db  3,    0,    0                   # 27 escape
+
+    ds  4, 0                            # 28-31
+    ds  4, 0
+    ds  4, 0
 
     db  1, 0x39, 0xb9                   # 32 space
     db  2, 0x02, 0x82                   # 33 !

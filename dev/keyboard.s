@@ -13,23 +13,6 @@
 # TODO avoid pressing and releasing shift unless necessary (remember shift state)
 # TODO consider moving outside of dev/ to kbd/
 
-
-# 0x3b-0x44 = f1-f10
-#
-# 1b 4f 50 = f1
-# 1b 4f 51 = f2
-# 1b 4f 52 = f3
-# 1b 4f 53 = f4
-#
-# 1b 5b 31 35 7e = f5
-# 1b 5b 31 37 7e = f6
-# 1b 5b 31 38 7e = f7
-# 1b 5b 31 39 7e = f8
-#
-# 1b 5b 32 30 7e = f9
-# 1b 5b 32 31 7e = f10
-
-
 ##########
 handle_keyboard:
 .FRAME tmp
@@ -60,13 +43,14 @@ handle_keyboard:
     db  .done                           # 0, ignore this character
     db  .initial_lowercase              # 1, lowercase character, output the make code
     db  .initial_uppercase              # 2, uppercase character, output shift make code
+    db  .initial_escape                 # 3, escape, start processing complex input
 
 .initial_lowercase:
     # Output make code for current character
     add scancode + 1, [current_char_x3], [ip + 1]
     add [0], 0, [ppi_a]
 
-    # Follow up with the break code
+    # Follow up with break code
     add .output_break, 0, [keyboard_state]
     jz  0, .raise_irq1
 
@@ -92,7 +76,7 @@ handle_keyboard:
     add scancode + 1, [current_char_x3], [ip + 1]
     add [0], 0, [ppi_a]
 
-    # Follow up with the break code and then release shift
+    # Follow up with break code and then release shift
     add .output_break_release_shift, 0, [keyboard_state]
     jz  0, .raise_irq1
 
@@ -112,6 +96,60 @@ handle_keyboard:
     # We are done with this character
     add .initial, 0, [keyboard_state]
     jz  0, .raise_irq1
+
+.initial_escape:
+    # Escape character, process an escape sequence
+    add .esc, 0, [keyboard_state]
+    jz  0, .done
+
+.esc:
+    # Read next character in the escape sequence, if available
+    db  13, current_char                # ina [current_char]
+    eq  [current_char], -1, [rb + tmp]
+    jnz [rb + tmp], .done
+
+    eq  [current_char], 0x1b, [rb + tmp]
+    jnz [rb + tmp], .esc_esc
+#    eq  [current_char], 0x4f, [rb + tmp]
+#    jnz [rb + tmp], .esc_4f
+#    eq  [current_char], 0x5b, [rb + tmp]
+#    jnz [rb + tmp], .esc_5b
+
+    jz  0, .done
+
+.esc_esc:
+    # Double escape, output make and break for the escape key
+    # TODO do not require two escape key presses to generate the escape
+    add 0x01, 0, [ppi_a]
+
+    # Follow up with break code for the escape key
+    add .esc_esc_break, 0, [keyboard_state]
+    jz  0, .raise_irq1
+
+.esc_esc_break:
+    # Output break code for the escape key
+    add 0x81, 0, [ppi_a]
+
+    # We are done with this character
+    add .initial, 0, [keyboard_state]
+    jz  0, .raise_irq1
+
+# TODO function keys
+#
+# 0x3b-0x44 = f1-f10
+#
+# 1b 4f 50 = f1
+# 1b 4f 51 = f2
+# 1b 4f 52 = f3
+# 1b 4f 53 = f4
+#
+# 1b 5b 31 35 7e = f5
+# 1b 5b 31 37 7e = f6
+# 1b 5b 31 38 7e = f7
+# 1b 5b 31 39 7e = f8
+#
+# 1b 5b 32 30 7e = f9
+# 1b 5b 32 31 7e = f10
 
 .raise_irq1:
     add 1, 0, [rb - 1]
