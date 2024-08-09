@@ -15,7 +15,7 @@
 
 ##########
 handle_keyboard:
-.FRAME char, char_x3, tmp
+.FRAME char, char_x2, tmp
     arb -3
 
     # Wait until BIOS reads and acknowledges ppi_a by setting bit 7 in ppi_b (which will also clear ppi_a)
@@ -32,10 +32,10 @@ handle_keyboard:
     eq  [rb + char], -1, [rb + tmp]
     jnz [rb + tmp], .done
 
-    mul [rb + char], 3, [rb + char_x3]
+    mul [rb + char], 2, [rb + char_x2]
 
     # There is a character, what should we do with it?
-    add scancode + 0, [rb + char_x3], [ip + 1]
+    add scancode + 0, [rb + char_x2], [ip + 1]
     add [0], .initial_table, [ip + 2]
     jz  0, [0]
 
@@ -55,7 +55,7 @@ handle_keyboard:
     add 0, 0, [shift_pressed]
 
     # Follow up with make and break code for current character
-    add scancode + 1, [rb + char_x3], [ip + 1]
+    add scancode + 1, [rb + char_x2], [ip + 1]
     add [0], 0, [current_make_code]
 
     add .generic_make_break, 0, [keyboard_state]
@@ -70,7 +70,7 @@ handle_keyboard:
     add 1, 0, [shift_pressed]
 
     # Follow up with make and break code for current character
-    add scancode + 1, [rb + char_x3], [ip + 1]
+    add scancode + 1, [rb + char_x2], [ip + 1]
     add [0], 0, [current_make_code]
 
     add .generic_make_break, 0, [keyboard_state]
@@ -78,7 +78,7 @@ handle_keyboard:
 
 .initial_make_break:
     # Output make and break code for current character
-    add scancode + 1, [rb + char_x3], [ip + 1]
+    add scancode + 1, [rb + char_x2], [ip + 1]
     add [0], 0, [current_make_code]
 
     jz  0, .generic_make_break
