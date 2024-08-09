@@ -47,41 +47,18 @@ handle_keyboard:
 
 
 .initial_lowercase:
-    # Do we need to change shift status?
-    jz  [shift_pressed], .initial_make_break
-
-    # Yes, output break code for right shift
-    add 0xb6, 0, [ppi_a]
-    add 0, 0, [shift_pressed]
-
-    # Follow up with make and break code for current character
+    # Output make and break code for current character, with shift released
     add scancode + 1, [rb + char_x2], [ip + 1]
     add [0], 0, [current_make_code]
 
-    add .generic_make_break, 0, [keyboard_state]
-    jz  0, .raise_irq1
+    jz  0, .generic_lowercase_make_break
 
 .initial_uppercase:
-    # Do we need to change shift status?
-    jnz [shift_pressed], .initial_make_break
-
-    # Yes, output make code for right shift
-    add 0x36, 0, [ppi_a]
-    add 1, 0, [shift_pressed]
-
-    # Follow up with make and break code for current character
+    # Output make and break code for current character, with shift pressed
     add scancode + 1, [rb + char_x2], [ip + 1]
     add [0], 0, [current_make_code]
 
-    add .generic_make_break, 0, [keyboard_state]
-    jz  0, .raise_irq1
-
-.initial_make_break:
-    # Output make and break code for current character
-    add scancode + 1, [rb + char_x2], [ip + 1]
-    add [0], 0, [current_make_code]
-
-    jz  0, .generic_make_break
+    jz  0, .generic_uppercase_make_break
 
 
 .initial_escape:
@@ -106,20 +83,10 @@ handle_keyboard:
 
 .esc_esc:
     # Double escape, simulate pressing the escape key once
-    # TODO do not require two escape key presses to generate the escape
-    add 0x01, 0, [ppi_a]
+    # TODO do not require two escape key presses to generate one escape
+    add 0x01, 0, [current_make_code]
+    jz  0, .generic_lowercase_make_break
 
-    # Follow up with break code for the escape key
-    add .esc_esc_break, 0, [keyboard_state]
-    jz  0, .raise_irq1
-
-.esc_esc_break:
-    # Output break code for the escape key
-    add 0x81, 0, [ppi_a]
-
-    # We are done with this character
-    add .initial, 0, [keyboard_state]
-    jz  0, .raise_irq1
 
 # TODO function keys
 #
@@ -139,6 +106,29 @@ handle_keyboard:
 # 1b 5b 32 31 7e = f10
 
 
+.generic_lowercase_make_break:
+    # Do we need to change shift status?
+    jz  [shift_pressed], .generic_make_break
+
+    # Yes, output break code for right shift
+    add 0xb6, 0, [ppi_a]
+    add 0, 0, [shift_pressed]
+
+    # Follow up with make and break code for current character
+    add .generic_make_break, 0, [keyboard_state]
+    jz  0, .raise_irq1
+
+.generic_uppercase_make_break:
+    # Do we need to change shift status?
+    jnz [shift_pressed], .generic_make_break
+
+    # Yes, output make code for right shift
+    add 0x36, 0, [ppi_a]
+    add 1, 0, [shift_pressed]
+
+    # Follow up with make and break code for current character
+    add .generic_make_break, 0, [keyboard_state]
+    jz  0, .raise_irq1
 
 .generic_make_break:
     # Output the pre-calculated make code
