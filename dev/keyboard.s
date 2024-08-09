@@ -11,6 +11,7 @@
 
 # TODO what should happen if keys are pressed faster than BIOS can receive them?
 # TODO avoid pressing and releasing shift unless necessary (remember shift state)
+# TODO support repeating a key while it's held
 # TODO consider moving outside of dev/ to kbd/
 
 ##########
