@@ -18,6 +18,31 @@
 # 1b 5b 5a = shift+tab
 # 0a = ctrl+enter
 
+#       u d r l  1b 5b          41  1b 5b          42  1b 5b          43 1b  5b          44
+# shift u d r l  1b 5b 31 3b 32 41  1b 5b 31 3b 32 42  1b 5b 31 3b 32 43 1b  5b 31 3b 32 44
+# ctrl  u d r l  1b 5b 31 3b 35 41  1b 5b 31 3b 35 42  1b 5b 31 3b 35 43 1b  5b 31 3b 35 44
+# alt   u d r l  1b 5b 31 3b 33 41  1b 5b 31 3b 33 42  1b 5b 31 3b 33 43 1b  5b 31 3b 33 44
+# c+a   u d r l  1b 5b 31 3b 37 41  1b 5b 31 3b 37 42  1b 5b 31 3b 37 43 1b  5b 31 3b 37 44
+
+#       f1-4   1b 4f          50  1b 4f          51  1b 4f          52  1b 4f          53
+# shift f1-4   1b 5b 31 3b 32 50  1b 5b 31 3b 32 51  1b 5b 31 3b 32 52  1b 5b 31 3b 32 53
+# ctrl  f1-4   1b 5b 31 3b 35 50  1b 5b 31 3b 35 51  1b 5b 31 3b 35 52  1b 5b 31 3b 35 53
+# alt   f1-4   1b 5b 31 3b 33 50  1b 5b 31 3b 33 51  1b 5b 31 3b 33 52
+# c+a   f1-4   1b 5b 31 3b 37 50  1b 5b 31 3b 37 51  1b 5b 31 3b 37 52
+
+#       f5-10  1b 5b 31 35       7e  1b 5b 31 37       7e  1b 5b 31 38       7e  1b 5b 31 39       7e  1b 5b 32 30       7e  1b 5b 32 31       7e
+# shift f5-10  1b 5b 31 35 3b 32 7e  1b 5b 31 37 3b 32 7e  1b 5b 31 38 3b 32 7e  1b 5b 31 39 3b 32 7e  1b 5b 32 30 3b 32 7e  1b 5b 32 31 3b 32 7e
+# ctrl  f5-10  1b 5b 31 35 3b 35 7e  1b 5b 31 37 3b 35 7e  1b 5b 31 38 3b 35 7e  1b 5b 31 39 3b 35 7e  1b 5b 32 30 3b 35 7e  1b 5b 32 31 3b 35 7e
+# alt   f5-10  1b 5b 31 35 3b 33 7e  1b 5b 31 37 3b 33 7e  1b 5b 31 38 3b 33 7e  1b 5b 31 39 3b 33 7e  1b 5b 32 30 3b 33 7e  1b 5b 32 31 3b 33 7e
+# c+a   f5-10  1b 5b 31 35 3b 37 7e  1b 5b 31 37 3b 37 7e  1b 5b 31 38 3b 37 7e  1b 5b 31 39 3b 37 7e  1b 5b 32 30 3b 37 7e  1b 5b 32 31 3b 37 7e
+
+#       a      61
+# alt   a      1b 61
+# ctrl  a      01
+# c+a   a      1b 01
+
+# ctrl a-z: 0x01-0x1a
+
 scancode:
     ds  9, 0                            # 0-8
     ds  9, 0
