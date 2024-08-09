@@ -215,6 +215,23 @@ handle_keyboard:
     jz  0, .done
 
 
+
+# 0x47-0x53 = num pad: 789- 456+ 123 ins del
+#
+# 1b 5b 41 up
+# 1b 5b 42 down
+# 1b 5b 44 left
+# 1b 5b 43 right
+# 1b 5b 48 home
+# 1b 5b 46 end
+# 1b 5b 45 5
+# 1b 5b 35 7e pgup
+# 1b 5b 36 7e pgdn
+# 1b 5b 32 7e ins
+# 1b 5b 33 7e del
+
+
+
 .generic_lowercase_make_break:
     # Do we need to change shift status?
     jz  [shift_pressed], .generic_make_break

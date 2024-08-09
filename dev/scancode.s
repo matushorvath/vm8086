@@ -14,14 +14,6 @@
 # 1b 5b 5a = shift+tab
 # 0a = ctrl+enter
 
-# 0x47-0x53 = num pad: 789- 456+ 123 ins del
-#
-# 1b 5b 41 up
-# 1b 5b 42 down
-# 1b 5b 44 left
-# 1b 5b 43 right
-# (but check these on numeric keyboard)
-
 scancode:
     ds  9, 0                            # 0-8
     ds  9, 0
