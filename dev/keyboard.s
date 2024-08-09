@@ -15,8 +15,8 @@
 
 ##########
 handle_keyboard:
-.FRAME tmp
-    arb -1
+.FRAME char, char_x3, tmp
+    arb -3
 
     # Wait until BIOS reads and acknowledges ppi_a by setting bit 7 in ppi_b (which will also clear ppi_a)
     #jnz [ppi_a], .done                 # optimization, this was moved outside of this function
@@ -28,14 +28,14 @@ handle_keyboard:
     # Previous input is fully processed, start from scratch
 
     # Read a new character, if available
-    db  13, current_char                # ina [current_char]
-    eq  [current_char], -1, [rb + tmp]
+    db  213, char                       # ina [rb + char]
+    eq  [rb + char], -1, [rb + tmp]
     jnz [rb + tmp], .done
 
-    mul [current_char], 3, [current_char_x3]
+    mul [rb + char], 3, [rb + char_x3]
 
     # There is a character, what should we do with it?
-    add scancode + 0, [current_char_x3], [ip + 1]
+    add scancode + 0, [rb + char_x3], [ip + 1]
     add [0], .initial_table, [ip + 2]
     jz  0, [0]
 
@@ -45,57 +45,44 @@ handle_keyboard:
     db  .initial_uppercase              # 2, uppercase character, output shift make code
     db  .initial_escape                 # 3, escape, start processing complex input
 
+
 .initial_lowercase:
-    # Output make code for current character
-    add scancode + 1, [current_char_x3], [ip + 1]
-    add [0], 0, [ppi_a]
+    # Do we need to change shift status?
+    jz  [shift_pressed], .initial_make_break
 
-    # Follow up with break code
-    add .output_break, 0, [keyboard_state]
-    jz  0, .raise_irq1
+    # Yes, output break code for right shift
+    add 0xb6, 0, [ppi_a]
+    add 0, 0, [shift_pressed]
 
-.output_break:
-    # Output break code for current character
-    add scancode + 2, [current_char_x3], [ip + 1]
-    add [0], 0, [ppi_a]
+    # Follow up with make and break code for current character
+    add scancode + 1, [rb + char_x3], [ip + 1]
+    add [0], 0, [current_make_code]
 
-    # We are done with this character
-    add .initial, 0, [keyboard_state]
+    add .generic_make_break, 0, [keyboard_state]
     jz  0, .raise_irq1
 
 .initial_uppercase:
-    # Output make code for right shift
+    # Do we need to change shift status?
+    jnz [shift_pressed], .initial_make_break
+
+    # Yes, output make code for right shift
     add 0x36, 0, [ppi_a]
+    add 1, 0, [shift_pressed]
 
-    # Follow up with make code, break code and release shift
-    add .output_make_break_release_shift, 0, [keyboard_state]
+    # Follow up with make and break code for current character
+    add scancode + 1, [rb + char_x3], [ip + 1]
+    add [0], 0, [current_make_code]
+
+    add .generic_make_break, 0, [keyboard_state]
     jz  0, .raise_irq1
 
-.output_make_break_release_shift:
-    # Output make code for current character
-    add scancode + 1, [current_char_x3], [ip + 1]
-    add [0], 0, [ppi_a]
+.initial_make_break:
+    # Output make and break code for current character
+    add scancode + 1, [rb + char_x3], [ip + 1]
+    add [0], 0, [current_make_code]
 
-    # Follow up with break code and then release shift
-    add .output_break_release_shift, 0, [keyboard_state]
-    jz  0, .raise_irq1
+    jz  0, .generic_make_break
 
-.output_break_release_shift:
-    # Output break code for current character
-    add scancode + 2, [current_char_x3], [ip + 1]
-    add [0], 0, [ppi_a]
-
-    # Follow up with releasing shift
-    add .output_release_shift, 0, [keyboard_state]
-    jz  0, .raise_irq1
-
-.output_release_shift:
-    # Output break code for right shift
-    add 0xb6, 0, [ppi_a]
-
-    # We are done with this character
-    add .initial, 0, [keyboard_state]
-    jz  0, .raise_irq1
 
 .initial_escape:
     # Escape character, process an escape sequence
@@ -104,21 +91,21 @@ handle_keyboard:
 
 .esc:
     # Read next character in the escape sequence, if available
-    db  13, current_char                # ina [current_char]
-    eq  [current_char], -1, [rb + tmp]
+    db  213, char                       # ina [rb + char]
+    eq  [rb + char], -1, [rb + tmp]
     jnz [rb + tmp], .done
 
-    eq  [current_char], 0x1b, [rb + tmp]
+    eq  [rb + char], 0x1b, [rb + tmp]
     jnz [rb + tmp], .esc_esc
-#    eq  [current_char], 0x4f, [rb + tmp]
+#    eq  [rb + char], 0x4f, [rb + tmp]
 #    jnz [rb + tmp], .esc_4f
-#    eq  [current_char], 0x5b, [rb + tmp]
+#    eq  [rb + char], 0x5b, [rb + tmp]
 #    jnz [rb + tmp], .esc_5b
 
     jz  0, .done
 
 .esc_esc:
-    # Double escape, output make and break for the escape key
+    # Double escape, simulate pressing the escape key once
     # TODO do not require two escape key presses to generate the escape
     add 0x01, 0, [ppi_a]
 
@@ -151,22 +138,43 @@ handle_keyboard:
 # 1b 5b 32 30 7e = f9
 # 1b 5b 32 31 7e = f10
 
+
+
+.generic_make_break:
+    # Output the pre-calculated make code
+    add [current_make_code], 0, [ppi_a]
+
+    # Follow up with break code
+    add .generic_break, 0, [keyboard_state]
+    jz  0, .raise_irq1
+
+.generic_break:
+    # Output the pre-calculated break code
+    add [current_make_code], 0x80, [ppi_a]
+
+    # We are done with this character
+    add .initial, 0, [keyboard_state]
+    jz  0, .raise_irq1
+
+
 .raise_irq1:
     add 1, 0, [rb - 1]
     arb -1
     call interrupt_request
 
 .done:
-    arb 1
+    arb 3
     ret 0
 .ENDFRAME
 
 ##########
 keyboard_state:
     db  handle_keyboard.initial
-current_char:
+
+current_make_code:
     db  -1
-current_char_x3:
-    db  -1
+
+shift_pressed:
+    db  0
 
 .EOF
