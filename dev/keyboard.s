@@ -76,9 +76,9 @@ handle_keyboard:
     eq  [rb + char], 0x1b, [rb + tmp]
     jnz [rb + tmp], .esc_esc
     eq  [rb + char], 0x4f, [rb + tmp]
-    jnz [rb + tmp], .esc_4f
-#    eq  [rb + char], 0x5b, [rb + tmp]
-#    jnz [rb + tmp], .esc_5b
+    jnz [rb + tmp], .esc_4f_wait
+    eq  [rb + char], 0x5b, [rb + tmp]
+    jnz [rb + tmp], .esc_5b_wait
 
     jz  0, .done
 
@@ -87,6 +87,15 @@ handle_keyboard:
     # TODO do not require two escape key presses to generate one escape
     add 0x01, 0, [current_make_code]
     jz  0, .generic_lowercase_make_break
+
+.esc_4f_wait:
+    add .esc_4f, 0, [keyboard_state]
+    jz  0, .done
+
+.esc_5b_wait:
+    add .esc_5b, 0, [keyboard_state]
+    jz  0, .done
+
 
 .esc_4f:
     # Read next character if available
@@ -112,17 +121,98 @@ handle_keyboard:
     jz  0, .generic_lowercase_make_break
 
 
-# TODO function keys
-#
-# 0x3b-0x44 = f1-f10
-#
-# 1b 5b 31 35 7e = f5
-# 1b 5b 31 37 7e = f6
-# 1b 5b 31 38 7e = f7
-# 1b 5b 31 39 7e = f8
-#
-# 1b 5b 32 30 7e = f9
-# 1b 5b 32 31 7e = f10
+.esc_5b:
+    # Read next character if available
+    db  213, char                       # ina [rb + char]
+    eq  [rb + char], -1, [rb + tmp]
+    jnz [rb + tmp], .done
+
+    # Continue the escape sequence
+    eq  [rb + char], 0x31, [rb + tmp]
+    jnz [rb + tmp], .esc_5b_31_wait
+    eq  [rb + char], 0x32, [rb + tmp]
+    jnz [rb + tmp], .esc_5b_32_wait
+
+    jz  0, .done
+
+.esc_5b_31_wait:
+    add .esc_5b_31, 0, [keyboard_state]
+    jz  0, .done
+
+.esc_5b_32_wait:
+    add .esc_5b_32, 0, [keyboard_state]
+    jz  0, .done
+
+
+.esc_5b_31:
+    # Read next character if available
+    db  213, char                       # ina [rb + char]
+    eq  [rb + char], -1, [rb + tmp]
+    jnz [rb + tmp], .done
+
+    # Continue the escape sequence
+    eq  [rb + char], 0x35, [rb + tmp]
+    jnz [rb + tmp], .function_5_wait
+    eq  [rb + char], 0x37, [rb + tmp]
+    jnz [rb + tmp], .function_6_to_8_wait
+    eq  [rb + char], 0x38, [rb + tmp]
+    jnz [rb + tmp], .function_6_to_8_wait
+    eq  [rb + char], 0x39, [rb + tmp]
+    jnz [rb + tmp], .function_6_to_8_wait
+
+    jz  0, .done
+
+.function_5_wait:
+    # Function key F5
+    add 0x3f, 0, [current_make_code]
+
+    # Wait for 7e, then make and break with the code we just prepared
+    add .7e_make_break, 0, [keyboard_state]
+    jz  0, .done
+
+.function_6_to_8_wait:
+    # Function keys F6 to F8; char 0x37-0x39 maps to make code 0x40-0x42
+    add [rb + char], 0x9, [current_make_code]
+
+    # Wait for 7e, then make and break with the code we just prepared
+    add .7e_make_break, 0, [keyboard_state]
+    jz  0, .done
+
+
+.esc_5b_32:
+    # Read next character if available
+    db  213, char                       # ina [rb + char]
+    eq  [rb + char], -1, [rb + tmp]
+    jnz [rb + tmp], .done
+
+    # Continue the escape sequence
+    eq  [rb + char], 0x30, [rb + tmp]
+    jnz [rb + tmp], .function_9_10_wait
+    eq  [rb + char], 0x31, [rb + tmp]
+    jnz [rb + tmp], .function_9_10_wait
+
+    jz  0, .done
+
+.function_9_10_wait:
+    # Function keys F9 and F10; char 0x30-0x31 maps to make code 0x43-0x44
+    add [rb + char], 0x13, [current_make_code]
+
+    # Wait for 7e, then make and break with the code we just prepared
+    add .7e_make_break, 0, [keyboard_state]
+    jz  0, .done
+
+
+.7e_make_break:
+    # Read next character if available
+    db  213, char                       # ina [rb + char]
+    eq  [rb + char], -1, [rb + tmp]
+    jnz [rb + tmp], .done
+
+    # Expect to receive 7e, then make and break the prepared character
+    eq  [rb + char], 0x7e, [rb + tmp]
+    jnz [rb + tmp], .generic_lowercase_make_break
+
+    jz  0, .done
 
 
 .generic_lowercase_make_break:
