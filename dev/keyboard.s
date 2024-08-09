@@ -216,19 +216,17 @@ handle_keyboard:
 
 
 
-# 0x47-0x53 = num pad: 789- 456+ 123 ins del
-#
-# 1b 5b 41 up
-# 1b 5b 42 down
-# 1b 5b 44 left
-# 1b 5b 43 right
-# 1b 5b 48 home
-# 1b 5b 46 end
-# 1b 5b 45 5
-# 1b 5b 35 7e pgup
-# 1b 5b 36 7e pgdn
-# 1b 5b 32 7e ins
-# 1b 5b 33 7e del
+# 1b 5b 41 up       0x48
+# 1b 5b 42 down     0x50
+# 1b 5b 44 left     0x4b
+# 1b 5b 43 right    0x4d
+# 1b 5b 48 home     0x47
+# 1b 5b 46 end      0x4f
+# 1b 5b 45 5        0x4c
+# 1b 5b 35 7e pgup  0x49
+# 1b 5b 36 7e pgdn  0x51
+# 1b 5b 32 7e ins   0x52
+# 1b 5b 33 7e del   0x53
 
 
 

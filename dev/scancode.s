@@ -2,6 +2,7 @@
 
 # TODO support more keys
 
+# unsupported scan codes:
 # 0x1d = ctrl
 # 0x2a = left shift
 # 0x36 = right shift
@@ -10,7 +11,10 @@
 # 0x3a = caps lock
 # 0x45 = num lock
 # 0x46 = scroll lock
+# 0x4a = num pad -
+# 0x4e = num pad +
 
+# unsupported ANSI sequences:
 # 1b 5b 5a = shift+tab
 # 0a = ctrl+enter
 
