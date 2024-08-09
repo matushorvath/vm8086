@@ -133,6 +133,32 @@ handle_keyboard:
     eq  [rb + char], 0x32, [rb + tmp]
     jnz [rb + tmp], .esc_5b_32_wait
 
+    eq  [rb + char], 0x33, [rb + tmp]
+    jnz [rb + tmp], .delete_wait
+    eq  [rb + char], 0x35, [rb + tmp]
+    jnz [rb + tmp], .pgup_wait
+    eq  [rb + char], 0x36, [rb + tmp]
+    jnz [rb + tmp], .pgdn_wait
+
+    eq  [rb + char], 0x41, [rb + tmp]
+    jnz [rb + tmp], .arrow_up
+    eq  [rb + char], 0x42, [rb + tmp]
+    jnz [rb + tmp], .arrow_down
+    eq  [rb + char], 0x43, [rb + tmp]
+    jnz [rb + tmp], .arrow_right
+    eq  [rb + char], 0x44, [rb + tmp]
+    jnz [rb + tmp], .arrow_left
+
+    eq  [rb + char], 0x45, [rb + tmp]
+    jnz [rb + tmp], .numpad_5
+    eq  [rb + char], 0x46, [rb + tmp]
+    jnz [rb + tmp], .end
+    eq  [rb + char], 0x48, [rb + tmp]
+    jnz [rb + tmp], .home
+
+    eq  [rb + char], 0x45, [rb + tmp]
+    jnz [rb + tmp], .numpad_5
+
     jz  0, .done
 
 .esc_5b_31_wait:
@@ -142,6 +168,55 @@ handle_keyboard:
 .esc_5b_32_wait:
     add .esc_5b_32, 0, [keyboard_state]
     jz  0, .done
+
+.delete_wait:
+    add 0x53, 0, [current_make_code]
+
+    # Wait for 7e, then make and break with the code we just prepared
+    add .7e_make_break, 0, [keyboard_state]
+    jz  0, .done
+
+.pgup_wait:
+    add 0x49, 0, [current_make_code]
+
+    # Wait for 7e, then make and break with the code we just prepared
+    add .7e_make_break, 0, [keyboard_state]
+    jz  0, .done
+
+.pgdn_wait:
+    add 0x51, 0, [current_make_code]
+
+    # Wait for 7e, then make and break with the code we just prepared
+    add .7e_make_break, 0, [keyboard_state]
+    jz  0, .done
+
+.arrow_up:
+    add 0x48, 0, [current_make_code]
+    jz  0, .generic_lowercase_make_break
+
+.arrow_down:
+    add 0x50, 0, [current_make_code]
+    jz  0, .generic_lowercase_make_break
+
+.arrow_right:
+    add 0x4d, 0, [current_make_code]
+    jz  0, .generic_lowercase_make_break
+
+.arrow_left:
+    add 0x4b, 0, [current_make_code]
+    jz  0, .generic_lowercase_make_break
+
+.numpad_5:
+    add 0x4c, 0, [current_make_code]
+    jz  0, .generic_lowercase_make_break
+
+.end:
+    add 0x4f, 0, [current_make_code]
+    jz  0, .generic_lowercase_make_break
+
+.home:
+    add 0x47, 0, [current_make_code]
+    jz  0, .generic_lowercase_make_break
 
 
 .esc_5b_31:
@@ -191,6 +266,9 @@ handle_keyboard:
     eq  [rb + char], 0x31, [rb + tmp]
     jnz [rb + tmp], .function_9_10_wait
 
+    eq  [rb + char], 0x7e, [rb + tmp]
+    jnz [rb + tmp], .insert
+
     jz  0, .done
 
 .function_9_10_wait:
@@ -200,6 +278,10 @@ handle_keyboard:
     # Wait for 7e, then make and break with the code we just prepared
     add .7e_make_break, 0, [keyboard_state]
     jz  0, .done
+
+.insert:
+    add 0x52, 0, [current_make_code]
+    jz  0, .generic_lowercase_make_break
 
 
 .7e_make_break:
@@ -213,21 +295,6 @@ handle_keyboard:
     jnz [rb + tmp], .generic_lowercase_make_break
 
     jz  0, .done
-
-
-
-# 1b 5b 41 up       0x48
-# 1b 5b 42 down     0x50
-# 1b 5b 44 left     0x4b
-# 1b 5b 43 right    0x4d
-# 1b 5b 48 home     0x47
-# 1b 5b 46 end      0x4f
-# 1b 5b 45 5        0x4c
-# 1b 5b 35 7e pgup  0x49
-# 1b 5b 36 7e pgdn  0x51
-# 1b 5b 32 7e ins   0x52
-# 1b 5b 33 7e del   0x53
-
 
 
 .generic_lowercase_make_break:
