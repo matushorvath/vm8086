@@ -67,15 +67,16 @@ handle_keyboard:
     jz  0, .done
 
 .esc:
-    # Read next character in the escape sequence, if available
+    # Read next character if available
     db  213, char                       # ina [rb + char]
     eq  [rb + char], -1, [rb + tmp]
     jnz [rb + tmp], .done
 
+    # Continue the escape sequence
     eq  [rb + char], 0x1b, [rb + tmp]
     jnz [rb + tmp], .esc_esc
-#    eq  [rb + char], 0x4f, [rb + tmp]
-#    jnz [rb + tmp], .esc_4f
+    eq  [rb + char], 0x4f, [rb + tmp]
+    jnz [rb + tmp], .esc_4f
 #    eq  [rb + char], 0x5b, [rb + tmp]
 #    jnz [rb + tmp], .esc_5b
 
@@ -87,15 +88,33 @@ handle_keyboard:
     add 0x01, 0, [current_make_code]
     jz  0, .generic_lowercase_make_break
 
+.esc_4f:
+    # Read next character if available
+    db  213, char                       # ina [rb + char]
+    eq  [rb + char], -1, [rb + tmp]
+    jnz [rb + tmp], .done
+
+    # Continue the escape sequence
+    eq  [rb + char], 0x50, [rb + tmp]
+    jnz [rb + tmp], .function_1_to_4
+    eq  [rb + char], 0x51, [rb + tmp]
+    jnz [rb + tmp], .function_1_to_4
+    eq  [rb + char], 0x52, [rb + tmp]
+    jnz [rb + tmp], .function_1_to_4
+    eq  [rb + char], 0x53, [rb + tmp]
+    jnz [rb + tmp], .function_1_to_4
+
+    jz  0, .done
+
+.function_1_to_4:
+    # Function keys F1 to F4; char 0x50-0x53 maps to make code 0x3b-0x3e
+    add [rb + char], -0x15, [current_make_code]
+    jz  0, .generic_lowercase_make_break
+
 
 # TODO function keys
 #
 # 0x3b-0x44 = f1-f10
-#
-# 1b 4f 50 = f1
-# 1b 4f 51 = f2
-# 1b 4f 52 = f3
-# 1b 4f 53 = f4
 #
 # 1b 5b 31 35 7e = f5
 # 1b 5b 31 37 7e = f6
