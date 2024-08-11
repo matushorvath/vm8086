@@ -1,9 +1,5 @@
 .EXPORT init_processor_test
 
-# From util/brk.s
-.IMPORT brk
-.IMPORT sbrk
-
 # From util/error.s
 .IMPORT report_error
 
@@ -50,6 +46,10 @@
 
 # From util/util.s
 .IMPORT split_16_8_8
+
+# From libxib.a
+.IMPORT brk
+.IMPORT sbrk
 
 ##########
 init_processor_test:

@@ -4,10 +4,6 @@
 .EXPORT floppy
 .EXPORT floppy_size
 
-# From brk.s
-.IMPORT brk
-.IMPORT sbrk
-
 # From util/error.s
 .IMPORT report_error
 
@@ -16,6 +12,10 @@
 
 # From util/util.s
 .IMPORT check_range
+
+# From libxib.a
+.IMPORT brk
+.IMPORT sbrk
 
 ##########
 init_rom_image:
