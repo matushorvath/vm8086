@@ -24,7 +24,6 @@
 .IMPORT mem
 
 # From test_header.s
-.IMPORT test_header_end
 .IMPORT init_ax
 .IMPORT init_bx
 .IMPORT init_cx

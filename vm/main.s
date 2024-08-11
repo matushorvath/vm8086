@@ -12,7 +12,7 @@
 # From floppy.o
 .IMPORT floppy_image
 
-# From ports.s
+# From vm_ports.s
 .IMPORT init_vm_ports
 
 # From cga/cga.s
@@ -27,10 +27,10 @@
 # From cpu/images.s
 .IMPORT init_images
 
-# From dev/dma.s
+# From dev/dma_8237a.s
 .IMPORT init_dma_8237a
 
-# From dev/pic_8259a.s
+# From dev/pic_8259a_ports.s
 .IMPORT init_pic_8259a
 
 # From dev/pit_8253.s

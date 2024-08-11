@@ -1,6 +1,6 @@
 .EXPORT print_output
 
-# From cpu/flag.s
+# From cpu/flags.s
 .IMPORT pack_flags_lo
 .IMPORT pack_flags_hi
 

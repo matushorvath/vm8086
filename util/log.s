@@ -1,6 +1,6 @@
 .EXPORT log_start
 
-# From state.s
+# From cpu/state.s
 .IMPORT reg_cs
 .IMPORT reg_ip
 
