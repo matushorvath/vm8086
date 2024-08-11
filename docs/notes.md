@@ -185,9 +185,6 @@ tools (sorted by priority):
        - relevant memory locations (every location read/written during instruction execution?)
     - monitor in js that parses the JSONs and .lst files (and C debug info) and displays source code and state
 
- - DONE logging based on config.s, multiple configurable subsystems
-    - or better, preprocessor with ifdef support and a debug version, don't even compile in the logging
-
  - improve xzintbit debugging
     - as option to export all symbols, maybe add a new section to .o with non-exported symbols (asd debug version)
     - as option to map line number to memory address, maybe also add a new section to .o for that (asd debug version)
@@ -205,11 +202,6 @@ good addresses to start tracing:
 9001:050f
 9001:129f
 
-Q: Why does it not even display the F5/F8 message in bochs?
-
-kbc_data_reg	equ	60h
-kbc_status_reg	equ	64h
-
 MACHINE_HOMEBREW8088 is like MACHINE_XT, but AT keyboard controller and no DMA ch0 setup
 
 also interesting
@@ -219,8 +211,6 @@ also interesting
 
 INT 2a = critical section and NETBIOS (could be keyboard busy loop if AH=84)
 https://stanislavs.org/helppc/int_2a.html
-
-f000:cb32 "fdc reset controller" - what happens before that, why is it resetting the fdc?
 
 Keyboard
 ========
@@ -240,25 +230,22 @@ ESC SP G:
 
 Terminal input sequences
 
-non-blocking input options:
- - modify ICVM
-    - address 0: arb 0 will enable extensions, write IC version to address 0 for one cycle only
-    - add a FEATURE instruction, param feature_id, returns version, 0=feature unsupported
-       - perhaps feature id = instruction opcode? return also for standard instructions?
-    - other options:
-       - jnz 0, 0
-       - jz [0], [0]
-       - eq 0, 1, [2] write to address 3
-    - add non-blocking IN instruction
-       - return e.g. -1 if no character available
-    - don't forget that instructions < 100
- - pre-filter: read stdin, respond to reads on stdout
-    - needs to be synchronous, only generate on stdout if there is a request, avoid buffering - can that be done?
- - think about fallbacks - running with standard ICVM (disable keyboard?), running without filter (how to even detect that?)
-
 https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html
 https://c-faq.com/osdep/cbreak.html
 https://digitalmars.com/rtl/conio.html#_kbhit
+
+hardware:
+
+int_09 (IRQ1)
+int_16 (BIOS functions)
+
+in	al, 60h ; get keyboard data / scancode
+
+in	al, 61h
+out 61h, (al | 0b10000000) ; clear keyboard (set bit 7)
+out 61h, (al & 0b01111111) ; unset clear keyboard (unset bit 7)
+
+https://cosmodoc.org/topics/keyboard-functions/
 
 Shutdown and Reboot
 ===================
@@ -300,65 +287,3 @@ TODO:
     - could cache last used region registration, so we can reuse it for multiple operations
       - or at least cache it for word-sized operations, currently those get split to two bytes
     - could use a fixed number of region registrations, currently 2 would be probably enough
-
-Keyboard Hardware
-=================
-
-int_09 (IRQ1)
-int_16 (BIOS functions)
-
-in	al, 60h ; get keyboard data / scancode
-
-in	al, 61h
-out 61h, (al | 0b10000000) ; clear keyboard (set bit 7)
-out 61h, (al & 0b01111111) ; unset clear keyboard (unset bit 7)
-
-(scancode in al)
-cmp	al,0FFh			; check for overrun
-cmp	al,0EEh			; echo response?
-cmp	al,0FAh			; acknowledge?
- -> sets a bit in BIOS
-cmp	al,0FEh			; resend command?
- -> sets a bit in BIOS
-
-; check for 0E0h and 0E1h scancodes, set flags in kbd_flags_3
-cmp	al,0E0h
-cmp	al,0E1h
- -> these set some E0/E1 flag in BIOS
-
-; translate keyboard scan code to ASCII and BIOS scan code
-call	scan_xlat
-
-=> when char is available, trigger IRQ1, then subsequent in 60h will return the char
-maybe like this
-
-handle_keyboard:
-   ina [rb + char]
-   eq  [rb + char], -1, [rb + tmp]
-   jnz [rb + tmp], .done
-
-   add [rb + char], 0, [keyboard_char]
-   add 1, 0, [interrrupt_pending] (or whatever is the interface to triger IRQ1)
-
-.done:
-
-then to handle the IN 60h instruction
-
-read_port_60:
-   # read the rest of the input - it might be an ANSI sequence or something, multiple bytes
-   # the first byte is already read in [keyboard_char]
-
-   # translate the whole ANSI sequence to scancodes, perhaps with a FSM
-   # the FSM might result in multiple scancodes, like 'A' byte will generate press shift, press A, release A, release shift
-   # then we maybe need to generate multiple IRQ1s?
-
-   # also, ABC should probably generate press shift, p+r A, p+r B, p+r C, release shift - not 3 shift presses, just one
-
-
-also, bit 7 on port 61 is to acknowledge character and get next?
-
-The PPI will hold a byte in its input buffer indefinitely until the software acknowledges that it has completed the read. The acknowledgment procedure is to briefly strobe the high bit of I/O port 61h on, then off. When this occurs, the keyboard controller resets its buffer status and resumes reading from the keyboard.
-
-Scancodes arrive one byte at a time, and one interrupt at a time, even if it is a multi-byte code. 
-
-https://cosmodoc.org/topics/keyboard-functions/
