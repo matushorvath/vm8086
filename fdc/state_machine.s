@@ -23,7 +23,7 @@
 # From the config file
 .IMPORT config_log_fdc
 
-# From fdc_commands.s
+# From commands.s
 .IMPORT fdc_exec_read_data
 .IMPORT fdc_exec_read_deleted_data
 .IMPORT fdc_exec_write_data
@@ -42,10 +42,10 @@
 .IMPORT fdc_exec_sense_drive_status
 .IMPORT fdc_exec_seek
 
-# From fdc_control.s
+# From control.s
 .IMPORT fdc_interrupt_pending
 
-# From fdc_drives.s
+# From drives.s
 .IMPORT fdc_present_cylinder_units
 
 # From util/bits.s

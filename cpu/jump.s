@@ -11,7 +11,7 @@
 .IMPORT read_location_w
 .IMPORT read_location_dw
 
-# From log.s
+# From log_cs_change.s
 .IMPORT log_cs_change
 
 # From memory.s

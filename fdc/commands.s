@@ -21,22 +21,25 @@
 # From the config file
 .IMPORT config_log_fdd
 
-# From fdc_config.s
+# From config.s
 .IMPORT fdc_config_connected_units
 .IMPORT fdc_config_inserted_units
 
-# From fdc_control.s
+# From control.s
 .IMPORT fdc_dor_enable_motor_units
 .IMPORT fdc_interrupt_pending
 
-# From fdc_drives.s
+# From drives.s
 .IMPORT fdc_medium_cylinders_units
 .IMPORT fdc_medium_heads_units
 .IMPORT fdc_medium_sectors_units
 .IMPORT fdc_present_cylinder_units
 .IMPORT fdc_present_sector_units
 
-# From fdc_fsm.s
+# From init.s
+.IMPORT fdc_error_non_dma
+
+# From state_machine.s
 .IMPORT fdc_cmd_multi_track
 .IMPORT fdc_cmd_unit_selected
 
@@ -53,14 +56,8 @@
 .IMPORT fdc_cmd_st2
 .IMPORT fdc_cmd_st3
 
-# From fdc_init.s
-.IMPORT fdc_error_non_dma
-
 # From dev/pic_8259a_execute.s
 .IMPORT interrupt_request
-
-# From cpu/error.s
-.IMPORT report_error
 
 # From cpu/images.s
 .IMPORT floppy
@@ -76,6 +73,9 @@
 
 # From util/bits.s
 .IMPORT bit_0
+
+# From util/error.s
+.IMPORT report_error
 
 # From util/log.s
 .IMPORT log_start

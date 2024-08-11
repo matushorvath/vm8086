@@ -4,16 +4,16 @@
 .IMPORT bochs_shutdown
 .IMPORT bochs_out_char
 
-# From cpu/ports.s
-.IMPORT register_ports
-
-# From cpu/dump_state.s
+# From dump_state.s
 .IMPORT dump_state
 
 # From test_api.s
 .IMPORT port_in_debug
 .IMPORT port_out_debug
 .IMPORT print_mark
+
+# From cpu/ports.s
+.IMPORT register_ports
 
 ##########
 ports:

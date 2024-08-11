@@ -22,9 +22,6 @@
 # From cpu/ports.s
 .IMPORT register_ports
 
-# From cpu/error.s
-.IMPORT report_error
-
 # From util/bits.s
 .IMPORT bit_0
 .IMPORT bit_1
@@ -34,6 +31,9 @@
 .IMPORT bit_5
 .IMPORT bit_6
 .IMPORT bit_7
+
+# From util/error.s
+.IMPORT report_error
 
 # PC Speaker
 # - bit 0 port 0x61: write, 1 = speaker is controlled by PIT channel 2

@@ -1,29 +1,29 @@
 .EXPORT init_fdc
 .EXPORT fdc_error_non_dma
 
-# From fdc_config.s
+# From config.s
 .IMPORT fdc_config_connected_units
 .IMPORT fdc_config_inserted_units
 
-# From fdc_control.s
+# From control.s
 .IMPORT fdc_dor_write
 .IMPORT fdc_status_read
 .IMPORT fdc_dir_read
 .IMPORT fdc_control_write
 
-# From fdc_drives.s
+# From drives.s
 .IMPORT fdc_medium_cylinders_units
 .IMPORT fdc_medium_heads_units
 .IMPORT fdc_medium_sectors_units
 
-# From fdc_state_machine.s
+# From state_machine.s
 .IMPORT fdc_data_read
 .IMPORT fdc_data_write
 
 # From cpu/ports.s
 .IMPORT register_ports
 
-# From cpu/error.s
+# From util/error.s
 .IMPORT report_error
 
 # TODO fdc should not work while fdc_dor_reset == 0
