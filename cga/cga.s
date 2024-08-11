@@ -23,8 +23,6 @@
 # From cpu/regions.s
 .IMPORT register_region
 
-# TODO hide the cursor if running on a VM that supports extended console IO
-
 ##########
 cga_ports:
     db  0xd4, 0x03, 0, mc6845_address_write                 # MC6845 address register

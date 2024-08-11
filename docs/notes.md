@@ -275,15 +275,11 @@ read_cs_ip_w
 write_b
 handle_memory_write
 
-TODO:
- - OK merge read_b and handle_memory_read, write_b and handle_memory_write
- - OK inline calc_addr_b
- - OK read_location_b and write_location_b should directly call read_memory_b and write_memory_b
- - OK read_location_w and write_location_w should directly call read_memory_b and write_memory_b
-
+TODO profiling
  - optimize calc_addr_w, perhaps inline that as well
  - find a design that avoids searching the list of regions for every memory access
     - could use some kind of table (use segment as a key?)
     - could cache last used region registration, so we can reuse it for multiple operations
       - or at least cache it for word-sized operations, currently those get split to two bytes
     - could use a fixed number of region registrations, currently 2 would be probably enough
+ - re-profile with keyboard input, I suspect vm_callback is very slow now
