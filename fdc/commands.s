@@ -56,9 +56,6 @@
 .IMPORT fdc_cmd_st2
 .IMPORT fdc_cmd_st3
 
-# From dev/pic_8259a_execute.s
-.IMPORT interrupt_request
-
 # From cpu/images.s
 .IMPORT floppy
 
@@ -70,6 +67,9 @@
 .IMPORT dma_count_ch2
 .IMPORT dma_receive_data
 .IMPORT dma_send_data
+
+# From dev/pic_8259a_execute.s
+.IMPORT interrupt_request
 
 # From util/bits.s
 .IMPORT bit_0

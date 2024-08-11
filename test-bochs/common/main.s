@@ -1,6 +1,9 @@
 .EXPORT irq_execute
 .EXPORT irq_need_to_execute
 
+# From the binary
+.IMPORT binary_image
+
 # From devices.s
 .IMPORT register_devices
 
@@ -9,9 +12,6 @@
 
 # From cpu/images.s
 .IMPORT init_rom_image
-
-# From the binary.o
-.IMPORT binary_image
 
 ##########
 # Entry point

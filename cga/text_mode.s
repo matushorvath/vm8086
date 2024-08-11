@@ -13,10 +13,6 @@
 # From log.s
 .IMPORT redraw_screen_text_log
 
-# From text_palette.s
-.IMPORT palette_text_fg
-.IMPORT palette_text_bg_ptr
-
 # From registers.s
 .IMPORT mode_high_res_text
 .IMPORT mode_not_blinking
@@ -24,6 +20,10 @@
 
 # From screen.s
 .IMPORT screen_needs_redraw
+
+# From text_palette.s
+.IMPORT palette_text_fg
+.IMPORT palette_text_bg_ptr
 
 # From cpu/state.s
 .IMPORT mem
