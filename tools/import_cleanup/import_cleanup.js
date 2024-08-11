@@ -55,9 +55,9 @@ const main = async () => {
         const sourceDir = path.dirname(source);
 
         const text = await fsp.readFile(path.join(root, source), 'utf8');
-        const matches = text.matchAll(/# From (.*\.s)\s+.IMPORT (.*)/g);
+        const sourceImports = text.matchAll(/# From (.*\.s)\s+.IMPORT (.*)/g);
 
-        for (const [_, importFile, importSymbol] of matches) {
+        for (const [_, importFile, importSymbol] of sourceImports) {
             const exportFromRoot = exports[importFile];
             const exportFromDir = exports[path.join(sourceDir, importFile)];
 
@@ -79,6 +79,41 @@ const main = async () => {
                 console.log(`${source}: "From ${importFile} .IMPORT ${importSymbol}": Symbol not in file; candidates: ${getCandidates(exports, source, importSymbol)}`);
                 continue;
             }
+        }
+
+        const allImports = text.matchAll(/# From (.*)\s+.IMPORT (.*)/g);
+
+        const importFiles = [...allImports].map(m => m[1]);
+        const sortedImportFiles = importFiles.toSorted((a, b) => {
+            const extOrder = { '': 0, '.s': 1, '.o': 1, '.a': 2 };
+
+            const aext = extOrder[path.extname(a)] ?? 0;
+            const bext = extOrder[path.extname(b)] ?? 0;
+
+            if (aext !== bext) {
+                return aext - bext;
+            }
+
+            const adir = path.dirname(a);
+            const bdir = path.dirname(b);
+
+            if (adir !== bdir) {
+                return adir < bdir ? -1 : adir > bdir ? 1 : 0;
+            }
+
+            const afile = path.basename(a);
+            const bfile = path.basename(b);
+
+            return afile < bfile ? -1 : afile > bfile ? 1 : 0;
+        });
+
+        const diff = Object.keys(importFiles).filter(i => importFiles[i] !== sortedImportFiles[i]).map(Number);
+        if (diff.length > 0) {
+            const actual = importFiles.filter((_, i) => diff.includes(i)).join(',')
+            const expected = sortedImportFiles.filter((_, i) => diff.includes(i)).join(',');
+
+            console.log(`${source}: Incorrect order: "${actual}" should be "${expected}"`);
+            continue;
         }
     }
 };
