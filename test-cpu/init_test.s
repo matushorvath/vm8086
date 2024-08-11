@@ -1,11 +1,24 @@
 .EXPORT init_processor_test
 
-# From util/brk.s
-.IMPORT brk
-.IMPORT sbrk
+# From test_header.s
+.IMPORT init_ax
+.IMPORT init_bx
+.IMPORT init_cx
+.IMPORT init_dx
+.IMPORT init_cs
+.IMPORT init_ss
+.IMPORT init_ds
+.IMPORT init_es
+.IMPORT init_sp
+.IMPORT init_bp
+.IMPORT init_si
+.IMPORT init_di
+.IMPORT init_ip
+.IMPORT init_flags
 
-# From util/error.s
-.IMPORT report_error
+.IMPORT init_mem_length
+.IMPORT result_mem_length
+.IMPORT mem_data
 
 # From cpu/flags.s
 .IMPORT unpack_flags_lo
@@ -27,29 +40,15 @@
 .IMPORT reg_es
 .IMPORT mem
 
-# From test_header.s
-.IMPORT test_header_end
-.IMPORT init_ax
-.IMPORT init_bx
-.IMPORT init_cx
-.IMPORT init_dx
-.IMPORT init_cs
-.IMPORT init_ss
-.IMPORT init_ds
-.IMPORT init_es
-.IMPORT init_sp
-.IMPORT init_bp
-.IMPORT init_si
-.IMPORT init_di
-.IMPORT init_ip
-.IMPORT init_flags
-
-.IMPORT init_mem_length
-.IMPORT result_mem_length
-.IMPORT mem_data
+# From util/error.s
+.IMPORT report_error
 
 # From util/util.s
 .IMPORT split_16_8_8
+
+# From libxib.a
+.IMPORT brk
+.IMPORT sbrk
 
 ##########
 init_processor_test:

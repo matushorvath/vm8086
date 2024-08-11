@@ -1,10 +1,10 @@
 .EXPORT extended_vm
 
-# From bios.o
-.IMPORT bios_image
-
 # From bios_address.template
 .IMPORT bios_address
+
+# From bios.o
+.IMPORT bios_image
 
 # From callback.s
 .IMPORT init_vm_callback
@@ -12,14 +12,11 @@
 # From floppy.o
 .IMPORT floppy_image
 
-# From ports.s
+# From vm_ports.s
 .IMPORT init_vm_ports
 
 # From cga/cga.s
 .IMPORT init_cga
-
-# From cpu/regions.s
-.IMPORT register_region
 
 # From cpu/execute.s
 .IMPORT execute
@@ -27,10 +24,13 @@
 # From cpu/images.s
 .IMPORT init_images
 
-# From dev/dma.s
+# From cpu/regions.s
+.IMPORT register_region
+
+# From dev/dma_8237a.s
 .IMPORT init_dma_8237a
 
-# From dev/pic_8259a.s
+# From dev/pic_8259a_ports.s
 .IMPORT init_pic_8259a
 
 # From dev/pit_8253.s

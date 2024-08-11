@@ -21,12 +21,6 @@
 # From memory.s
 .IMPORT read_cs_ip_b
 
-# From util/nibbles.s
-.IMPORT nibble_0
-
-# From util/parity.s
-.IMPORT parity
-
 # From state.s
 .IMPORT inc_ip_b
 .IMPORT reg_ip
@@ -38,6 +32,12 @@
 .IMPORT flag_parity
 .IMPORT flag_auxiliary_carry
 .IMPORT flag_overflow
+
+# From util/nibbles.s
+.IMPORT nibble_0
+
+# From util/parity.s
+.IMPORT parity
 
 # From util/util.s
 .IMPORT split_16_8_8

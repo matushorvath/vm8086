@@ -5,9 +5,6 @@
 .IMPORT execute_call_near_indirect
 .IMPORT execute_call_far_indirect
 
-# From util/error.s
-.IMPORT report_error
-
 # From inc_dec.s
 .IMPORT execute_inc_b
 .IMPORT execute_inc_w
@@ -20,6 +17,9 @@
 
 # From stack.s
 .IMPORT execute_push_w
+
+# From util/error.s
+.IMPORT report_error
 
 # Group 2 8-bit instructions, first byte is MOD xxx R/M, where xxx is:
 # 000 INC REG8/MEM8

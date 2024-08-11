@@ -8,6 +8,9 @@
 
 .EXPORT redraw_status_bar
 
+# From the linked binary
+.IMPORT extended_vm
+
 # From screen.s
 .IMPORT screen_width_chars
 .IMPORT screen_height_chars
@@ -17,9 +20,6 @@
 
 # From libxib.a
 .IMPORT print_num_radix
-
-# From the linked binary
-.IMPORT extended_vm
 
 # Unicode icons
 #

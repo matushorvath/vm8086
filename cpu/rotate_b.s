@@ -11,6 +11,11 @@
 .IMPORT read_location_b
 .IMPORT write_location_b
 
+# From state.s
+.IMPORT reg_cl
+.IMPORT flag_carry
+.IMPORT flag_overflow
+
 # From util/bits.s
 .IMPORT bit_0
 .IMPORT bit_1
@@ -46,11 +51,6 @@
 
 # From util/split233.s
 .IMPORT split233_0
-
-# From state.s
-.IMPORT reg_cl
-.IMPORT flag_carry
-.IMPORT flag_overflow
 
 ##########
 .FRAME lseg, loff; val, count

@@ -4,7 +4,7 @@
 .IMPORT reg_ip
 .IMPORT reg_cs
 
-# From libxib.s
+# From libxib.a
 .IMPORT print_num_radix
 .IMPORT print_str
 

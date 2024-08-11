@@ -9,6 +9,15 @@
 .IMPORT read_location_w
 .IMPORT write_location_w
 
+# From state.s
+.IMPORT reg_cl
+.IMPORT flag_carry
+.IMPORT flag_parity
+.IMPORT flag_auxiliary_carry
+.IMPORT flag_zero
+.IMPORT flag_sign
+.IMPORT flag_overflow
+
 # From util/bits.s
 .IMPORT bits
 .IMPORT bit_0
@@ -22,15 +31,6 @@
 
 # From util/shr.s
 .IMPORT shr
-
-# From state.s
-.IMPORT reg_cl
-.IMPORT flag_carry
-.IMPORT flag_parity
-.IMPORT flag_auxiliary_carry
-.IMPORT flag_zero
-.IMPORT flag_sign
-.IMPORT flag_overflow
 
 ##########
 .FRAME lseg, loff; val_lo, val_hi, count, spill, tmp

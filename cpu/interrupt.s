@@ -19,10 +19,10 @@
 .IMPORT log_dos_21_iret
 
 # From memory.s
-.IMPORT read_memory_b
+.IMPORT read_cs_ip_b
 
 # From regions.s
-.IMPORT read_cs_ip_b
+.IMPORT read_memory_b
 
 # From stack.s
 .IMPORT pop_w

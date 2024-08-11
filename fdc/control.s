@@ -9,19 +9,16 @@
 # From the config file
 .IMPORT config_log_fdc
 
-# From fdc_init.s
+# From init.s
 .IMPORT fdc_error_non_dma
 
-# From fdc_fsm.s
+# From state_machine.s
 .IMPORT fdc_cmd_state
 .IMPORT fdc_cmd_result_phase
 .IMPORT fdc_cmd_st0
 
-# From pic_8259a_execute.s
+# From dev/pic_8259a_execute.s
 .IMPORT interrupt_request
-
-# From cpu/error.s
-.IMPORT report_error
 
 # From util/bits.s
 .IMPORT bit_0
@@ -29,6 +26,9 @@
 .IMPORT bit_3
 .IMPORT bit_4
 .IMPORT bit_5
+
+# From util/error.s
+.IMPORT report_error
 
 # From util/log.s
 .IMPORT log_start

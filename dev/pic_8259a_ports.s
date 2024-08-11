@@ -20,9 +20,6 @@
 # From cpu/ports.s
 .IMPORT register_ports
 
-# From cpu/error.s
-.IMPORT report_error
-
 # From util/bits.s
 .IMPORT bit_0
 .IMPORT bit_1
@@ -31,6 +28,9 @@
 .IMPORT bit_4
 .IMPORT bit_5
 .IMPORT bit_6
+
+# From util/error.s
+.IMPORT report_error
 
 # From util/shr.s
 .IMPORT shr_3

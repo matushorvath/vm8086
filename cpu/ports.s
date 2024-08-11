@@ -4,10 +4,8 @@
 .EXPORT handle_port_read
 .EXPORT handle_port_write
 
-# From brk.s
-.IMPORT sbrk
-
 # From libxib.a
+.IMPORT sbrk
 .IMPORT zeromem
 
 ##########

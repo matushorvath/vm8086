@@ -3,14 +3,14 @@
 .EXPORT read_memory_b
 .EXPORT write_memory_b
 
-# From brk.s
-.IMPORT sbrk
-
 # From state.s
 .IMPORT mem
 
 # From util/error.s
 .IMPORT report_error
+
+# From libxib.a
+.IMPORT sbrk
 
 ##########
 register_region:

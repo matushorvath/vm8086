@@ -6,9 +6,6 @@
 .IMPORT decode_mod_rm
 .IMPORT decode_reg
 
-# From util/error.s
-.IMPORT report_error
-
 # From location.s
 .IMPORT read_location_dw
 .IMPORT write_location_w
@@ -16,15 +13,18 @@
 # From memory.s
 .IMPORT read_cs_ip_b
 
-# From util/split233.s
-.IMPORT split233_0
-.IMPORT split233_1
-.IMPORT split233_2
-
 # From state.s
 .IMPORT reg_ds
 .IMPORT reg_es
 .IMPORT inc_ip_b
+
+# From util/error.s
+.IMPORT report_error
+
+# From util/split233.s
+.IMPORT split233_0
+.IMPORT split233_1
+.IMPORT split233_2
 
 ##########
 execute_lea:

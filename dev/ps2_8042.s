@@ -1,10 +1,10 @@
 .EXPORT init_ps2_8042
 
-# From cpu/ports.s
-.IMPORT register_ports
-
 # From cpu/execute.s
 .IMPORT halt
+
+# From cpu/ports.s
+.IMPORT register_ports
 
 # From libxib.a
 .IMPORT print_str

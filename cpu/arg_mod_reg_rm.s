@@ -16,13 +16,13 @@
 # From memory.s
 .IMPORT read_cs_ip_b
 
+# From state.s
+.IMPORT inc_ip_b
+
 # From util/split233.s
 .IMPORT split233_0
 .IMPORT split233_1
 .IMPORT split233_2
-
-# From state.s
-.IMPORT inc_ip_b
 
 # "_src_" means the REG field is the source
 # "_dst_" means the REG field is the destination

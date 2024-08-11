@@ -1,12 +1,13 @@
 .EXPORT print_output
 
-# From cpu/flag.s
+# From test_header.s
+.IMPORT init_mem_length
+.IMPORT result_mem_length
+.IMPORT mem_data
+
+# From cpu/flags.s
 .IMPORT pack_flags_lo
 .IMPORT pack_flags_hi
-
-# From libxib.a
-.IMPORT print_str
-.IMPORT print_num_radix
 
 # From cpu/state.s
 .IMPORT reg_ip
@@ -24,10 +25,9 @@
 .IMPORT reg_es
 .IMPORT mem
 
-# From test_header.s
-.IMPORT init_mem_length
-.IMPORT result_mem_length
-.IMPORT mem_data
+# From libxib.a
+.IMPORT print_str
+.IMPORT print_num_radix
 
 ##########
 print_output:

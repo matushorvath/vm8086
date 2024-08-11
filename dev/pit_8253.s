@@ -1,15 +1,5 @@
 .EXPORT init_pit_8253
 
-# From cpu/ports.s
-.IMPORT register_ports
-
-# From util/error.s
-.IMPORT report_error
-
-# From util/bits.s
-.IMPORT bit_6
-.IMPORT bit_7
-
 # From pit_8253_ch0.s
 .IMPORT pit_data_read_ch0
 .IMPORT pit_data_write_ch0
@@ -19,6 +9,16 @@
 .IMPORT pit_data_read_ch2
 .IMPORT pit_data_write_ch2
 .IMPORT pit_mode_command_write_ch2
+
+# From cpu/ports.s
+.IMPORT register_ports
+
+# From util/bits.s
+.IMPORT bit_6
+.IMPORT bit_7
+
+# From util/error.s
+.IMPORT report_error
 
 # How 8086_bios uses the channels (MACHINE_XT):
 #

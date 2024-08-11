@@ -9,12 +9,6 @@
 .IMPORT read_location_w
 .IMPORT write_location_w
 
-# From util/nibbles.s
-.IMPORT nibble_0
-
-# From util/parity.s
-.IMPORT parity
-
 # From state.s
 .IMPORT flag_carry
 .IMPORT flag_parity
@@ -22,6 +16,12 @@
 .IMPORT flag_zero
 .IMPORT flag_sign
 .IMPORT flag_overflow
+
+# From util/nibbles.s
+.IMPORT nibble_0
+
+# From util/parity.s
+.IMPORT parity
 
 ##########
 execute_neg_b:

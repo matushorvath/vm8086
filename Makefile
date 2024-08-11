@@ -5,7 +5,7 @@ BINDIR ?= bin
 OBJDIR ?= obj
 
 SRCDIRS = util cga cpu dev fdc img vm
-TOOLSDIR = monitor
+TOOLSDIR = tools/import-cleanup tools/monitor
 TESTDIRS = test-bochs test-cpu
 
 # Build VM
@@ -59,6 +59,10 @@ validate-bochs: build
 $(TESTDIRS): build
 	make -C $@ test
 
+.PHONY: imports
+imports: tools/import-cleanup
+	node tools/import-cleanup/import-cleanup.js .
+
 # Clean
 CLEAN_TARGETS = $(addprefix clean-,$(SRCDIRS) $(TOOLSDIR) $(TESTDIRS))
 
@@ -70,7 +74,7 @@ clean: $(CLEAN_TARGETS)
 $(CLEAN_TARGETS):
 	make -C $(patsubst clean-%,%,$@) clean
 
-VERY_CLEAN_TARGETS = very-clean-img very-clean-monitor
+VERY_CLEAN_TARGETS = very-clean-img very-clean-tools/import-cleanup very-clean-tools/monitor
 
 .PHONY: very-clean
 very-clean: clean $(VERY_CLEAN_TARGETS)

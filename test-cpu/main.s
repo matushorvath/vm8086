@@ -4,15 +4,15 @@
 # From callback.s
 .IMPORT vm_callback
 
-# From cpu/execute.s
-.IMPORT execute
-.IMPORT execute_callback
-
 # From init_test.s
 .IMPORT init_processor_test
 
 # From print_output.s
 .IMPORT print_output
+
+# From cpu/execute.s
+.IMPORT execute
+.IMPORT execute_callback
 
 ##########
 # Entry point

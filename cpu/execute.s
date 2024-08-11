@@ -14,9 +14,6 @@
 .IMPORT config_tracing_cs
 .IMPORT config_tracing_ip
 
-# From util/error.s
-.IMPORT report_error
-
 # From instructions.s
 .IMPORT instructions
 
@@ -43,6 +40,9 @@
 # From dev/pic_8259a_execute.s
 .IMPORT irq_execute
 .IMPORT irq_need_to_execute
+
+# From util/error.s
+.IMPORT report_error
 
 ##########
 execute:

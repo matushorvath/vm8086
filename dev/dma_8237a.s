@@ -36,8 +36,6 @@
 .IMPORT print_num_2_b
 .IMPORT print_num_16
 
-# TODO dma_send_data and dma_receive_data have a lot of common code, unify
-
 ##########
 dma_ports:
     db  0x02, 0x00, 0, dma_address_ch1_write                # start address register channel 1
@@ -80,103 +78,28 @@ init_dma_8237a:
 .ENDFRAME
 
 ##########
-dma_receive_data:
-.FRAME channel, src_addr, count; dst_addr, dst_delta, index, tmp
-    arb -4
+.FRAME channel, dev_addr, count; send, dma_addr, dma_delta, index, tmp
+    # Function with multiple entry points
 
-    # Floppy controller logging
-    jz  [config_log_fdc], .after_log_fdc
-    eq  [rb + channel], 0x02, [rb + tmp]
-    jz  [rb + tmp], .after_log_fdc
-
-    add 0, 0, [rb - 1]
-    add [rb + count], 0, [rb - 2]
-    arb -2
-    call dma_send_receive_data_log_fdc
-
-.after_log_fdc:
-    # Check the DMA controller
-    jnz [dma_disable_controller], .disabled
-
-    add dma_mask_channels, [rb + channel], [ip + 1]
-    jnz [dma_mask_channels], .disabled
-
-    add dma_transfer_type_channels, [rb + channel], [ip + 1]
-    eq  [0], 1, [rb + tmp]                                  # transfer type must be write (1)
-    jz  [rb + tmp], .disabled
-
-    # TODO support single/block/demand modes
-
-    # Decrement the destination address if requested
-    add dma_decrement_channels, [rb + channel], [ip + 1]
-    mul [0], -2, [rb + dst_delta]
-    add [rb + dst_delta], 1, [rb + dst_delta]
-
-    # Determine where we should write the data
-    add dma_page_channels, [rb + channel], [ip + 1]
-    mul [0], 0x10000, [rb + dst_addr]
-    add dma_address_channels, [rb + channel], [ip + 1]
-    add [0], [rb + dst_addr], [rb + dst_addr]
-    add [mem], [rb + dst_addr], [rb + dst_addr]
-
-    # Calculate how much data to move, count = min(count, dma_count_*+1)
-    add dma_count_channels, [rb + channel], [ip + 1]
-    add [0], 1, [rb + tmp]
-    lt  [rb + tmp], [rb + count], [rb + tmp]
-    jz  [rb + tmp], .move
-
-    add dma_count_channels, [rb + channel], [ip + 1]
-    add [0], 1, [rb + count]
-
-.move:
-    add [rb + count], 0, [rb + index]
-
-.loop:
-    # Move the data
-    add [rb + src_addr], 0, [ip + 5]
-    add [rb + dst_addr], 0, [ip + 3]
-    add [0], 0, [0]
-
-    # Increment source address, increment/decrement destination address
-    # TODO handle wraparound for dst_addr, it wraps around 0x10000 and then adds the page
-    add [rb + src_addr], 1, [rb + src_addr]
-    add [rb + dst_addr], [rb + dst_delta], [rb + dst_addr]
-
-    # Decrease index and loop
-    add [rb + index], -1, [rb + index]
-    jnz [rb + index], .loop
-
-    # Update the DMA counter, decrease it by count
-    mul [rb + count], -1, [rb + tmp]
-    add dma_count_channels, [rb + channel], [ip + 5]
-    add dma_count_channels, [rb + channel], [ip + 3]
-    add [0], [rb + tmp], [0]
-
-    # Update destination address, increase/decrease it by count
-    # TODO wraparound the address, make sure it stays between 0x0000 and 0x10000
-    mul [rb + count], [rb + dst_delta], [rb + tmp]
-    add dma_address_channels, [rb + channel], [ip + 5]
-    add dma_address_channels, [rb + channel], [ip + 3]
-    add [0], [rb + tmp], [0]
-
-    # TODO handle dma_auto_init_channels (remember originally set values, reset them after dma_count_ch* goes to -1)
-
-.disabled:
-    arb 4
-    ret 3
-.ENDFRAME
-
-##########
 dma_send_data:
-.FRAME channel, dst_addr, count; src_addr, src_delta, index, tmp
-    arb -4
+    # Copy data from main memory (dma_addr) to device (dev_addr)
+    arb -5
+    add 1, 0, [rb + send]
 
+    jz  0, dma_send_receive_data
+
+dma_receive_data:
+    # Copy data from device (dev_addr) to main memory (dma_addr)
+    arb -5
+    add 0, 0, [rb + send]
+
+dma_send_receive_data:
     # Floppy controller logging
     jz  [config_log_fdc], .after_log_fdc
     eq  [rb + channel], 0x02, [rb + tmp]
     jz  [rb + tmp], .after_log_fdc
 
-    add 1, 0, [rb - 1]
+    add [rb + send], 0, [rb - 1]
     add [rb + count], 0, [rb - 2]
     arb -2
     call dma_send_receive_data_log_fdc
@@ -188,23 +111,25 @@ dma_send_data:
     add dma_mask_channels, [rb + channel], [ip + 1]
     jnz [dma_mask_channels], .disabled
 
+    # Check transfer type: receive -> write (1); send -> read (2)
+    add [rb + send], 1, [rb + tmp]
     add dma_transfer_type_channels, [rb + channel], [ip + 1]
-    eq  [0], 2, [rb + tmp]                                  # transfer type must be read (2)
+    eq  [0], [rb + tmp], [rb + tmp]
     jz  [rb + tmp], .disabled
 
     # TODO support single/block/demand modes
 
-    # Decrement the source address if requested
+    # Decrement the DMA address if requested
     add dma_decrement_channels, [rb + channel], [ip + 1]
-    mul [0], -2, [rb + src_delta]
-    add [rb + src_delta], 1, [rb + src_delta]
+    mul [0], -2, [rb + dma_delta]
+    add [rb + dma_delta], 1, [rb + dma_delta]
 
-    # Determine where we should read the data from
+    # Calculate DMA address in intcode memory
     add dma_page_channels, [rb + channel], [ip + 1]
-    mul [0], 0x10000, [rb + src_addr]
+    mul [0], 0x10000, [rb + dma_addr]
     add dma_address_channels, [rb + channel], [ip + 1]
-    add [0], [rb + src_addr], [rb + src_addr]
-    add [mem], [rb + src_addr], [rb + src_addr]
+    add [0], [rb + dma_addr], [rb + dma_addr]
+    add [mem], [rb + dma_addr], [rb + dma_addr]
 
     # Calculate how much data to move, count = min(count, dma_count_*+1)
     add dma_count_channels, [rb + channel], [ip + 1]
@@ -219,15 +144,26 @@ dma_send_data:
     add [rb + count], 0, [rb + index]
 
 .loop:
-    # Move the data
-    add [rb + src_addr], 0, [ip + 5]
-    add [rb + dst_addr], 0, [ip + 3]
+    jz  [rb + send], .move_byte_dev_to_dma
+
+    # Move data from main memory to device
+    add [rb + dma_addr], 0, [ip + 5]
+    add [rb + dev_addr], 0, [ip + 3]
     add [0], 0, [0]
 
-    # Increment destination address, increment/decrement source address
-    # TODO handle wraparound for src_addr, it wraps around 0x10000 and then adds the page
-    add [rb + dst_addr], 1, [rb + dst_addr]
-    add [rb + src_addr], [rb + src_delta], [rb + src_addr]
+    jz  0, .after_move_byte
+
+.move_byte_dev_to_dma:
+    # Move data from device to main memory
+    add [rb + dev_addr], 0, [ip + 5]
+    add [rb + dma_addr], 0, [ip + 3]
+    add [0], 0, [0]
+
+.after_move_byte:
+    # Increment device address, increment/decrement DMA address
+    # TODO handle wraparound for dma_addr, it wraps around 0x10000 and then adds the page
+    add [rb + dev_addr], 1, [rb + dev_addr]
+    add [rb + dma_addr], [rb + dma_delta], [rb + dma_addr]
 
     # Decrease index and loop
     add [rb + index], -1, [rb + index]
@@ -239,9 +175,9 @@ dma_send_data:
     add dma_count_channels, [rb + channel], [ip + 3]
     add [0], [rb + tmp], [0]
 
-    # Update source address, increase/decrease it by count
+    # Update DMA address, increase/decrease it by count
     # TODO wraparound the address, make sure it stays between 0x0000 and 0x10000
-    mul [rb + count], [rb + src_delta], [rb + tmp]
+    mul [rb + count], [rb + dma_delta], [rb + tmp]
     add dma_address_channels, [rb + channel], [ip + 5]
     add dma_address_channels, [rb + channel], [ip + 3]
     add [0], [rb + tmp], [0]
@@ -249,7 +185,7 @@ dma_send_data:
     # TODO handle dma_auto_init_channels (remember originally set values, reset them after dma_count_ch* goes to -1)
 
 .disabled:
-    arb 4
+    arb 5
     ret 3
 .ENDFRAME
 
