@@ -218,15 +218,16 @@ fdc_exec_read_data:
     jz  [config_log_fdd], .terminated
 
     add 0, 0, [rb - 1]
-    add [rb + dma_count], 0, [rb - 2]
-    arb -2
+    add FDC_RW_REASON_DONE, 0, [rb - 2]
+    add [rb + dma_count], 0, [rb - 3]
+    arb -3
     call fdc_exec_read_write_data_log
 
     jz  0, .terminated
 
 .no_dma:
     # Floppy is accessible, but the DMA controller is not ready to accept data
-    # Set up ST0 (abnormal termination), ST1, ST2; keep head, cylinder or sector
+    # Set up ST0 (abnormal termination), ST1, ST2; keep head, cylinder and sector
     add 0b01000000, [fdc_cmd_st0], [fdc_cmd_st0]
     add 0, 0, [fdc_cmd_st1]
     add 0, 0, [fdc_cmd_st2]
@@ -235,8 +236,9 @@ fdc_exec_read_data:
     jz  [config_log_fdd], .terminated
 
     add 0, 0, [rb - 1]
-    add [rb + dma_count], 0, [rb - 2]
-    arb -2
+    add FDC_RW_REASON_NO_DMA, 0, [rb - 2]
+    add [rb + dma_count], 0, [rb - 3]
+    arb -3
     call fdc_exec_read_write_data_log
 
     jz  0, .terminated
@@ -254,8 +256,9 @@ fdc_exec_read_data:
     jz  [config_log_fdd], .bad_input_after_log
 
     add 0, 0, [rb - 1]
-    add [rb + dma_count], 0, [rb - 2]
-    arb -2
+    add FDC_RW_REASON_BAD_INPUT, 0, [rb - 2]
+    add [rb + dma_count], 0, [rb - 3]
+    arb -3
     call fdc_exec_read_write_data_log
 
 .bad_input_after_log:
@@ -277,8 +280,9 @@ fdc_exec_read_data:
     jz  [config_log_fdd], .no_floppy_after_log
 
     add 0, 0, [rb - 1]
-    add [rb + dma_count], 0, [rb - 2]
-    arb -2
+    add FDC_RW_REASON_NO_FLOPPY, 0, [rb - 2]
+    add [rb + dma_count], 0, [rb - 3]
+    arb -3
     call fdc_exec_read_write_data_log
 
 .no_floppy_after_log:
@@ -442,15 +446,16 @@ fdc_exec_write_data:
     jz  [config_log_fdd], .terminated
 
     add 1, 0, [rb - 1]
-    add [rb + dma_count], 0, [rb - 2]
-    arb -2
+    add FDC_RW_REASON_DONE, 0, [rb - 2]
+    add [rb + dma_count], 0, [rb - 3]
+    arb -3
     call fdc_exec_read_write_data_log
 
     jz  0, .terminated
 
 .no_dma:
     # Floppy is accessible, but the DMA controller is not ready to accept data
-    # Set up ST0 (abnormal termination), ST1, ST2; keep head, cylinder or sector
+    # Set up ST0 (abnormal termination), ST1, ST2; keep head, cylinder and sector
     add 0b01000000, [fdc_cmd_st0], [fdc_cmd_st0]
     add 0, 0, [fdc_cmd_st1]
     add 0, 0, [fdc_cmd_st2]
@@ -459,8 +464,9 @@ fdc_exec_write_data:
     jz  [config_log_fdd], .terminated
 
     add 1, 0, [rb - 1]
-    add [rb + dma_count], 0, [rb - 2]
-    arb -2
+    add FDC_RW_REASON_NO_DMA, 0, [rb - 2]
+    add [rb + dma_count], 0, [rb - 3]
+    arb -3
     call fdc_exec_read_write_data_log
 
     jz  0, .terminated
@@ -478,8 +484,9 @@ fdc_exec_write_data:
     jz  [config_log_fdd], .bad_input_after_log
 
     add 1, 0, [rb - 1]
-    add [rb + dma_count], 0, [rb - 2]
-    arb -2
+    add FDC_RW_REASON_BAD_INPUT, 0, [rb - 2]
+    add [rb + dma_count], 0, [rb - 3]
+    arb -3
     call fdc_exec_read_write_data_log
 
 .bad_input_after_log:
@@ -501,8 +508,9 @@ fdc_exec_write_data:
     jz  [config_log_fdd], .no_floppy_after_log
 
     add 1, 0, [rb - 1]
-    add [rb + dma_count], 0, [rb - 2]
-    arb -2
+    add FDC_RW_REASON_NO_FLOPPY, 0, [rb - 2]
+    add [rb + dma_count], 0, [rb - 3]
+    arb -3
     call fdc_exec_read_write_data_log
 
 .no_floppy_after_log:
@@ -536,7 +544,7 @@ fdc_exec_write_deleted_data:
 
 ##########
 fdc_exec_read_write_data_log:
-.FRAME write, dma_count; tmp
+.FRAME write, reason, dma_count; tmp
     arb -1
 
     call log_start
@@ -593,10 +601,15 @@ fdc_exec_read_write_data_log:
     arb -1
     call print_num
 
+    add .reason_msg, [rb + reason], [ip + 1]
+    add [0], 0, [rb - 1]
+    arb -1
+    call print_str
+
     out 10
 
     arb 1
-    ret 2
+    ret 3
 
 .read_write_msg:
     db  .read_msg
@@ -620,6 +633,25 @@ fdc_exec_read_write_data_log:
     db  "FAILURE", 0
 .success_msg:
     db  "SUCCESS", 0
+
+.SYMBOL FDC_RW_REASON_DONE              0
+.SYMBOL FDC_RW_REASON_NO_DMA            1
+.SYMBOL FDC_RW_REASON_BAD_INPUT         2
+.SYMBOL FDC_RW_REASON_NO_FLOPPY         3
+
+.reason_msg:
+    db  .reason_done_msg
+    db  .reason_no_dma_msg
+    db  .reason_bad_input_msg
+    db  .reason_no_floppy_msg
+.reason_done_msg:
+    db  ", done", 0
+.reason_no_dma_msg:
+    db  ", DMA not set up", 0
+.reason_bad_input_msg:
+    db  ", invalid input", 0
+.reason_no_floppy_msg:
+    db  ", no floppy", 0
 .ENDFRAME
 
 ##########
