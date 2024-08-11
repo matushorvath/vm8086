@@ -109,7 +109,7 @@ const main = async () => {
 
         const diff = Object.keys(importFiles).filter(i => importFiles[i] !== sortedImportFiles[i]).map(Number);
         if (diff.length > 0) {
-            const actual = importFiles.filter((_, i) => diff.includes(i)).join(',')
+            const actual = importFiles.filter((_, i) => diff.includes(i)).join(',');
             const expected = sortedImportFiles.filter((_, i) => diff.includes(i)).join(',');
 
             console.log(`${source}: Incorrect order: "${actual}" should be "${expected}"`);

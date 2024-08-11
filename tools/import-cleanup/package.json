@@ -1,5 +1,5 @@
 {
-    "name": "import_cleanup",
+    "name": "import-cleanup",
     "version": "1.0.0",
     "type": "module",
     "scripts": {
