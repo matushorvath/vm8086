@@ -370,7 +370,7 @@ fdc_exec_write_data:
     jnz [dma_disable_controller], .no_dma
     jnz [dma_mask_ch2], .no_dma
 
-    eq  [dma_transfer_type_ch2], 0, [rb + tmp]              # transfer type must be read (0)
+    eq  [dma_transfer_type_ch2], 2, [rb + tmp]              # transfer type must be read (2)
     jz  [rb + tmp], .no_dma
 
     eq  [dma_mode_ch2], 1, [rb + tmp]                       # only single mode is supported (1)

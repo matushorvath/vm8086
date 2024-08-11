@@ -189,7 +189,8 @@ dma_send_data:
     jnz [dma_mask_channels], .disabled
 
     add dma_transfer_type_channels, [rb + channel], [ip + 1]
-    jnz [0], .disabled                                      # transfer type must be read (0)
+    eq  [0], 2, [rb + tmp]                                  # transfer type must be read (2)
+    jz  [rb + tmp], .disabled
 
     # TODO support single/block/demand modes
 
