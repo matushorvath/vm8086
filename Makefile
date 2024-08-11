@@ -59,6 +59,10 @@ validate-bochs: build
 $(TESTDIRS): build
 	make -C $@ test
 
+.PHONY: imports
+imports: tools/import-cleanup
+	node tools/import-cleanup/import-cleanup.js .
+
 # Clean
 CLEAN_TARGETS = $(addprefix clean-,$(SRCDIRS) $(TOOLSDIR) $(TESTDIRS))
 
