@@ -15,9 +15,6 @@
 .EXPORT execute_jg
 .EXPORT execute_jng
 
-# From util/error.s
-.IMPORT report_error
-
 # From jump.s
 .IMPORT execute_jmp_short
 
@@ -28,6 +25,9 @@
 .IMPORT flag_sign
 .IMPORT flag_overflow
 .IMPORT inc_ip_b
+
+# From util/error.s
+.IMPORT report_error
 
 ##########
 execute_jo:

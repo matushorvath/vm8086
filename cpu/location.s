@@ -4,15 +4,15 @@
 .EXPORT write_location_b
 .EXPORT write_location_w
 
-# From util/error.s
-.IMPORT report_error
-
 # From memory.s
 .IMPORT calc_addr_w
 
 # From regions.s
 .IMPORT read_memory_b
 .IMPORT write_memory_b
+
+# From util/error.s
+.IMPORT report_error
 
 # Location is a generalized data item:
 #

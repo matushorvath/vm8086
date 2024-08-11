@@ -11,9 +11,6 @@
 # From arg_mod_reg_rm.s
 .IMPORT arg_mod_rm_generic
 
-# From util/error.s
-.IMPORT report_error
-
 # From memory.s
 .IMPORT read_cs_ip_b
 
@@ -22,6 +19,9 @@
 .IMPORT inc_ip_w
 .IMPORT reg_cs
 .IMPORT reg_ip
+
+# From util/error.s
+.IMPORT report_error
 
 ##########
 arg_mod_000_rm_w:

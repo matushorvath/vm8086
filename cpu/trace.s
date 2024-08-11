@@ -3,12 +3,12 @@
 # From memory.s
 .IMPORT read_seg_off_b
 
-# From trace_data.s
-.IMPORT trace_data
-
 # From state.s
 .IMPORT reg_cs
 .IMPORT reg_ip
+
+# From trace_data.s
+.IMPORT trace_data
 
 # From libxib.a
 .IMPORT print_num_radix

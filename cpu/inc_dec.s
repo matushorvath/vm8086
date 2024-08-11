@@ -9,18 +9,18 @@
 .IMPORT write_location_b
 .IMPORT write_location_w
 
-# From util/nibbles.s
-.IMPORT nibble_0
-
-# From util/parity.s
-.IMPORT parity
-
 # From state.s
 .IMPORT flag_parity
 .IMPORT flag_auxiliary_carry
 .IMPORT flag_zero
 .IMPORT flag_sign
 .IMPORT flag_overflow
+
+# From util/nibbles.s
+.IMPORT nibble_0
+
+# From util/parity.s
+.IMPORT parity
 
 ##########
 execute_inc_b:

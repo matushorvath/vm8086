@@ -3,9 +3,6 @@
 .EXPORT execute_shift_cl_b
 .EXPORT execute_shift_cl_w
 
-# From util/error.s
-.IMPORT report_error
-
 # From rotate_b.s
 .IMPORT execute_rol_1_b
 .IMPORT execute_rol_cl_b
@@ -41,6 +38,9 @@
 .IMPORT execute_shr_cl_w
 .IMPORT execute_sar_1_w
 .IMPORT execute_sar_cl_w
+
+# From util/error.s
+.IMPORT report_error
 
 # Group "shift" instructions, first byte is MOD xxx R/M, where xxx is:
 # 000 ROL, 001 ROR, 010 RCL, 011 RCR, 100 SAL/SHL, 101 SHR, 111 SAR

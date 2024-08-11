@@ -2,9 +2,6 @@
 .EXPORT decode_reg
 .EXPORT decode_sr
 
-# From util/error.s
-.IMPORT report_error
-
 # From memory.s
 .IMPORT read_cs_ip_b
 .IMPORT read_cs_ip_w
@@ -41,6 +38,9 @@
 
 .IMPORT inc_ip_b
 .IMPORT inc_ip_w
+
+# From util/error.s
+.IMPORT report_error
 
 ##########
 decode_mod_rm:

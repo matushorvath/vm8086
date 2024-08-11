@@ -4,11 +4,11 @@
 .EXPORT floppy
 .EXPORT floppy_size
 
-# From util/error.s
-.IMPORT report_error
-
 # From state.s
 .IMPORT mem
+
+# From util/error.s
+.IMPORT report_error
 
 # From util/util.s
 .IMPORT check_range

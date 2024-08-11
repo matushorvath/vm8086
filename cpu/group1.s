@@ -17,9 +17,6 @@
 .IMPORT execute_idiv_b
 .IMPORT execute_idiv_w
 
-# From util/error.s
-.IMPORT report_error
-
 # From mul.s
 .IMPORT execute_mul_b
 .IMPORT execute_mul_w
@@ -31,6 +28,9 @@
 .IMPORT reg_ip
 .IMPORT inc_ip_b
 .IMPORT inc_ip_w
+
+# From util/error.s
+.IMPORT report_error
 
 # Group 1, first byte is MOD xxx R/M, where xxx is:
 # 000 TEST REG/MEM, IMMED

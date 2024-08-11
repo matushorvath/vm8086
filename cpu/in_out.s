@@ -8,12 +8,12 @@
 .EXPORT execute_out_al_dx
 .EXPORT execute_out_ax_dx
 
+# From memory.s
+.IMPORT read_cs_ip_b
+
 # From ports.s
 .IMPORT handle_port_read
 .IMPORT handle_port_write
-
-# From memory.s
-.IMPORT read_cs_ip_b
 
 # From state.s
 .IMPORT reg_al

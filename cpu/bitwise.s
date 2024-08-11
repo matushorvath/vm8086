@@ -15,12 +15,6 @@
 .IMPORT read_location_w
 .IMPORT write_location_w
 
-# From util/bits.s
-.IMPORT bit_7
-
-# From util/parity.s
-.IMPORT parity
-
 # From state.s
 .IMPORT flag_carry
 .IMPORT flag_parity
@@ -28,6 +22,12 @@
 .IMPORT flag_zero
 .IMPORT flag_sign
 .IMPORT flag_overflow
+
+# From util/bits.s
+.IMPORT bit_7
+
+# From util/parity.s
+.IMPORT parity
 
 ##########
 .FRAME lseg_src, loff_src, lseg_dst, loff_dst; a, b, function, store, res, tmp

@@ -19,9 +19,6 @@
 .IMPORT read_location_b
 .IMPORT read_location_w
 
-# From util/bits.s
-.IMPORT bit_7
-
 # From prefix.s
 .IMPORT rep_prefix
 
@@ -31,6 +28,9 @@
 .IMPORT reg_ah
 .IMPORT reg_dl
 .IMPORT reg_dh
+
+# From util/bits.s
+.IMPORT bit_7
 
 # From util/util.s
 .IMPORT split_16_8_8
