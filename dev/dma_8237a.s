@@ -1,5 +1,6 @@
 .EXPORT init_dma_8237a
 .EXPORT dma_receive_data
+.EXPORT dma_send_data
 
 .EXPORT dma_disable_controller
 .EXPORT dma_mask_ch2
@@ -34,6 +35,8 @@
 .IMPORT print_num
 .IMPORT print_num_2_b
 .IMPORT print_num_16
+
+# TODO dma_send_data and dma_receive_data have a lot of common code, unify
 
 ##########
 dma_ports:
@@ -86,9 +89,10 @@ dma_receive_data:
     eq  [rb + channel], 0x02, [rb + tmp]
     jz  [rb + tmp], .after_log_fdc
 
-    add [rb + count], 0, [rb - 1]
-    arb -1
-    call dma_receive_data_log_fdc
+    add 0, 0, [rb - 1]
+    add [rb + count], 0, [rb - 2]
+    arb -2
+    call dma_send_receive_data_log_fdc
 
 .after_log_fdc:
     # Check the DMA controller
@@ -163,11 +167,99 @@ dma_receive_data:
 .ENDFRAME
 
 ##########
-dma_receive_data_log_fdc:
-.FRAME count;
+dma_send_data:
+.FRAME channel, dst_addr, count; src_addr, src_delta, index, tmp
+    arb -4
+
+    # Floppy controller logging
+    jz  [config_log_fdc], .after_log_fdc
+    eq  [rb + channel], 0x02, [rb + tmp]
+    jz  [rb + tmp], .after_log_fdc
+
+    add 1, 0, [rb - 1]
+    add [rb + count], 0, [rb - 2]
+    arb -2
+    call dma_send_receive_data_log_fdc
+
+.after_log_fdc:
+    # Check the DMA controller
+    jnz [dma_disable_controller], .disabled
+
+    add dma_mask_channels, [rb + channel], [ip + 1]
+    jnz [dma_mask_channels], .disabled
+
+    add dma_transfer_type_channels, [rb + channel], [ip + 1]
+    eq  [0], 2, [rb + tmp]                                  # transfer type must be read (2)
+    jz  [rb + tmp], .disabled
+
+    # TODO support single/block/demand modes
+
+    # Decrement the source address if requested
+    add dma_decrement_channels, [rb + channel], [ip + 1]
+    mul [0], -2, [rb + src_delta]
+    add [rb + src_delta], 1, [rb + src_delta]
+
+    # Determine where we should read the data from
+    add dma_page_channels, [rb + channel], [ip + 1]
+    mul [0], 0x10000, [rb + src_addr]
+    add dma_address_channels, [rb + channel], [ip + 1]
+    add [0], [rb + src_addr], [rb + src_addr]
+    add [mem], [rb + src_addr], [rb + src_addr]
+
+    # Calculate how much data to move, count = min(count, dma_count_*+1)
+    add dma_count_channels, [rb + channel], [ip + 1]
+    add [0], 1, [rb + tmp]
+    lt  [rb + tmp], [rb + count], [rb + tmp]
+    jz  [rb + tmp], .move
+
+    add dma_count_channels, [rb + channel], [ip + 1]
+    add [0], 1, [rb + count]
+
+.move:
+    add [rb + count], 0, [rb + index]
+
+.loop:
+    # Move the data
+    add [rb + src_addr], 0, [ip + 5]
+    add [rb + dst_addr], 0, [ip + 3]
+    add [0], 0, [0]
+
+    # Increment destination address, increment/decrement source address
+    # TODO handle wraparound for src_addr, it wraps around 0x10000 and then adds the page
+    add [rb + dst_addr], 1, [rb + dst_addr]
+    add [rb + src_addr], [rb + src_delta], [rb + src_addr]
+
+    # Decrease index and loop
+    add [rb + index], -1, [rb + index]
+    jnz [rb + index], .loop
+
+    # Update the DMA counter, decrease it by count
+    mul [rb + count], -1, [rb + tmp]
+    add dma_count_channels, [rb + channel], [ip + 5]
+    add dma_count_channels, [rb + channel], [ip + 3]
+    add [0], [rb + tmp], [0]
+
+    # Update source address, increase/decrease it by count
+    # TODO wraparound the address, make sure it stays between 0x0000 and 0x10000
+    mul [rb + count], [rb + src_delta], [rb + tmp]
+    add dma_address_channels, [rb + channel], [ip + 5]
+    add dma_address_channels, [rb + channel], [ip + 3]
+    add [0], [rb + tmp], [0]
+
+    # TODO handle dma_auto_init_channels (remember originally set values, reset them after dma_count_ch* goes to -1)
+
+.disabled:
+    arb 4
+    ret 3
+.ENDFRAME
+
+##########
+dma_send_receive_data_log_fdc:
+.FRAME send, count;
     call log_start
 
-    add .msg, 0, [rb - 1]
+    add .msg, [rb + send], [ip + 1]
+    add [0], 0, [rb - 1]
     arb -1
     call print_str
 
@@ -176,10 +268,15 @@ dma_receive_data_log_fdc:
     call print_num
 
     out 10
-    ret 1
+    ret 2
 
 .msg:
+    db  .msg_receive
+    db  .msg_send
+.msg_receive:
     db  "dma ch02, receive data, count ", 0
+.msg_send:
+    db  "dma ch02, send data, count ", 0
 .ENDFRAME
 
 ##########

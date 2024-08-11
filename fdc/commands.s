@@ -72,6 +72,7 @@
 .IMPORT dma_mode_ch2
 .IMPORT dma_count_ch2
 .IMPORT dma_receive_data
+.IMPORT dma_send_data
 
 # From util/bits.s
 .IMPORT bit_0
@@ -82,6 +83,8 @@
 # From libxib.a
 .IMPORT print_str
 .IMPORT print_num
+
+# TODO fdc_exec_read_data and fdc_exec_write_data have a lot of common code, unify
 
 ##########
 fdc_exec_read_data:
@@ -214,15 +217,17 @@ fdc_exec_read_data:
     # Floppy disk logging
     jz  [config_log_fdd], .terminated
 
-    add [rb + dma_count], 0, [rb - 1]
-    arb -1
-    call fdc_exec_read_data_log
+    add 0, 0, [rb - 1]
+    add FDC_RW_REASON_DONE, 0, [rb - 2]
+    add [rb + dma_count], 0, [rb - 3]
+    arb -3
+    call fdc_exec_read_write_data_log
 
     jz  0, .terminated
 
 .no_dma:
     # Floppy is accessible, but the DMA controller is not ready to accept data
-    # Set up ST0 (abnormal termination), ST1, ST2; keep head, cylinder or sector
+    # Set up ST0 (abnormal termination), ST1, ST2; keep head, cylinder and sector
     add 0b01000000, [fdc_cmd_st0], [fdc_cmd_st0]
     add 0, 0, [fdc_cmd_st1]
     add 0, 0, [fdc_cmd_st2]
@@ -230,9 +235,11 @@ fdc_exec_read_data:
     # Floppy disk logging
     jz  [config_log_fdd], .terminated
 
-    add [rb + dma_count], 0, [rb - 1]
-    arb -1
-    call fdc_exec_read_data_log
+    add 0, 0, [rb - 1]
+    add FDC_RW_REASON_NO_DMA, 0, [rb - 2]
+    add [rb + dma_count], 0, [rb - 3]
+    arb -3
+    call fdc_exec_read_write_data_log
 
     jz  0, .terminated
 
@@ -248,9 +255,11 @@ fdc_exec_read_data:
     # Floppy disk logging
     jz  [config_log_fdd], .bad_input_after_log
 
-    add [rb + dma_count], 0, [rb - 1]
-    arb -1
-    call fdc_exec_read_data_log
+    add 0, 0, [rb - 1]
+    add FDC_RW_REASON_BAD_INPUT, 0, [rb - 2]
+    add [rb + dma_count], 0, [rb - 3]
+    arb -3
+    call fdc_exec_read_write_data_log
 
 .bad_input_after_log:
     # Zero out cylinder, head and sector
@@ -270,9 +279,11 @@ fdc_exec_read_data:
     # Floppy disk logging
     jz  [config_log_fdd], .no_floppy_after_log
 
-    add [rb + dma_count], 0, [rb - 1]
-    arb -1
-    call fdc_exec_read_data_log
+    add 0, 0, [rb - 1]
+    add FDC_RW_REASON_NO_FLOPPY, 0, [rb - 2]
+    add [rb + dma_count], 0, [rb - 3]
+    arb -3
+    call fdc_exec_read_write_data_log
 
 .no_floppy_after_log:
     # Zero out cylinder, head and sector
@@ -293,13 +304,253 @@ fdc_exec_read_data:
 .ENDFRAME
 
 ##########
-fdc_exec_read_data_log:
-.FRAME dma_count; tmp
+fdc_exec_read_deleted_data:
+.FRAME
+    add .error, 0, [rb - 1]
+    arb -1
+    call report_error
+
+.error:
+    db  "fdc: read deleted data command is not supported", 0
+.ENDFRAME
+
+##########
+fdc_exec_write_data:
+.FRAME heads, sectors, dma_count, addr_c, addr_s, tmp
+    arb -6
+
+    add [dma_count_ch2], 0, [rb + dma_count]
+
+    # Prepare base value for ST0
+    mul [fdc_cmd_head], 0b00000100, [fdc_cmd_st0]
+    add [fdc_cmd_unit_selected], [fdc_cmd_st0], [fdc_cmd_st0]
+
+    # Is the unit connected?
+    add fdc_config_connected_units, [fdc_cmd_unit_selected], [ip + 1]
+    jz  [0], .no_floppy
+
+    # Is a floppy inserted?
+    add fdc_config_inserted_units, [fdc_cmd_unit_selected], [ip + 1]
+    jz  [0], .no_floppy
+
+    # Is the motor running?
+    add fdc_dor_enable_motor_units, [fdc_cmd_unit_selected], [ip + 1]
+    jz  [0], .no_floppy
+
+    # Floppy is accessible, report disk activity
+    jz  [fdc_activity_callback], .after_callback
+    add [fdc_cmd_unit_selected], 0, [rb - 1]
+    arb -1
+    call [fdc_activity_callback]
+
+.after_callback:
+    # Load floppy parameters
+    add fdc_medium_heads_units, [fdc_cmd_unit_selected], [ip + 1]
+    add [0], 0, [rb + heads]
+    add fdc_medium_sectors_units, [fdc_cmd_unit_selected], [ip + 1]
+    add [0], 0, [rb + sectors]
+
+    # Cylinder number must match the cylinder we are on
+    eq  [fdc_cmd_cylinder], [fdc_present_cylinder_units], [rb + tmp]
+    jz  [rb + tmp], .bad_input
+
+    # Head number must be in range
+    lt  [fdc_cmd_head], 0, [rb + tmp]
+    jnz [rb + tmp], .bad_input
+    lt  [fdc_cmd_head], [rb + heads], [rb + tmp]
+    jz  [rb + tmp], .bad_input
+
+    # Sector number must be in range (1-based)
+    lt  [fdc_cmd_sector], 1, [rb + tmp]
+    jnz [rb + tmp], .bad_input
+    lt  [rb + sectors], [fdc_cmd_sector], [rb + tmp]
+    jnz [rb + tmp], .bad_input
+
+    # Check the DMA controller
+    jnz [dma_disable_controller], .no_dma
+    jnz [dma_mask_ch2], .no_dma
+
+    eq  [dma_transfer_type_ch2], 2, [rb + tmp]              # transfer type must be read (2)
+    jz  [rb + tmp], .no_dma
+
+    eq  [dma_mode_ch2], 1, [rb + tmp]                       # only single mode is supported (1)
+    jz  [rb + tmp], .no_dma
+
+    # DMA is set up, start writing at head H sector S up to end of the track/cylinder,
+    # or until the DMA controller has no more data
+
+    # Calculate cylinder address in intcode memory:
+    # addr_c = floppy + cylinder * heads * sectors * 512
+    mul [fdc_cmd_cylinder], [rb + heads], [rb + addr_c]
+    mul [rb + addr_c], [rb + sectors], [rb + addr_c]
+    mul [rb + addr_c], 512, [rb + addr_c]
+    add [floppy], [rb + addr_c], [rb + addr_c]
+
+.loop:
+    # Does the DMA controller have more data?
+    eq  [dma_count_ch2], -1, [rb + tmp]
+    jnz [rb + tmp], .all_data_written
+
+    # Calculate sector address in intcode memory:
+    # addr_s = addr_c + (head * sectors + sector - 1) * 512
+    mul [fdc_cmd_head], [rb + sectors], [rb + addr_s]
+    add [rb + addr_s], [fdc_cmd_sector], [rb + addr_s]
+    add [rb + addr_s], -1, [rb + addr_s]
+    mul [rb + addr_s], 512, [rb + addr_s]
+    add [rb + addr_c], [rb + addr_s], [rb + addr_s]
+
+    # Receive one sector of data from DMA controller, channel 2
+    # TODO if N=0, DTL defines how much of each sector should we receive from DMA, not 512
+    add 2, 0, [rb - 1]
+    add [rb + addr_s], 0, [rb - 2]
+    add 512, 0, [rb - 3]
+    arb -3
+    call dma_send_data
+
+    # Move to next sector
+    add [fdc_cmd_sector], 1, [fdc_cmd_sector]
+
+    # Did we reach end of track?
+    lt  [rb + sectors], [fdc_cmd_sector], [rb + tmp]
+    jz  [rb + tmp], .loop
+
+    # End of track, move to sector 1
+    add 1, 0, [fdc_cmd_sector]
+
+    # Is this a multi-track operation?
+    jnz [fdc_cmd_multi_track], .multi_track
+
+    # Single track operation is finished, move to the same head on next cylinder
+    add [fdc_cmd_cylinder], 1, [fdc_cmd_cylinder]
+    jz  0, .all_data_written
+
+.multi_track:
+    # Multi-track operation, move to next side
+    add [fdc_cmd_head], 1, [fdc_cmd_head]
+
+    # Does this side actually exist on the disk?
+    lt  [fdc_cmd_head], [rb + heads], [rb + tmp]
+    jnz [rb + tmp], .loop
+
+    # No, end of cylinder, move to head 0 on next cylinder
+    add 0, 0, [fdc_cmd_head]
+    add [fdc_cmd_cylinder], 1, [fdc_cmd_cylinder]
+
+.all_data_written:
+    # The DMA controller does not have more data, or we have filled in all requested sectors
+    # Respond with ST0 (see above) ST1 ST2, and C H R N that was set up above
+    add 0, 0, [fdc_cmd_st1]
+    add 0, 0, [fdc_cmd_st2]
+
+    # Floppy disk logging
+    jz  [config_log_fdd], .terminated
+
+    add 1, 0, [rb - 1]
+    add FDC_RW_REASON_DONE, 0, [rb - 2]
+    add [rb + dma_count], 0, [rb - 3]
+    arb -3
+    call fdc_exec_read_write_data_log
+
+    jz  0, .terminated
+
+.no_dma:
+    # Floppy is accessible, but the DMA controller is not ready to accept data
+    # Set up ST0 (abnormal termination), ST1, ST2; keep head, cylinder and sector
+    add 0b01000000, [fdc_cmd_st0], [fdc_cmd_st0]
+    add 0, 0, [fdc_cmd_st1]
+    add 0, 0, [fdc_cmd_st2]
+
+    # Floppy disk logging
+    jz  [config_log_fdd], .terminated
+
+    add 1, 0, [rb - 1]
+    add FDC_RW_REASON_NO_DMA, 0, [rb - 2]
+    add [rb + dma_count], 0, [rb - 3]
+    arb -3
+    call fdc_exec_read_write_data_log
+
+    jz  0, .terminated
+
+.bad_input:
+    # Floppy is accessible, but input parameters are invalid
+    # Set up ST0 (abnormal termination), ST1 (end of cylinder, no data), ST2
+    # TODO only set ST1 bit 7 when sector is wrong
+    # TODO set up ST2 (bits 1, 4) when cylinder is wrong
+    add 0b01000000, [fdc_cmd_st0], [fdc_cmd_st0]
+    add 0b10000100, 0, [fdc_cmd_st1]
+    add 0, 0, [fdc_cmd_st2]
+
+    # Floppy disk logging
+    jz  [config_log_fdd], .bad_input_after_log
+
+    add 1, 0, [rb - 1]
+    add FDC_RW_REASON_BAD_INPUT, 0, [rb - 2]
+    add [rb + dma_count], 0, [rb - 3]
+    arb -3
+    call fdc_exec_read_write_data_log
+
+.bad_input_after_log:
+    # Zero out cylinder, head and sector
+    add 0, 0, [fdc_cmd_cylinder]
+    add 0, 0, [fdc_cmd_head]
+    add 0, 0, [fdc_cmd_sector]
+
+    jz  0, .terminated
+
+.no_floppy:
+    # Floppy is not accessible
+    # Set up ST0 (not ready, abnormal termination), ST1 (missing address mark, no data), ST2
+    add 0b01001000, [fdc_cmd_st0], [fdc_cmd_st0]
+    add 0b00000101, 0, [fdc_cmd_st1]
+    add 0, 0, [fdc_cmd_st2]
+
+    # Floppy disk logging
+    jz  [config_log_fdd], .no_floppy_after_log
+
+    add 1, 0, [rb - 1]
+    add FDC_RW_REASON_NO_FLOPPY, 0, [rb - 2]
+    add [rb + dma_count], 0, [rb - 3]
+    arb -3
+    call fdc_exec_read_write_data_log
+
+.no_floppy_after_log:
+    # Zero out cylinder, head and sector
+    add 0, 0, [fdc_cmd_cylinder]
+    add 0, 0, [fdc_cmd_head]
+    add 0, 0, [fdc_cmd_sector]
+
+.terminated:
+    # Trigger IRQ6
+    add 1, 0, [fdc_interrupt_pending]
+
+    add 6, 0, [rb - 1]
+    arb -1
+    call interrupt_request
+
+    arb 6
+    ret 0
+.ENDFRAME
+
+##########
+fdc_exec_write_deleted_data:
+.FRAME
+    add .error, 0, [rb - 1]
+    arb -1
+    call report_error
+
+.error:
+    db  "fdc: write deleted data command ","is not supported", 0
+.ENDFRAME
+
+##########
+fdc_exec_read_write_data_log:
+.FRAME write, reason, dma_count; tmp
     arb -1
 
     call log_start
 
-    add .start_msg, 0, [rb - 1]
+    add .read_write_msg, [rb + write], [ip + 1]
+    add [0], 0, [rb - 1]
     arb -1
     call print_str
 
@@ -350,19 +601,31 @@ fdc_exec_read_data_log:
     arb -1
     call print_num
 
+    add .reason_msg, [rb + reason], [ip + 1]
+    add [0], 0, [rb - 1]
+    arb -1
+    call print_str
+
     out 10
 
     arb 1
-    ret 1
+    ret 3
 
-.start_msg:
-    db  "fdd read data: ", 0
+.read_write_msg:
+    db  .read_msg
+    db  .write_msg
+.read_msg:
+    db  "fdd read data:  ", 0
+.write_msg:
+    db  "fdd write data: ", 0
+
 .mt_msg:
     db  ", multi-track", 0
 .cnt_f_msg:
     db  ", bytes ", 0
 .cnt_t_msg:
     db  " -> ", 0
+
 .result_msg:
     db  .failure_msg
     db  .success_msg
@@ -370,52 +633,25 @@ fdc_exec_read_data_log:
     db  "FAILURE", 0
 .success_msg:
     db  "SUCCESS", 0
-.ENDFRAME
 
-##########
-fdc_exec_read_deleted_data:
-.FRAME
-    add .error, 0, [rb - 1]
-    arb -1
-    call report_error
+.SYMBOL FDC_RW_REASON_DONE              0
+.SYMBOL FDC_RW_REASON_NO_DMA            1
+.SYMBOL FDC_RW_REASON_BAD_INPUT         2
+.SYMBOL FDC_RW_REASON_NO_FLOPPY         3
 
-.error:
-    db  "fdc: read deleted data command is not supported", 0
-.ENDFRAME
-
-##########
-fdc_exec_write_data:
-.FRAME
-    # TODO for now, return a valid "write protected" status
-    # TODO implement write data
-    # TODO disk activity
-
-#    # Trigger IRQ6
-#    add 1, 0, [fdc_interrupt_pending]
-#
-#    add 6, 0, [rb - 1]
-#    arb -1
-#    call interrupt_request
-#
-#    ret 0
-
-    add .error, 0, [rb - 1]
-    arb -1
-    call report_error
-
-.error:
-    db  "fdc: write data command ","is not implemented", 0
-.ENDFRAME
-
-##########
-fdc_exec_write_deleted_data:
-.FRAME
-    add .error, 0, [rb - 1]
-    arb -1
-    call report_error
-
-.error:
-    db  "fdc: write deleted data command ","is not supported", 0
+.reason_msg:
+    db  .reason_done_msg
+    db  .reason_no_dma_msg
+    db  .reason_bad_input_msg
+    db  .reason_no_floppy_msg
+.reason_done_msg:
+    db  ", done", 0
+.reason_no_dma_msg:
+    db  ", DMA not set up", 0
+.reason_bad_input_msg:
+    db  ", invalid input", 0
+.reason_no_floppy_msg:
+    db  ", no floppy", 0
 .ENDFRAME
 
 ##########

@@ -29,8 +29,8 @@
 
 ##########
 log_dos_21_call:
-.FRAME description, log_handler, tmp
-    arb -3
+.FRAME log_handler, tmp
+    arb -2
 
     # TODO print where was the int 21h called (we have that saved in interrupt.s)
 
@@ -48,24 +48,26 @@ log_dos_21_call:
     out ' '
 
     # Do we have a function description?
-    add dos_21_description_unknown, 0, [rb + description]
     lt  [reg_ah], DOS_21_FUNCTION_COUNT, [rb + tmp]
-    jz  [rb + tmp], .print_description
+    jnz [rb + tmp], .known_function
 
-    # Yes, find description in the table
-    mul [reg_ah], DOS_21_DESCRIPTION_LENGTH, [rb + description]
-    add dos_21_descriptions, [rb + description], [rb + description]
+    # Print "unknown function"
+    add dos_21_description_unknown, 0, [rb - 1]
+    arb -1
+    call print_str
 
-.print_description:
-    # Print description
-    add [rb + description], 0, [rb - 1]
+    jz  0, .done
+
+.known_function:
+    # Find function description in the table and print it
+    mul [reg_ah], DOS_21_DESCRIPTION_LENGTH, [rb + tmp]
+    add dos_21_descriptions, [rb + tmp], [rb - 1]
     arb -1
     call print_str
 
     # Is there a function-specific log handler?
     add dos_21_log_handlers, [reg_ah], [ip + 1]
     add [0], 0, [rb + log_handler]
-
     jz  [rb + log_handler], .done
 
     # Yes, output the function-specific log
@@ -74,7 +76,7 @@ log_dos_21_call:
 .done:
     out 10
 
-    arb 3
+    arb 2
     ret 0
 
 .msg:
