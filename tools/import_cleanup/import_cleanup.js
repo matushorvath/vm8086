@@ -62,6 +62,14 @@ const main = async () => {
             const exportFromDir = exports[path.join(sourceDir, importFile)];
 
             if (exportFromRoot === undefined && exportFromDir === undefined) {
+                const genFromRoot = path.join(path.dirname(importFile), `gen_${path.basename(importFile)}`);
+                const genFromDir = path.join(sourceDir, `gen_${path.basename(importFile)}`);
+
+                if (exports[genFromRoot] !== undefined || exports[genFromDir] !== undefined) {
+                    // Ignore imports from generated files, as long as the generator exists
+                    continue;
+                }
+
                 console.log(`${source}: "From ${importFile}": File does not exist; candidates: ${getCandidates(exports, source, importSymbol)}`);
                 continue;
             }
