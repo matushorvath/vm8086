@@ -11,12 +11,12 @@
 // - cat modified-LICENSE | tr q '\037' > monitor/test.in
 
 // Run the VM with logs in second window;
-// - make run | ./monitor/split 2> /dev/pts/0
+// - make run | ./tools/monitor/split 2> /dev/pts/0
 
 // Run the VM with logs redirected to less:
 // - mkfifo log.pipe
 // - less -f log.pipe
-// - make run | ./monitor/split 2> ../log.pipe
+// - make run | ./tools/monitor/split 2> ../log.pipe
 
 import '@ungap/with-resolvers';
 

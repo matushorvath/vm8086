@@ -5,7 +5,7 @@ BINDIR ?= bin
 OBJDIR ?= obj
 
 SRCDIRS = util cga cpu dev fdc img vm
-TOOLSDIR = monitor
+TOOLSDIR = tools/monitor
 TESTDIRS = test-bochs test-cpu
 
 # Build VM
@@ -70,7 +70,7 @@ clean: $(CLEAN_TARGETS)
 $(CLEAN_TARGETS):
 	make -C $(patsubst clean-%,%,$@) clean
 
-VERY_CLEAN_TARGETS = very-clean-img very-clean-monitor
+VERY_CLEAN_TARGETS = very-clean-img very-clean-tools/monitor
 
 .PHONY: very-clean
 very-clean: clean $(VERY_CLEAN_TARGETS)

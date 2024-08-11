@@ -6,7 +6,6 @@
 /img/AV
 /img/NC
 /img/PRINCE
-/monitor/node_modules
 /obj
 /test-bochs/*/bin
 /test-bochs/*/obj
@@ -14,5 +13,5 @@
 /test-bochs/test.log
 /test-cpu/obj
 /test-cpu/res
-/test-cpu/node_modules
 /test-cpu/test*.log
+node_modules
