@@ -50,6 +50,7 @@ int read_sync(void) {
 }
 
 int read_async(void) {
+#ifndef NO_POLL
     // is there data to read?
     struct pollfd fd = {};
     fd.fd = STDIN_FILENO;
@@ -70,6 +71,7 @@ int read_async(void) {
             return READ_NO_DATA;
         }
     }
+#endif // NO_POLL
 
     // read the data
     char ch = -1;
@@ -94,6 +96,7 @@ int main() {
     const char *instruction;
 
     // INA:                     10000000 = 9.2s
+    // INA w/o poll:            10000000 = 5.1s
     // IN:  1000000000 = 2.9s   10000000 = 0.03s
     while (result != READ_EOF && countRead < 10000000) {
 #ifdef INA
