@@ -1,5 +1,8 @@
+// CFLAGS='-O3' make test-in && time ./test-in < /dev/zero
 // CFLAGS='-O3 -DINA' make test-in && time ./test-in < /dev/zero
-// CFLAGS='-O3 -DIN' make test-in && time ./test-in < /dev/zero
+// CFLAGS='-O3 -DINA -DNO_POLL' make test-in && time ./test-in < /dev/zero
+// CFLAGS='-O3 -DINA -DZERO_TIMEOUT' make test-in && time ./test-in < /dev/zero
+// CFLAGS='-O3 -DINA -DNON_BLOCK' make test-in && time ./test-in < /dev/zero
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -8,6 +11,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <poll.h>
+#include <fcntl.h>
 #include <errno.h>
 
 #define READ_EOF                        -1
@@ -31,6 +35,10 @@ void restore_terminal(void) {
 
 void init_terminal(bool extended) {
     if (extended) {
+#ifdef NON_BLOCK
+        fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL) | O_NONBLOCK);
+#endif // NON_BLOCK
+
         tcgetattr(STDIN_FILENO, &orig_attr);
         atexit(&restore_terminal);
 
@@ -40,6 +48,11 @@ void init_terminal(bool extended) {
         attr.c_cflag |= (CS8);
         attr.c_lflag &= ~(ECHO | ICANON | IEXTEN); // keep ISIG for Ctrl+C, Ctrl+Z
 
+#ifdef ZERO_TIMEOUT
+        attr.c_cc[VMIN] = 0;
+        attr.c_cc[VTIME] = 0;
+#endif // ZERO_TIMEOUT
+
         tcsetattr(STDIN_FILENO, TCSAFLUSH, &attr);
     }
 }
@@ -48,6 +61,38 @@ int read_sync(void) {
     int ch = getc(stdin);
     return ch == EOF ? READ_EOF : ch;
 }
+
+#ifdef ZERO_TIMEOUT
+
+// Note: Doesn't work when stdin is a terminal
+int read_async(void) {
+    int ch = getc(stdin);
+    return ch == EOF ? READ_EOF : ch;
+}
+
+#elif NON_BLOCK
+
+int read_async(void) {
+    char ch = -1;
+    ssize_t size = read(STDIN_FILENO, &ch, 1);
+
+    if (size < 0) {
+        if (errno == EAGAIN) {
+            return READ_NO_DATA;
+        }
+
+        fprintf(stderr, "error while reading input: %i", errno);
+        exit(1);
+    }
+
+    if (size == 0) {
+        return READ_EOF;
+    }
+
+    return ch;
+}
+
+#else
 
 int read_async(void) {
 #ifndef NO_POLL
@@ -88,6 +133,8 @@ int read_async(void) {
     return ch;
 }
 
+#endif
+
 int main() {
     init_terminal(true);
 
@@ -96,9 +143,11 @@ int main() {
     const char *instruction;
 
     // INA:                     10000000 = 9.2s
-    // INA w/o poll:            10000000 = 5.1s
+    // INA NO_POLL:             10000000 = 5.1s     is sync
+    // INA ZERO_TIMEOUT         10000000 = 5.1s     does not work with terminal
+    // INA NON_BLOCK:           10000000 = 4.5s     works
     // IN:  1000000000 = 2.9s   10000000 = 0.03s
-    while (result != READ_EOF && countRead < 10000000) {
+    while (result != READ_EOF && countRead < 5) {
 #ifdef INA
         instruction = "ina";
         result = READ_NO_DATA;
