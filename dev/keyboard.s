@@ -71,11 +71,9 @@ handle_keyboard:
     # Read next character if available
     db  213, char                       # ina [rb + char]
     eq  [rb + char], -1, [rb + tmp]
-    jnz [rb + tmp], .done
+    jnz [rb + tmp], .esc_nothing
 
     # Continue the escape sequence
-    eq  [rb + char], 0x1b, [rb + tmp]
-    jnz [rb + tmp], .esc_esc
     eq  [rb + char], 0x4f, [rb + tmp]
     jnz [rb + tmp], .esc_4f_wait
     eq  [rb + char], 0x5b, [rb + tmp]
@@ -83,9 +81,8 @@ handle_keyboard:
 
     jz  0, .done
 
-.esc_esc:
-    # Double escape, simulate pressing the escape key once
-    # TODO do not require two escape key presses to generate one escape
+.esc_nothing:
+    # Escape followed by nothing, press the escape key
     add 0x01, 0, [current_make_code]
     jz  0, .generic_lowercase_make_break
 
