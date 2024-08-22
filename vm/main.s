@@ -11,6 +11,7 @@
 
 # From floppy.o
 .IMPORT floppy_a_image
+.IMPORT floppy_b_image
 
 # From vm_ports.s
 .IMPORT init_vm_ports
@@ -45,9 +46,6 @@
 # From fdc/init.s
 .IMPORT init_fdc
 
-# TODO remove
-.IMPORT floppy_a
-
 ##########
 # Entry point
     # magic instruction; extended VM starts at extended_init
@@ -78,7 +76,9 @@ init:
 
 ##########
 main:
-.FRAME
+.FRAME floppy_a, floppy_b
+    arb -2
+
     call init_vm_callback
 
     # Initialize the ROM and floppy images
@@ -88,7 +88,9 @@ main:
     add floppy_a_image, 0, [rb - 4]
     arb -4
     call init_images
-    # TODO xxx return floppy images for init_fdc
+
+    add [rb - 6], 0, [rb + floppy_a]
+    add [rb - 7], 0, [rb + floppy_b]
 
     # Make the ROM read-only
     add [bios_address], 0, [rb - 1]
@@ -108,14 +110,15 @@ main:
     call init_vm_ports
 
     # Initialize floppy drives
-    add [floppy_a], 0, [rb - 1]
-    add 0, 0, [rb - 2] # TODO floppy_b
+    add [rb + floppy_a], 0, [rb - 1]
+    add [rb + floppy_b], 0, [rb - 2]
     arb -2
     call init_fdc
 
     # Start the CPU
     call execute
 
+    arb 2
     ret 0
 .ENDFRAME
 

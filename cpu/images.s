@@ -1,8 +1,6 @@
 .EXPORT init_rom_image
 .EXPORT init_images
 
-.EXPORT floppy_a
-
 # From state.s
 .IMPORT mem
 
@@ -31,8 +29,13 @@ init_rom_image:
 
 ##########
 init_images:
-.FRAME rom_address, rom_image, floppy_image_size, floppy_image;
-    # This function assumes the ROM image is in memory immediately before the floppy image
+.FRAME rom_address, rom_image, floppy_image_size, floppy_image; floppy_a, floppy_b                  # returns floppy_a, floppy_b
+    arb -2
+
+    # This function assumes the ROM image is in memory immediately before the optional floppy images
+
+    add 0, 0, [rb + floppy_a]
+    add 0, 0, [rb + floppy_b]
 
     # Validate the ROM address
     add [rb + rom_address], 0, [rb - 1]
@@ -58,12 +61,12 @@ init_images:
     add [rb + floppy_image_size], 0, [rb - 1]
     arb -1
     call sbrk
-    add [rb - 3], 0, [floppy_a]
+    add [rb - 3], 0, [rb + floppy_a]
 
     # Inflate the floppy image
     add [rb + floppy_image], 0, [rb - 1]
-    add [floppy_a], 0, [rb - 2]
-    add [floppy_a], [rb + floppy_image_size], [rb - 3]
+    add [rb + floppy_a], 0, [rb - 2]
+    add [rb + floppy_a], [rb + floppy_image_size], [rb - 3]
     arb -3
     call inflate_image
 
@@ -75,6 +78,7 @@ init_images:
     arb -3
     call inflate_image
 
+    arb 2
     ret 4
 .ENDFRAME
 
@@ -177,9 +181,5 @@ move_memory_reverse:
     arb 1
     ret 3
 .ENDFRAME
-
-##########
-floppy_a:
-    db  0
 
 .EOF
