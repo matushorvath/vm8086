@@ -21,10 +21,6 @@
 # From the config file
 .IMPORT config_log_fdd
 
-# From config.s
-.IMPORT fdc_config_connected_units
-.IMPORT fdc_config_inserted_units
-
 # From control.s
 .IMPORT fdc_dor_enable_motor_units
 .IMPORT fdc_interrupt_pending
@@ -35,9 +31,7 @@
 .IMPORT fdc_medium_sectors_units
 .IMPORT fdc_present_cylinder_units
 .IMPORT fdc_present_sector_units
-
-# From init.s
-.IMPORT fdc_error_non_dma
+.IMPORT fdc_image_units
 
 # From state_machine.s
 .IMPORT fdc_cmd_multi_track
@@ -97,12 +91,8 @@ fdc_exec_read_data:
     mul [fdc_cmd_head], 0b00000100, [fdc_cmd_st0]
     add [fdc_cmd_unit_selected], [fdc_cmd_st0], [fdc_cmd_st0]
 
-    # Is the unit connected?
-    add fdc_config_connected_units, [fdc_cmd_unit_selected], [ip + 1]
-    jz  [0], .no_floppy
-
-    # Is a floppy inserted?
-    add fdc_config_inserted_units, [fdc_cmd_unit_selected], [ip + 1]
+    # Is the floppy available?
+    add fdc_image_units, [fdc_cmd_unit_selected], [ip + 1]
     jz  [0], .no_floppy
 
     # Is the motor running?
@@ -325,12 +315,8 @@ fdc_exec_write_data:
     mul [fdc_cmd_head], 0b00000100, [fdc_cmd_st0]
     add [fdc_cmd_unit_selected], [fdc_cmd_st0], [fdc_cmd_st0]
 
-    # Is the unit connected?
-    add fdc_config_connected_units, [fdc_cmd_unit_selected], [ip + 1]
-    jz  [0], .no_floppy
-
-    # Is a floppy inserted?
-    add fdc_config_inserted_units, [fdc_cmd_unit_selected], [ip + 1]
+    # Is the floppy available?
+    add fdc_image_units, [fdc_cmd_unit_selected], [ip + 1]
     jz  [0], .no_floppy
 
     # Is the motor running?
@@ -686,12 +672,8 @@ fdc_exec_read_id:
     mul [fdc_cmd_head], 0b00000100, [fdc_cmd_st0]
     add [fdc_cmd_unit_selected], [fdc_cmd_st0], [fdc_cmd_st0]
 
-    # Is the unit connected?
-    add fdc_config_connected_units, [fdc_cmd_unit_selected], [ip + 1]
-    jz  [0], .no_floppy
-
-    # Is a floppy inserted?
-    add fdc_config_inserted_units, [fdc_cmd_unit_selected], [ip + 1]
+    # Is the floppy available?
+    add fdc_image_units, [fdc_cmd_unit_selected], [ip + 1]
     jz  [0], .no_floppy
 
     # Is the motor running?
@@ -854,12 +836,8 @@ fdc_exec_recalibrate:
     mul [fdc_cmd_head], 0b00000100, [fdc_cmd_st0]
     add [fdc_cmd_unit_selected], [fdc_cmd_st0], [fdc_cmd_st0]
 
-    # Is the unit connected?
-    add fdc_config_connected_units, [fdc_cmd_unit_selected], [ip + 1]
-    jz  [0], .no_floppy
-
-    # Is a floppy inserted?
-    add fdc_config_inserted_units, [fdc_cmd_unit_selected], [ip + 1]
+    # Is the floppy available?
+    add fdc_image_units, [fdc_cmd_unit_selected], [ip + 1]
     jz  [0], .no_floppy
 
     # Is the motor running?
@@ -904,9 +882,12 @@ fdc_exec_specify:
     ret 0
 
 .non_dma:
-    add fdc_error_non_dma, 0, [rb - 1]
+    add .non_dma_msg, 0, [rb - 1]
     arb -1
     call report_error
+
+.non_dma_msg:
+    db  "fdc: Non-DMA operation is not supported", 0
 .ENDFRAME
 
 ##########
@@ -932,12 +913,8 @@ fdc_exec_seek:
     mul [fdc_cmd_head], 0b00000100, [fdc_cmd_st0]
     add [fdc_cmd_unit_selected], [fdc_cmd_st0], [fdc_cmd_st0]
 
-    # Is the unit connected?
-    add fdc_config_connected_units, [fdc_cmd_unit_selected], [ip + 1]
-    jz  [0], .no_floppy
-
-    # Is a floppy inserted?
-    add fdc_config_inserted_units, [fdc_cmd_unit_selected], [ip + 1]
+    # Is the floppy available?
+    add fdc_image_units, [fdc_cmd_unit_selected], [ip + 1]
     jz  [0], .no_floppy
 
     # Is the motor running?

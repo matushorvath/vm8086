@@ -5,36 +5,27 @@
 .EXPORT fdc_medium_heads_units
 .EXPORT fdc_medium_sectors_units
 
+.EXPORT fdc_image_units
+
 # Current head positions
 fdc_present_cylinder_units:
-fdc_present_cylinder_unit0:
-    db  0
-fdc_present_cylinder_unit1:
-    db  0
+    ds  2, 0
 
 fdc_present_sector_units:
-fdc_present_sector_unit0:
-    db  0
-fdc_present_sector_unit1:
-    db  0
+    ds  2, 0
 
 # Inserted floppy parameters
 fdc_medium_cylinders_units:
-fdc_medium_cylinders_unit0:
-    db  0
-fdc_medium_cylinders_unit1:
-    db  0
+    ds  2, 0
 
 fdc_medium_heads_units:
-fdc_medium_heads_unit0:
-    db  0
-fdc_medium_heads_unit1:
-    db  0
+    ds  2, 0
 
 fdc_medium_sectors_units:
-fdc_medium_sectors_unit0:
-    db  0
-fdc_medium_sectors_unit1:
-    db  0
+    ds  2, 0
+
+# Floppy image pointers
+fdc_image_units:
+    ds  2, 0
 
 .EOF

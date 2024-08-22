@@ -45,6 +45,9 @@
 # From fdc/init.s
 .IMPORT init_fdc
 
+# TODO remove
+.IMPORT floppy_a
+
 ##########
 # Entry point
     # magic instruction; extended VM starts at extended_init
@@ -85,6 +88,7 @@ main:
     add floppy_a_image, 0, [rb - 4]
     arb -4
     call init_images
+    # TODO xxx return floppy images for init_fdc
 
     # Make the ROM read-only
     add [bios_address], 0, [rb - 1]
@@ -101,8 +105,13 @@ main:
     call init_ps2_8042
     call init_dma_8237a
     call init_cga
-    call init_fdc
     call init_vm_ports
+
+    # Initialize floppy drives
+    add [floppy_a], 0, [rb - 1]
+    add 0, 0, [rb - 2] # TODO floppy_b
+    arb -2
+    call init_fdc
 
     # Start the CPU
     call execute

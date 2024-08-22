@@ -9,9 +9,6 @@
 # From the config file
 .IMPORT config_log_fdc
 
-# From init.s
-.IMPORT fdc_error_non_dma
-
 # From state_machine.s
 .IMPORT fdc_cmd_state
 .IMPORT fdc_cmd_result_phase
