@@ -18,10 +18,12 @@ FLOPPY ?= freedos-simple
 FLOPPY_A_BIN ?= $(abspath $(VMDIR)/img/$(word 1,$(FLOPPY)).img)
 FLOPPY_B_BIN ?= $(abspath $(VMDIR)/img/$(word 2,$(FLOPPY)).img)
 
-FLOPPY_A_NAME = $(basename $(notdir $(FLOPPY_A_BIN)))
-FLOPPY_B_NAME = $(basename $(notdir $(FLOPPY_B_BIN)))
+FLOPPY_A_NAME = $(patsubst %,%.floppy-a,$(basename $(notdir $(FLOPPY_A_BIN))))
+FLOPPY_B_NAME = $(patsubst %,%.floppy-b,$(basename $(notdir $(FLOPPY_B_BIN))))
 
-VM_NAME = vm.$(BIOS_NAME).$(FLOPPY_A_NAME)$(if $(FLOPPY_B_NAME),.$(FLOPPY_B_NAME)).input
+# this defines a string with a single space
+SPACE = $(eval) $(eval)
+VM_NAME = vm.$(BIOS_NAME).$(subst $(SPACE),.,$(FLOPPY)).input
 
 BINDIR ?= $(VMDIR)/bin
 OBJDIR ?= $(VMDIR)/obj/vm
