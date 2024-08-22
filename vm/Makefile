@@ -43,7 +43,7 @@ run: build
 
 VM_OBJS = main.o callback.o config.o vm_ports.o $(BIOS_NAME)_address.o $(BINDIR)/libcpu.a \
 	$(BINDIR)/libcga.a $(BINDIR)/libdev.a $(BINDIR)/libfdc.a $(BINDIR)/libutil.a $(LIBXIB) \
-	$(BIOS_NAME:=.o) $(FLOPPY_A_NAME:=.o) $(FLOPPY_B_NAME:=.o) $(OBJDIR)/fake_floppy.a
+	$(BIOS_NAME:=.o) $(FLOPPY_A_NAME:=.o) $(if $(FLOPPY_B_NAME),$(FLOPPY_B_NAME:=.o),fake_floppy_b.o)
 
 $(BINDIR)/$(VM_NAME): $(VM_OBJS:%.o=$(OBJDIR)/%.o)
 	$(run-intcode-ld)
@@ -69,9 +69,6 @@ $(OBJDIR)/$(FLOPPY_A_NAME).o: $(FLOPPY_A_BIN)
 $(OBJDIR)/$(FLOPPY_B_NAME).o: $(FLOPPY_B_BIN)
 	$(eval BIN2OBJ_NAME = floppy_b)
 	$(run-intcode-bin2obj)
-
-$(OBJDIR)/fake_floppy.a: $(OBJDIR)/fake_floppy.o
-	$(run-intcode-ar)
 
 .PHONY: clean
 clean:

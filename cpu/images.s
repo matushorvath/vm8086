@@ -14,6 +14,8 @@
 .IMPORT brk
 .IMPORT sbrk
 
+.SYMBOL FLOPPY_144_SIZE 1474560
+
 ##########
 init_rom_image:
 .FRAME rom_address, rom_image;
@@ -29,7 +31,7 @@ init_rom_image:
 
 ##########
 init_images:
-.FRAME rom_address, rom_image, floppy_image_size, floppy_image; floppy_a, floppy_b                  # returns floppy_a, floppy_b
+.FRAME rom_address, rom_image, floppy_a_image, floppy_b_image; floppy_a, floppy_b                   # returns floppy_a, floppy_b
     arb -2
 
     # This function assumes the ROM image is in memory immediately before the optional floppy images
@@ -54,23 +56,40 @@ init_images:
     call sbrk
     add [rb - 3], 0, [mem]
 
-    # Skip floppy image initialization if there is no floppy
-    jz  [rb + floppy_image_size], .after_floppy
+    # Skip floppy B: image initialization if there is no floppy
+    jz  [rb + floppy_b_image], .after_floppy_b
 
     # Reserve space for the floppy image
-    add [rb + floppy_image_size], 0, [rb - 1]
+    add FLOPPY_144_SIZE, 0, [rb - 1]
+    arb -1
+    call sbrk
+    add [rb - 3], 0, [rb + floppy_b]
+
+    # Inflate the floppy image
+    add [rb + floppy_b_image], 0, [rb - 1]
+    add [rb + floppy_b], 0, [rb - 2]
+    add [rb + floppy_b], FLOPPY_144_SIZE, [rb - 3]
+    arb -3
+    call inflate_image
+
+.after_floppy_b:
+    # Skip floppy A: image initialization if there is no floppy
+    jz  [rb + floppy_a_image], .after_floppy_a
+
+    # Reserve space for the floppy image
+    add FLOPPY_144_SIZE, 0, [rb - 1]
     arb -1
     call sbrk
     add [rb - 3], 0, [rb + floppy_a]
 
     # Inflate the floppy image
-    add [rb + floppy_image], 0, [rb - 1]
+    add [rb + floppy_a_image], 0, [rb - 1]
     add [rb + floppy_a], 0, [rb - 2]
-    add [rb + floppy_a], [rb + floppy_image_size], [rb - 3]
+    add [rb + floppy_a], FLOPPY_144_SIZE, [rb - 3]
     arb -3
     call inflate_image
 
-.after_floppy:
+.after_floppy_a:
     # Inflate the ROM
     add [rb + rom_image], 0, [rb - 1]
     add [mem], [rb + rom_address], [rb - 2]

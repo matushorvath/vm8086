@@ -1,6 +1,8 @@
 // Clean up the "# From" comments
 // node import_cleanup.mjs ~/intcode/vm8086
 
+// TODO detect unused imported symbols
+
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import dotgit from 'dotgitignore';
