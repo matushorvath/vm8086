@@ -1,8 +1,7 @@
 .EXPORT init_rom_image
 .EXPORT init_images
 
-.EXPORT floppy
-.EXPORT floppy_size
+.EXPORT floppy_a
 
 # From state.s
 .IMPORT mem
@@ -55,18 +54,16 @@ init_images:
     # Skip floppy image initialization if there is no floppy
     jz  [rb + floppy_image_size], .after_floppy
 
-    add [rb + floppy_image_size], 0, [floppy_size]
-
     # Reserve space for the floppy image
-    add [floppy_size], 0, [rb - 1]
+    add [rb + floppy_image_size], 0, [rb - 1]
     arb -1
     call sbrk
-    add [rb - 3], 0, [floppy]
+    add [rb - 3], 0, [floppy_a]
 
     # Inflate the floppy image
     add [rb + floppy_image], 0, [rb - 1]
-    add [floppy], 0, [rb - 2]
-    add [floppy], [floppy_size], [rb - 3]
+    add [floppy_a], 0, [rb - 2]
+    add [floppy_a], [rb + floppy_image_size], [rb - 3]
     arb -3
     call inflate_image
 
@@ -182,9 +179,7 @@ move_memory_reverse:
 .ENDFRAME
 
 ##########
-floppy:
-    db  0
-floppy_size:
+floppy_a:
     db  0
 
 .EOF

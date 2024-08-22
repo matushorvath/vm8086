@@ -57,7 +57,7 @@
 .IMPORT fdc_cmd_st3
 
 # From cpu/images.s
-.IMPORT floppy
+.IMPORT floppy_a
 
 # From dev/dma_8237a.s
 .IMPORT dma_disable_controller
@@ -156,7 +156,7 @@ fdc_exec_read_data:
     mul [fdc_cmd_cylinder], [rb + heads], [rb + addr_c]
     mul [rb + addr_c], [rb + sectors], [rb + addr_c]
     mul [rb + addr_c], 512, [rb + addr_c]
-    add [floppy], [rb + addr_c], [rb + addr_c]
+    add [floppy_a], [rb + addr_c], [rb + addr_c]
 
 .loop:
     # Does the DMA controller expect more data?
@@ -384,7 +384,7 @@ fdc_exec_write_data:
     mul [fdc_cmd_cylinder], [rb + heads], [rb + addr_c]
     mul [rb + addr_c], [rb + sectors], [rb + addr_c]
     mul [rb + addr_c], 512, [rb + addr_c]
-    add [floppy], [rb + addr_c], [rb + addr_c]
+    add [floppy_a], [rb + addr_c], [rb + addr_c]
 
 .loop:
     # Does the DMA controller have more data?

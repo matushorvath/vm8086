@@ -61,7 +61,7 @@ $(OBJDIR)/$(BIOS_NAME)_address.s: bios_address.template
 	sed -e 's/BIOS_ADDRESS/$(BIOS_ADDRESS)/g' < $< > $@
 
 $(OBJDIR)/$(FLOPPY_A_NAME).o: $(FLOPPY_A_BIN)
-	$(eval BIN2OBJ_NAME = floppy) # TODO floppy_a
+	$(eval BIN2OBJ_NAME = floppy_a)
 	$(run-intcode-bin2obj)
 
 $(OBJDIR)/$(FLOPPY_B_NAME).o: $(FLOPPY_B_BIN)

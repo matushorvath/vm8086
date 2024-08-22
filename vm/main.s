@@ -10,7 +10,7 @@
 .IMPORT init_vm_callback
 
 # From floppy.o
-.IMPORT floppy_image
+.IMPORT floppy_a_image
 
 # From vm_ports.s
 .IMPORT init_vm_ports
@@ -82,7 +82,7 @@ main:
     add [bios_address], 0, [rb - 1]
     add bios_image, 0, [rb - 2]
     add 1474560, 0, [rb - 3]
-    add floppy_image, 0, [rb - 4]
+    add floppy_a_image, 0, [rb - 4]
     arb -4
     call init_images
 
