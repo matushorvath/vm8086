@@ -8,13 +8,13 @@
 #  - https://vetusware.com/download/T602%203.0%20CZ -> t602-3.zip
 
 FLOPPY ?= freedos-simple
-BUILD_TARGET=$(FLOPPY).img
+BUILD_TARGETS=$(patsubst %,%.img,$(FLOPPY))
 
 .PHONY: build-all
 build-all: checksum freedos msdos
 
 .PHONY: build
-build: $(BUILD_TARGET)
+build: $(BUILD_TARGETS)
 
 .PHONY: checksum
 checksum: hash.md5 av.zip freedos.zip freedos-simple.img.xz msdos.7z nc.7z prince.zip \

@@ -11,15 +11,20 @@ else
 	BIOS_ADDRESS ?= fc000
 endif
 
+BIOS_NAME = $(basename $(notdir $(BIOS_BIN)))
+
 FLOPPY ?= freedos-simple
-FLOPPY_BIN = $(abspath $(VMDIR)/img/$(FLOPPY).img)
+
+FLOPPY_A_BIN ?= $(abspath $(VMDIR)/img/$(word 1,$(FLOPPY)).img)
+FLOPPY_B_BIN ?= $(abspath $(VMDIR)/img/$(word 2,$(FLOPPY)).img)
+
+FLOPPY_A_NAME = $(basename $(notdir $(FLOPPY_A_BIN)))
+FLOPPY_B_NAME = $(basename $(notdir $(FLOPPY_B_BIN)))
+
+VM_NAME = vm.$(BIOS_NAME).$(FLOPPY_A_NAME)$(if $(FLOPPY_B_NAME),.$(FLOPPY_B_NAME)).input
 
 BINDIR ?= $(VMDIR)/bin
 OBJDIR ?= $(VMDIR)/obj/vm
-
-BIOS_NAME = $(basename $(notdir $(BIOS_BIN)))
-FLOPPY_NAME = $(basename $(notdir $(FLOPPY_BIN)))
-VM_NAME = vm.$(BIOS_NAME).$(FLOPPY_NAME).input
 
 .PHONY: build
 build: build-prep $(BINDIR)/$(VM_NAME)
@@ -36,7 +41,7 @@ run: build
 
 VM_OBJS = main.o callback.o config.o vm_ports.o $(BIOS_NAME)_address.o $(BINDIR)/libcpu.a \
 	$(BINDIR)/libcga.a $(BINDIR)/libdev.a $(BINDIR)/libfdc.a $(BINDIR)/libutil.a $(LIBXIB) \
-	$(BIOS_NAME).o $(FLOPPY_NAME).o
+	$(BIOS_NAME:=.o) $(FLOPPY_A_NAME:=.o) $(FLOPPY_B_NAME:=.o)
 
 $(BINDIR)/$(VM_NAME): $(VM_OBJS:%.o=$(OBJDIR)/%.o)
 	$(run-intcode-ld)
@@ -55,8 +60,12 @@ $(OBJDIR)/$(BIOS_NAME)_address.o: $(OBJDIR)/$(BIOS_NAME)_address.s
 $(OBJDIR)/$(BIOS_NAME)_address.s: bios_address.template
 	sed -e 's/BIOS_ADDRESS/$(BIOS_ADDRESS)/g' < $< > $@
 
-$(OBJDIR)/$(FLOPPY_NAME).o: $(FLOPPY_BIN)
-	$(eval BIN2OBJ_NAME = floppy)
+$(OBJDIR)/$(FLOPPY_A_NAME).o: $(FLOPPY_A_BIN)
+	$(eval BIN2OBJ_NAME = floppy) # TODO floppy_a
+	$(run-intcode-bin2obj)
+
+$(OBJDIR)/$(FLOPPY_B_NAME).o: $(FLOPPY_B_BIN)
+	$(eval BIN2OBJ_NAME = floppy_b)
 	$(run-intcode-bin2obj)
 
 .PHONY: clean
