@@ -13,6 +13,7 @@
 # TODO avoid pressing and releasing shift unless necessary (remember shift state)
 # TODO support repeating a key while it's held
 # TODO consider moving outside of dev/ to kbd/
+# TODO check why keyboard doesn't work in Arcade Volleyball
 
 ##########
 handle_keyboard:
