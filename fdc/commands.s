@@ -110,7 +110,8 @@ fdc_exec_read_data:
     add [0], 0, [rb + sectors]
 
     # Cylinder number must match the cylinder we are on
-    eq  [fdc_cmd_cylinder], [fdc_present_cylinder_units], [rb + tmp]
+    add fdc_present_cylinder_units, [fdc_cmd_unit_selected], [ip + 1]
+    eq  [0], [fdc_cmd_cylinder], [rb + tmp]
     jz  [rb + tmp], .bad_input
 
     # Head number must be in range
@@ -336,7 +337,8 @@ fdc_exec_write_data:
     add [0], 0, [rb + sectors]
 
     # Cylinder number must match the cylinder we are on
-    eq  [fdc_cmd_cylinder], [fdc_present_cylinder_units], [rb + tmp]
+    add fdc_present_cylinder_units, [fdc_cmd_unit_selected], [ip + 1]
+    eq  [0], [fdc_cmd_cylinder], [rb + tmp]
     jz  [rb + tmp], .bad_input
 
     # Head number must be in range
