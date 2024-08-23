@@ -76,8 +76,8 @@ init:
 
 ##########
 main:
-.FRAME floppy_a, floppy_b
-    arb -2
+.FRAME floppy_a, floppy_b, tmp
+    arb -3
 
     call init_vm_callback
 
@@ -100,14 +100,12 @@ main:
     arb -4
     call register_region
 
-    # Initialize devices
-    call init_pic_8259a
-    call init_pit_8253
+    # Initialize PPI using correct floppy drive count
+    lt  0, [rb + floppy_a], [rb + tmp]
+    lt  0, [rb + floppy_b], [rb - 1]
+    add [rb - 1], [rb + tmp], [rb - 1]
+    arb -1
     call init_ppi_8255a
-    call init_ps2_8042
-    call init_dma_8237a
-    call init_cga
-    call init_vm_ports
 
     # Initialize floppy drives
     add [rb + floppy_a], 0, [rb - 1]
@@ -115,10 +113,18 @@ main:
     arb -2
     call init_fdc
 
+    # Initialize other devices
+    call init_pic_8259a
+    call init_pit_8253
+    call init_ps2_8042
+    call init_dma_8237a
+    call init_cga
+    call init_vm_ports
+
     # Start the CPU
     call execute
 
-    arb 2
+    arb 3
     ret 0
 .ENDFRAME
 

@@ -54,13 +54,18 @@ ppi_ports:
 
 ##########
 init_ppi_8255a:
-.FRAME
+.FRAME floppy_count;
     # Register I/O ports
     add ppi_ports, 0, [rb - 1]
     arb -1
     call register_ports
 
-    ret 0
+    # Prepare floppy drive count in the format used by port C
+    # bits 2 and 3: floppy drive count - 1
+    add [rb + floppy_count], -1, [ppi_port_c_floppy_bits]
+    mul [ppi_port_c_floppy_bits], 4, [ppi_port_c_floppy_bits]
+
+    ret 1
 .ENDFRAME
 
 ##########
@@ -218,10 +223,12 @@ ppi_port_c_read:
     jz  0, .done
 
 .high_switches:
-    # 0, 1: display: 01 - color 40x25, 10 - color 80x25
-    # 2, 3: number of drives: 00 - 1 drive
+    # bits 0, 1: display: 01 - color 40x25, 10 - color 80x25
     add [rb + value], 0b00000001, [rb + value]
     add [rb + value], [config_boot_80x25], [rb + value]
+
+    # bits 2, 3: number of drives minus 1
+    add [rb + value], [ppi_port_c_floppy_bits], [rb + value]
 
 .done:
     # PPI logging
@@ -243,6 +250,9 @@ ppi_b:
     db  0
 
 ppi_read_high_switches:
+    db  0
+
+ppi_port_c_floppy_bits:
     db  0
 
 speaker_activity_callback:
