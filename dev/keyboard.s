@@ -15,6 +15,19 @@
 # TODO consider moving outside of dev/ to kbd/
 # TODO check why keyboard doesn't work in Arcade Volleyball
 
+
+# TODO remove
+# 1b 5b 31 35 3b 33 7e
+# 1b 5b 31 37 3b 33 7e
+# 1b 5b 31 38 3b 33 7e
+# 1b 5b 31 39 3b 33 7e
+# 
+# 1b 5b 32 30 3b 33 7e
+# 1b 5b 32 31 3b 33 7e
+# 1b 5b 32 33 3b 33 7e
+# 1b 5b 32 34 3b 33 7e
+
+
 ##########
 handle_keyboard:
 .FRAME char, char_x2, tmp
@@ -53,14 +66,14 @@ handle_keyboard:
     add scancode + 1, [rb + char_x2], [ip + 1]
     add [0], 0, [current_make_code]
 
-    jz  0, .generic_lowercase_make_break
+    jz  0, .generic_make_break_cas
 
 .initial_uppercase:
     # Output make and break code for current character, with shift pressed
     add scancode + 1, [rb + char_x2], [ip + 1]
     add [0], 0, [current_make_code]
 
-    jz  0, .generic_uppercase_make_break
+    jz  0, .generic_make_break_caS
 
 
 .initial_escape:
@@ -85,7 +98,7 @@ handle_keyboard:
 .esc_nothing:
     # Escape followed by nothing, press the escape key
     add 0x01, 0, [current_make_code]
-    jz  0, .generic_lowercase_make_break
+    jz  0, .generic_make_break_cas
 
 .esc_4f_wait:
     add .esc_4f, 0, [keyboard_state]
@@ -117,7 +130,7 @@ handle_keyboard:
 .function_1_to_4:
     # Function keys F1 to F4; char 0x50-0x53 maps to make code 0x3b-0x3e
     add [rb + char], -0x15, [current_make_code]
-    jz  0, .generic_lowercase_make_break
+    jz  0, .generic_make_break_cas
 
 
 .esc_5b:
@@ -191,31 +204,31 @@ handle_keyboard:
 
 .arrow_up:
     add 0x48, 0, [current_make_code]
-    jz  0, .generic_lowercase_make_break
+    jz  0, .generic_make_break_cas
 
 .arrow_down:
     add 0x50, 0, [current_make_code]
-    jz  0, .generic_lowercase_make_break
+    jz  0, .generic_make_break_cas
 
 .arrow_right:
     add 0x4d, 0, [current_make_code]
-    jz  0, .generic_lowercase_make_break
+    jz  0, .generic_make_break_cas
 
 .arrow_left:
     add 0x4b, 0, [current_make_code]
-    jz  0, .generic_lowercase_make_break
+    jz  0, .generic_make_break_cas
 
 .numpad_5:
     add 0x4c, 0, [current_make_code]
-    jz  0, .generic_lowercase_make_break
+    jz  0, .generic_make_break_cas
 
 .end:
     add 0x4f, 0, [current_make_code]
-    jz  0, .generic_lowercase_make_break
+    jz  0, .generic_make_break_cas
 
 .home:
     add 0x47, 0, [current_make_code]
-    jz  0, .generic_lowercase_make_break
+    jz  0, .generic_make_break_cas
 
 
 .esc_5b_31:
@@ -234,6 +247,9 @@ handle_keyboard:
     eq  [rb + char], 0x39, [rb + tmp]
     jnz [rb + tmp], .function_6_to_8_wait
 
+    eq  [rb + char], 0x3b, [rb + tmp]
+    jnz [rb + tmp], .esc_5b_31_3b_wait
+
     jz  0, .done
 
 .function_5_wait:
@@ -251,6 +267,51 @@ handle_keyboard:
     # Wait for 7e, then make and break with the code we just prepared
     add .7e_make_break, 0, [keyboard_state]
     jz  0, .done
+
+.esc_5b_31_3b_wait:
+    add .esc_5b_31_3b, 0, [keyboard_state]
+    jz  0, .done
+
+
+.esc_5b_31_3b:
+    # Read next character if available
+    db  213, char                       # ina [rb + char]
+    eq  [rb + char], -1, [rb + tmp]
+    jnz [rb + tmp], .done
+
+    # Continue the escape sequence
+    eq  [rb + char], 0x33, [rb + tmp]
+    jnz [rb + tmp], .esc_5b_31_3b_33_wait
+
+    jz  0, .done
+
+.esc_5b_31_3b_33_wait:
+    add .esc_5b_31_3b_33, 0, [keyboard_state]
+    jz  0, .done
+
+
+.esc_5b_31_3b_33:
+    # Read next character if available
+    db  213, char                       # ina [rb + char]
+    eq  [rb + char], -1, [rb + tmp]
+    jnz [rb + tmp], .done
+
+    # Continue the escape sequence
+    eq  [rb + char], 0x50, [rb + tmp]
+    jnz [rb + tmp], .alt_function_1_to_4_wait
+    eq  [rb + char], 0x51, [rb + tmp]
+    jnz [rb + tmp], .alt_function_1_to_4_wait
+    eq  [rb + char], 0x52, [rb + tmp]
+    jnz [rb + tmp], .alt_function_1_to_4_wait
+    eq  [rb + char], 0x53, [rb + tmp]
+    jnz [rb + tmp], .alt_function_1_to_4_wait
+
+    jz  0, .done
+
+.alt_function_1_to_4_wait:
+    # Alt + function keys F1 to F4; char 0x50-0x53 maps to make code 0x3b-0x3e
+    add [rb + char], -0x15, [current_make_code]
+    jz  0, .generic_make_break_cAs
 
 
 .esc_5b_32:
@@ -280,7 +341,7 @@ handle_keyboard:
 
 .insert:
     add 0x52, 0, [current_make_code]
-    jz  0, .generic_lowercase_make_break
+    jz  0, .generic_make_break_cas
 
 
 .7e_make_break:
@@ -291,34 +352,186 @@ handle_keyboard:
 
     # Expect to receive 7e, then make and break the prepared character
     eq  [rb + char], 0x7e, [rb + tmp]
-    jnz [rb + tmp], .generic_lowercase_make_break
+    jnz [rb + tmp], .generic_make_break_cas
 
     jz  0, .done
 
 
-.generic_lowercase_make_break:
-    # Do we need to change shift status?
+# c/C = Ctrl state
+# a/A = Alt state
+# s/S = Shift state
+
+.generic_make_break_cas:
+    # Do we need to change ctrl state?
+    jz  [ctrl_pressed], .generic_make_break_as
+
+    # Yes, output break code for ctrl
+    add 0x9d, 0, [ppi_a]
+    add 0, 0, [ctrl_pressed]
+
+    # Continue outputting current character afterwards
+    add .generic_make_break_as, 0, [keyboard_state]
+    jz  0, .raise_irq1
+
+.generic_make_break_caS:
+    # Do we need to change ctrl state?
+    jz  [ctrl_pressed], .generic_make_break_aS
+
+    # Yes, output break code for ctrl
+    add 0x9d, 0, [ppi_a]
+    add 0, 0, [ctrl_pressed]
+
+    # Continue outputting current character afterwards
+    add .generic_make_break_aS, 0, [keyboard_state]
+    jz  0, .raise_irq1
+
+.generic_make_break_cAs:
+    # Do we need to change ctrl state?
+    jz  [ctrl_pressed], .generic_make_break_As
+
+    # Yes, output break code for ctrl
+    add 0x9d, 0, [ppi_a]
+    add 0, 0, [ctrl_pressed]
+
+    # Continue outputting current character afterwards
+    add .generic_make_break_As, 0, [keyboard_state]
+    jz  0, .raise_irq1
+
+.generic_make_break_cAS:
+    # Do we need to change ctrl state?
+    jz  [ctrl_pressed], .generic_make_break_AS
+
+    # Yes, output break code for ctrl
+    add 0x9d, 0, [ppi_a]
+    add 0, 0, [ctrl_pressed]
+
+    # Continue outputting current character afterwards
+    add .generic_make_break_AS, 0, [keyboard_state]
+    jz  0, .raise_irq1
+
+
+.generic_make_break_Cas:
+    # Do we need to change ctrl state?
+    jnz [ctrl_pressed], .generic_make_break_as
+
+    # Yes, output make code for ctrl
+    add 0x1d, 0, [ppi_a]
+    add 1, 0, [ctrl_pressed]
+
+    # Continue outputting current character afterwards
+    add .generic_make_break_as, 0, [keyboard_state]
+    jz  0, .raise_irq1
+
+.generic_make_break_CaS:
+    # Do we need to change ctrl state?
+    jnz [ctrl_pressed], .generic_make_break_aS
+
+    # Yes, output make code for ctrl
+    add 0x1d, 0, [ppi_a]
+    add 1, 0, [ctrl_pressed]
+
+    # Continue outputting current character afterwards
+    add .generic_make_break_aS, 0, [keyboard_state]
+    jz  0, .raise_irq1
+
+.generic_make_break_CAs:
+    # Do we need to change ctrl state?
+    jnz [ctrl_pressed], .generic_make_break_As
+
+    # Yes, output make code for ctrl
+    add 0x1d, 0, [ppi_a]
+    add 1, 0, [ctrl_pressed]
+
+    # Continue outputting current character afterwards
+    add .generic_make_break_As, 0, [keyboard_state]
+    jz  0, .raise_irq1
+
+.generic_make_break_CAS:
+    # Do we need to change ctrl state?
+    jnz [ctrl_pressed], .generic_make_break_AS
+
+    # Yes, output make code for ctrl
+    add 0x1d, 0, [ppi_a]
+    add 1, 0, [ctrl_pressed]
+
+    # Continue outputting current character afterwards
+    add .generic_make_break_AS, 0, [keyboard_state]
+    jz  0, .raise_irq1
+
+
+.generic_make_break_as:
+    # Do we need to change alt state?
+    jz  [alt_pressed], .generic_make_break_s
+
+    # Yes, output break code for alt
+    add 0xb8, 0, [ppi_a]
+    add 0, 0, [alt_pressed]
+
+    # Continue outputting current character afterwards
+    add .generic_make_break_s, 0, [keyboard_state]
+    jz  0, .raise_irq1
+
+.generic_make_break_aS:
+    # Do we need to change alt state?
+    jz  [alt_pressed], .generic_make_break_S
+
+    # Yes, output break code for alt
+    add 0xb8, 0, [ppi_a]
+    add 0, 0, [alt_pressed]
+
+    # Continue outputting current character afterwards
+    add .generic_make_break_S, 0, [keyboard_state]
+    jz  0, .raise_irq1
+
+.generic_make_break_As:
+    # Do we need to change alt state?
+    jnz [alt_pressed], .generic_make_break_s
+
+    # Yes, output make code for alt
+    add 0x38, 0, [ppi_a]
+    add 1, 0, [alt_pressed]
+
+    # Continue outputting current character afterwards
+    add .generic_make_break_s, 0, [keyboard_state]
+    jz  0, .raise_irq1
+
+.generic_make_break_AS:
+    # Do we need to change alt state?
+    jnz [alt_pressed], .generic_make_break_S
+
+    # Yes, output make code for alt
+    add 0x38, 0, [ppi_a]
+    add 1, 0, [alt_pressed]
+
+    # Continue outputting current character afterwards
+    add .generic_make_break_S, 0, [keyboard_state]
+    jz  0, .raise_irq1
+
+
+.generic_make_break_s:
+    # Do we need to change shift state?
     jz  [shift_pressed], .generic_make_break
 
     # Yes, output break code for right shift
     add 0xb6, 0, [ppi_a]
     add 0, 0, [shift_pressed]
 
-    # Follow up with make and break code for current character
+    # Continue outputting current character afterwards
     add .generic_make_break, 0, [keyboard_state]
     jz  0, .raise_irq1
 
-.generic_uppercase_make_break:
-    # Do we need to change shift status?
+.generic_make_break_S:
+    # Do we need to change shift state?
     jnz [shift_pressed], .generic_make_break
 
     # Yes, output make code for right shift
     add 0x36, 0, [ppi_a]
     add 1, 0, [shift_pressed]
 
-    # Follow up with make and break code for current character
+    # Continue outputting current character afterwards
     add .generic_make_break, 0, [keyboard_state]
     jz  0, .raise_irq1
+
 
 .generic_make_break:
     # Output the pre-calculated make code
@@ -354,6 +567,10 @@ keyboard_state:
 current_make_code:
     db  -1
 
+ctrl_pressed:
+    db  0
+alt_pressed:
+    db  0
 shift_pressed:
     db  0
 
