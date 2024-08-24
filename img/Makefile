@@ -11,7 +11,7 @@ FLOPPY ?= freedos-simple
 BUILD_TARGETS=$(patsubst %,%.img,$(FLOPPY))
 
 .PHONY: build-all
-build-all: checksum freedos msdos
+build-all: checksum empty freedos msdos
 
 .PHONY: build
 build: $(BUILD_TARGETS)
@@ -20,6 +20,9 @@ build: $(BUILD_TARGETS)
 checksum: hash.md5 av.zip freedos.zip freedos-simple.img.xz msdos.7z nc.7z prince.zip \
 	t602-1.zip t602-3.zip
 	md5sum -c < $<
+
+.PHONY: empty
+empty: empty.img
 
 .PHONY: freedos
 freedos: freedos-simple.img freedos.img freedos-min.img freedos-poweroff.img freedos-nc.img \
@@ -36,6 +39,11 @@ freedos-simple.img: freedos-simple.img.xz
 	xz -dkf $<
 	# ignore errors, since this is just cosmetic and CI/CD has no mtools
 	mdeltree -i $@ FSEVEN~1 || true
+
+empty.img: freedos-simple.img
+	cp $< $@
+	mdeltree -i $@ ::/*.*
+	mlabel -i $@ -c ::
 
 # https://www.freedos.org/download
 freedos.zip:
