@@ -39,6 +39,8 @@
 
 # TODO separate fsm_?_invalid from unsupported functionality, crash when unsupported
 
+# TODO bug the B: floppy seems to be accessible even when no image is present (probably overwriting memory at 0)
+
 ##########
 fdc_ports:
     db  0xf2, 0x03, 0, fdc_dor_write                        # Digital Output Register
