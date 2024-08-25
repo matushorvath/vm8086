@@ -11,13 +11,13 @@ FLOPPY ?= freedos-simple
 BUILD_TARGETS=$(patsubst %,%.img,$(FLOPPY))
 
 .PHONY: build-all
-build-all: checksum empty freedos msdos
+build-all: checksum empty freedos msdos3 msdos5 msdos6
 
 .PHONY: build
 build: $(BUILD_TARGETS)
 
 .PHONY: checksum
-checksum: hash.md5 av.zip freedos.zip freedos-simple.img.xz msdos.7z nc.7z prince.zip \
+checksum: hash.md5 av.zip freedos.zip freedos-simple.img.xz msdos3.7z msdos5.7z msdos6.7z nc.7z prince.zip \
 	t602-1.zip t602-3.zip
 	md5sum -c < $<
 
@@ -28,8 +28,17 @@ empty: empty.img
 freedos: freedos-simple.img freedos.img freedos-min.img freedos-poweroff.img freedos-nc.img \
 	freedos-t602-1.img freedos-t602-3.img freedos-av.img freedos-prince.img
 
-.PHONY: msdos
-msdos: msdos.img msdos-min.img msdos-nc.img msdos-t602-1.img msdos-av.img msdos-prince.img
+.PHONY: msdos3
+msdos3: msdos3.img msdos3-min.img msdos3-nc.img msdos3-t602-1.img msdos3-t602-3.img \
+	msdos3-av.img msdos3-prince.img
+
+.PHONY: msdos5
+msdos5: msdos5.img msdos5-min.img msdos5-nc.img msdos5-t602-1.img msdos5-t602-3.img \
+	msdos5-av.img msdos5-prince.img
+
+.PHONY: msdos6
+msdos6: msdos6.img msdos6-min.img msdos6-nc.img msdos6-t602-1.img msdos6-t602-3.img \
+	msdos6-av.img msdos6-prince.img
 
 # https://github.com/codercowboy/freedosbootdisks - a boot disk we can boot in CI/CD, without mtools
 freedos-simple.img.xz:
@@ -56,11 +65,30 @@ freedos.img: freedos.zip
 	mcopy -D o -i $@ config-freedos.sys ::CONFIG.SYS
 
 # https://winworldpc.com/product/ms-dos/331
-msdos.7z:
-	wget 'https://winworldpc.com/download/40c2b855-0818-c39a-11c3-a4e284a2c3a5/from/c3ae6ee2-8099-713d-3411-c3a6e280947e' -O $@
+msdos3.7z:
+	wget 'https://winworldpc.com/download/40c2b855-0818-c39a-11c3-a4e284a2c3a5' -O $@
 
-msdos.img: msdos.7z
+msdos3.img: msdos3.7z
 	7zz -y e $< -r Disk1.img -so > $@
+
+# https://winworldpc.com/product/ms-dos/50
+msdos5.7z:
+	wget 'https://winworldpc.com/download/28c2b366-26e2-809c-c3ad-11c3a5c28f13' -O $@
+
+msdos5.img: msdos5.7z
+	7zz -y e $< -r disk01.img -so > $@
+	mdel -i $@ DOS50.ZIP AUTOEXEC.BAT CONFIG.SYS SETUP.* PKUNZIP.EXE
+	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
+
+# https://winworldpc.com/product/ms-dos/622
+msdos6.7z:
+	wget 'https://winworldpc.com/download/c38fc38d-68c2-bbe2-80a6-4b11c3a4c2ac' -O $@
+
+msdos6.img: msdos6.7z
+	7zz -y e $< -r Disk1.img -so > $@
+	mdel -i $@ *.??_ AUTOEXEC.BAT CONFIG.SYS COUNTRY.* DEFRAG.* DOSSETUP.INI DRVSPACE.BIN \
+		EXPAND.EXE MSCDEX.EXE NETWORKS.TXT PACKING.LST SCANDISK.* SETUP.*
+	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
 
 # freedos image with as much free space as possible
 freedos-min.img: freedos.img
@@ -70,7 +98,7 @@ freedos-min.img: freedos.img
 	mdel -i $@ ::/CONFIG.SYS
 
 # msdos image with as much free space as possible
-msdos-min.img: msdos.img
+msdos%-min.img: msdos%.img
 	cp $< $@
 	mdeltree -i $@ $$(mdir -i $@ -ab | grep -v -e 'COMMAND\.COM' -e 'IO\.SYS' -e 'MSDOS\.SYS')
 	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
