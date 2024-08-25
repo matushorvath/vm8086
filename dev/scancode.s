@@ -18,6 +18,8 @@
 # 1b 5b 5a = shift+tab
 # 0a = ctrl+enter
 
+# Alt+??: 1b ?? for many keys (including '[' = 5b, which conflicts with many escape sequences)
+
 #       u d r l  1b 5b          41  1b 5b          42  1b 5b          43 1b  5b          44
 # shift u d r l  1b 5b 31 3b 32 41  1b 5b 31 3b 32 42  1b 5b 31 3b 32 43 1b  5b 31 3b 32 44
 # ctrl  u d r l  1b 5b 31 3b 35 41  1b 5b 31 3b 35 42  1b 5b 31 3b 35 43 1b  5b 31 3b 35 44

@@ -45,6 +45,8 @@
 .IMPORT shr_0
 .IMPORT shr_1
 
+# TODO qbasic.exe, msdos6-nc image: window borders are blinking (probably should be high intensity instead)
+
 ##########
 initialize_text_mode:
 .FRAME
