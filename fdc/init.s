@@ -1,9 +1,4 @@
 .EXPORT init_fdc
-.EXPORT fdc_error_non_dma
-
-# From config.s
-.IMPORT fdc_config_connected_units
-.IMPORT fdc_config_inserted_units
 
 # From control.s
 .IMPORT fdc_dor_write
@@ -15,6 +10,7 @@
 .IMPORT fdc_medium_cylinders_units
 .IMPORT fdc_medium_heads_units
 .IMPORT fdc_medium_sectors_units
+.IMPORT fdc_image_units
 
 # From state_machine.s
 .IMPORT fdc_data_read
@@ -52,7 +48,7 @@ fdc_ports:
 
 ##########
 init_fdc:
-.FRAME unit
+.FRAME floppy_a, floppy_b;
     # Register I/O ports
     add fdc_ports, 0, [rb - 1]
     arb -1
@@ -60,21 +56,21 @@ init_fdc:
 
     # Initialize both drive units
     add 0, 0, [rb - 1]
-    arb -1
+    add [rb + floppy_a], 0, [rb - 2]
+    arb -2
     call init_unit
 
     add 1, 0, [rb - 1]
-    arb -1
+    add [rb + floppy_b], 0, [rb - 2]
+    arb -2
     call init_unit
 
-    ret 0
+    ret 2
 .ENDFRAME
 
 ##########
 init_unit:
-.FRAME unit; type, tmp
-    arb -2
-
+.FRAME unit, image;
     # Initialize floppy parameters based on inserted floppy types
     # Currently we only support 3.5" 1.44MB floppies
 
@@ -86,18 +82,10 @@ init_unit:
     # 3.5"      2       80      9       512      737280     24
     # 3.5"      2       80      18      512     1474560     25
 
-    # Skip disconnected and empty drives
-    add fdc_config_connected_units, [rb + unit], [ip + 1]
-    jz  [0], .done
-    add fdc_config_inserted_units, [rb + unit], [ip + 1]
-    add [0], 0, [rb + type]
-    jz  [rb + type], .done
+    # Skip units without a floppy image
+    jz  [rb + image], .done
 
-    # Fill in floppy parameters; currently only 1.44MB 3.5" floppies are supported
-    eq  [rb + type], 25, [rb + tmp]
-    jz  [rb + tmp], .unsupported_type
-
-    # Set floppy parameters based on floppy type
+    # Fill in floppy parameters; currently only 1.44MB 3.5" (type 25) floppies are supported
     # TODO support more floppy types
     add fdc_medium_cylinders_units, [rb + unit], [ip + 3]
     add 80, 0, [0]
@@ -106,21 +94,12 @@ init_unit:
     add fdc_medium_sectors_units, [rb + unit], [ip + 3]
     add 18, 0, [0]
 
+    # Save pointer to floppy image
+    add fdc_image_units, [rb + unit], [ip + 3]
+    add [rb + image], 0, [0]
+
 .done:
-    arb 2
-    ret 1
-
-.unsupported_type:
-    add .unsupported_type_message, 0, [rb - 1]
-    arb -1
-    call report_error
-
-.unsupported_type_message:
-    db  "fdd unit type is not supported", 0
+    ret 2
 .ENDFRAME
-
-##########
-fdc_error_non_dma:
-    db  "fdc: Non-DMA operation is not supported", 0
 
 .EOF

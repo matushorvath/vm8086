@@ -10,7 +10,8 @@
 .IMPORT init_vm_callback
 
 # From floppy.o
-.IMPORT floppy_image
+.IMPORT floppy_a_image
+.IMPORT floppy_b_image
 
 # From vm_ports.s
 .IMPORT init_vm_ports
@@ -75,16 +76,21 @@ init:
 
 ##########
 main:
-.FRAME
+.FRAME floppy_a, floppy_b, tmp
+    arb -3
+
     call init_vm_callback
 
     # Initialize the ROM and floppy images
     add [bios_address], 0, [rb - 1]
     add bios_image, 0, [rb - 2]
-    add 1474560, 0, [rb - 3]
-    add floppy_image, 0, [rb - 4]
+    add floppy_a_image, 0, [rb - 3]
+    add floppy_b_image, 0, [rb - 4]
     arb -4
     call init_images
+
+    add [rb - 6], 0, [rb + floppy_a]
+    add [rb - 7], 0, [rb + floppy_b]
 
     # Make the ROM read-only
     add [bios_address], 0, [rb - 1]
@@ -94,19 +100,31 @@ main:
     arb -4
     call register_region
 
-    # Initialize devices
+    # Initialize PPI using correct floppy drive count
+    lt  0, [rb + floppy_a], [rb + tmp]
+    lt  0, [rb + floppy_b], [rb - 1]
+    add [rb - 1], [rb + tmp], [rb - 1]
+    arb -1
+    call init_ppi_8255a
+
+    # Initialize floppy drives
+    add [rb + floppy_a], 0, [rb - 1]
+    add [rb + floppy_b], 0, [rb - 2]
+    arb -2
+    call init_fdc
+
+    # Initialize other devices
     call init_pic_8259a
     call init_pit_8253
-    call init_ppi_8255a
     call init_ps2_8042
     call init_dma_8237a
     call init_cga
-    call init_fdc
     call init_vm_ports
 
     # Start the CPU
     call execute
 
+    arb 3
     ret 0
 .ENDFRAME
 

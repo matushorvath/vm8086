@@ -283,3 +283,13 @@ TODO profiling
       - or at least cache it for word-sized operations, currently those get split to two bytes
     - could use a fixed number of region registrations, currently 2 would be probably enough
  - re-profile with keyboard input, I suspect vm_callback is very slow now
+
+MS-DOS and Two Drives
+=====================
+
+last syscall is 21,11 (with success)
+
+21,11 -> Dir_Search_First
+search.asm $DIR_SEARCH_FIRST
+
+CMD/COMMAND/TCMD1A.ASM CATALOG (DIR)
