@@ -311,3 +311,4 @@ Sixels test image: https://codeberg.org/coffee/sixel-experiments/raw/branch/defa
 
 https://en.wikipedia.org/wiki/Sixel
 https://www.digiater.nl/openvms/decus/vax90b1/krypton-nasa/all-about-sixels.text
+https://vt100.net/docs/vt3xx-gp/chapter14.html
