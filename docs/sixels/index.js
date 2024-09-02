@@ -5,6 +5,7 @@ const COLS = 500;
 
 const main = async () => {
     for (let phase = 0; phase < 1000; phase++) {
+        process.stdout.write('\x1b[1;1H'); // move to 1,1
         process.stdout.write('\x1bPq'); // enter sixel mode
 
         for (let r = 0; r < ROWS / 6; r++) {
