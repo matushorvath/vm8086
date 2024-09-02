@@ -24,17 +24,22 @@ const setPixel = (x, y, c) => {
 };
 
 const main = async () => {
-    const phase = 0;
-    //for (let phase = 0; phase < 1000; phase++) {
-        for (let x = 0; x < COLS; x++) {
-            const value = Math.sin(2 * Math.PI * (x + phase) / COLS);
-            const y = Math.round((value + 1) * (ROWS - 1) / 2);
+    process.stdout.write('\x1b[?25l'); // hide cursor
 
-            setPixel(x, y, 1);
+    try {
+        for (let phase = 0; phase < 1000; phase++) {
+            for (let x = 0; x < COLS; x++) {
+                const value = Math.sin(2 * Math.PI * (x + phase) / COLS);
+                const y = Math.round((value + 1) * (ROWS - 1) / 2);
+
+                setPixel(x, y, 1);
+            }
+
+            await timers.setTimeout(100);
         }
-
-    //    await timers.setTimeout(100);
-    //}
+    } finally {
+        process.stdout.write('\x1b[?25h'); // show cursor
+    }
 };
 
 await main();
