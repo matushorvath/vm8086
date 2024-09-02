@@ -1,21 +1,36 @@
 import timers from 'node:timers/promises';
 
-const main = async () => {
-    for (let j = 0; j < 1000; j++) {
-        process.stdout.write("\x1bPq"); // enter sixel mode
+const ROWS = 30;
+const COLS = 500;
 
-        for (let i = 0; i < 500; i++) {
-            const pos = 6 - Math.round((Math.sin(2 * Math.PI * (i + j) / 500) + 1) * 6 / 2);
-            process.stdout.write(String.fromCharCode(63 + (1 << pos))); // enter sixel mode
+const main = async () => {
+    for (let phase = 0; phase < 1000; phase++) {
+        process.stdout.write('\x1bPq'); // enter sixel mode
+
+        for (let r = 0; r < ROWS / 6; r++) {
+            for (let x = 0; x < COLS; x++) {
+                const value = Math.sin(2 * Math.PI * (x + phase) / COLS);
+                const y = Math.round((value + 1) * (ROWS - 1) / 2);
+
+                const row = Math.floor(y / 6);
+                const pxl = y % 6;
+
+                if (r === row) {
+                    process.stdout.write(String.fromCharCode(63 + (1 << pxl)));
+                } else {
+                    process.stdout.write(String.fromCharCode(63));
+                }
+            }
+
+            process.stdout.write('-');
         }
 
-        //process.stdout.write("$"); // next sixel line * 2
-        process.stdout.write("\x1b\\"); // exit sixel mode
+        process.stdout.write('\x1b\\'); // exit sixel mode
 
         await timers.setTimeout(100);
     }
 
-    process.stdout.write("\x1b\\"); // exit sixel mode
+    process.stdout.write('\x1b\\'); // exit sixel mode
 };
 
 await main();
