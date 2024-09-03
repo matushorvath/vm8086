@@ -6,6 +6,11 @@ const COLS = 500;
 const setPixel = (x, y, c) => {
     process.stdout.write('\x1bP0;1;0q'); // enter sixel mode
 
+    process.stdout.write('#0;2;0;0;0'); // set palette
+    process.stdout.write('#1;2;100;0;0'); // set palette
+    process.stdout.write('#2;2;0;100;0'); // set palette
+    process.stdout.write('#3;2;0;0;100'); // set palette
+
     const row = Math.floor(y / 6);
     const pxl = y % 6;
 
@@ -13,16 +18,19 @@ const setPixel = (x, y, c) => {
         process.stdout.write('-');
     }
 
-    process.stdout.write(`!${x}?`); // skip x columns
+    for (let i = 0; i < 4; i++) {
+        process.stdout.write(`#${i}!${x}?`); // color i, skip x columns
 
-    if (c === 1) {
-        process.stdout.write(String.fromCharCode(63 + (1 << pxl)));
-    } else {
-        // TODO set the pixel to background
-        process.stdout.write('?');
+        if (i === c) {
+            process.stdout.write(String.fromCharCode(63 + (1 << pxl)));
+        } else {
+            process.stdout.write(String.fromCharCode(63 + ~(1 << pxl)));
+        }
+
+        process.stdout.write('$');
     }
 
-    process.stdout.write('$');
+    process.stdout.write('-');
 
     process.stdout.write('\x1b\\'); // exit sixel mode
 };
@@ -44,7 +52,7 @@ const main = async () => {
                 }
                 prev[x] = y;
 
-                setPixel(x, y, 1);
+                setPixel(x, y, (Math.floor(x / 10) % 3) + 1);
             }
 
             await timers.setTimeout(100);
