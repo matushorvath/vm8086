@@ -4,8 +4,6 @@ const ROWS = 30;
 const COLS = 500;
 
 const setPixel = (x, y, c) => {
-    process.stdout.write('\x1b[1;1H'); // move to 1,1
-    //process.stdout.write('\x1b[?80l'); // disable sixel scrolling
     process.stdout.write('\x1bP0;1;0q'); // enter sixel mode
 
     const row = Math.floor(y / 6);
@@ -17,7 +15,13 @@ const setPixel = (x, y, c) => {
 
     process.stdout.write(`!${x}?`); // skip x columns
 
-    process.stdout.write(String.fromCharCode(63 + (1 << pxl)));
+    if (c === 1) {
+        process.stdout.write(String.fromCharCode(63 + (1 << pxl)));
+    } else {
+        // TODO set the pixel to background
+        process.stdout.write('?');
+    }
+
     process.stdout.write('$');
 
     process.stdout.write('\x1b\\'); // exit sixel mode
@@ -25,12 +29,20 @@ const setPixel = (x, y, c) => {
 
 const main = async () => {
     process.stdout.write('\x1b[?25l'); // hide cursor
+    process.stdout.write('\x1b[?80h'); // disable sixel scrolling
+
+    const prev = [];
 
     try {
         for (let phase = 0; phase < 1000; phase++) {
             for (let x = 0; x < COLS; x++) {
                 const value = Math.sin(2 * Math.PI * (x + phase) / COLS);
                 const y = Math.round((value + 1) * (ROWS - 1) / 2);
+
+                if (prev[x] !== undefined) {
+                    setPixel(x, prev[x], 0);
+                }
+                prev[x] = y;
 
                 setPixel(x, y, 1);
             }
