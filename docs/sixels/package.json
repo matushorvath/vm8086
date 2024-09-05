@@ -1,7 +1,6 @@
 {
   "name": "sixels",
   "version": "1.0.0",
-  "main": "index.js",
   "type": "module",
   "author": "",
   "license": "ISC",
@@ -13,5 +12,9 @@
   },
   "devDependencies": {
     "eslint": "^9.9.1"
+  },
+  "dependencies": {
+    "promise.withresolvers": "^1.0.3",
+    "sharp": "^0.33.5"
   }
 }
