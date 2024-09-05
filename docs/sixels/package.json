@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "promise.withresolvers": "^1.0.3",
+    "rgbquant": "^1.1.2",
     "sharp": "^0.33.5"
   }
 }
