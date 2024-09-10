@@ -293,3 +293,22 @@ last syscall is 21,11 (with success)
 search.asm $DIR_SEARCH_FIRST
 
 CMD/COMMAND/TCMD1A.ASM CATALOG (DIR)
+
+Sixels
+======
+
+Detection: https://invisible-island.net/xterm/ctlseqs/ctlseqs.html
+
+ESC [ 0c -> ESC [ ? 61;6;7;14;21;22;23;24;28;32;42c
+ESC [ 0c -> ESC [ ? 61;4;6;7;14;21;22;23;24;28;32;42c
+
+61 is something like terminal model
+;4; means sixels support
+
+Windows Terminal 1.22 has sixels support
+
+Sixels test image: https://codeberg.org/coffee/sixel-experiments/raw/branch/default/text-test.sixel
+
+https://en.wikipedia.org/wiki/Sixel
+https://www.digiater.nl/openvms/decus/vax90b1/krypton-nasa/all-about-sixels.text
+https://vt100.net/docs/vt3xx-gp/chapter14.html
