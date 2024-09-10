@@ -1,4 +1,4 @@
-# apt install 7zip mtools wget xdelta
+# apt install 7zip mtools wget xdelta3 xz-utils
 #
 # download:
 #  - https://vetusware.com/download/Norton%20Commander%203.0%203.0 -> nc.7z
@@ -132,7 +132,7 @@ msdos%-min.img: msdos%.img
 	7zz -y x t602-3.zip -oT602-3
 	rm T602-3/T602/K602.EXE T602-3/T602/K602.HLP T602-3/T602/CESKY.SLO
 	cp T602-3/T602/T602.EXE T602.EXE.tmp
-	xdelta patch t602-3.xdelta T602.EXE.tmp T602-3/T602/T602.EXE
+	xdelta3 -d -f -s T602.EXE.tmp t602-3.xdelta3 T602-3/T602/T602.EXE
 	rm -f T602.EXE.tmp
 	cp $< $@
 	mcopy -D o -s -i $@ T602-3/T602 ::T602
