@@ -6,6 +6,9 @@ include $(ICDIR)/intcode.mk
 ifeq ($(BIOS),pcxtbios)
 	BIOS_BIN ?= $(abspath $(VMDIR)/../pcxtbios/eproms/2764/pcxtbios.rom)
 	BIOS_ADDRESS ?= fe000
+else ifeq ($(BIOS),phoenix)
+	BIOS_BIN ?= $(abspath $(VMDIR)/../phoenix-2.51.rom)
+	BIOS_ADDRESS ?= fe000
 else
 	BIOS_BIN ?= $(abspath $(VMDIR)/../8088_bios/binaries/bios-xt.bin)
 	BIOS_ADDRESS ?= fc000
