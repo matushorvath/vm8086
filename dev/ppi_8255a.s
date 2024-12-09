@@ -81,8 +81,11 @@ ppi_mode_write:
     call ppi_mode_write_log
 
 .after_log:
-    # We only support one value
+    # The only supported value is 0x10011001
+    # However, Phoenix BIOS briefly sets mode to 0x10001001, so we also allow that
     eq  [rb + value], 0b10011001, [rb + tmp]
+    jnz [rb + tmp], .done
+    eq  [rb + value], 0b10001001, [rb + tmp]
     jnz [rb + tmp], .done
 
     add .error, 0, [rb - 1]

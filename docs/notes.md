@@ -293,3 +293,15 @@ last syscall is 21,11 (with success)
 search.asm $DIR_SEARCH_FIRST
 
 CMD/COMMAND/TCMD1A.ASM CATALOG (DIR)
+
+Phoenix BIOS
+============
+
+http://www.hampa.ch/pce/download.html
+
+BIOS sets PPI mode to 0x89, which means port A is output - normally port A is input
+Then it attempts to read from port A (which is related to keyboard), which seems wrong.
+It also prints "Keyboard Bad" but then continues, and the keyboard does work.
+Eventually it writes the correct value 0x99 into PPI mode and continues to boot.
+
+ppi_mode_write needed a hack to allow both 0x89 and 0x99 to make this work.
