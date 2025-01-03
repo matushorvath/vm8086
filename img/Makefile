@@ -22,23 +22,35 @@ checksum: hash.md5 av.zip freedos.zip freedos-simple.img.xz msdos3.7z msdos5.7z 
 	md5sum -c < $<
 
 .PHONY: empty
-empty: empty-1440.img
+empty: empty-360.img empty-720.img empty-1200.img empty-1440.img
 
 .PHONY: freedos
-freedos: freedos-simple.img freedos.img freedos-min-1440.img freedos-poweroff.img freedos-nc.img \
+freedos: freedos-simple.img freedos.img freedos-min freedos-poweroff.img freedos-nc.img \
 	freedos-t602-1.img freedos-t602-3.img freedos-av.img freedos-prince.img
 
+.PHONY: freedos-min
+freedos-min: freedos-min-360.img freedos-min-720.img freedos-min-1200.img freedos-min-1440.img
+
 .PHONY: msdos3
-msdos3: msdos3.img msdos3-min-1440.img msdos3-nc.img msdos3-t602-1.img msdos3-t602-3.img \
+msdos3: msdos3.img msdos3-min msdos3-nc.img msdos3-t602-1.img msdos3-t602-3.img \
 	msdos3-av.img msdos3-prince.img
 
+.PHONY: msdos3-min
+msdos3-min: msdos3-min-360.img msdos3-min-720.img msdos3-min-1200.img msdos3-min-1440.img
+
 .PHONY: msdos5
-msdos5: msdos5.img msdos5-min-1440.img msdos5-nc.img msdos5-t602-1.img msdos5-t602-3.img \
+msdos5: msdos5.img msdos5-min msdos5-nc.img msdos5-t602-1.img msdos5-t602-3.img \
 	msdos5-av.img msdos5-prince.img
 
+.PHONY: msdos5-min
+freedos-min: msdos5-min-360.img msdos5-min-720.img msdos5-min-1200.img msdos5-min-1440.img
+
 .PHONY: msdos6
-msdos6: msdos6.img msdos6-min-1440.img msdos6-nc.img msdos6-t602-1.img msdos6-t602-3.img \
+msdos6: msdos6.img msdos6-min msdos6-nc.img msdos6-t602-1.img msdos6-t602-3.img \
 	msdos6-av.img msdos6-prince.img
+
+.PHONY: msdos6-min
+freedos-min: msdos6-min-360.img msdos6-min-720.img msdos6-min-1200.img msdos6-min-1440.img
 
 # https://github.com/codercowboy/freedosbootdisks - a boot disk we can boot in CI/CD, without mtools
 freedos-simple.img.xz:
@@ -85,28 +97,31 @@ msdos6.img: msdos6.7z
 		EXPAND.EXE MSCDEX.EXE NETWORKS.TXT PACKING.LST SCANDISK.* SETUP.*
 	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
 
-empty-1440.img:
-	mformat -i $@ -f 1440 -C
+empty-%.img:
+	mformat -i $@ -f $(*F) -C
 
 # freedos image with as much free space as possible
-freedos-min-1440.img: freedos.img
+define make-freedos-floppy
 	dd if=$< of=$(<:img=boot) bs=512 count=1
-	mformat -i $@ -f 1440 -C -B $(<:img=boot)
+	mformat -i $@ -f $(*F) -C -B $(<:img=boot)
 	mcopy -D o -i $< ::KERNEL.SYS KERNEL.SYS
 	mcopy -D o -i $@ KERNEL.SYS ::KERNEL.SYS
 	mcopy -D o -i $< ::FREEDOS/BIN/COMMAND.COM COMMAND.COM
 	mcopy -D o -i $@ COMMAND.COM ::COMMAND.COM
 	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
 	rm -f $(<:img=boot) KERNEL.SYS COMMAND.COM
+endef
 
-# msdos images with as much free space as possible
-msdos%-min-1440.img: msdos%.img
+freedos-min-%.img: freedos.img
+	$(make-freedos-floppy)
+
+# msdos 3.x images with as much free space as possible
+define make-msdos3-floppy
 	dd if=$< of=$(<:img=boot) bs=512 count=1
-	mformat -i $@ -f 1440 -C -B $(<:img=boot)
+	mformat -i $@ -f $(*F) -C -B $(<:img=boot)
 	# msdos 3 does not boot with the boot sector updated by mformat (which has an EBPB block)
 	# we need to copy a few bytes from the proper boot sector to make it boot
-	[ -z "$(findstring msdos3,$@)" ] || \
-		dd if=$(<:img=boot) of=$@ bs=1 count=24 iseek=38 oseek=38 conv=notrunc
+    dd if=$(<:img=boot) of=$@ bs=1 count=24 iseek=38 oseek=38 conv=notrunc
 	mcopy -D o -i $< ::IO.SYS IO.SYS
 	mcopy -D o -i $@ IO.SYS ::IO.SYS
 	mattrib -i $@ +h +s ::IO.SYS
@@ -117,7 +132,34 @@ msdos%-min-1440.img: msdos%.img
 	mcopy -D o -i $@ COMMAND.COM ::COMMAND.COM
 	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
 	rm -f $(<:img=boot) IO.SYS MSDOS.SYS COMMAND.COM
+endef
 
+msdos3-min-%.img: msdos3.img
+	$(make-msdos3-floppy)
+
+# msdos 5.x and 6.x images with as much free space as possible
+define make-msdos56-floppy
+	dd if=$< of=$(<:img=boot) bs=512 count=1
+	mformat -i $@ -f $(*F) -C -B $(<:img=boot)
+	mcopy -D o -i $< ::IO.SYS IO.SYS
+	mcopy -D o -i $@ IO.SYS ::IO.SYS
+	mattrib -i $@ +h +s ::IO.SYS
+	mcopy -D o -i $< ::MSDOS.SYS MSDOS.SYS
+	mcopy -D o -i $@ MSDOS.SYS ::MSDOS.SYS
+	mattrib -i $@ +h +s ::MSDOS.SYS
+	mcopy -D o -i $< ::COMMAND.COM COMMAND.COM
+	mcopy -D o -i $@ COMMAND.COM ::COMMAND.COM
+	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
+	rm -f $(<:img=boot) IO.SYS MSDOS.SYS COMMAND.COM
+endef
+
+msdos5-min-%.img: msdos5.img
+	$(make-msdos56-floppy)
+
+msdos6-min-%.img: msdos6.img
+	$(make-msdos56-floppy)
+
+# additional software
 %-poweroff.img: %.img autoexec-poweroff.bat
 	cp $< $@
 	mcopy -D o -i $@ autoexec-poweroff.bat ::AUTOEXEC.BAT
