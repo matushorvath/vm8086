@@ -99,17 +99,14 @@ freedos-min-1440.img: freedos.img
 	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
 	rm -f $(<:img=boot) KERNEL.SYS COMMAND.COM
 
-# msdos3 image with as much free space as possible
-# TODO use the dd process (currently broken for msdos 3.0)
-msdos3-min-1440.img: msdos3.img
-	cp $< $@
-	mdeltree -i $@ $$(mdir -i $@ -ab | grep -v -e 'COMMAND\.COM' -e 'IO\.SYS' -e 'MSDOS\.SYS')
-	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
-
 # msdos images with as much free space as possible
 msdos%-min-1440.img: msdos%.img
 	dd if=$< of=$(<:img=boot) bs=512 count=1
 	mformat -i $@ -f 1440 -C -B $(<:img=boot)
+	# msdos 3 does not boot with the boot sector updated by mformat (which has an EBPB block)
+	# we need to copy a few bytes from the proper boot sector to make it boot
+	[ -z "$(findstring msdos3,$@)" ] || \
+		dd if=$(<:img=boot) of=$@ bs=1 count=24 iseek=38 oseek=38 conv=notrunc
 	mcopy -D o -i $< ::IO.SYS IO.SYS
 	mcopy -D o -i $@ IO.SYS ::IO.SYS
 	mattrib -i $@ +h +s ::IO.SYS
