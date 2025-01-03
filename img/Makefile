@@ -22,10 +22,10 @@ checksum: hash.md5 av.zip freedos.zip freedos-simple.img.xz msdos3.7z msdos5.7z 
 	md5sum -c < $<
 
 .PHONY: empty
-empty: empty.img
+empty: empty-1440.img
 
 .PHONY: freedos
-freedos: freedos-simple.img freedos.img freedos-1440.img freedos-poweroff.img freedos-nc.img \
+freedos: freedos-simple.img freedos.img freedos-min-1440.img freedos-poweroff.img freedos-nc.img \
 	freedos-t602-1.img freedos-t602-3.img freedos-av.img freedos-prince.img
 
 .PHONY: msdos3
@@ -48,11 +48,6 @@ freedos-simple.img: freedos-simple.img.xz
 	xz -dkf $<
 	# ignore errors, since this is just cosmetic and CI/CD has no mtools
 	mdeltree -i $@ FSEVEN~1 || true
-
-empty.img: freedos-simple.img
-	cp $< $@
-	mdeltree -i $@ ::/*.*
-	mlabel -i $@ -c ::
 
 # https://www.freedos.org/download
 freedos.zip:
@@ -89,6 +84,9 @@ msdos6.img: msdos6.7z
 	mdel -i $@ *.??_ AUTOEXEC.BAT CONFIG.SYS COUNTRY.* DEFRAG.* DOSSETUP.INI DRVSPACE.BIN \
 		EXPAND.EXE MSCDEX.EXE NETWORKS.TXT PACKING.LST SCANDISK.* SETUP.*
 	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
+
+empty-1440.img:
+	mformat -i $@ -f 1440 -C
 
 # freedos image with as much free space as possible
 freedos-min-1440.img: freedos.img
