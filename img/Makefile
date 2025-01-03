@@ -90,10 +90,14 @@ empty-1440.img:
 
 # freedos image with as much free space as possible
 freedos-min-1440.img: freedos.img
-	cp $< $@
-	mcopy -D o -i $@ ::/FREEDOS/BIN/COMMAND.COM ::/
-	mdeltree -i $@ ::/FREEDOS
-	mdel -i $@ ::/CONFIG.SYS
+	dd if=$< of=$(<:img=boot) bs=512 count=1
+	mformat -i $@ -f 1440 -C -B $(<:img=boot)
+	mcopy -D o -i $< ::KERNEL.SYS KERNEL.SYS
+	mcopy -D o -i $@ KERNEL.SYS ::KERNEL.SYS
+	mcopy -D o -i $< ::FREEDOS/BIN/COMMAND.COM COMMAND.COM
+	mcopy -D o -i $@ COMMAND.COM ::COMMAND.COM
+	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
+	rm -f $(<:img=boot) KERNEL.SYS COMMAND.COM
 
 # msdos3 image with as much free space as possible
 # TODO use the dd process (currently broken for msdos 3.0)
