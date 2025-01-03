@@ -25,19 +25,19 @@ checksum: hash.md5 av.zip freedos.zip freedos-simple.img.xz msdos3.7z msdos5.7z 
 empty: empty.img
 
 .PHONY: freedos
-freedos: freedos-simple.img freedos.img freedos-min.img freedos-poweroff.img freedos-nc.img \
+freedos: freedos-simple.img freedos.img freedos-1440.img freedos-poweroff.img freedos-nc.img \
 	freedos-t602-1.img freedos-t602-3.img freedos-av.img freedos-prince.img
 
 .PHONY: msdos3
-msdos3: msdos3.img msdos3-min.img msdos3-nc.img msdos3-t602-1.img msdos3-t602-3.img \
+msdos3: msdos3.img msdos3-min-1440.img msdos3-nc.img msdos3-t602-1.img msdos3-t602-3.img \
 	msdos3-av.img msdos3-prince.img
 
 .PHONY: msdos5
-msdos5: msdos5.img msdos5-min.img msdos5-nc.img msdos5-t602-1.img msdos5-t602-3.img \
+msdos5: msdos5.img msdos5-min-1440.img msdos5-nc.img msdos5-t602-1.img msdos5-t602-3.img \
 	msdos5-av.img msdos5-prince.img
 
 .PHONY: msdos6
-msdos6: msdos6.img msdos6-min.img msdos6-nc.img msdos6-t602-1.img msdos6-t602-3.img \
+msdos6: msdos6.img msdos6-min-1440.img msdos6-nc.img msdos6-t602-1.img msdos6-t602-3.img \
 	msdos6-av.img msdos6-prince.img
 
 # https://github.com/codercowboy/freedosbootdisks - a boot disk we can boot in CI/CD, without mtools
@@ -91,17 +91,33 @@ msdos6.img: msdos6.7z
 	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
 
 # freedos image with as much free space as possible
-freedos-min.img: freedos.img
+freedos-min-1440.img: freedos.img
 	cp $< $@
 	mcopy -D o -i $@ ::/FREEDOS/BIN/COMMAND.COM ::/
 	mdeltree -i $@ ::/FREEDOS
 	mdel -i $@ ::/CONFIG.SYS
 
-# msdos image with as much free space as possible
-msdos%-min.img: msdos%.img
+# msdos3 image with as much free space as possible
+# TODO use the dd process (currently broken for msdos 3.0)
+msdos3-min-1440.img: msdos3.img
 	cp $< $@
 	mdeltree -i $@ $$(mdir -i $@ -ab | grep -v -e 'COMMAND\.COM' -e 'IO\.SYS' -e 'MSDOS\.SYS')
 	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
+
+# msdos images with as much free space as possible
+msdos%-min-1440.img: msdos%.img
+	dd if=$< of=$(<:img=boot) bs=512 count=1
+	mformat -i $@ -f 1440 -C -B $(<:img=boot)
+	mcopy -D o -i $< ::IO.SYS IO.SYS
+	mcopy -D o -i $@ IO.SYS ::IO.SYS
+	mattrib -i $@ +h +s ::IO.SYS
+	mcopy -D o -i $< ::MSDOS.SYS MSDOS.SYS
+	mcopy -D o -i $@ MSDOS.SYS ::MSDOS.SYS
+	mattrib -i $@ +h +s ::MSDOS.SYS
+	mcopy -D o -i $< ::COMMAND.COM COMMAND.COM
+	mcopy -D o -i $@ COMMAND.COM ::COMMAND.COM
+	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
+	rm -f $(<:img=boot) IO.SYS MSDOS.SYS COMMAND.COM
 
 %-poweroff.img: %.img autoexec-poweroff.bat
 	cp $< $@
@@ -126,7 +142,7 @@ msdos%-min.img: msdos%.img
 	rm -rf T602-1
 	mcopy -D o -i $@ autoexec-t602-1.bat ::AUTOEXEC.BAT
 
-%-t602-3.img: %-min.img t602-3.zip autoexec-t602-3.bat
+%-t602-3.img: %-min-1440.img t602-3.zip autoexec-t602-3.bat
 	rm -rf T602-3
 	mkdir -p T602-3
 	7zz -y x t602-3.zip -oT602-3
