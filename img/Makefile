@@ -100,7 +100,7 @@ msdos6.img: msdos6.7z
 empty-%.img:
 	mformat -i $@ -f $(*F) -C
 
-# freedos image with as much free space as possible
+# minimal freedos images
 define make-freedos-floppy
 	dd if=$< of=$(<:img=boot) bs=512 count=1
 	mformat -i $@ -f $(*F) -C -B $(<:img=boot)
@@ -115,7 +115,7 @@ endef
 freedos-min-%.img: freedos.img
 	$(make-freedos-floppy)
 
-# msdos 3.x images with as much free space as possible
+# minimal msdos 3.x images
 define make-msdos3-floppy
 	dd if=$< of=$(<:img=boot) bs=512 count=1
 	mformat -i $@ -f $(*F) -C -B $(<:img=boot)
@@ -137,8 +137,8 @@ endef
 msdos3-min-%.img: msdos3.img
 	$(make-msdos3-floppy)
 
-# msdos 5.x and 6.x images with as much free space as possible
-define make-msdos56-floppy
+# minimal msdos 5.x and 6.x images
+define make-msdos5-floppy
 	dd if=$< of=$(<:img=boot) bs=512 count=1
 	mformat -i $@ -f $(*F) -C -B $(<:img=boot)
 	mcopy -D o -i $< ::IO.SYS IO.SYS
@@ -154,10 +154,10 @@ define make-msdos56-floppy
 endef
 
 msdos5-min-%.img: msdos5.img
-	$(make-msdos56-floppy)
+	$(make-msdos5-floppy)
 
 msdos6-min-%.img: msdos6.img
-	$(make-msdos56-floppy)
+	$(make-msdos5-floppy)
 
 # additional software
 %-poweroff.img: %.img autoexec-poweroff.bat
