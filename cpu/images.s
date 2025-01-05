@@ -14,9 +14,6 @@
 .IMPORT brk
 .IMPORT sbrk
 
-# TODO store image size in the image itself (in bin2obj)
-.SYMBOL FLOPPY_144_SIZE 1474560
-
 ##########
 init_rom_image:
 .FRAME rom_address, rom_image;
@@ -61,8 +58,8 @@ init_images:
     jz  [rb + floppy_a_image], .after_alloc_floppy_a
 
     # Reserve space for the floppy image
-    # TODO store image size in the image itself (in bin2obj)
-    add FLOPPY_144_SIZE, 0, [rb - 1]
+    add [rb + floppy_a_image], 0, [ip + 1]
+    add [0], 0, [rb - 1]                                    # floppy_a_image.size
     arb -1
     call sbrk
     add [rb - 3], 0, [rb + floppy_a]
@@ -72,8 +69,8 @@ init_images:
     jz  [rb + floppy_b_image], .after_alloc_floppy_b
 
     # Reserve space for the floppy image
-    # TODO store image size in the image itself (in bin2obj)
-    add FLOPPY_144_SIZE, 0, [rb - 1]
+    add [rb + floppy_b_image], 0, [ip + 1]
+    add [0], 0, [rb - 1]                                    # floppy_b_image.size
     arb -1
     call sbrk
     add [rb - 3], 0, [rb + floppy_b]
@@ -88,8 +85,8 @@ init_images:
     # Inflate the floppy image
     add [rb + floppy_b_image], 0, [rb - 1]
     add [rb + floppy_b], 0, [rb - 2]
-    # TODO store image size in the image itself (in bin2obj)
-    add [rb + floppy_b], FLOPPY_144_SIZE, [rb - 3]
+    add [rb + floppy_b_image], 0, [ip + 1]
+    add [0], [rb + floppy_b], [rb - 3]                      # floppy_b + floppy_b_image.size
     arb -3
     call inflate_image
 
@@ -100,8 +97,8 @@ init_images:
     # Inflate the floppy image
     add [rb + floppy_a_image], 0, [rb - 1]
     add [rb + floppy_a], 0, [rb - 2]
-    # TODO store image size in the image itself (in bin2obj)
-    add [rb + floppy_a], FLOPPY_144_SIZE, [rb - 3]
+    add [rb + floppy_a_image], 0, [ip + 1]
+    add [0], [rb + floppy_a], [rb - 3]                      # floppy_a + floppy_a_image.size
     arb -3
     call inflate_image
 
@@ -125,9 +122,9 @@ inflate_image:
     # This function zeroes out the input image, to make sure we don't leave any invalid numbers accessible to the 8086
 
     # Parse the image
-    add [rb + image], 0, [ip + 1]
+    add [rb + image], 1, [ip + 1]
     add [0], 0, [rb + section_count]
-    add [rb + image], 1, [rb + image_header]
+    add [rb + image], 2, [rb + image_header]
     mul [rb + section_count], 3, [rb + image_data]
     add [rb + image_header], [rb + image_data], [rb + image_data]
 
