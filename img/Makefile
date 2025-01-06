@@ -10,6 +10,8 @@
 FLOPPY ?= freedos-simple
 BUILD_TARGETS=$(patsubst %,%.img,$(FLOPPY))
 
+FORMATS=180 360 720 1200 1440
+
 .PHONY: build-all
 build-all: checksum empty freedos msdos3 msdos5 msdos6
 
@@ -71,6 +73,13 @@ freedos.img: freedos.zip
 	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
 	mcopy -D o -i $@ config-freedos.sys ::CONFIG.SYS
 
+# https://winworldpc.com/product/pc-dos/2x
+pcdos2.7z:
+	wget 'https://winworldpc.com/download/44c2ac7d-cb9c-c2b4-e280-a111c3a4c2ac' -O $@
+
+pcdos2.img: pcdos2.7z
+	7zz -y e $< -r Disk01.img -so > $@
+
 # https://winworldpc.com/product/ms-dos/331
 msdos3.7z:
 	wget 'https://winworldpc.com/download/40c2b855-0818-c39a-11c3-a4e284a2c3a5' -O $@
@@ -97,7 +106,7 @@ msdos6.img: msdos6.7z
 		EXPAND.EXE MSCDEX.EXE NETWORKS.TXT PACKING.LST SCANDISK.* SETUP.*
 	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
 
-empty-%.img:
+$(FORMATS:%=empty-%.img): empty-%.img:
 	mformat -i $@ -f $(*F) -C
 
 # minimal freedos images
@@ -112,8 +121,27 @@ define make-freedos-floppy
 	rm -f $(<:img=boot) KERNEL.SYS COMMAND.COM
 endef
 
-freedos-min-%.img: freedos.img
+$(FORMATS:%=freedos-min-%.img): freedos-min-%.img: freedos.img
 	$(make-freedos-floppy)
+
+# minimal pcdos 2.x images
+define make-pcdos1-floppy
+	dd if=$< of=$(<:img=boot) bs=512 count=1
+	mformat -i $@ -f $(*F) -C -B $(<:img=boot)
+	mcopy -D o -i $< ::IBMBIO.COM IBMBIO.COM
+	mcopy -D o -i $@ IBMBIO.COM ::IBMBIO.COM
+	mattrib -i $@ +h +s ::IBMBIO.COM
+	mcopy -D o -i $< ::IBMDOS.COM IBMDOS.COM
+	mcopy -D o -i $@ IBMDOS.COM ::IBMDOS.COM
+	mattrib -i $@ +h +s ::IBMDOS.COM
+	mcopy -D o -i $< ::COMMAND.COM COMMAND.COM
+	mcopy -D o -i $@ COMMAND.COM ::COMMAND.COM
+	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
+	rm -f $(<:img=boot) IBMBIO.COM IBMDOS.COM COMMAND.COM
+endef
+
+$(FORMATS:%=pcdos2-min-%.img): pcdos2-min-%.img: pcdos2.img
+	$(make-pcdos1-floppy)
 
 # minimal msdos 3.x images
 define make-msdos3-floppy
@@ -121,7 +149,7 @@ define make-msdos3-floppy
 	mformat -i $@ -f $(*F) -C -B $(<:img=boot)
 	# msdos 3 does not boot with the boot sector updated by mformat (which has an EBPB block)
 	# we need to copy a few bytes from the proper boot sector to make it boot
-    dd if=$(<:img=boot) of=$@ bs=1 count=24 iseek=38 oseek=38 conv=notrunc
+	dd if=$(<:img=boot) of=$@ bs=1 count=24 iseek=38 oseek=38 conv=notrunc
 	mcopy -D o -i $< ::IO.SYS IO.SYS
 	mcopy -D o -i $@ IO.SYS ::IO.SYS
 	mattrib -i $@ +h +s ::IO.SYS
@@ -134,7 +162,7 @@ define make-msdos3-floppy
 	rm -f $(<:img=boot) IO.SYS MSDOS.SYS COMMAND.COM
 endef
 
-msdos3-min-%.img: msdos3.img
+$(FORMATS:%=msdos3-min-%.img): msdos3-min-%.img: msdos3.img
 	$(make-msdos3-floppy)
 
 # minimal msdos 5.x and 6.x images
@@ -153,10 +181,10 @@ define make-msdos5-floppy
 	rm -f $(<:img=boot) IO.SYS MSDOS.SYS COMMAND.COM
 endef
 
-msdos5-min-%.img: msdos5.img
+$(FORMATS:%=msdos5-min-%.img): msdos5-min-%.img: msdos5.img
 	$(make-msdos5-floppy)
 
-msdos6-min-%.img: msdos6.img
+$(FORMATS:%=msdos6-min-%.img): msdos6-min-%.img: msdos6.img
 	$(make-msdos5-floppy)
 
 # additional software
@@ -174,7 +202,7 @@ msdos6-min-%.img: msdos6.img
 	mcopy -D o -i $@ autoexec-nc.bat ::AUTOEXEC.BAT
 	mcopy -D o -i $@ nc.ini ::NC/NC.INI
 
-%-t602-1.img: %-nc.img t602-1.zip autoexec-t602-1.bat
+%-t602-1.img: %.img t602-1.zip autoexec-t602-1.bat
 	rm -rf T602-1
 	mkdir -p T602-1
 	7zz -y x t602-1.zip -oT602-1

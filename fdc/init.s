@@ -72,23 +72,47 @@ init_fdc:
 
 ##########
 init_unit:
-.FRAME unit, image, size;
-    # Initialize floppy parameters based on inserted floppy types
-    # Currently we only support 3.5" 1.44MB floppies
+.FRAME unit, image, size; tmp
+    arb -1
 
-    # Floppy geometry:
-    #           heads   tracks  sectors bytes   capacity    type
-    # 5.25"     1       40      9       512      184320     12
-    # 5.25"     2       80      9       512      368640     14
-    # 5.25"     2       80      15      512     1228800     17
-    # 3.5"      2       80      9       512      737280     24
-    # 3.5"      2       80      18      512     1474560     25
+    # Initialize floppy parameters based on inserted floppy type
 
     # Skip units without a floppy image
     jz  [rb + image], .done
 
-    # Fill in floppy parameters; currently only 1.44MB 3.5" (type 25) floppies are supported
-    # TODO support more floppy types
+    # Save pointer to floppy image
+    add fdc_image_units, [rb + unit], [ip + 3]
+    add [rb + image], 0, [0]
+
+    # Set medium parameters based on floppy image size
+    eq  [rb + size], 1474560, [rb + tmp]
+    jnz [rb + tmp], .floppy_1440
+    eq  [rb + size], 1228800, [rb + tmp]
+    jnz [rb + tmp], .floppy_1200
+    eq  [rb + size], 737280, [rb + tmp]
+    jnz [rb + tmp], .floppy_720
+    eq  [rb + size], 368640, [rb + tmp]
+    jnz [rb + tmp], .floppy_360
+    eq  [rb + size], 184320, [rb + tmp]
+    jnz [rb + tmp], .floppy_180
+
+    add .error, 0, [rb - 1]
+    arb -1
+    call report_error
+
+.error:
+    db  "fdc: unsupported floppy image size", 0
+
+    # Floppy geometry:
+    #           heads   tracks  sectors bytes   capacity    type
+    # 5.25"     1       40      9       512      184320     12
+    # 5.25"     2       40      9       512      368640     14
+    # 5.25"     2       80      15      512     1228800     17
+    # 3.5"      2       80      9       512      737280     24
+    # 3.5"      2       80      18      512     1474560     25
+
+.floppy_1440:
+    # Floppy parameters for 1.44MB 3.5"
     add fdc_medium_cylinders_units, [rb + unit], [ip + 3]
     add 80, 0, [0]
     add fdc_medium_heads_units, [rb + unit], [ip + 3]
@@ -96,11 +120,54 @@ init_unit:
     add fdc_medium_sectors_units, [rb + unit], [ip + 3]
     add 18, 0, [0]
 
-    # Save pointer to floppy image
-    add fdc_image_units, [rb + unit], [ip + 3]
-    add [rb + image], 0, [0]
+    jz  0, .done
+
+.floppy_1200:
+    # Floppy parameters for 1.2MB 5.25"
+    add fdc_medium_cylinders_units, [rb + unit], [ip + 3]
+    add 80, 0, [0]
+    add fdc_medium_heads_units, [rb + unit], [ip + 3]
+    add 2, 0, [0]
+    add fdc_medium_sectors_units, [rb + unit], [ip + 3]
+    add 15, 0, [0]
+
+    jz  0, .done
+
+.floppy_720:
+    # Floppy parameters for 720kB 3.5"
+    add fdc_medium_cylinders_units, [rb + unit], [ip + 3]
+    add 80, 0, [0]
+    add fdc_medium_heads_units, [rb + unit], [ip + 3]
+    add 2, 0, [0]
+    add fdc_medium_sectors_units, [rb + unit], [ip + 3]
+    add 9, 0, [0]
+
+    jz  0, .done
+
+.floppy_360:
+    # Floppy parameters for 360kB 5.25"
+    add fdc_medium_cylinders_units, [rb + unit], [ip + 3]
+    add 40, 0, [0]
+    add fdc_medium_heads_units, [rb + unit], [ip + 3]
+    add 2, 0, [0]
+    add fdc_medium_sectors_units, [rb + unit], [ip + 3]
+    add 9, 0, [0]
+
+    jz  0, .done
+
+.floppy_180:
+    # Floppy parameters for 180kB 5.25"
+    add fdc_medium_cylinders_units, [rb + unit], [ip + 3]
+    add 40, 0, [0]
+    add fdc_medium_heads_units, [rb + unit], [ip + 3]
+    add 1, 0, [0]
+    add fdc_medium_sectors_units, [rb + unit], [ip + 3]
+    add 9, 0, [0]
+
+    jz  0, .done
 
 .done:
+    arb 1
     ret 3
 .ENDFRAME
 

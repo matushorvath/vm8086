@@ -103,8 +103,8 @@ main:
     call register_region
 
     # Initialize PPI using correct floppy drive count
-    lt  0, [rb + floppy_a], [rb + tmp]
-    lt  0, [rb + floppy_b], [rb - 1]
+    lt  0, [rb + floppy_a_size], [rb + tmp]
+    lt  0, [rb + floppy_b_size], [rb - 1]
     add [rb - 1], [rb + tmp], [rb - 1]
     arb -1
     call init_ppi_8255a
