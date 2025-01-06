@@ -211,7 +211,7 @@ $(FORMATS:%=msdos6-min-%.img): msdos6-min-%.img: msdos6.img
 	rm -rf T602-1
 	mcopy -D o -i $@ autoexec-t602-1.bat ::AUTOEXEC.BAT
 
-%-t602-3.img: %-min-1440.img t602-3.zip autoexec-t602-3.bat
+%-t602-3.img: %.img t602-3.zip autoexec-t602-3.bat
 	rm -rf T602-3
 	mkdir -p T602-3
 	7zz -y x t602-3.zip -oT602-3
