@@ -58,13 +58,13 @@ init_images:
     call sbrk
     add [rb - 3], 0, [mem]
 
-    # Save floppy image sizes
+    # Allocate memory for floppy A, if enabled
+    jz  [rb + floppy_a_image], .after_alloc_floppy_a
+
+    # Save floppy image size
     add [rb + floppy_a_image], 0, [ip + 1]
     add [0], 0, [rb + floppy_a_size]
-    add [rb + floppy_b_image], 0, [ip + 1]
-    add [0], 0, [rb + floppy_b_size]
 
-    # Allocate memory for floppy A, if enabled
     jz  [rb + floppy_a_size], .after_alloc_floppy_a
 
     # Reserve space for the floppy image
@@ -75,6 +75,12 @@ init_images:
 
 .after_alloc_floppy_a:
     # Allocate memory for floppy B, if enabled
+    jz  [rb + floppy_b_image], .after_alloc_floppy_b
+
+    # Save floppy image size
+    add [rb + floppy_b_image], 0, [ip + 1]
+    add [0], 0, [rb + floppy_b_size]
+
     jz  [rb + floppy_b_size], .after_alloc_floppy_b
 
     # Reserve space for the floppy image
