@@ -48,7 +48,7 @@ fdc_ports:
 
 ##########
 init_fdc:
-.FRAME floppy_a, floppy_b;
+.FRAME floppy_a, floppy_b, floppy_a_size, floppy_b_size;
     # Register I/O ports
     add fdc_ports, 0, [rb - 1]
     arb -1
@@ -57,20 +57,22 @@ init_fdc:
     # Initialize both drive units
     add 0, 0, [rb - 1]
     add [rb + floppy_a], 0, [rb - 2]
-    arb -2
+    add [rb + floppy_a_size], 0, [rb - 3]
+    arb -3
     call init_unit
 
     add 1, 0, [rb - 1]
     add [rb + floppy_b], 0, [rb - 2]
-    arb -2
+    add [rb + floppy_b_size], 0, [rb - 3]
+    arb -3
     call init_unit
 
-    ret 2
+    ret 4
 .ENDFRAME
 
 ##########
 init_unit:
-.FRAME unit, image;
+.FRAME unit, image, size;
     # Initialize floppy parameters based on inserted floppy types
     # Currently we only support 3.5" 1.44MB floppies
 
@@ -99,7 +101,7 @@ init_unit:
     add [rb + image], 0, [0]
 
 .done:
-    ret 2
+    ret 3
 .ENDFRAME
 
 .EOF

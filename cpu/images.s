@@ -14,6 +14,8 @@
 .IMPORT brk
 .IMPORT sbrk
 
+# TODO this should not be part of libcpu.a
+
 ##########
 init_rom_image:
 .FRAME rom_address, rom_image;
@@ -29,13 +31,15 @@ init_rom_image:
 
 ##########
 init_images:
-.FRAME rom_address, rom_image, floppy_a_image, floppy_b_image; floppy_a, floppy_b                   # returns floppy_a, floppy_b
-    arb -2
+.FRAME rom_address, rom_image, floppy_a_image, floppy_b_image; floppy_a, floppy_b, floppy_a_size, floppy_b_size # returns floppy_a|b, floppy_a|b_size
+    arb -4
 
     # This function assumes the ROM image is in memory immediately before the optional A and B floppy images
 
     add 0, 0, [rb + floppy_a]
+    add 0, 0, [rb + floppy_a_size]
     add 0, 0, [rb + floppy_b]
+    add 0, 0, [rb + floppy_b_size]
 
     # Validate the ROM address
     add [rb + rom_address], 0, [rb - 1]
@@ -57,9 +61,12 @@ init_images:
     # Allocate memory for floppy A, if enabled
     jz  [rb + floppy_a_image], .after_alloc_floppy_a
 
-    # Reserve space for the floppy image
+    # Save floppy size
     add [rb + floppy_a_image], 0, [ip + 1]
-    add [0], 0, [rb - 1]                                    # floppy_a_image.size
+    add [0], 0, [rb + floppy_a_size]
+
+    # Reserve space for the floppy image
+    add [rb + floppy_a_size], 0, [rb - 1]
     arb -1
     call sbrk
     add [rb - 3], 0, [rb + floppy_a]
@@ -68,9 +75,12 @@ init_images:
     # Allocate memory for floppy B, if enabled
     jz  [rb + floppy_b_image], .after_alloc_floppy_b
 
-    # Reserve space for the floppy image
+    # Save floppy size
     add [rb + floppy_b_image], 0, [ip + 1]
-    add [0], 0, [rb - 1]                                    # floppy_b_image.size
+    add [0], 0, [rb + floppy_b_size]
+
+    # Reserve space for the floppy image
+    add [rb + floppy_b_size], 0, [rb - 1]
     arb -1
     call sbrk
     add [rb - 3], 0, [rb + floppy_b]
@@ -85,8 +95,7 @@ init_images:
     # Inflate the floppy image
     add [rb + floppy_b_image], 0, [rb - 1]
     add [rb + floppy_b], 0, [rb - 2]
-    add [rb + floppy_b_image], 0, [ip + 1]
-    add [0], [rb + floppy_b], [rb - 3]                      # floppy_b + floppy_b_image.size
+    add [rb + floppy_b], [rb + floppy_b_size], [rb - 3]
     arb -3
     call inflate_image
 
@@ -97,8 +106,7 @@ init_images:
     # Inflate the floppy image
     add [rb + floppy_a_image], 0, [rb - 1]
     add [rb + floppy_a], 0, [rb - 2]
-    add [rb + floppy_a_image], 0, [ip + 1]
-    add [0], [rb + floppy_a], [rb - 3]                      # floppy_a + floppy_a_image.size
+    add [rb + floppy_a], [rb + floppy_a_size], [rb - 3]
     arb -3
     call inflate_image
 
@@ -110,7 +118,7 @@ init_images:
     arb -3
     call inflate_image
 
-    arb 2
+    arb 4
     ret 4
 .ENDFRAME
 
