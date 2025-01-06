@@ -14,8 +14,7 @@
 .IMPORT brk
 .IMPORT sbrk
 
-# TODO store image size in the image itself (in bin2obj)
-.SYMBOL FLOPPY_144_SIZE 1474560
+# TODO this should not be part of libcpu.a
 
 ##########
 init_rom_image:
@@ -32,13 +31,15 @@ init_rom_image:
 
 ##########
 init_images:
-.FRAME rom_address, rom_image, floppy_a_image, floppy_b_image; floppy_a, floppy_b                   # returns floppy_a, floppy_b
-    arb -2
+.FRAME rom_address, rom_image, floppy_a_image, floppy_b_image; floppy_a, floppy_b, floppy_a_size, floppy_b_size # returns floppy_a|b, floppy_a|b_size
+    arb -4
 
     # This function assumes the ROM image is in memory immediately before the optional A and B floppy images
 
     add 0, 0, [rb + floppy_a]
+    add 0, 0, [rb + floppy_a_size]
     add 0, 0, [rb + floppy_b]
+    add 0, 0, [rb + floppy_b_size]
 
     # Validate the ROM address
     add [rb + rom_address], 0, [rb - 1]
@@ -60,9 +61,14 @@ init_images:
     # Allocate memory for floppy A, if enabled
     jz  [rb + floppy_a_image], .after_alloc_floppy_a
 
+    # Save floppy image size
+    add [rb + floppy_a_image], 0, [ip + 1]
+    add [0], 0, [rb + floppy_a_size]
+
+    jz  [rb + floppy_a_size], .after_alloc_floppy_a
+
     # Reserve space for the floppy image
-    # TODO store image size in the image itself (in bin2obj)
-    add FLOPPY_144_SIZE, 0, [rb - 1]
+    add [rb + floppy_a_size], 0, [rb - 1]
     arb -1
     call sbrk
     add [rb - 3], 0, [rb + floppy_a]
@@ -71,9 +77,14 @@ init_images:
     # Allocate memory for floppy B, if enabled
     jz  [rb + floppy_b_image], .after_alloc_floppy_b
 
+    # Save floppy image size
+    add [rb + floppy_b_image], 0, [ip + 1]
+    add [0], 0, [rb + floppy_b_size]
+
+    jz  [rb + floppy_b_size], .after_alloc_floppy_b
+
     # Reserve space for the floppy image
-    # TODO store image size in the image itself (in bin2obj)
-    add FLOPPY_144_SIZE, 0, [rb - 1]
+    add [rb + floppy_b_size], 0, [rb - 1]
     arb -1
     call sbrk
     add [rb - 3], 0, [rb + floppy_b]
@@ -83,25 +94,23 @@ init_images:
     # We need to inflate the images back to front to avoid overwriting inputs we still need
 
     # Inflate the image for floppy B, if enabled
-    jz  [rb + floppy_b_image], .after_inflate_floppy_b
+    jz  [rb + floppy_b_size], .after_inflate_floppy_b
 
     # Inflate the floppy image
     add [rb + floppy_b_image], 0, [rb - 1]
     add [rb + floppy_b], 0, [rb - 2]
-    # TODO store image size in the image itself (in bin2obj)
-    add [rb + floppy_b], FLOPPY_144_SIZE, [rb - 3]
+    add [rb + floppy_b], [rb + floppy_b_size], [rb - 3]
     arb -3
     call inflate_image
 
 .after_inflate_floppy_b:
     # Inflate the image for floppy A, if enabled
-    jz  [rb + floppy_a_image], .after_inflate_floppy_a
+    jz  [rb + floppy_a_size], .after_inflate_floppy_a
 
     # Inflate the floppy image
     add [rb + floppy_a_image], 0, [rb - 1]
     add [rb + floppy_a], 0, [rb - 2]
-    # TODO store image size in the image itself (in bin2obj)
-    add [rb + floppy_a], FLOPPY_144_SIZE, [rb - 3]
+    add [rb + floppy_a], [rb + floppy_a_size], [rb - 3]
     arb -3
     call inflate_image
 
@@ -113,7 +122,7 @@ init_images:
     arb -3
     call inflate_image
 
-    arb 2
+    arb 4
     ret 4
 .ENDFRAME
 
@@ -125,9 +134,9 @@ inflate_image:
     # This function zeroes out the input image, to make sure we don't leave any invalid numbers accessible to the 8086
 
     # Parse the image
-    add [rb + image], 0, [ip + 1]
+    add [rb + image], 1, [ip + 1]
     add [0], 0, [rb + section_count]
-    add [rb + image], 1, [rb + image_header]
+    add [rb + image], 2, [rb + image_header]
     mul [rb + section_count], 3, [rb + image_data]
     add [rb + image_header], [rb + image_data], [rb + image_data]
 

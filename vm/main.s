@@ -76,8 +76,8 @@ init:
 
 ##########
 main:
-.FRAME floppy_a, floppy_b, tmp
-    arb -3
+.FRAME floppy_a, floppy_b, floppy_a_size, floppy_b_size, tmp
+    arb -5
 
     call init_vm_callback
 
@@ -91,6 +91,8 @@ main:
 
     add [rb - 6], 0, [rb + floppy_a]
     add [rb - 7], 0, [rb + floppy_b]
+    add [rb - 8], 0, [rb + floppy_a_size]
+    add [rb - 9], 0, [rb + floppy_b_size]
 
     # Make the ROM read-only
     add [bios_address], 0, [rb - 1]
@@ -101,8 +103,8 @@ main:
     call register_region
 
     # Initialize PPI using correct floppy drive count
-    lt  0, [rb + floppy_a], [rb + tmp]
-    lt  0, [rb + floppy_b], [rb - 1]
+    lt  0, [rb + floppy_a_size], [rb + tmp]
+    lt  0, [rb + floppy_b_size], [rb - 1]
     add [rb - 1], [rb + tmp], [rb - 1]
     arb -1
     call init_ppi_8255a
@@ -110,7 +112,9 @@ main:
     # Initialize floppy drives
     add [rb + floppy_a], 0, [rb - 1]
     add [rb + floppy_b], 0, [rb - 2]
-    arb -2
+    add [rb + floppy_a_size], 0, [rb - 3]
+    add [rb + floppy_b_size], 0, [rb - 4]
+    arb -4
     call init_fdc
 
     # Initialize other devices
@@ -124,7 +128,7 @@ main:
     # Start the CPU
     call execute
 
-    arb 3
+    arb 5
     ret 0
 .ENDFRAME
 
