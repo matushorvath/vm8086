@@ -25,7 +25,7 @@ VM_NAME = vm.$(BIOS_NAME).$(subst $(SPACE),.,$(DISKS)).input
 BINDIR ?= $(VMDIR)/bin
 OBJDIR ?= $(VMDIR)/obj/vm
 
-IMGOBJDIR ?= $(VMDIR)/obj/img
+SOFTWARE_OBJDIR ?= $(VMDIR)/obj/software
 
 .PHONY: build
 build: build-prep $(BINDIR)/$(VM_NAME)
@@ -44,7 +44,8 @@ VM_OBJS = main.o callback.o config.o vm_ports.o $(BIOS_NAME)_address.o $(BINDIR)
 	$(BINDIR)/libcga.a $(BINDIR)/libdev.a $(BINDIR)/libfdc.a $(BINDIR)/libutil.a $(LIBXIB) \
 	$(BIOS_NAME:=.o)
 
-$(BINDIR)/$(VM_NAME): $(VM_OBJS:%.o=$(OBJDIR)/%.o) $(DISKS:%=$(IMGOBJDIR)/%.o) $(OBJDIR)/last_image.o
+$(BINDIR)/$(VM_NAME): $(VM_OBJS:%.o=$(OBJDIR)/%.o) $(DISKS:%=$(SOFTWARE_OBJDIR)/%.o) \
+	$(OBJDIR)/last_image.o
 	$(run-intcode-ld)
 	@echo VM name: $(VM_NAME)
 

@@ -4,7 +4,7 @@ include $(ICDIR)/intcode.mk
 BINDIR ?= bin
 OBJDIR ?= obj
 
-SRCDIRS = util cga cpu dev fdc img vm
+SRCDIRS = util cga cpu dev fdc software vm
 TOOLSDIR = tools/import-cleanup tools/monitor
 TESTDIRS = test-bochs test-cpu
 
@@ -74,7 +74,7 @@ clean: $(CLEAN_TARGETS)
 $(CLEAN_TARGETS):
 	make -C $(patsubst clean-%,%,$@) clean
 
-VERY_CLEAN_TARGETS = very-clean-img very-clean-tools/import-cleanup very-clean-tools/monitor
+VERY_CLEAN_TARGETS = very-clean-software very-clean-tools/import-cleanup very-clean-tools/monitor
 
 .PHONY: very-clean
 very-clean: clean $(VERY_CLEAN_TARGETS)

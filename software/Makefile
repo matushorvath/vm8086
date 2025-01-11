@@ -13,7 +13,7 @@ ICDIR ?= $(abspath $(VMDIR)/../xzintbit)
 include $(ICDIR)/intcode.mk
 
 BINDIR ?= $(VMDIR)/bin
-OBJDIR ?= $(VMDIR)/obj/img
+OBJDIR ?= $(VMDIR)/obj/software
 
 DISKS ?= freedos-simple
 BUILD_TARGETS=$(patsubst %,$(OBJDIR)/%.o,$(DISKS))
