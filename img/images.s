@@ -14,8 +14,6 @@
 .IMPORT brk
 .IMPORT sbrk
 
-# TODO this should not be part of libcpu.a
-
 ##########
 init_rom_image:
 .FRAME rom_address, rom_image;
