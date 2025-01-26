@@ -528,7 +528,7 @@ fdc_exec_write_deleted_data:
     call report_error
 
 .error:
-    db  "fdc: write deleted data command ","is not supported", 0
+    db  "fdc: write deleted data command is not supported", 0
 .ENDFRAME
 
 ##########
@@ -663,7 +663,7 @@ fdc_exec_read_track:
     call report_error
 
 .error:
-    db  "fdc: read track command ","is not implemented", 0
+    db  "fdc: read track command is not implemented", 0
 .ENDFRAME
 
 ##########
@@ -760,7 +760,7 @@ fdc_exec_format_track:
     call report_error
 
 .error:
-    db  "fdc: format track command ","is not implemented", 0
+    db  "fdc: format track command is not implemented", 0
 .ENDFRAME
 
 ##########
@@ -783,7 +783,7 @@ fdc_exec_scan_equal:
     call report_error
 
 .error:
-    db  "fdc: scan equal command ","is not implemented", 0
+    db  "fdc: scan equal command is not implemented", 0
 .ENDFRAME
 
 ##########
@@ -806,7 +806,7 @@ fdc_exec_scan_low_or_equal:
     call report_error
 
 .error:
-    db  "fdc: scan low or equal command ","is not implemented", 0
+    db  "fdc: scan low or equal command is not implemented", 0
 .ENDFRAME
 
 ##########
@@ -829,7 +829,7 @@ fdc_exec_scan_high_or_equal:
     call report_error
 
 .error:
-    db  "fdc: scan high or equal command ","is not implemented", 0
+    db  "fdc: scan high or equal command is not implemented", 0
 .ENDFRAME
 
 ##########
@@ -904,7 +904,7 @@ fdc_exec_sense_drive_status:
     call report_error
 
 .error:
-    db  "fdc: sense drive status command ","is not implemented", 0
+    db  "fdc: sense drive status command is not implemented", 0
 .ENDFRAME
 
 ##########
