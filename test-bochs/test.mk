@@ -86,7 +86,7 @@ $(RESDIR)/%.vm8086.txt: $(OBJDIR)/%.input FORCE
 
 TEST_OBJS = $(COMMON_OBJDIR)/main.o $(COMMON_OBJDIR)/bochs_api.o $(COMMON_OBJDIR)/config.o \
 	$(COMMON_OBJDIR)/devices.o $(COMMON_OBJDIR)/dump_state.o $(COMMON_OBJDIR)/test_api.o \
-	$(VMDIR)/bin/libcpu.a $(VMDIR)/bin/libutil.a $(LIBXIB)
+	$(VMDIR)/bin/libcpu.a $(VMDIR)/bin/libimg.a $(VMDIR)/bin/libutil.a $(LIBXIB)
 
 $(OBJDIR)/%.input: $(TEST_OBJS) $(OBJDIR)/%.o
 	printf '$(NAME): [intcode] linking ' >> $(TESTLOG)

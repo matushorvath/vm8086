@@ -3,15 +3,11 @@
 # From bios_address.template
 .IMPORT bios_address
 
-# From bios.o
+# From the BIOS image
 .IMPORT bios_image
 
 # From callback.s
 .IMPORT init_vm_callback
-
-# From floppy.o
-.IMPORT floppy_a_image
-.IMPORT floppy_b_image
 
 # From vm_ports.s
 .IMPORT init_vm_ports
@@ -21,9 +17,6 @@
 
 # From cpu/execute.s
 .IMPORT execute
-
-# From cpu/images.s
-.IMPORT init_images
 
 # From cpu/regions.s
 .IMPORT register_region
@@ -45,6 +38,13 @@
 
 # From fdc/init.s
 .IMPORT init_fdc
+
+# From img/images.s
+.IMPORT floppy_data
+.IMPORT floppy_size
+
+# From img/init.s
+.IMPORT init_images
 
 ##########
 # Entry point
@@ -76,23 +76,16 @@ init:
 
 ##########
 main:
-.FRAME floppy_a, floppy_b, floppy_a_size, floppy_b_size, tmp
-    arb -5
+.FRAME tmp
+    arb -1
 
     call init_vm_callback
 
     # Initialize the ROM and floppy images
-    add [bios_address], 0, [rb - 1]
-    add bios_image, 0, [rb - 2]
-    add floppy_a_image, 0, [rb - 3]
-    add floppy_b_image, 0, [rb - 4]
-    arb -4
+    add bios_image, 0, [rb - 1]
+    add [bios_address], 0, [rb - 2]
+    arb -2
     call init_images
-
-    add [rb - 6], 0, [rb + floppy_a]
-    add [rb - 7], 0, [rb + floppy_b]
-    add [rb - 8], 0, [rb + floppy_a_size]
-    add [rb - 9], 0, [rb + floppy_b_size]
 
     # Make the ROM read-only
     add [bios_address], 0, [rb - 1]
@@ -103,17 +96,19 @@ main:
     call register_region
 
     # Initialize PPI using correct floppy drive count
-    lt  0, [rb + floppy_a_size], [rb + tmp]
-    lt  0, [rb + floppy_b_size], [rb - 1]
+    # TODO make floppy image indexes configurable at compile time
+    lt  0, [floppy_size + 0], [rb + tmp]
+    lt  0, [floppy_size + 1], [rb - 1]
     add [rb - 1], [rb + tmp], [rb - 1]
     arb -1
     call init_ppi_8255a
 
     # Initialize floppy drives
-    add [rb + floppy_a], 0, [rb - 1]
-    add [rb + floppy_b], 0, [rb - 2]
-    add [rb + floppy_a_size], 0, [rb - 3]
-    add [rb + floppy_b_size], 0, [rb - 4]
+    # TODO make floppy image indexes configurable at compile time
+    add [floppy_data + 0], 0, [rb - 1]
+    add [floppy_data + 1], 0, [rb - 2]
+    add [floppy_size + 0], 0, [rb - 3]
+    add [floppy_size + 1], 0, [rb - 4]
     arb -4
     call init_fdc
 
@@ -128,7 +123,7 @@ main:
     # Start the CPU
     call execute
 
-    arb 5
+    arb 1
     ret 0
 .ENDFRAME
 
