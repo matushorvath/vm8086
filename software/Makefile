@@ -16,7 +16,8 @@ BINDIR ?= $(VMDIR)/bin
 OBJDIR ?= $(VMDIR)/obj/software
 
 DISKS ?= freedos-simple
-BUILD_TARGETS=$(patsubst %,$(OBJDIR)/%.o,$(DISKS))
+COMMA = ,
+TARGETS=$(patsubst %,$(OBJDIR)/%.o,$(subst $(COMMA), ,$(DISKS)))
 
 FORMATS=180 360 720 1200 1440
 
@@ -24,7 +25,7 @@ FORMATS=180 360 720 1200 1440
 build-all: build-prep checksum empty freedos msdos3 msdos5 msdos6
 
 .PHONY: build
-build: build-prep $(BUILD_TARGETS)
+build: build-prep $(TARGETS)
 
 .PHONY: build-prep
 build-prep:

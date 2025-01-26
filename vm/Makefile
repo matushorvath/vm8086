@@ -14,18 +14,17 @@ else
 	BIOS_ADDRESS ?= fc000
 endif
 
-BIOS_NAME = $(basename $(notdir $(BIOS_BIN)))
-
 DISKS ?= freedos-simple
 
-# this defines a string with a single space
-SPACE = $(eval) $(eval)
-VM_NAME = vm.$(BIOS_NAME).$(subst $(SPACE),.,$(DISKS)).input
+COMMA = ,
+BIOS_NAME = $(basename $(notdir $(BIOS_BIN)))
+VM_NAME = vm.$(BIOS_NAME).$(subst $(COMMA),.,$(DISKS)).input
+
+SOFTWARE_OBJDIR ?= $(VMDIR)/obj/software
+SOFTWARE_TARGETS=$(patsubst %,$(SOFTWARE_OBJDIR)/%.o,$(subst $(COMMA), ,$(DISKS)))
 
 BINDIR ?= $(VMDIR)/bin
 OBJDIR ?= $(VMDIR)/obj/vm
-
-SOFTWARE_OBJDIR ?= $(VMDIR)/obj/software
 
 .PHONY: build
 build: build-prep $(BINDIR)/$(VM_NAME)
@@ -44,7 +43,7 @@ VM_OBJS = main.o callback.o config.o vm_ports.o $(BIOS_NAME)_address.o $(BINDIR)
 	$(BINDIR)/libcga.a $(BINDIR)/libdev.a $(BINDIR)/libfdc.a $(BINDIR)/libimg.a \
 	$(BINDIR)/libutil.a $(LIBXIB) $(BIOS_NAME:=.o)
 
-$(BINDIR)/$(VM_NAME): $(VM_OBJS:%.o=$(OBJDIR)/%.o) $(DISKS:%=$(SOFTWARE_OBJDIR)/%.o)
+$(BINDIR)/$(VM_NAME): $(VM_OBJS:%.o=$(OBJDIR)/%.o) $(SOFTWARE_TARGETS)
 	$(run-intcode-ld)
 	@echo VM name: $(VM_NAME)
 
