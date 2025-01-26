@@ -27,11 +27,11 @@ test: build
 	node test.js
 
 # The order of the object files matters: First include all the code in any order,
-# then test_header.o, which will be followed by the 8086 during test runtime.
+# then test_header.o, which will be followed by the 8086 image during test runtime.
 
 TEST_OBJS = $(OBJDIR)/main.o $(OBJDIR)/callback.o $(OBJDIR)/config.o $(OBJDIR)/init_test.o \
-	$(OBJDIR)/print_output.o $(VMDIR)/bin/libcpu.a $(VMDIR)/bin/libutil.a $(LIBXIB) \
-	$(OBJDIR)/test_header.o
+	$(OBJDIR)/print_output.o $(VMDIR)/bin/libcpu.a $(VMDIR)/bin/libimg.a $(VMDIR)/bin/libutil.a \
+	$(LIBXIB) $(OBJDIR)/test_header.o
 
 $(OBJDIR)/test.input: $(TEST_OBJS)
 	$(run-intcode-ld)
