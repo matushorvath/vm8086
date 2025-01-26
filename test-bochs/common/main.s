@@ -10,8 +10,8 @@
 # From cpu/execute.s
 .IMPORT execute
 
-# From cpu/images.s
-.IMPORT init_rom_image
+# From img/init.s
+.IMPORT init_images
 
 ##########
 # Entry point
@@ -27,10 +27,10 @@
 ##########
 main:
 .FRAME
-    add 0xca000, 0, [rb - 1]
-    add binary_image, 0, [rb - 2]
+    add binary_image, 0, [rb - 1]
+    add 0xca000, 0, [rb - 2]
     arb -2
-    call init_rom_image
+    call init_images
 
     call register_devices
     call execute

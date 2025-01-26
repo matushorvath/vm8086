@@ -13,7 +13,7 @@ build: build-prep $(BINDIR)/libimg.a
 build-prep:
 	mkdir -p "$(BINDIR)" "$(OBJDIR)"
 
-DEV_OBJS = inflate.o init.o
+DEV_OBJS = images.o inflate.o init.o
 
 $(BINDIR)/libimg.a: $(DEV_OBJS:%.o=$(OBJDIR)/%.o)
 	$(run-intcode-ar)

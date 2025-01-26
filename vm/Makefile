@@ -44,8 +44,7 @@ VM_OBJS = main.o callback.o config.o vm_ports.o $(BIOS_NAME)_address.o $(BINDIR)
 	$(BINDIR)/libcga.a $(BINDIR)/libdev.a $(BINDIR)/libfdc.a $(BINDIR)/libimg.a \
 	$(BINDIR)/libutil.a $(LIBXIB) $(BIOS_NAME:=.o)
 
-$(BINDIR)/$(VM_NAME): $(VM_OBJS:%.o=$(OBJDIR)/%.o) $(DISKS:%=$(SOFTWARE_OBJDIR)/%.o) \
-	$(OBJDIR)/last_image.o
+$(BINDIR)/$(VM_NAME): $(VM_OBJS:%.o=$(OBJDIR)/%.o) $(DISKS:%=$(SOFTWARE_OBJDIR)/%.o)
 	$(run-intcode-ld)
 	@echo VM name: $(VM_NAME)
 

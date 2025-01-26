@@ -1,7 +1,37 @@
+.EXPORT deflated_size
 .EXPORT inflate_image
 
 # From util/error.s
 .IMPORT report_error
+
+##########
+deflated_size:
+.FRAME image; image_size, section_count, image_header, section_header           # returns image_size
+    arb -4
+
+    # Parse the image
+    add [rb + image], 1, [ip + 1]
+    add [0], 0, [rb + section_count]
+    add [rb + image], 2, [rb + image_header]
+
+    # Add image header and section header sizes to image size
+    mul [rb + section_count], 3, [rb + image_size]
+    add [rb + image_size], 2, [rb + image_size]
+
+    # Load last section header
+    add [rb + section_count], -1, [rb + section_header]
+    mul [rb + section_header], 3, [rb + section_header]
+    add [rb + image_header], [rb + section_header], [rb + section_header]
+
+    # Determine where last section ends
+    add [rb + section_header], 1, [ip + 1]                  # last section start offset
+    add [0], [rb + image_size], [rb + image_size]
+    add [rb + section_header], 2, [ip + 1]                  # last section size
+    add [0], [rb + image_size], [rb + image_size]
+
+    arb 4
+    ret 1
+.ENDFRAME
 
 ##########
 inflate_image:
@@ -9,6 +39,7 @@ inflate_image:
     arb -8
 
     # This function zeroes out the input image, to make sure we don't leave any invalid numbers accessible to the 8086
+    # TODO zero-out parts of the image with no sections, otherwise they contain random data
 
     # Parse the image
     add [rb + image], 1, [ip + 1]
