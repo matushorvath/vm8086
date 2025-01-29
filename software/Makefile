@@ -38,7 +38,7 @@ build-prep:
 
 .PHONY: checksum
 checksum: hash.md5 av.zip freedos.zip freedos-simple.img.xz msdos3.7z msdos5.7z msdos6.7z nc.7z \
-	prince.zip t602-1.zip t602-3.zip
+	prince.zip t602-1.zip t602-3.zip pcdos2.7z win286.7z
 	md5sum -c < $<
 
 .PHONY: empty
