@@ -1,6 +1,7 @@
 .EXPORT fdc_present_cylinder_units
 .EXPORT fdc_present_sector_units
 
+.EXPORT fdc_medium_changed_units
 .EXPORT fdc_medium_cylinders_units
 .EXPORT fdc_medium_heads_units
 .EXPORT fdc_medium_sectors_units
@@ -15,6 +16,9 @@ fdc_present_sector_units:
     ds  2, 0
 
 # Inserted floppy parameters
+fdc_medium_changed_units:
+    ds  2, 0
+
 fdc_medium_cylinders_units:
     ds  2, 0
 

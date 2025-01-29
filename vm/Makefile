@@ -39,7 +39,7 @@ run: build
 
 # The order of the object files matters, the BIOS and floppy binaries need to be the last objects.
 
-VM_OBJS = main.o callback.o config.o vm_ports.o $(BIOS_NAME)_address.o $(BINDIR)/libcpu.a \
+VM_OBJS = main.o callback.o config.o menu.o vm_ports.o $(BIOS_NAME)_address.o $(BINDIR)/libcpu.a \
 	$(BINDIR)/libcga.a $(BINDIR)/libdev.a $(BINDIR)/libfdc.a $(BINDIR)/libimg.a \
 	$(BINDIR)/libutil.a $(LIBXIB) $(BIOS_NAME:=.o)
 
