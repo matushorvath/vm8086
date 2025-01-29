@@ -1,11 +1,16 @@
 # apt install 7zip mtools wget xdelta3 xz-utils
 #
 # download:
-#  - https://vetusware.com/download/Norton%20Commander%203.0%203.0 -> nc.7z
 #  - https://www.myabandonware.com/game/arcade-volleyball-1on -> av.zip
 #  - https://www.myabandonware.com/game/prince-of-persia-pd -> prince.zip
-#  - https://vetusware.com/download/Text602 _T602_ 1.00 %231090 CZ -> t602-1.zip
+#  - https://vetusware.com/download/Norton%20Commander%203.0%203.0 -> nc.7z
+#  - https://vetusware.com/download/Text602%20_T602_%201.00%20%231090%20CZ -> t602-1.zip
 #  - https://vetusware.com/download/T602%203.0%20CZ -> t602-3.zip
+#  - https://winworldpc.com/download/44c2ac7d-cb9c-c2b4-e280-a111c3a4c2ac -> pcdos2.7z
+#  - https://winworldpc.com/download/40c2b855-0818-c39a-11c3-a4e284a2c3a5 -> msdos3.7z
+#  - https://winworldpc.com/download/28c2b366-26e2-809c-c3ad-11c3a5c28f13 -> msdos5.7z
+#  - https://winworldpc.com/download/c38fc38d-68c2-bbe2-80a6-4b11c3a4c2ac -> msdos6.7z
+#  - https://winworldpc.com/download/3a5c3583-0cb6-11e9-9b71-fa163e9022f0 -> win286.7z
 
 VMDIR = $(abspath ..)
 
@@ -87,32 +92,16 @@ $(OBJDIR)/freedos.img: freedos.zip
 	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
 	mcopy -D o -i $@ config-freedos.sys ::CONFIG.SYS
 
-# https://winworldpc.com/product/pc-dos/2x
-pcdos2.7z:
-	wget 'https://winworldpc.com/download/44c2ac7d-cb9c-c2b4-e280-a111c3a4c2ac' -O $@
-
 $(OBJDIR)/pcdos2.img: pcdos2.7z
 	7zz -y e $< -r Disk01.img -so > $@
 
-# https://winworldpc.com/product/ms-dos/331
-msdos3.7z:
-	wget 'https://winworldpc.com/download/40c2b855-0818-c39a-11c3-a4e284a2c3a5' -O $@
-
 $(OBJDIR)/msdos3.img: msdos3.7z
 	7zz -y e $< -r Disk1.img -so > $@
-
-# https://winworldpc.com/product/ms-dos/50
-msdos5.7z:
-	wget 'https://winworldpc.com/download/28c2b366-26e2-809c-c3ad-11c3a5c28f13' -O $@
 
 $(OBJDIR)/msdos5.img: msdos5.7z
 	7zz -y e $< -r disk01.img -so > $@
 	mdel -i $@ DOS50.ZIP AUTOEXEC.BAT CONFIG.SYS SETUP.* PKUNZIP.EXE
 	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
-
-# https://winworldpc.com/product/ms-dos/622
-msdos6.7z:
-	wget 'https://winworldpc.com/download/c38fc38d-68c2-bbe2-80a6-4b11c3a4c2ac' -O $@
 
 $(OBJDIR)/msdos6.img: msdos6.7z
 	7zz -y e $< -r Disk1.img -so > $@
