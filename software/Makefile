@@ -27,7 +27,7 @@ TARGETS=$(patsubst %,$(OBJDIR)/%.o,$(subst $(COMMA), ,$(DISKS)))
 FORMATS=180 360 720 1200 1440
 
 .PHONY: build-all
-build-all: build-prep checksum empty freedos msdos3 msdos5 msdos6
+build-all: build-prep checksum empty freedos msdos3 msdos5 msdos6 win286
 
 .PHONY: build
 build: build-prep $(TARGETS)
@@ -73,6 +73,9 @@ msdos6: msdos6-min $(addprefix $(OBJDIR)/,msdos6.o msdos6-nc.o msdos6-t602-1.o m
 .PHONY: msdos6-min
 msdos6-min: $(addprefix $(OBJDIR)/,msdos6-min-360.o msdos6-min-720.o msdos6-min-1200.o msdos6-min-1440.o)
 
+.PHONY: win286
+win286: $(addprefix $(OBJDIR)/,win286-disk1.o win286-disk2.o win286-disk3.o win286-disk4.o)
+
 # https://github.com/codercowboy/freedosbootdisks - a boot disk we can boot in CI/CD, without mtools
 freedos-simple.img.xz:
 	wget 'https://github.com/codercowboy/freedosbootdisks/raw/master/bootdisks/freedos.boot.disk.1.4MB.img' -O - | xz > $@
@@ -108,6 +111,9 @@ $(OBJDIR)/msdos6.img: msdos6.7z
 	mdel -i $@ *.??_ AUTOEXEC.BAT CONFIG.SYS COUNTRY.* DEFRAG.* DOSSETUP.INI DRVSPACE.BIN \
 		EXPAND.EXE MSCDEX.EXE NETWORKS.TXT PACKING.LST SCANDISK.* SETUP.*
 	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
+
+$(OBJDIR)/win286-disk%.img: win286.7z
+	7zz -y e $< -r disk0$(*F).img -so > $@
 
 $(FORMATS:%=$(OBJDIR)/empty-%.img): $(OBJDIR)/empty-%.img:
 	mformat -i $@ -f $(*F) -C
