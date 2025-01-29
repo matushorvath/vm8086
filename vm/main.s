@@ -9,6 +9,9 @@
 # From callback.s
 .IMPORT init_vm_callback
 
+# From menu.s
+.IMPORT init_menu
+
 # From vm_ports.s
 .IMPORT init_vm_ports
 
@@ -80,6 +83,7 @@ main:
     arb -1
 
     call init_vm_callback
+    call init_menu
 
     # Initialize the ROM and floppy images
     add bios_image, 0, [rb - 1]
@@ -103,13 +107,10 @@ main:
     arb -1
     call init_ppi_8255a
 
-    # Initialize floppy drives
-    # TODO make floppy image indexes configurable at compile time
-    add [floppy_data + 0], 0, [rb - 1]
-    add [floppy_data + 1], 0, [rb - 2]
-    add [floppy_size + 0], 0, [rb - 3]
-    add [floppy_size + 1], 0, [rb - 4]
-    arb -4
+    # Initialize floppy drives with images 0 (A) and 1 (B)
+    add 0, 0, [rb - 1]
+    add 1, 0, [rb - 2]
+    arb -2
     call init_fdc
 
     # Initialize other devices

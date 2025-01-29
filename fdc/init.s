@@ -21,6 +21,10 @@
 # From cpu/ports.s
 .IMPORT register_ports
 
+# From img/images.s
+.IMPORT floppy_data
+.IMPORT floppy_size
+
 # From util/error.s
 .IMPORT report_error
 
@@ -50,7 +54,7 @@ fdc_ports:
 
 ##########
 init_fdc:
-.FRAME floppy_a, floppy_b, floppy_a_size, floppy_b_size;
+.FRAME image_index_a, image_index_b;
     # Register I/O ports
     add fdc_ports, 0, [rb - 1]
     arb -1
@@ -58,30 +62,34 @@ init_fdc:
 
     # Initialize both drive units
     add 0, 0, [rb - 1]
-    add [rb + floppy_a], 0, [rb - 2]
-    add [rb + floppy_a_size], 0, [rb - 3]
-    arb -3
+    add [rb + image_index_a], 0, [rb - 2]
+    arb -2
     call init_fdd
 
     add 1, 0, [rb - 1]
-    add [rb + floppy_b], 0, [rb - 2]
-    add [rb + floppy_b_size], 0, [rb - 3]
-    arb -3
+    add [rb + image_index_b], 0, [rb - 2]
+    arb -2
     call init_fdd
 
-    ret 4
+    ret 2
 .ENDFRAME
 
 ##########
 init_fdd:
-.FRAME unit, image, size; tmp
-    arb -1
+.FRAME unit, image_index; data, size, tmp
+    arb -3
 
     # Initialize floppy parameters based on inserted floppy type
 
-    # Skip units without a floppy image
-    # TODO remove disk from the drive when the image is 0?
-    jz  [rb + image], .done
+    # Load image information
+    add floppy_data, [rb + image_index], [ip + 1]
+    add [0], 0, [rb + data]
+    add floppy_size, [rb + image_index], [ip + 1]
+    add [0], 0, [rb + size]
+
+    # Skip zero images
+    # TODO remove disk from the drive for zero images
+    jz  [rb + data], .done
 
     # Set the medium changed flag
     add fdc_medium_changed_units, [rb + unit], [ip + 3]
@@ -89,7 +97,7 @@ init_fdd:
 
     # Save pointer to floppy image
     add fdc_image_units, [rb + unit], [ip + 3]
-    add [rb + image], 0, [0]
+    add [rb + data], 0, [0]
 
     # Set medium parameters based on floppy image size
     eq  [rb + size], 1474560, [rb + tmp]
@@ -174,8 +182,8 @@ init_fdd:
     jz  0, .done
 
 .done:
-    arb 1
-    ret 3
+    arb 3
+    ret 2
 .ENDFRAME
 
 .EOF
