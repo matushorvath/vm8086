@@ -1,4 +1,5 @@
 .EXPORT handle_keyboard
+.EXPORT keyboard_callback
 
 # From scancode.s
 .IMPORT scancode
@@ -10,7 +11,6 @@
 .IMPORT ppi_a
 
 # TODO what should happen if keys are pressed faster than BIOS can receive them?
-# TODO avoid pressing and releasing shift unless necessary (remember shift state)
 # TODO support repeating a key while it's held
 # TODO consider moving outside of dev/ to kbd/
 # TODO check why keyboard doesn't work in Arcade Volleyball
@@ -354,6 +354,8 @@ handle_keyboard:
     jnz [rb + tmp], .function_9_10_wait
     eq  [rb + char], 0x31, [rb + tmp]
     jnz [rb + tmp], .function_9_10_wait
+    eq  [rb + char], 0x34, [rb + tmp]
+    jnz [rb + tmp], .function_12_wait
 
     eq  [rb + char], 0x7e, [rb + tmp]
     jnz [rb + tmp], .insert
@@ -366,6 +368,31 @@ handle_keyboard:
 
     # Wait for 7e, then make and break with the code we just prepared
     add .xx_xx_7e_trailer, 0, [keyboard_state]
+    jz  0, .done
+
+.function_12_wait:
+    # Function key F12; the PC does not have this key, so we use it to trigger a menu
+    # Wait for 7e, then call a VM callback if registered
+    add .7e_callback, 0, [keyboard_state]
+    jz  0, .done
+
+.7e_callback:
+    # Read next character if available
+    db  213, char                       # ina [rb + char]
+    eq  [rb + char], -1, [rb + tmp]
+    jnz [rb + tmp], .done
+
+    # We expect a plain 7e trailer, no ctrl, alt or shift
+    eq  [rb + char], 0x7e, [rb + tmp]
+    jz  [rb + tmp], .done
+
+    # Call the callback if registered
+    jz  [keyboard_callback], .done
+    call [keyboard_callback]
+
+    # This character was processed
+    add .initial, 0, [keyboard_state]
+
     jz  0, .done
 
 .insert:
@@ -575,6 +602,9 @@ ctrl_needed:
 alt_needed:
     db  0
 shift_needed:
+    db  0
+
+keyboard_callback:
     db  0
 
 .EOF

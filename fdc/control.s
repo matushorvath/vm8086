@@ -9,6 +9,9 @@
 # From the config file
 .IMPORT config_log_fdc
 
+# From drives.s
+.IMPORT fdc_medium_changed_units
+
 # From state_machine.s
 .IMPORT fdc_cmd_state
 .IMPORT fdc_cmd_result_phase
@@ -171,8 +174,8 @@ fdc_dir_read:
     arb -1
 
     # The only bit related to floppy operation is bit 7 - diskette change
-    # We don't support changing the diskette, so return all zeros
-    add 0, 0, [rb + value]
+    add fdc_medium_changed_units, [fdc_dor_drive_a_select], [ip + 1]
+    mul [0], 0x80, [rb + value]
 
     arb 1
     ret 1

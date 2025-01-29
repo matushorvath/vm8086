@@ -1,4 +1,5 @@
 .EXPORT init_fdc
+.EXPORT init_fdd
 
 # From control.s
 .IMPORT fdc_dor_write
@@ -7,6 +8,7 @@
 .IMPORT fdc_control_write
 
 # From drives.s
+.IMPORT fdc_medium_changed_units
 .IMPORT fdc_medium_cylinders_units
 .IMPORT fdc_medium_heads_units
 .IMPORT fdc_medium_sectors_units
@@ -59,26 +61,31 @@ init_fdc:
     add [rb + floppy_a], 0, [rb - 2]
     add [rb + floppy_a_size], 0, [rb - 3]
     arb -3
-    call init_unit
+    call init_fdd
 
     add 1, 0, [rb - 1]
     add [rb + floppy_b], 0, [rb - 2]
     add [rb + floppy_b_size], 0, [rb - 3]
     arb -3
-    call init_unit
+    call init_fdd
 
     ret 4
 .ENDFRAME
 
 ##########
-init_unit:
+init_fdd:
 .FRAME unit, image, size; tmp
     arb -1
 
     # Initialize floppy parameters based on inserted floppy type
 
     # Skip units without a floppy image
+    # TODO remove disk from the drive when the image is 0?
     jz  [rb + image], .done
+
+    # Set the medium changed flag
+    add fdc_medium_changed_units, [rb + unit], [ip + 3]
+    add 1, 0, [0]
 
     # Save pointer to floppy image
     add fdc_image_units, [rb + unit], [ip + 3]

@@ -26,6 +26,7 @@
 .IMPORT fdc_interrupt_pending
 
 # From drives.s
+.IMPORT fdc_medium_changed_units
 .IMPORT fdc_medium_cylinders_units
 .IMPORT fdc_medium_heads_units
 .IMPORT fdc_medium_sectors_units
@@ -851,6 +852,10 @@ fdc_exec_recalibrate:
     add fdc_present_cylinder_units, [fdc_cmd_unit_selected], [ip + 3]
     add 0, 0, [0]
 
+    # Clear the media changed flag
+    add fdc_medium_changed_units, [fdc_cmd_unit_selected], [ip + 3]
+    add 0, 0, [0]
+
     # TODO set floppy busy with seek in MSR, it is cleared by sense interrupt
     # TODO clear floppy busy in MSR when sense interrupt
 
@@ -944,6 +949,10 @@ fdc_exec_seek:
     # Set present cylinder to the requested cylinder
     add fdc_present_cylinder_units, [fdc_cmd_unit_selected], [ip + 3]
     add [fdc_cmd_cylinder], 0, [0]
+
+    # Clear the media changed flag
+    add fdc_medium_changed_units, [fdc_cmd_unit_selected], [ip + 3]
+    add 0, 0, [0]
 
     # TODO set floppy busy with seek in MSR, it is cleared by sense interrupt
     # TODO clear floppy busy in MSR when sense interrupt
