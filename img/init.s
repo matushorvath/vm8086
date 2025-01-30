@@ -1,6 +1,7 @@
 .EXPORT init_images
 
 # From images.s
+.IMPORT floppy_count
 .IMPORT floppy_image
 .IMPORT floppy_data
 .IMPORT floppy_size
@@ -27,7 +28,7 @@ init_images:
 .FRAME images, rom_address; index, image, tmp
     arb -3
 
-    # This function assumes the first image is the ROM, followed by up to FLOPPY_COUNT-1 floppy images
+    # This function assumes the first image is the ROM, followed by up to MAX_FLOPPY_COUNT-1 floppy images
 
     # Validate the ROM address
     add [rb + rom_address], 0, [rb - 1]
@@ -86,12 +87,14 @@ init_images:
     add [rb + image], [rb - 3], [rb + image]                # image = image + deflated_size(image)
     add [rb + index], 1, [rb + index]
 
-    lt  [rb + index], 16, [rb + tmp]                        # if (index >= FLOPPY_COUNT (16)) report_error()
+    lt  [rb + index], 16, [rb + tmp]                        # if (index >= MAX_FLOPPY_COUNT (16)) report_error()
     jz  [rb + tmp], .too_many_images
 
     jz  0, .load_loop
 
 .load_done:
+    add [rb + index], 0, [floppy_count]
+
     # The output buffers we allocated for inflated images overlap the input buffers with compressed image data
     # We need to inflate the images back to front to avoid overwriting inputs we still need
 

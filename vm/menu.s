@@ -13,6 +13,7 @@
 .IMPORT init_fdd
 
 # From img/images.s
+.IMPORT floppy_count
 .IMPORT floppy_data
 .IMPORT floppy_size
 
@@ -39,10 +40,9 @@ menu_callback:
     add [rb - 6], 0, [rb + drive]
 
     # Ask which image to select
-    # TODO build list of images at runtime
     add image_msg, 0, [rb - 1]
     add image_options, 0, [rb - 2]
-    add [image_option_count], 0, [rb - 3]
+    add [floppy_count], 0, [rb - 3]
     add fdc_image_index_units, [rb + drive], [ip + 1]
     add [0], 0, [rb - 4]
     arb -4
@@ -50,7 +50,6 @@ menu_callback:
 
     add [rb - 6], 0, [rb + image_index]
 
-    # TODO validate image actually exists
     # TODO allow removing disk from a drive without replacement
 
     add [rb + drive], 0, [rb - 1]
@@ -79,13 +78,12 @@ drive_option_b:
 image_msg:
     db  "Image:", 0
 
+# We need text for MAX_FLOPPY_COUNT images, currently 16
 image_options:
     db  image_option_00, image_option_01, image_option_02, image_option_03, image_option_04
     db  image_option_05, image_option_06, image_option_07, image_option_08, image_option_09
     db  image_option_10, image_option_11, image_option_12, image_option_13, image_option_14
     db  image_option_15
-image_option_count:
-    db  16
 
 image_option_00:
     db  "0", 0
