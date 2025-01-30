@@ -1,11 +1,17 @@
 # apt install 7zip mtools wget xdelta3 xz-utils
 #
 # download:
-#  - https://vetusware.com/download/Norton%20Commander%203.0%203.0 -> nc.7z
 #  - https://www.myabandonware.com/game/arcade-volleyball-1on -> av.zip
 #  - https://www.myabandonware.com/game/prince-of-persia-pd -> prince.zip
-#  - https://vetusware.com/download/Text602 _T602_ 1.00 %231090 CZ -> t602-1.zip
+#  - https://vetusware.com/download/Norton%20Commander%203.0%203.0 -> nc.7z
+#  - https://vetusware.com/download/Text602%20_T602_%201.00%20%231090%20CZ -> t602-1.zip
 #  - https://vetusware.com/download/T602%203.0%20CZ -> t602-3.zip
+#  - https://winworldpc.com/download/44c2ac7d-cb9c-c2b4-e280-a111c3a4c2ac -> pcdos2.7z
+#  - https://winworldpc.com/download/40c2b855-0818-c39a-11c3-a4e284a2c3a5 -> msdos3.7z
+#  - https://winworldpc.com/download/28c2b366-26e2-809c-c3ad-11c3a5c28f13 -> msdos5.7z
+#  - https://winworldpc.com/download/c38fc38d-68c2-bbe2-80a6-4b11c3a4c2ac -> msdos6.7z
+#  - https://winworldpc.com/download/0474c84d-d5c4-11eb-9de1-0200008a0da4 -> win203.7z
+#  - https://winworldpc.com/download/c396c3b1-e280-a65d-e280-b06211c3a4ef -> win211.7z
 
 VMDIR = $(abspath ..)
 
@@ -22,7 +28,7 @@ TARGETS=$(patsubst %,$(OBJDIR)/%.o,$(subst $(COMMA), ,$(DISKS)))
 FORMATS=180 360 720 1200 1440
 
 .PHONY: build-all
-build-all: build-prep checksum empty freedos msdos3 msdos5 msdos6
+build-all: build-prep checksum empty freedos msdos3 msdos5 msdos6 win104 win203 win211
 
 .PHONY: build
 build: build-prep $(TARGETS)
@@ -33,7 +39,7 @@ build-prep:
 
 .PHONY: checksum
 checksum: hash.md5 av.zip freedos.zip freedos-simple.img.xz msdos3.7z msdos5.7z msdos6.7z nc.7z \
-	prince.zip t602-1.zip t602-3.zip
+	prince.zip t602-1.zip t602-3.zip pcdos2.7z win104.7z win203.7z win211.7z
 	md5sum -c < $<
 
 .PHONY: empty
@@ -68,6 +74,15 @@ msdos6: msdos6-min $(addprefix $(OBJDIR)/,msdos6.o msdos6-nc.o msdos6-t602-1.o m
 .PHONY: msdos6-min
 msdos6-min: $(addprefix $(OBJDIR)/,msdos6-min-360.o msdos6-min-720.o msdos6-min-1200.o msdos6-min-1440.o)
 
+.PHONY: win104
+win104: $(patsubst %,$(OBJDIR)/win104-disk%.o,1 2 3 4 5 6 7)
+
+.PHONY: win203
+win203: $(patsubst %,$(OBJDIR)/win203-disk%.o,1 2 3 4 5)
+
+.PHONY: win211
+win211: $(patsubst %,$(OBJDIR)/win211-disk%.o,1 2 3 4)
+
 # https://github.com/codercowboy/freedosbootdisks - a boot disk we can boot in CI/CD, without mtools
 freedos-simple.img.xz:
 	wget 'https://github.com/codercowboy/freedosbootdisks/raw/master/bootdisks/freedos.boot.disk.1.4MB.img' -O - | xz > $@
@@ -87,38 +102,31 @@ $(OBJDIR)/freedos.img: freedos.zip
 	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
 	mcopy -D o -i $@ config-freedos.sys ::CONFIG.SYS
 
-# https://winworldpc.com/product/pc-dos/2x
-pcdos2.7z:
-	wget 'https://winworldpc.com/download/44c2ac7d-cb9c-c2b4-e280-a111c3a4c2ac' -O $@
-
 $(OBJDIR)/pcdos2.img: pcdos2.7z
 	7zz -y e $< -r Disk01.img -so > $@
 
-# https://winworldpc.com/product/ms-dos/331
-msdos3.7z:
-	wget 'https://winworldpc.com/download/40c2b855-0818-c39a-11c3-a4e284a2c3a5' -O $@
-
 $(OBJDIR)/msdos3.img: msdos3.7z
 	7zz -y e $< -r Disk1.img -so > $@
-
-# https://winworldpc.com/product/ms-dos/50
-msdos5.7z:
-	wget 'https://winworldpc.com/download/28c2b366-26e2-809c-c3ad-11c3a5c28f13' -O $@
 
 $(OBJDIR)/msdos5.img: msdos5.7z
 	7zz -y e $< -r disk01.img -so > $@
 	mdel -i $@ DOS50.ZIP AUTOEXEC.BAT CONFIG.SYS SETUP.* PKUNZIP.EXE
 	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
 
-# https://winworldpc.com/product/ms-dos/622
-msdos6.7z:
-	wget 'https://winworldpc.com/download/c38fc38d-68c2-bbe2-80a6-4b11c3a4c2ac' -O $@
-
 $(OBJDIR)/msdos6.img: msdos6.7z
 	7zz -y e $< -r Disk1.img -so > $@
 	mdel -i $@ *.??_ AUTOEXEC.BAT CONFIG.SYS COUNTRY.* DEFRAG.* DOSSETUP.INI DRVSPACE.BIN \
 		EXPAND.EXE MSCDEX.EXE NETWORKS.TXT PACKING.LST SCANDISK.* SETUP.*
 	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
+
+$(OBJDIR)/win104-disk%.img: win104.7z
+	7zz -y e $< -r D$(*F)_*.img -so > $@
+
+$(OBJDIR)/win203-disk%.img: win203.7z
+	7zz -y e $< -r disk$(*F).img -so > $@
+
+$(OBJDIR)/win211-disk%.img: win211.7z
+	7zz -y e $< -r Disk$(*F).img -so > $@
 
 $(FORMATS:%=$(OBJDIR)/empty-%.img): $(OBJDIR)/empty-%.img:
 	mformat -i $@ -f $(*F) -C
