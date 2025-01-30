@@ -1,10 +1,14 @@
+.EXPORT floppy_count
 .EXPORT floppy_image
 .EXPORT floppy_data
 .EXPORT floppy_size
 
-# TODO const FLOPPY_COUNT 16
+# TODO const MAX_FLOPPY_COUNT 16
 
-# Table of FLOPPY_COUNT-1 binary floppy images (followed by a zero-image as a terminator)
+floppy_count:
+    db  0
+
+# Table of up to MAX_FLOPPY_COUNT-1 binary floppy images (followed by a zero-image as a terminator)
 
 # Deflated floppy image pointers, invalid after initialization
 floppy_image:

@@ -13,6 +13,7 @@
 .IMPORT fdc_medium_heads_units
 .IMPORT fdc_medium_sectors_units
 .IMPORT fdc_image_units
+.IMPORT fdc_image_index_units
 
 # From state_machine.s
 .IMPORT fdc_data_read
@@ -94,6 +95,10 @@ init_fdd:
     # Set the medium changed flag
     add fdc_medium_changed_units, [rb + unit], [ip + 3]
     add 1, 0, [0]
+
+    # Save image index
+    add fdc_image_index_units, [rb + unit], [ip + 3]
+    add [rb + image_index], 0, [0]
 
     # Save pointer to floppy image
     add fdc_image_units, [rb + unit], [ip + 3]
