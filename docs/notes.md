@@ -301,3 +301,6 @@ Windows
 
 ICVM_TYPE=c-ext make run DISKS=msdos3-min-1440,win203-disk1,win203-disk2,win203-disk3,win203-disk4,win203-disk5
 ICVM_TYPE=c-ext make run DISKS=msdos3-min-1440,win211-disk1,win211-disk2,win211-disk3,win211-disk4
+
+run B:\setup, install to A:
+F12, select disk in B: drive

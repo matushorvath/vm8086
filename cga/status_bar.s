@@ -7,7 +7,6 @@
 .EXPORT set_speaker_inactive
 
 .EXPORT redraw_status_bar
-.EXPORT question
 
 # From the linked binary
 .IMPORT extended_vm
@@ -21,7 +20,6 @@
 
 # From libxib.a
 .IMPORT print_num_radix
-.IMPORT print_str
 
 # Unicode icons
 #
@@ -293,76 +291,6 @@ redraw_speaker_activity:
 
 .done:
     ret 0
-.ENDFRAME
-
-##########
-question:
-.FRAME message, response, response_size; index, char, tmp
-    arb -3
-
-    # Display a question in the status bar and wait for input
-
-    # Position the cursor one row below the screen, right side
-    out 0x1b
-    out '['
-
-    add [screen_height_chars], 1, [rb - 1]
-    arb -1
-    call printb
-
-    out ';'
-    out '1'
-    out 'H'
-
-    # Clear current line
-    out 0x1b
-    out '['
-    out '2'
-    out 'K'
-
-    # Print the message
-    add [rb + message], 0, [rb - 1]
-    arb -1
-    call print_str
-
-    out ' '
-
-    # Read the response into the provided buffer
-    add 0, 0, [rb + index]
-
-.loop:
-    # Write at most response_size bytes to the buffer (including zero termination)
-    add [rb + response_size], -1, [rb + response_size]
-    lt  0, [rb + response_size], [rb + tmp]
-    jz  [rb + tmp], .done
-
-    # Read next character
-    in  [rb + char]
-
-    # Stop reading on Enter
-    eq  [rb + char], 13, [rb + tmp]
-    jnz [rb + tmp], .done
-
-    # Output the character
-    out [rb + char]
-
-    # Save the character
-    add [rb + response], [rb + index], [ip + 3]
-    add [rb + char], 0, [0]
-
-    add [rb + index], 1, [rb + index]
-    jz  0, .loop
-
-.done:
-    # Zero terminate the response
-    add [rb + response], [rb + index], [ip + 3]
-    add 0, 0, [0]
-
-    # Redraw the status bar
-    call redraw_status_bar
-
-    arb 3
-    ret 3
 .ENDFRAME
 
 ##########

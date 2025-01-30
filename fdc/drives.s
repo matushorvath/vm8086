@@ -7,6 +7,7 @@
 .EXPORT fdc_medium_sectors_units
 
 .EXPORT fdc_image_units
+.EXPORT fdc_image_index_units
 
 # Current head positions
 fdc_present_cylinder_units:
@@ -30,6 +31,10 @@ fdc_medium_sectors_units:
 
 # Floppy image pointers
 fdc_image_units:
+    ds  2, 0
+
+# Floppy image indexes
+fdc_image_index_units:
     ds  2, 0
 
 .EOF
