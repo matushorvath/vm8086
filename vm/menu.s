@@ -33,11 +33,12 @@ menu_callback:
     add drive_msg, 0, [rb - 1]
     add drive_options, 0, [rb - 2]
     add [drive_option_count], 0, [rb - 3]
-    add 0, 0, [rb - 4]
+    add [last_drive], 0, [rb - 4]
     arb -4
     call question
 
     add [rb - 6], 0, [rb + drive]
+    add [rb + drive], 0, [last_drive]
 
     # Ask which image to select
     add image_msg, 0, [rb - 1]
@@ -74,6 +75,9 @@ drive_option_a:
     db  "A:", 0
 drive_option_b:
     db  "B:", 0
+
+last_drive:
+    db  0
 
 image_msg:
     db  "Image:", 0
