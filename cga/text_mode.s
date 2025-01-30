@@ -45,7 +45,8 @@
 .IMPORT shr_0
 .IMPORT shr_1
 
-# TODO qbasic.exe, msdos6-nc image: window borders are blinking (probably should be high intensity instead)
+# qbasic.exe, msdos6-nc image: window borders are blinking
+# verified that qbasic actually sets CGA mode control to 0b00001001, which correctly enables blinking (bit 5 is 0)
 
 ##########
 initialize_text_mode:
@@ -305,15 +306,15 @@ output_character:
     out 'm'
 
 .after_color:
-    jnz [mode_high_res_text], .double_width
+    jnz [mode_high_res_text], .after_double_width
 
     # Select double width font for 40x25
     out 0x1b
     out '#'
     out '6'
 
-.double_width:
-    jnz [mode_not_blinking], .blink
+.after_double_width:
+    jnz [mode_not_blinking], .after_blink
 
     # Turn on blinking
     out 0x1b
@@ -321,7 +322,7 @@ output_character:
     out '5'
     out 'm'
 
-.blink:
+.after_blink:
     # Print the character, converting from CP437 to UTF-8
     add cp437_0, [rb + char], [ip + 1]
     out [0]

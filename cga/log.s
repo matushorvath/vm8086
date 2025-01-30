@@ -349,7 +349,7 @@ dump_cga_state:
 .high_res_graphics_msg:
     db  " hi-gr ", 0
 .blinking_msg:
-    db  " blink ", 0
+    db  " no-blink ", 0
 .color_selected_msg:
     db  " select ", 0
 .bright_msg:
