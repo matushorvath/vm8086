@@ -10,7 +10,8 @@
 #  - https://winworldpc.com/download/40c2b855-0818-c39a-11c3-a4e284a2c3a5 -> msdos3.7z
 #  - https://winworldpc.com/download/28c2b366-26e2-809c-c3ad-11c3a5c28f13 -> msdos5.7z
 #  - https://winworldpc.com/download/c38fc38d-68c2-bbe2-80a6-4b11c3a4c2ac -> msdos6.7z
-#  - https://winworldpc.com/download/3a5c3583-0cb6-11e9-9b71-fa163e9022f0 -> win286.7z
+#  - https://winworldpc.com/download/0474c84d-d5c4-11eb-9de1-0200008a0da4 -> win203.7z
+#  - https://winworldpc.com/download/c396c3b1-e280-a65d-e280-b06211c3a4ef -> win211.7z
 
 VMDIR = $(abspath ..)
 
@@ -27,7 +28,7 @@ TARGETS=$(patsubst %,$(OBJDIR)/%.o,$(subst $(COMMA), ,$(DISKS)))
 FORMATS=180 360 720 1200 1440
 
 .PHONY: build-all
-build-all: build-prep checksum empty freedos msdos3 msdos5 msdos6 win286
+build-all: build-prep checksum empty freedos msdos3 msdos5 msdos6 win203 win211
 
 .PHONY: build
 build: build-prep $(TARGETS)
@@ -73,8 +74,11 @@ msdos6: msdos6-min $(addprefix $(OBJDIR)/,msdos6.o msdos6-nc.o msdos6-t602-1.o m
 .PHONY: msdos6-min
 msdos6-min: $(addprefix $(OBJDIR)/,msdos6-min-360.o msdos6-min-720.o msdos6-min-1200.o msdos6-min-1440.o)
 
-.PHONY: win286
-win286: $(addprefix $(OBJDIR)/,win286-disk1.o win286-disk2.o win286-disk3.o win286-disk4.o)
+.PHONY: win203
+win203: $(addprefix $(OBJDIR)/,win203-disk1.o win203-disk2.o win203-disk3.o win203-disk4.o win203-disk5.o)
+
+.PHONY: win211
+win211: $(addprefix $(OBJDIR)/,win211-disk1.o win211-disk2.o win211-disk3.o win211-disk4.o)
 
 # https://github.com/codercowboy/freedosbootdisks - a boot disk we can boot in CI/CD, without mtools
 freedos-simple.img.xz:
@@ -112,8 +116,11 @@ $(OBJDIR)/msdos6.img: msdos6.7z
 		EXPAND.EXE MSCDEX.EXE NETWORKS.TXT PACKING.LST SCANDISK.* SETUP.*
 	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
 
-$(OBJDIR)/win286-disk%.img: win286.7z
-	7zz -y e $< -r disk0$(*F).img -so > $@
+$(OBJDIR)/win203-disk%.img: win203.7z
+	7zz -y e $< -r disk$(*F).img -so > $@
+
+$(OBJDIR)/win211-disk%.img: win211.7z
+	7zz -y e $< -r Disk$(*F).img -so > $@
 
 $(FORMATS:%=$(OBJDIR)/empty-%.img): $(OBJDIR)/empty-%.img:
 	mformat -i $@ -f $(*F) -C
