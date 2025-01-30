@@ -299,6 +299,5 @@ ppi_mode_write needed a hack to allow both 0x89 and 0x99 to make this work.
 Windows
 =======
 
-(does not work, displays the splash screen and freezes/crashes)
-
-ICVM_TYPE=c-ext make run DISKS=msdos5-min-1440,win203-disk1,win203-disk2,win203-disk3,win203-disk4
+ICVM_TYPE=c-ext make run DISKS=msdos3-min-1440,win203-disk1,win203-disk2,win203-disk3,win203-disk4,win203-disk5
+ICVM_TYPE=c-ext make run DISKS=msdos3-min-1440,win211-disk1,win211-disk2,win211-disk3,win211-disk4

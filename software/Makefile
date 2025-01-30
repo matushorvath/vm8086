@@ -28,7 +28,7 @@ TARGETS=$(patsubst %,$(OBJDIR)/%.o,$(subst $(COMMA), ,$(DISKS)))
 FORMATS=180 360 720 1200 1440
 
 .PHONY: build-all
-build-all: build-prep checksum empty freedos msdos3 msdos5 msdos6 win203 win211
+build-all: build-prep checksum empty freedos msdos3 msdos5 msdos6 win104 win203 win211
 
 .PHONY: build
 build: build-prep $(TARGETS)
@@ -39,7 +39,7 @@ build-prep:
 
 .PHONY: checksum
 checksum: hash.md5 av.zip freedos.zip freedos-simple.img.xz msdos3.7z msdos5.7z msdos6.7z nc.7z \
-	prince.zip t602-1.zip t602-3.zip pcdos2.7z win286.7z
+	prince.zip t602-1.zip t602-3.zip pcdos2.7z win104.7z win203.7z win211.7z
 	md5sum -c < $<
 
 .PHONY: empty
@@ -74,11 +74,14 @@ msdos6: msdos6-min $(addprefix $(OBJDIR)/,msdos6.o msdos6-nc.o msdos6-t602-1.o m
 .PHONY: msdos6-min
 msdos6-min: $(addprefix $(OBJDIR)/,msdos6-min-360.o msdos6-min-720.o msdos6-min-1200.o msdos6-min-1440.o)
 
+.PHONY: win104
+win104: $(patsubst %,$(OBJDIR)/win104-disk%.o,1 2 3 4 5 6 7)
+
 .PHONY: win203
-win203: $(addprefix $(OBJDIR)/,win203-disk1.o win203-disk2.o win203-disk3.o win203-disk4.o win203-disk5.o)
+win203: $(patsubst %,$(OBJDIR)/win203-disk%.o,1 2 3 4 5)
 
 .PHONY: win211
-win211: $(addprefix $(OBJDIR)/,win211-disk1.o win211-disk2.o win211-disk3.o win211-disk4.o)
+win211: $(patsubst %,$(OBJDIR)/win211-disk%.o,1 2 3 4)
 
 # https://github.com/codercowboy/freedosbootdisks - a boot disk we can boot in CI/CD, without mtools
 freedos-simple.img.xz:
@@ -115,6 +118,9 @@ $(OBJDIR)/msdos6.img: msdos6.7z
 	mdel -i $@ *.??_ AUTOEXEC.BAT CONFIG.SYS COUNTRY.* DEFRAG.* DOSSETUP.INI DRVSPACE.BIN \
 		EXPAND.EXE MSCDEX.EXE NETWORKS.TXT PACKING.LST SCANDISK.* SETUP.*
 	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
+
+$(OBJDIR)/win104-disk%.img: win104.7z
+	7zz -y e $< -r D$(*F)_*.img -so > $@
 
 $(OBJDIR)/win203-disk%.img: win203.7z
 	7zz -y e $< -r disk$(*F).img -so > $@
