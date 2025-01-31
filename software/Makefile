@@ -196,53 +196,53 @@ $(OBJDIR)/%-poweroff.img: $(OBJDIR)/%.img autoexec-poweroff.bat
 	mcopy -D o -i $@ autoexec-poweroff.bat ::AUTOEXEC.BAT
 
 $(OBJDIR)/%-nc.img: $(OBJDIR)/%.img blobs/nc.7z autoexec-nc.bat nc.ini
-	rm -rf NC
-	mkdir -p NC
-	7zz -y x blobs/nc.7z -oNC
+	rm -rf $(OBJDIR)/NC
+	mkdir -p $(OBJDIR)/NC
+	7zz -y x blobs/nc.7z -o$(OBJDIR)/NC
 	cp $< $@
-	mcopy -D o -s -i $@ NC ::NC
-	rm -rf NC
+	mcopy -D o -s -i $@ $(OBJDIR)/NC ::NC
+	rm -rf $(OBJDIR)/NC
 	mcopy -D o -i $@ autoexec-nc.bat ::AUTOEXEC.BAT
 	mcopy -D o -i $@ nc.ini ::NC/NC.INI
 
 $(OBJDIR)/%-t602-1.img: $(OBJDIR)/%.img blobs/t602-1.zip autoexec-t602-1.bat
-	rm -rf T602-1
-	mkdir -p T602-1
-	7zz -y x blobs/t602-1.zip -oT602-1
+	rm -rf $(OBJDIR)/T602-1
+	mkdir -p $(OBJDIR)/T602-1
+	7zz -y x blobs/t602-1.zip -o$(OBJDIR)/T602-1
 	cp $< $@
-	mcopy -D o -s -i $@ T602-1/t602 ::T602
-	rm -rf T602-1
+	mcopy -D o -s -i $@ $(OBJDIR)/T602-1/t602 ::T602
+	rm -rf $(OBJDIR)/T602-1
 	mcopy -D o -i $@ autoexec-t602-1.bat ::AUTOEXEC.BAT
 
 $(OBJDIR)/%-t602-3.img: $(OBJDIR)/%.img blobs/t602-3.zip autoexec-t602-3.bat
-	rm -rf T602-3
-	mkdir -p T602-3
-	7zz -y x blobs/t602-3.zip -oT602-3
-	rm T602-3/T602/K602.EXE T602-3/T602/K602.HLP T602-3/T602/CESKY.SLO
-	cp T602-3/T602/T602.EXE T602.EXE.tmp
-	xdelta3 -d -f -s T602.EXE.tmp t602-3.xdelta3 T602-3/T602/T602.EXE
-	rm -f T602.EXE.tmp
+	rm -rf $(OBJDIR)/T602-3
+	mkdir -p $(OBJDIR)/T602-3
+	7zz -y x blobs/t602-3.zip -o$(OBJDIR)/T602-3
+	rm $(OBJDIR)/T602-3/T602/K602.EXE $(OBJDIR)/T602-3/T602/K602.HLP $(OBJDIR)/T602-3/T602/CESKY.SLO
+	cp $(OBJDIR)/T602-3/T602/T602.EXE $(OBJDIR)/T602.EXE.tmp
+	xdelta3 -d -f -s $(OBJDIR)/T602.EXE.tmp t602-3.xdelta3 $(OBJDIR)/T602-3/T602/T602.EXE
+	rm -f $(OBJDIR)/T602.EXE.tmp
 	cp $< $@
-	mcopy -D o -s -i $@ T602-3/T602 ::T602
-	rm -rf T602-3
+	mcopy -D o -s -i $@ $(OBJDIR)/T602-3/T602 ::T602
+	rm -rf $(OBJDIR)/T602-3
 	mcopy -D o -i $@ autoexec-t602-3.bat ::AUTOEXEC.BAT
 
 $(OBJDIR)/%-av.img: $(OBJDIR)/%.img blobs/av.zip autoexec-av.bat
-	rm -rf AV
-	mkdir -p AV
-	7zz -y x blobs/av.zip -oAV
+	rm -rf $(OBJDIR)/AV
+	mkdir -p $(OBJDIR)/AV
+	7zz -y x blobs/av.zip -o$(OBJDIR)/AV
 	cp $< $@
-	mcopy -D o -s -i $@ AV ::AV
-	rm -rf AV
+	mcopy -D o -s -i $@ $(OBJDIR)/AV ::AV
+	rm -rf $(OBJDIR)/AV
 	mcopy -D o -i $@ autoexec-av.bat ::AUTOEXEC.BAT
 
 $(OBJDIR)/%-prince.img: $(OBJDIR)/%.img blobs/prince.zip autoexec-prince.bat
-	rm -rf PRINCE
-	mkdir -p PRINCE
-	7zz -y x blobs/prince.zip -oPRINCE
+	rm -rf $(OBJDIR)/PRINCE
+	mkdir -p $(OBJDIR)/PRINCE
+	7zz -y x blobs/prince.zip -o$(OBJDIR)/PRINCE
 	cp $< $@
-	mcopy -D o -s -i $@ PRINCE/PoP1 ::PRINCE
-	rm -rf PRINCE
+	mcopy -D o -s -i $@ $(OBJDIR)/PRINCE/PoP1 ::PRINCE
+	rm -rf $(OBJDIR)/PRINCE
 	mcopy -D o -i $@ autoexec-prince.bat ::AUTOEXEC.BAT
 
 $(OBJDIR)/%.o: $(OBJDIR)/%.img
@@ -251,4 +251,4 @@ $(OBJDIR)/%.o: $(OBJDIR)/%.img
 
 .PHONY: clean
 clean:
-	rm -rf $(OBJDIR) AV NC PRINCE T602-1 T602-3
+	rm -rf $(OBJDIR)

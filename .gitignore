@@ -1,9 +1,6 @@
 /bin
 /obj
 /software/blobs
-/software/AV
-/software/NC
-/software/PRINCE
 /test-bochs/*/bin
 /test-bochs/*/obj
 /test-bochs/*/res
