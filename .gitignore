@@ -1,11 +1,5 @@
 /bin
 /obj
-/software/*.7z
-/software/*.xz
-/software/*.zip
-/software/AV
-/software/NC
-/software/PRINCE
 /test-bochs/*/bin
 /test-bochs/*/obj
 /test-bochs/*/res

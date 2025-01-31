@@ -74,7 +74,7 @@ clean: $(CLEAN_TARGETS)
 $(CLEAN_TARGETS):
 	make -C $(patsubst clean-%,%,$@) clean
 
-VERY_CLEAN_TARGETS = very-clean-software very-clean-tools/import-cleanup very-clean-tools/monitor
+VERY_CLEAN_TARGETS = very-clean-tools/import-cleanup very-clean-tools/monitor
 
 .PHONY: very-clean
 very-clean: clean $(VERY_CLEAN_TARGETS)

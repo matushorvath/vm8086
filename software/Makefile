@@ -1,17 +1,4 @@
 # apt install 7zip mtools wget xdelta3 xz-utils
-#
-# download:
-#  - https://www.myabandonware.com/game/arcade-volleyball-1on -> av.zip
-#  - https://www.myabandonware.com/game/prince-of-persia-pd -> prince.zip
-#  - https://vetusware.com/download/Norton%20Commander%203.0%203.0 -> nc.7z
-#  - https://vetusware.com/download/Text602%20_T602_%201.00%20%231090%20CZ -> t602-1.zip
-#  - https://vetusware.com/download/T602%203.0%20CZ -> t602-3.zip
-#  - https://winworldpc.com/download/44c2ac7d-cb9c-c2b4-e280-a111c3a4c2ac -> pcdos2.7z
-#  - https://winworldpc.com/download/40c2b855-0818-c39a-11c3-a4e284a2c3a5 -> msdos3.7z
-#  - https://winworldpc.com/download/28c2b366-26e2-809c-c3ad-11c3a5c28f13 -> msdos5.7z
-#  - https://winworldpc.com/download/c38fc38d-68c2-bbe2-80a6-4b11c3a4c2ac -> msdos6.7z
-#  - https://winworldpc.com/download/0474c84d-d5c4-11eb-9de1-0200008a0da4 -> win203.7z
-#  - https://winworldpc.com/download/c396c3b1-e280-a65d-e280-b06211c3a4ef -> win211.7z
 
 VMDIR = $(abspath ..)
 
@@ -38,8 +25,9 @@ build-prep:
 	mkdir -p "$(BINDIR)" "$(OBJDIR)"
 
 .PHONY: checksum
-checksum: hash.md5 av.zip freedos.zip freedos-simple.img.xz msdos3.7z msdos5.7z msdos6.7z nc.7z \
-	prince.zip t602-1.zip t602-3.zip pcdos2.7z win104.7z win203.7z win211.7z
+checksum: hash.md5 blobs/av.zip blobs/freedos.zip blobs/freedos-simple.img.xz blobs/msdos3.7z \
+	blobs/msdos5.7z blobs/msdos6.7z blobs/nc.7z blobs/prince.zip blobs/t602-1.zip \
+	blobs/t602-3.zip blobs/pcdos2.7z blobs/win104.7z blobs/win203.7z blobs/win211.7z
 	md5sum -c < $<
 
 .PHONY: empty
@@ -83,49 +71,42 @@ win203: $(patsubst %,$(OBJDIR)/win203-disk%.o,1 2 3 4 5)
 .PHONY: win211
 win211: $(patsubst %,$(OBJDIR)/win211-disk%.o,1 2 3 4)
 
-# https://github.com/codercowboy/freedosbootdisks - a boot disk we can boot in CI/CD, without mtools
-freedos-simple.img.xz:
-	wget 'https://github.com/codercowboy/freedosbootdisks/raw/master/bootdisks/freedos.boot.disk.1.4MB.img' -O - | xz > $@
-
-$(OBJDIR)/freedos-simple.img: freedos-simple.img.xz
+# a boot disk we can boot in CI/CD, without mtools
+$(OBJDIR)/freedos-simple.img: blobs/freedos-simple.img.xz
 	xz -dkfc $< > $@
 	# ignore errors, since this is just cosmetic and CI/CD has no mtools
 	mdeltree -i $@ FSEVEN~1 || true
 
-# https://www.freedos.org/download
-freedos.zip:
-	wget 'https://www.ibiblio.org/pub/micro/pc-stuff/freedos/files/distributions/1.3/official/FD13-FloppyEdition.zip' -O $@
-
-$(OBJDIR)/freedos.img: freedos.zip
+$(OBJDIR)/freedos.img: blobs/freedos.zip
 	7zz -y e $< -r 144m/x86BOOT.img -so > $@
 	mdel -i $@ FDAUTO.BAT FDCONFIG.SYS SETUP.BAT
 	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
 	mcopy -D o -i $@ config-freedos.sys ::CONFIG.SYS
 
-$(OBJDIR)/pcdos2.img: pcdos2.7z
+$(OBJDIR)/pcdos2.img: blobs/pcdos2.7z
 	7zz -y e $< -r Disk01.img -so > $@
 
-$(OBJDIR)/msdos3.img: msdos3.7z
+$(OBJDIR)/msdos3.img: blobs/msdos3.7z
 	7zz -y e $< -r Disk1.img -so > $@
 
-$(OBJDIR)/msdos5.img: msdos5.7z
+$(OBJDIR)/msdos5.img: blobs/msdos5.7z
 	7zz -y e $< -r disk01.img -so > $@
 	mdel -i $@ DOS50.ZIP AUTOEXEC.BAT CONFIG.SYS SETUP.* PKUNZIP.EXE
 	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
 
-$(OBJDIR)/msdos6.img: msdos6.7z
+$(OBJDIR)/msdos6.img: blobs/msdos6.7z
 	7zz -y e $< -r Disk1.img -so > $@
 	mdel -i $@ *.??_ AUTOEXEC.BAT CONFIG.SYS COUNTRY.* DEFRAG.* DOSSETUP.INI DRVSPACE.BIN \
 		EXPAND.EXE MSCDEX.EXE NETWORKS.TXT PACKING.LST SCANDISK.* SETUP.*
 	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
 
-$(OBJDIR)/win104-disk%.img: win104.7z
+$(OBJDIR)/win104-disk%.img: blobs/win104.7z
 	7zz -y e $< -r D$(*F)_*.img -so > $@
 
-$(OBJDIR)/win203-disk%.img: win203.7z
+$(OBJDIR)/win203-disk%.img: blobs/win203.7z
 	7zz -y e $< -r disk$(*F).img -so > $@
 
-$(OBJDIR)/win211-disk%.img: win211.7z
+$(OBJDIR)/win211-disk%.img: blobs/win211.7z
 	7zz -y e $< -r Disk$(*F).img -so > $@
 
 $(FORMATS:%=$(OBJDIR)/empty-%.img): $(OBJDIR)/empty-%.img:
@@ -214,54 +195,54 @@ $(OBJDIR)/%-poweroff.img: $(OBJDIR)/%.img autoexec-poweroff.bat
 	cp $< $@
 	mcopy -D o -i $@ autoexec-poweroff.bat ::AUTOEXEC.BAT
 
-$(OBJDIR)/%-nc.img: $(OBJDIR)/%.img nc.7z autoexec-nc.bat nc.ini
-	rm -rf NC
-	mkdir -p NC
-	7zz -y x nc.7z -oNC
+$(OBJDIR)/%-nc.img: $(OBJDIR)/%.img blobs/nc.7z autoexec-nc.bat nc.ini
+	rm -rf $(OBJDIR)/NC
+	mkdir -p $(OBJDIR)/NC
+	7zz -y x blobs/nc.7z -o$(OBJDIR)/NC
 	cp $< $@
-	mcopy -D o -s -i $@ NC ::NC
-	rm -rf NC
+	mcopy -D o -s -i $@ $(OBJDIR)/NC ::NC
+	rm -rf $(OBJDIR)/NC
 	mcopy -D o -i $@ autoexec-nc.bat ::AUTOEXEC.BAT
 	mcopy -D o -i $@ nc.ini ::NC/NC.INI
 
-$(OBJDIR)/%-t602-1.img: $(OBJDIR)/%.img t602-1.zip autoexec-t602-1.bat
-	rm -rf T602-1
-	mkdir -p T602-1
-	7zz -y x t602-1.zip -oT602-1
+$(OBJDIR)/%-t602-1.img: $(OBJDIR)/%.img blobs/t602-1.zip autoexec-t602-1.bat
+	rm -rf $(OBJDIR)/T602-1
+	mkdir -p $(OBJDIR)/T602-1
+	7zz -y x blobs/t602-1.zip -o$(OBJDIR)/T602-1
 	cp $< $@
-	mcopy -D o -s -i $@ T602-1/t602 ::T602
-	rm -rf T602-1
+	mcopy -D o -s -i $@ $(OBJDIR)/T602-1/t602 ::T602
+	rm -rf $(OBJDIR)/T602-1
 	mcopy -D o -i $@ autoexec-t602-1.bat ::AUTOEXEC.BAT
 
-$(OBJDIR)/%-t602-3.img: $(OBJDIR)/%.img t602-3.zip autoexec-t602-3.bat
-	rm -rf T602-3
-	mkdir -p T602-3
-	7zz -y x t602-3.zip -oT602-3
-	rm T602-3/T602/K602.EXE T602-3/T602/K602.HLP T602-3/T602/CESKY.SLO
-	cp T602-3/T602/T602.EXE T602.EXE.tmp
-	xdelta3 -d -f -s T602.EXE.tmp t602-3.xdelta3 T602-3/T602/T602.EXE
-	rm -f T602.EXE.tmp
+$(OBJDIR)/%-t602-3.img: $(OBJDIR)/%.img blobs/t602-3.zip autoexec-t602-3.bat
+	rm -rf $(OBJDIR)/T602-3
+	mkdir -p $(OBJDIR)/T602-3
+	7zz -y x blobs/t602-3.zip -o$(OBJDIR)/T602-3
+	rm $(OBJDIR)/T602-3/T602/K602.EXE $(OBJDIR)/T602-3/T602/K602.HLP $(OBJDIR)/T602-3/T602/CESKY.SLO
+	cp $(OBJDIR)/T602-3/T602/T602.EXE $(OBJDIR)/T602.EXE.tmp
+	xdelta3 -d -f -s $(OBJDIR)/T602.EXE.tmp t602-3.xdelta3 $(OBJDIR)/T602-3/T602/T602.EXE
+	rm -f $(OBJDIR)/T602.EXE.tmp
 	cp $< $@
-	mcopy -D o -s -i $@ T602-3/T602 ::T602
-	rm -rf T602-3
+	mcopy -D o -s -i $@ $(OBJDIR)/T602-3/T602 ::T602
+	rm -rf $(OBJDIR)/T602-3
 	mcopy -D o -i $@ autoexec-t602-3.bat ::AUTOEXEC.BAT
 
-$(OBJDIR)/%-av.img: $(OBJDIR)/%.img av.zip autoexec-av.bat
-	rm -rf AV
-	mkdir -p AV
-	7zz -y x av.zip -oAV
+$(OBJDIR)/%-av.img: $(OBJDIR)/%.img blobs/av.zip autoexec-av.bat
+	rm -rf $(OBJDIR)/AV
+	mkdir -p $(OBJDIR)/AV
+	7zz -y x blobs/av.zip -o$(OBJDIR)/AV
 	cp $< $@
-	mcopy -D o -s -i $@ AV ::AV
-	rm -rf AV
+	mcopy -D o -s -i $@ $(OBJDIR)/AV ::AV
+	rm -rf $(OBJDIR)/AV
 	mcopy -D o -i $@ autoexec-av.bat ::AUTOEXEC.BAT
 
-$(OBJDIR)/%-prince.img: $(OBJDIR)/%.img prince.zip autoexec-prince.bat
-	rm -rf PRINCE
-	mkdir -p PRINCE
-	7zz -y x prince.zip -oPRINCE
+$(OBJDIR)/%-prince.img: $(OBJDIR)/%.img blobs/prince.zip autoexec-prince.bat
+	rm -rf $(OBJDIR)/PRINCE
+	mkdir -p $(OBJDIR)/PRINCE
+	7zz -y x blobs/prince.zip -o$(OBJDIR)/PRINCE
 	cp $< $@
-	mcopy -D o -s -i $@ PRINCE/PoP1 ::PRINCE
-	rm -rf PRINCE
+	mcopy -D o -s -i $@ $(OBJDIR)/PRINCE/PoP1 ::PRINCE
+	rm -rf $(OBJDIR)/PRINCE
 	mcopy -D o -i $@ autoexec-prince.bat ::AUTOEXEC.BAT
 
 $(OBJDIR)/%.o: $(OBJDIR)/%.img
@@ -270,8 +251,4 @@ $(OBJDIR)/%.o: $(OBJDIR)/%.img
 
 .PHONY: clean
 clean:
-	rm -rf $(OBJDIR) AV NC PRINCE T602-1 T602-3
-
-.PHONY: very-clean
-very-clean: clean
-	rm -rf *.7z *.xz *.zip
+	rm -rf $(OBJDIR)
