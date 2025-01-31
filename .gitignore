@@ -1,6 +1,5 @@
 /bin
 /obj
-/software/blobs
 /test-bochs/*/bin
 /test-bochs/*/obj
 /test-bochs/*/res

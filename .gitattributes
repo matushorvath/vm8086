@@ -1,3 +1,4 @@
 /test-bochs/*/*.txt text eol=lf
 /software/*.bat text eol=crlf
 /software/*.sys text eol=crlf
+/software/blobs/* filter=lfs diff=lfs merge=lfs -text
