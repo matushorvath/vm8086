@@ -30,6 +30,7 @@
 
 # From util/bits.s
 .IMPORT bit_0
+.IMPORT bit_7
 
 # From util/div80.s
 .IMPORT div80
@@ -44,8 +45,6 @@
 # From util/shr.s
 .IMPORT shr_0
 .IMPORT shr_1
-
-# TODO qbasic.exe, msdos6-nc image: window borders are blinking (probably should be high intensity instead)
 
 ##########
 initialize_text_mode:
@@ -241,7 +240,7 @@ output_character:
 
     # Set colors, unless it's the default white-on-black
     eq  [rb + attr], 0x07, [rb + tmp]
-    jnz [rb + tmp], .after_color
+    jnz [rb + tmp], .after_attr
 
     out 0x1b
     out '['
@@ -304,16 +303,11 @@ output_character:
 
     out 'm'
 
-.after_color:
-    jnz [mode_high_res_text], .double_width
+    # Turn on blinking if enabled and background attribute has the highest bit set
+    jnz [mode_not_blinking], .after_attr
 
-    # Select double width font for 40x25
-    out 0x1b
-    out '#'
-    out '6'
-
-.double_width:
-    jnz [mode_not_blinking], .blink
+    add bit_7, [rb + attr], [ip + 1]
+    jz  [0], .after_attr
 
     # Turn on blinking
     out 0x1b
@@ -321,7 +315,15 @@ output_character:
     out '5'
     out 'm'
 
-.blink:
+.after_attr:
+    jnz [mode_high_res_text], .after_double_width
+
+    # Select double width font for 40x25
+    out 0x1b
+    out '#'
+    out '6'
+
+.after_double_width:
     # Print the character, converting from CP437 to UTF-8
     add cp437_0, [rb + char], [ip + 1]
     out [0]

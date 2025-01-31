@@ -31,6 +31,7 @@
 .IMPORT print_str
 .IMPORT print_num
 .IMPORT print_num_2_b
+.IMPORT print_num_16_b
 
 ##########
 mc6845_address_read_log:
@@ -63,13 +64,13 @@ mc6845_address_write_log:
 
     add [rb + value], 0, [rb - 1]
     arb -1
-    call print_num_2_b
+    call print_num_16_b
 
     out 10
     ret 1
 
 .msg:
-    db  "cga address write: value ", 0
+    db  "cga address write: value 0x", 0
 .ENDFRAME
 
 ##########
@@ -349,7 +350,7 @@ dump_cga_state:
 .high_res_graphics_msg:
     db  " hi-gr ", 0
 .blinking_msg:
-    db  " blink ", 0
+    db  " no-blink ", 0
 .color_selected_msg:
     db  " select ", 0
 .bright_msg:
