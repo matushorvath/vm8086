@@ -1,8 +1,6 @@
 /bin
 /obj
-/software/*.7z
-/software/*.xz
-/software/*.zip
+/software/blobs
 /software/AV
 /software/NC
 /software/PRINCE
