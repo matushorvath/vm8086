@@ -65,7 +65,7 @@ https://github.com/shirriff/DAA
 BIOS
 ====
 
-8086_bios
+8088_bios
 ---------
 
 https://github.com/skiselev/8088_bios.git
@@ -73,6 +73,31 @@ https://github.com/skiselev/8088_bios.git
 listing:
 set(CMAKE_ASM_NASM_FLAGS "-O9 -l $(basename $@).lst)"
 ./build/CMakeFiles/bios-xt.bin.dir/src/bios.asm.lst
+
+IDE support:
+
+MACHINE_BOOK8088 has IDE support and is most similar to MACHINE_XT
+bios-book8088-xtide.rom, starts 48kb before 0xfc000
+(from CMakeLists.txt, 8kB for XT-IDE + 40kB gap; from config.inc START is 0C000h same as MACHINE_XT)
+
+differences:
+ - 8255 PPI ports 62h and 63h are used differently
+    - can't set video mode to 40 column or monochrome on boot, hardcoded to 80 column
+    - can't set or floppy count, but that seems to be ignored anyway by BIOS
+    - does not reset keyboard on boot, completely different handling in keyboard.inc
+    - instead writes 00h to port B
+ - memory refresh using DMA 0 is off
+
+memory map:
+(bios-book8088-xtide.rom)
+
+0xf0000 - 0xf1fff: XT-IDE (8kB)
+0xf2000 - 0xfbfff: gap (40kB)
+0xfc000 - 0xfffff: BIOS (16kB)
+
+300h vs 320h refers to the port for XT-CF-Lite, not to memory address
+
+-> use bios-xt.bin at 0xfc000 and ide_xt-cf-lite_300h.bin at 0xf0000
 
 GLaBIOS
 -------
@@ -304,3 +329,16 @@ ICVM_TYPE=c-ext make run DISKS=msdos3-min-1440,win211-disk1,win211-disk2,win211-
 
 run B:\setup, install to A:
 F12, select disk in B: drive
+
+Hard Drive
+==========
+
+MFM:
+https://retrocmp.de/hardware/it-805/it805.htm
+"very simple" with a small BIOS https://retrocmp.de/hardware/wd1002s-wx2a/wd1002s-wx2a.htm
+WD1006?
+
+PC AT https://retrocmp.de/ibm/cards/hdcfdc/16bit-at.htm
+https://winworldpc.com/product/ibm-pc-at-fixed-disk-diskette-drive-adapter-test/100
+
+https://xtideuniversalbios.org/

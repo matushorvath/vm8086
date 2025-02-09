@@ -1,5 +1,5 @@
  - https://github.com/codercowboy/freedosbootdisks/raw/master/bootdisks/freedos.boot.disk.1.4MB.img -> freedos-simple.img.xz
- - wget 'https://www.ibiblio.org/pub/micro/pc-stuff/freedos/files/distributions/1.3/official/FD13-FloppyEdition.zip -> freedos.zip
+ - https://www.ibiblio.org/pub/micro/pc-stuff/freedos/files/distributions/1.3/official/FD13-FloppyEdition.zip -> freedos.zip
  - https://www.myabandonware.com/game/arcade-volleyball-1on -> av.zip
  - https://www.myabandonware.com/game/prince-of-persia-pd -> prince.zip
  - https://vetusware.com/download/Norton%20Commander%203.0%203.0 -> nc.7z
