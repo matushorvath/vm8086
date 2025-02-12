@@ -4,7 +4,7 @@ include $(ICDIR)/intcode.mk
 BINDIR ?= bin
 OBJDIR ?= obj
 
-SRCDIRS = util cga cpu dev fdc img software vm
+SRCDIRS = util cga cpu dev fdc img vm
 TOOLSDIR = tools/import-cleanup tools/monitor
 TESTDIRS = test-bochs test-cpu
 

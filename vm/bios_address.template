@@ -1,7 +1,0 @@
-.EXPORT bios_address
-
-# Address of the BIOS in 8086 memory
-bios_address:
-    db  0xBIOS_ADDRESS
-
-.EOF
