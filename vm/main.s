@@ -1,13 +1,13 @@
 .EXPORT extended_vm
 
-# From bios_address.template
-.IMPORT bios_address
-
-# From the BIOS image
-.IMPORT bios_image
-
 # From callback.s
 .IMPORT init_vm_callback
+
+# From headers.s
+.IMPORT rom_headers
+
+# From images.s
+.IMPORT images
 
 # From menu.s
 .IMPORT init_menu
@@ -86,13 +86,13 @@ main:
     call init_menu
 
     # Initialize the ROM and floppy images
-    add bios_image, 0, [rb - 1]
-    add [bios_address], 0, [rb - 2]
+    add images, 0, [rb - 1]
+    add [rom_headers], 0, [rb - 2]  # TODO process rom_headers
     arb -2
     call init_images
 
     # Make the ROM read-only
-    add [bios_address], 0, [rb - 1]
+    add [rom_headers], 0, [rb - 1]  # TODO process rom_headers
     add 0x100000, 0, [rb - 2]
     add 0, 0, [rb - 3]
     add write_rom, 0, [rb - 4]
