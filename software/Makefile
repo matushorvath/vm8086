@@ -8,28 +8,17 @@ include $(ICDIR)/intcode.mk
 BINDIR ?= $(VMDIR)/bin
 OBJDIR ?= $(VMDIR)/obj/software
 
-DISKS ?= freedos-simple
-COMMA = ,
-TARGETS=$(patsubst %,$(OBJDIR)/%.o,$(subst $(COMMA), ,$(DISKS)))
-
 FORMATS=180 360 720 1200 1440
 
-.PHONY: build-all
-build-all: build-prep checksum empty freedos msdos3 msdos5 msdos6 win104 win203 win211
-
 .PHONY: build
-build: build-prep $(TARGETS)
+build: build-prep roms empty freedos msdos3 msdos5 msdos6 win104 win203 win211
 
 .PHONY: build-prep
 build-prep:
 	mkdir -p "$(BINDIR)" "$(OBJDIR)"
 
-.PHONY: checksum
-checksum: hash.md5 blobs/av.zip blobs/freedos.zip blobs/freedos-simple.img.xz blobs/msdos3.7z \
-	blobs/msdos5.7z blobs/msdos6.7z blobs/nc.7z blobs/prince.zip blobs/t602-1.zip \
-	blobs/t602-3.zip blobs/pcdos1.7z blobs/pcdos2.7z blobs/win104.7z blobs/win203.7z \
-	blobs/win211.7z
-	md5sum -c < $<
+.PHONY: roms
+roms: bios-xt pcxtbios phoenix
 
 .PHONY: empty
 empty: $(addprefix $(OBJDIR)/,empty-360.o empty-720.o empty-1200.o empty-1440.o)
@@ -71,6 +60,26 @@ win203: $(patsubst %,$(OBJDIR)/win203-disk%.o,1 2 3 4 5)
 
 .PHONY: win211
 win211: $(patsubst %,$(OBJDIR)/win211-disk%.o,1 2 3 4)
+
+# ROM images
+.PHONY: bios-xt
+bios-xt: $(OBJDIR)/bios-xt.o $(OBJDIR)/bios-xt_header.o $(OBJDIR)/ide_xt.o $(OBJDIR)/ide_xt_header.o
+
+.PHONY: pcxtbios
+pcxtbios: $(OBJDIR)/pcxtbios.o $(OBJDIR)/pcxtbios_header.o
+
+.PHONY: phoenix
+phoenix: $(OBJDIR)/phoenix-2.51.o $(OBJDIR)/phoenix-2.51_header.o
+
+$(OBJDIR)/%.rom: blobs/%.rom.xz
+	xz -dkfc $< > $@
+
+$(OBJDIR)/%.o: $(OBJDIR)/%.rom
+	$(eval BIN2OBJ_NAME = rom_$(subst -,_,$(basename $(notdir $@))))
+	$(run-intcode-bin2obj)
+
+$(OBJDIR)/%.o: %.s
+	$(run-intcode-as)
 
 # a boot disk we can boot in CI/CD, without mtools
 $(OBJDIR)/freedos-simple.img: blobs/freedos-simple.img.xz

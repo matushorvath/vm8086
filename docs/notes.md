@@ -120,6 +120,9 @@ https://github.com/virtualxt/pcxtbios
 - move the compiled tools to ./linux
 - eproms/2764/pcxtbios.rom at 0xfe000 is mandatory, the rest is optional
 
+update: actually, it's enough to install support for i386 in debian (via multiarch),
+no need to recompile using freebasic
+
 pcxtbios + BASIC:
 - make -C vm clean
 - cat ~/intcode/pcxtbios/eproms/2764/basicfc.rom ~/intcode/pcxtbios/eproms/2764/pcxtbios.rom > - bios.tmp
