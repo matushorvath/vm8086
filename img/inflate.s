@@ -1,5 +1,6 @@
 .EXPORT deflated_size
 .EXPORT inflate_image
+.EXPORT move_memory_reverse
 
 # From util/error.s
 .IMPORT report_error

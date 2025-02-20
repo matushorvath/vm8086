@@ -9,13 +9,11 @@
 # From fdc/drives.s
 .IMPORT fdc_image_index_units
 
+# From fdc/images.s
+.IMPORT floppy_count
+
 # From fdc/init.s
 .IMPORT init_fdd
-
-# From img/images.s
-.IMPORT floppy_count
-.IMPORT floppy_data
-.IMPORT floppy_size
 
 ##########
 init_menu:

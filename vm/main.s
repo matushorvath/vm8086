@@ -43,7 +43,6 @@
 .IMPORT init_fdc
 
 # From img/images.s
-.IMPORT floppy_data
 .IMPORT floppy_size
 
 # From img/init.s
@@ -86,13 +85,14 @@ main:
     call init_menu
 
     # Initialize the ROM and floppy images
-    add images, 0, [rb - 1]
-    add [rom_headers], 0, [rb - 2]  # TODO process rom_headers
+    add rom_headers, 0, [rb - 1]
+    add images, 0, [rb - 2]
     arb -2
     call init_images
 
-    # Make the ROM read-only
-    add [rom_headers], 0, [rb - 1]  # TODO process rom_headers
+    # Make the ROM read-only; to avoid creating multiple regions (which slows down every memory access),
+    # we mark all memory between 0xf0000 and 0xfffff as read-only, which is a reasonable approximation
+    add 0xf0000, 0, [rb - 1]
     add 0x100000, 0, [rb - 2]
     add 0, 0, [rb - 3]
     add write_rom, 0, [rb - 4]
@@ -100,7 +100,6 @@ main:
     call register_region
 
     # Initialize PPI using correct floppy drive count
-    # TODO make floppy image indexes configurable at compile time
     lt  0, [floppy_size + 0], [rb + tmp]
     lt  0, [floppy_size + 1], [rb - 1]
     add [rb - 1], [rb + tmp], [rb - 1]
