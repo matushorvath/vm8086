@@ -74,9 +74,10 @@ expand_images:
     # Expand all deflated images in memory, filling a table with expanded image information
 
     # Reclaim memory used by the images; this assumes there were no allocations yet
-    add [rb + images], 0, [rb - 1]
-    arb -1
-    call brk
+    # TODO this currently crashes, some memory gets overwritten while expanding images
+#    add [rb + images], 0, [rb - 1]
+#    arb -1
+#    call brk
 
     # Load information about deflated floppy images
     add [rb + images], 0, [rb + image]
