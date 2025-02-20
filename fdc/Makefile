@@ -13,7 +13,7 @@ build: build-prep $(BINDIR)/libfdc.a
 build-prep:
 	mkdir -p "$(BINDIR)" "$(OBJDIR)"
 
-DEV_OBJS = commands.o control.o drives.o images.o init.o state_machine.o
+DEV_OBJS = commands.o control.o drives.o init.o state_machine.o
 
 $(BINDIR)/libfdc.a: $(DEV_OBJS:%.o=$(OBJDIR)/%.o)
 	$(run-intcode-ar)

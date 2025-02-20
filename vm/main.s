@@ -42,7 +42,7 @@
 # From fdc/init.s
 .IMPORT init_fdc
 
-# From img/images.s
+# From img/floppy.s
 .IMPORT floppy_size
 
 # From img/init.s

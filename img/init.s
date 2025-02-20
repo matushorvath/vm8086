@@ -10,13 +10,13 @@
 .IMPORT inflate_image
 .IMPORT move_memory_reverse
 
-# From cpu/state.s
-.IMPORT mem
-
-# From fdc/images.s
+# From floppy.s
 .IMPORT floppy_count
 .IMPORT floppy_data
 .IMPORT floppy_size
+
+# From cpu/state.s
+.IMPORT mem
 
 # From util/error.s
 .IMPORT report_error

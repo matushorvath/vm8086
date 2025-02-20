@@ -22,7 +22,7 @@
 # From cpu/ports.s
 .IMPORT register_ports
 
-# From img/images.s
+# From img/floppy.s
 .IMPORT floppy_data
 .IMPORT floppy_size
 
