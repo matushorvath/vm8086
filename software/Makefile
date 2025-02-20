@@ -8,7 +8,7 @@ include $(ICDIR)/intcode.mk
 BINDIR ?= $(VMDIR)/bin
 OBJDIR ?= $(VMDIR)/obj/software
 
-FORMATS=180 360 720 1200 1440
+FORMATS=160 180 320 360 720 1200 1440 2880
 
 .PHONY: build
 build: build-prep roms empty freedos msdos3 msdos5 msdos6 win104 win203 win211
@@ -67,7 +67,9 @@ win211: $(patsubst %,$(OBJDIR)/win211-disk%.o,1 2 3 4)
 bios-xt: $(OBJDIR)/bios-xt.o $(OBJDIR)/bios-xt_header.o $(OBJDIR)/ide-xt.o $(OBJDIR)/ide-xt_header.o
 
 .PHONY: pcxtbios
-pcxtbios: $(OBJDIR)/pcxtbios.o $(OBJDIR)/pcxtbios_header.o
+pcxtbios: $(OBJDIR)/pcxtbios.o $(OBJDIR)/pcxtbios_header.o \
+	$(OBJDIR)/basicf6.o $(OBJDIR)/basicf8.o $(OBJDIR)/basicfa.o $(OBJDIR)/basicfc.o \
+	$(OBJDIR)/basicf6_header.o $(OBJDIR)/basicf8_header.o $(OBJDIR)/basicfa_header.o $(OBJDIR)/basicfc_header.o
 
 .PHONY: phoenix
 phoenix: $(OBJDIR)/phoenix-2.51.o $(OBJDIR)/phoenix-2.51_header.o

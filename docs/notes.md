@@ -76,18 +76,6 @@ set(CMAKE_ASM_NASM_FLAGS "-O9 -l $(basename $@).lst)"
 
 IDE support:
 
-MACHINE_BOOK8088 has IDE support and is most similar to MACHINE_XT
-bios-book8088-xtide.rom, starts 48kb before 0xfc000
-(from CMakeLists.txt, 8kB for XT-IDE + 40kB gap; from config.inc START is 0C000h same as MACHINE_XT)
-
-differences:
- - 8255 PPI ports 62h and 63h are used differently
-    - can't set video mode to 40 column or monochrome on boot, hardcoded to 80 column
-    - can't set or floppy count, but that seems to be ignored anyway by BIOS
-    - does not reset keyboard on boot, completely different handling in keyboard.inc
-    - instead writes 00h to port B
- - memory refresh using DMA 0 is off
-
 memory map:
 (bios-book8088-xtide.rom)
 
@@ -125,10 +113,14 @@ https://github.com/virtualxt/pcxtbios
 update: actually, it's enough to install support for i386 in debian (via multiarch),
 no need to recompile using freebasic
 
-pcxtbios + BASIC:
-- make -C vm clean
-- cat ~/intcode/pcxtbios/eproms/2764/basicfc.rom ~/intcode/pcxtbios/eproms/2764/pcxtbios.rom > - bios.tmp
-- BIOS_LOAD_ADDRESS=fc000 BIOS_BIN=$(pwd)/bios.tmp make && ~/intcode/xzintbit/vms/c/ic bin/vm.input
+pcxtbios + ROM BASIC:
+
+ICVM_TYPE=c-ext make run ROMS=pcxtbios,basicf6,basicf8,basicfa,basicfc DISKS=empty-180
+(needs all four BASIC ROMs)
+
+ICVM_TYPE=c-ext make run ROMS=pcxtbios,basicf6,basicf8,basicfa,basicfc DISKS=pcdos1
+A> basica
+(does not work if there is no ROM BASIC)
 
 CGA
 ===
@@ -221,26 +213,6 @@ tools (sorted by priority):
     - ldmap to include all that information in map, ld to ignore new sections if present
         - for symbols and line addresses, they need to be relocated same as exported symbols
         - for lines, we also need to somehow know file name for the line number (perhaps an additional input to asd, same as bin2obj)
-
-FreeDOS Prompt
-==============
-
-good addresses to start tracing:
-1254:0005 (after FreeDOS and a lot of disk reading)
-1212:0000
-9001:9f61
-9001:050f
-9001:129f
-
-MACHINE_HOMEBREW8088 is like MACHINE_XT, but AT keyboard controller and no DMA ch0 setup
-
-also interesting
-9001:0240 INT IMMED8(cd) 2a
-00d8:118a IRET(cf)
-9001:0242 POP AX(58)
-
-INT 2a = critical section and NETBIOS (could be keyboard busy loop if AH=84)
-https://stanislavs.org/helppc/int_2a.html
 
 Keyboard
 ========
