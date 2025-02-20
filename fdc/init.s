@@ -115,6 +115,8 @@ init_fdd:
     jnz [rb + tmp], .floppy_360
     eq  [rb + size], 184320, [rb + tmp]
     jnz [rb + tmp], .floppy_180
+    eq  [rb + size], 163840, [rb + tmp]
+    jnz [rb + tmp], .floppy_160
 
     add .error, 0, [rb - 1]
     arb -1
@@ -125,6 +127,7 @@ init_fdd:
 
     # Floppy geometry:
     #           heads   tracks  sectors bytes   capacity    type
+    # 5.25"     1       40      8       512      163840
     # 5.25"     1       40      9       512      184320     12
     # 5.25"     2       40      9       512      368640     14
     # 5.25"     2       80      15      512     1228800     17
@@ -185,6 +188,15 @@ init_fdd:
     add 9, 0, [0]
 
     jz  0, .done
+
+.floppy_160:
+    # Floppy parameters for 160kB 5.25"
+    add fdc_medium_cylinders_units, [rb + unit], [ip + 3]
+    add 40, 0, [0]
+    add fdc_medium_heads_units, [rb + unit], [ip + 3]
+    add 1, 0, [0]
+    add fdc_medium_sectors_units, [rb + unit], [ip + 3]
+    add 8, 0, [0]
 
 .done:
     arb 3

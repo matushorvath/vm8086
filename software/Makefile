@@ -27,7 +27,8 @@ build-prep:
 .PHONY: checksum
 checksum: hash.md5 blobs/av.zip blobs/freedos.zip blobs/freedos-simple.img.xz blobs/msdos3.7z \
 	blobs/msdos5.7z blobs/msdos6.7z blobs/nc.7z blobs/prince.zip blobs/t602-1.zip \
-	blobs/t602-3.zip blobs/pcdos2.7z blobs/win104.7z blobs/win203.7z blobs/win211.7z
+	blobs/t602-3.zip blobs/pcdos1.7z blobs/pcdos2.7z blobs/win104.7z blobs/win203.7z \
+	blobs/win211.7z
 	md5sum -c < $<
 
 .PHONY: empty
@@ -83,6 +84,9 @@ $(OBJDIR)/freedos.img: blobs/freedos.zip
 	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
 	mcopy -D o -i $@ config-freedos.sys ::CONFIG.SYS
 
+$(OBJDIR)/pcdos1.img: blobs/pcdos1.7z
+	7zz -y e $< -r Disk01.img -so > $@
+
 $(OBJDIR)/pcdos2.img: blobs/pcdos2.7z
 	7zz -y e $< -r Disk01.img -so > $@
 
@@ -127,7 +131,7 @@ endef
 $(FORMATS:%=$(OBJDIR)/freedos-min-%.img): $(OBJDIR)/freedos-min-%.img: $(OBJDIR)/freedos.img
 	$(make-freedos-floppy)
 
-# minimal pcdos 2.x images
+# minimal pcdos 1.x and 2.x images
 define make-pcdos1-floppy
 	dd if=$< of=$(<:img=boot) bs=512 count=1
 	mformat -i $@ -f $(*F) -C -B $(<:img=boot)
@@ -142,6 +146,9 @@ define make-pcdos1-floppy
 	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
 	rm -f $(<:img=boot) IBMBIO.COM IBMDOS.COM COMMAND.COM
 endef
+
+$(FORMATS:%=$(OBJDIR)/pcdos1-min-%.img): $(OBJDIR)/pcdos1-min-%.img: $(OBJDIR)/pcdos1.img
+	$(make-pcdos1-floppy)
 
 $(FORMATS:%=$(OBJDIR)/pcdos2-min-%.img): $(OBJDIR)/pcdos2-min-%.img: $(OBJDIR)/pcdos2.img
 	$(make-pcdos1-floppy)
