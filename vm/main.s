@@ -1,13 +1,13 @@
 .EXPORT extended_vm
 
-# From bios_address.template
-.IMPORT bios_address
-
-# From the BIOS image
-.IMPORT bios_image
-
 # From callback.s
 .IMPORT init_vm_callback
+
+# From headers.s
+.IMPORT rom_headers
+
+# From images.s
+.IMPORT images
 
 # From menu.s
 .IMPORT init_menu
@@ -42,8 +42,7 @@
 # From fdc/init.s
 .IMPORT init_fdc
 
-# From img/images.s
-.IMPORT floppy_data
+# From img/floppy.s
 .IMPORT floppy_size
 
 # From img/init.s
@@ -86,13 +85,14 @@ main:
     call init_menu
 
     # Initialize the ROM and floppy images
-    add bios_image, 0, [rb - 1]
-    add [bios_address], 0, [rb - 2]
+    add rom_headers, 0, [rb - 1]
+    add images, 0, [rb - 2]
     arb -2
     call init_images
 
-    # Make the ROM read-only
-    add [bios_address], 0, [rb - 1]
+    # Make the ROM read-only; to avoid creating multiple regions (which slows down every memory access),
+    # we mark all memory between 0xf0000 and 0xfffff as read-only, which is a reasonable approximation
+    add 0xf0000, 0, [rb - 1]
     add 0x100000, 0, [rb - 2]
     add 0, 0, [rb - 3]
     add write_rom, 0, [rb - 4]
@@ -100,7 +100,6 @@ main:
     call register_region
 
     # Initialize PPI using correct floppy drive count
-    # TODO make floppy image indexes configurable at compile time
     lt  0, [floppy_size + 0], [rb + tmp]
     lt  0, [floppy_size + 1], [rb - 1]
     add [rb - 1], [rb + tmp], [rb - 1]

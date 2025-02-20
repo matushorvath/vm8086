@@ -8,35 +8,25 @@ include $(ICDIR)/intcode.mk
 BINDIR ?= $(VMDIR)/bin
 OBJDIR ?= $(VMDIR)/obj/software
 
-DISKS ?= freedos-simple
-COMMA = ,
-TARGETS=$(patsubst %,$(OBJDIR)/%.o,$(subst $(COMMA), ,$(DISKS)))
-
-FORMATS=180 360 720 1200 1440
-
-.PHONY: build-all
-build-all: build-prep checksum empty freedos msdos3 msdos5 msdos6 win104 win203 win211
+FORMATS=160 180 320 360 720 1200 1440 2880
 
 .PHONY: build
-build: build-prep $(TARGETS)
+build: build-prep roms empty freedos msdos3 msdos5 msdos6 win104 win203 win211
 
 .PHONY: build-prep
 build-prep:
 	mkdir -p "$(BINDIR)" "$(OBJDIR)"
 
-.PHONY: checksum
-checksum: hash.md5 blobs/av.zip blobs/freedos.zip blobs/freedos-simple.img.xz blobs/msdos3.7z \
-	blobs/msdos5.7z blobs/msdos6.7z blobs/nc.7z blobs/prince.zip blobs/t602-1.zip \
-	blobs/t602-3.zip blobs/pcdos1.7z blobs/pcdos2.7z blobs/win104.7z blobs/win203.7z \
-	blobs/win211.7z
-	md5sum -c < $<
+.PHONY: roms
+roms: bios-xt pcxtbios phoenix
 
 .PHONY: empty
 empty: $(addprefix $(OBJDIR)/,empty-360.o empty-720.o empty-1200.o empty-1440.o)
 
 .PHONY: freedos
 freedos: freedos-min $(addprefix $(OBJDIR)/,freedos-simple.o freedos.o freedos-poweroff.o \
-	freedos-nc.o freedos-t602-1.o freedos-min-1440-t602-3.o freedos-av.o freedos-prince.o)
+	freedos-nc.o freedos-t602-1.o freedos-min-1440-t602-3.o freedos-av.o freedos-prince.o \
+	freedos-xtidecfg.o)
 
 .PHONY: freedos-min
 freedos-min: $(addprefix $(OBJDIR)/,freedos-min-360.o freedos-min-720.o freedos-min-1200.o \
@@ -44,21 +34,21 @@ freedos-min: $(addprefix $(OBJDIR)/,freedos-min-360.o freedos-min-720.o freedos-
 
 .PHONY: msdos3
 msdos3: msdos3-min $(addprefix $(OBJDIR)/,msdos3.o msdos3-nc.o msdos3-t602-1.o msdos3-min-1440-t602-3.o \
-	msdos3-av.o msdos3-prince.o)
+	msdos3-av.o msdos3-prince.o msdos3-xtidecfg.o)
 
 .PHONY: msdos3-min
 msdos3-min: $(addprefix $(OBJDIR)/,msdos3-min-360.o msdos3-min-720.o msdos3-min-1200.o msdos3-min-1440.o)
 
 .PHONY: msdos5
 msdos5: msdos5-min $(addprefix $(OBJDIR)/,msdos5.o msdos5-nc.o msdos5-t602-1.o msdos5-min-1440-t602-3.o \
-	msdos5-av.o msdos5-prince.o)
+	msdos5-av.o msdos5-prince.o msdos5-xtidecfg.o)
 
 .PHONY: msdos5-min
 msdos5-min: $(addprefix $(OBJDIR)/,msdos5-min-360.o msdos5-min-720.o msdos5-min-1200.o msdos5-min-1440.o)
 
 .PHONY: msdos6
 msdos6: msdos6-min $(addprefix $(OBJDIR)/,msdos6.o msdos6-nc.o msdos6-t602-1.o msdos6-min-1440-t602-3.o \
-	msdos6-av.o msdos6-prince.o)
+	msdos6-av.o msdos6-prince.o msdos6-xtidecfg.o)
 
 .PHONY: msdos6-min
 msdos6-min: $(addprefix $(OBJDIR)/,msdos6-min-360.o msdos6-min-720.o msdos6-min-1200.o msdos6-min-1440.o)
@@ -71,6 +61,28 @@ win203: $(patsubst %,$(OBJDIR)/win203-disk%.o,1 2 3 4 5)
 
 .PHONY: win211
 win211: $(patsubst %,$(OBJDIR)/win211-disk%.o,1 2 3 4)
+
+# ROM images
+.PHONY: bios-xt
+bios-xt: $(OBJDIR)/bios-xt.o $(OBJDIR)/bios-xt_header.o $(OBJDIR)/ide-xt.o $(OBJDIR)/ide-xt_header.o
+
+.PHONY: pcxtbios
+pcxtbios: $(OBJDIR)/pcxtbios.o $(OBJDIR)/pcxtbios_header.o \
+	$(OBJDIR)/basicf6.o $(OBJDIR)/basicf8.o $(OBJDIR)/basicfa.o $(OBJDIR)/basicfc.o \
+	$(OBJDIR)/basicf6_header.o $(OBJDIR)/basicf8_header.o $(OBJDIR)/basicfa_header.o $(OBJDIR)/basicfc_header.o
+
+.PHONY: phoenix
+phoenix: $(OBJDIR)/phoenix-2.51.o $(OBJDIR)/phoenix-2.51_header.o
+
+$(OBJDIR)/%.rom: blobs/%.rom.xz
+	xz -dkfc $< > $@
+
+$(OBJDIR)/%.o: $(OBJDIR)/%.rom
+	$(eval BIN2OBJ_NAME = rom_$(subst -,_,$(basename $(notdir $@))))
+	$(run-intcode-bin2obj)
+
+$(OBJDIR)/%.o: %.s
+	$(run-intcode-as)
 
 # a boot disk we can boot in CI/CD, without mtools
 $(OBJDIR)/freedos-simple.img: blobs/freedos-simple.img.xz
@@ -251,6 +263,11 @@ $(OBJDIR)/%-prince.img: $(OBJDIR)/%.img blobs/prince.zip autoexec-prince.bat
 	mcopy -D o -s -i $@ $(OBJDIR)/PRINCE/PoP1 ::PRINCE
 	rm -rf $(OBJDIR)/PRINCE
 	mcopy -D o -i $@ autoexec-prince.bat ::AUTOEXEC.BAT
+
+$(OBJDIR)/%-xtidecfg.img: $(OBJDIR)/%.img blobs/xtidecfg.com.xz
+	xz -dkfc blobs/xtidecfg.com.xz > $(OBJDIR)/xtidecfg.com
+	cp $< $@
+	mcopy -D o -s -i $@ $(OBJDIR)/xtidecfg.com ::
 
 $(OBJDIR)/%.o: $(OBJDIR)/%.img
 	$(eval BIN2OBJ_NAME = img_$(subst -,_,$(basename $(notdir $@))))

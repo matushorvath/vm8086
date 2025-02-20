@@ -1,25 +1,20 @@
-.EXPORT floppy_count
-.EXPORT floppy_image
-.EXPORT floppy_data
-.EXPORT floppy_size
+.EXPORT image_count
+.EXPORT image_data
+.EXPORT image_size
 
-# TODO const MAX_FLOPPY_COUNT 16
+# TODO const MAX_IMAGE_COUNT 32
 
-floppy_count:
+image_count:
     db  0
 
-# Table of up to MAX_FLOPPY_COUNT-1 binary floppy images (followed by a zero-image as a terminator)
+# Table of up to MAX_IMAGE_COUNT-1 binary images (followed by a zero-image as a terminator)
 
-# Deflated floppy image pointers, invalid after initialization
-floppy_image:
-    ds  16, 0
+# Inflated image data
+image_data:
+    ds  32, 0
 
-# Inflated floppy data
-floppy_data:
-    ds  16, 0
-
-# Inflated floppy size
-floppy_size:
-    ds  16, 0
+# Inflated image sizes
+image_size:
+    ds  32, 0
 
 .EOF

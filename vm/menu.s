@@ -12,10 +12,8 @@
 # From fdc/init.s
 .IMPORT init_fdd
 
-# From img/images.s
+# From img/floppy.s
 .IMPORT floppy_count
-.IMPORT floppy_data
-.IMPORT floppy_size
 
 ##########
 init_menu:

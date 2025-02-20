@@ -27,8 +27,8 @@
 ##########
 main:
 .FRAME
-    add binary_image, 0, [rb - 1]
-    add 0xca000, 0, [rb - 2]
+    add rom_headers, 0, [rb - 1]
+    add binary_image, 0, [rb - 2]
     arb -2
     call init_images
 
@@ -37,6 +37,11 @@ main:
 
     ret 0
 .ENDFRAME
+
+##########
+# Fake ROM headers, indicating we have a single ROM image to be mapped at 0xca000
+rom_headers:
+    db  0xca000
 
 ##########
 # Fake implementation of an IRQ controller

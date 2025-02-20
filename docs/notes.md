@@ -65,7 +65,7 @@ https://github.com/shirriff/DAA
 BIOS
 ====
 
-8086_bios
+8088_bios
 ---------
 
 https://github.com/skiselev/8088_bios.git
@@ -73,6 +73,21 @@ https://github.com/skiselev/8088_bios.git
 listing:
 set(CMAKE_ASM_NASM_FLAGS "-O9 -l $(basename $@).lst)"
 ./build/CMakeFiles/bios-xt.bin.dir/src/bios.asm.lst
+
+IDE support:
+
+memory map:
+(bios-book8088-xtide.rom)
+
+0xf0000 - 0xf1fff: XT-IDE (8kB)
+0xf2000 - 0xfbfff: gap (40kB)
+0xfc000 - 0xfffff: BIOS (16kB)
+
+300h vs 320h refers to the port for XT-CF-Lite, not to memory address
+
+-> use bios-xt.bin at 0xfc000 and ide_xt-cf-lite_300h.bin at 0xf0000
+
+ICVM_TYPE=c-ext make run ROMS=bios-xt,ide-xt DISKS=msdos3-xtidecfg
 
 GLaBIOS
 -------
@@ -95,10 +110,17 @@ https://github.com/virtualxt/pcxtbios
 - move the compiled tools to ./linux
 - eproms/2764/pcxtbios.rom at 0xfe000 is mandatory, the rest is optional
 
-pcxtbios + BASIC:
-- make -C vm clean
-- cat ~/intcode/pcxtbios/eproms/2764/basicfc.rom ~/intcode/pcxtbios/eproms/2764/pcxtbios.rom > - bios.tmp
-- BIOS_LOAD_ADDRESS=fc000 BIOS_BIN=$(pwd)/bios.tmp make && ~/intcode/xzintbit/vms/c/ic bin/vm.input
+update: actually, it's enough to install support for i386 in debian (via multiarch),
+no need to recompile using freebasic
+
+pcxtbios + ROM BASIC:
+
+ICVM_TYPE=c-ext make run ROMS=pcxtbios,basicf6,basicf8,basicfa,basicfc DISKS=empty-180
+(needs all four BASIC ROMs)
+
+ICVM_TYPE=c-ext make run ROMS=pcxtbios,basicf6,basicf8,basicfa,basicfc DISKS=pcdos1
+A> basica
+(does not work if there is no ROM BASIC)
 
 CGA
 ===
@@ -192,26 +214,6 @@ tools (sorted by priority):
         - for symbols and line addresses, they need to be relocated same as exported symbols
         - for lines, we also need to somehow know file name for the line number (perhaps an additional input to asd, same as bin2obj)
 
-FreeDOS Prompt
-==============
-
-good addresses to start tracing:
-1254:0005 (after FreeDOS and a lot of disk reading)
-1212:0000
-9001:9f61
-9001:050f
-9001:129f
-
-MACHINE_HOMEBREW8088 is like MACHINE_XT, but AT keyboard controller and no DMA ch0 setup
-
-also interesting
-9001:0240 INT IMMED8(cd) 2a
-00d8:118a IRET(cf)
-9001:0242 POP AX(58)
-
-INT 2a = critical section and NETBIOS (could be keyboard busy loop if AH=84)
-https://stanislavs.org/helppc/int_2a.html
-
 Keyboard
 ========
 
@@ -304,3 +306,16 @@ ICVM_TYPE=c-ext make run DISKS=msdos3-min-1440,win211-disk1,win211-disk2,win211-
 
 run B:\setup, install to A:
 F12, select disk in B: drive
+
+Hard Drive
+==========
+
+MFM:
+https://retrocmp.de/hardware/it-805/it805.htm
+"very simple" with a small BIOS https://retrocmp.de/hardware/wd1002s-wx2a/wd1002s-wx2a.htm
+WD1006?
+
+PC AT https://retrocmp.de/ibm/cards/hdcfdc/16bit-at.htm
+https://winworldpc.com/product/ibm-pc-at-fixed-disk-diskette-drive-adapter-test/100
+
+https://xtideuniversalbios.org/
