@@ -2,7 +2,7 @@ ROMS
 ====
 
 - https://github.com/skiselev/8088_bios.git
-  binaries/bios-xt.bin, xtide_r625/ide_xt.bin
+  binaries/bios-xt.bin, xtide_r625/ide_xt-cf-lite_300h.bin.bin
 - https://github.com/virtualxt/pcxtbios
   eproms/2764/pcxtbios.rom
 - phoenix-2.51.rom, TODO find URL

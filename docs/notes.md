@@ -99,6 +99,8 @@ memory map:
 
 -> use bios-xt.bin at 0xfc000 and ide_xt-cf-lite_300h.bin at 0xf0000
 
+ICVM_TYPE=c-ext make run ROMS=bios-xt,ide-xt DISKS=msdos3-xtidecfg
+
 GLaBIOS
 -------
 
