@@ -47,16 +47,23 @@ init_images:
     # Each image is a bin2obj generated binary, with its own headers as documented in bin2obj
     # The last image is followed by uninitialized intcode memory, which behaves as all zeros.
 
-    # Expand all images in memory; no sbrk allocations are allowed before this point
+    # Reclaim memory used by the images; this assumes there were no allocations yet
     add [rb + images], 0, [rb - 1]
     arb -1
-    call expand_images
+    call brk
 
-    # Now it is safe to allocate space for 8086 memory
+    # Allocate space for 8086 memory. This allocation also serves the purpose of making sure 
+    # each inflated image buffer starts after the corresponing deflated data. This might not 
+    # otherwise be guaranteed, since an inflated image can be shorter than its deflated data.
     add 0x100000, 0, [rb - 1]
     arb -1
     call sbrk
     add [rb - 3], 0, [mem]
+
+    # Expand all images in memory
+    add [rb + images], 0, [rb - 1]
+    arb -1
+    call expand_images
 
     # Process the expanded images
     add [rb + rom_headers], 0, [rb - 1]
@@ -72,12 +79,6 @@ expand_images:
     arb -3
 
     # Expand all deflated images in memory, filling a table with expanded image information
-
-    # Reclaim memory used by the images; this assumes there were no allocations yet
-    # TODO this currently crashes, some memory gets overwritten while expanding images
-#    add [rb + images], 0, [rb - 1]
-#    arb -1
-#    call brk
 
     # Load information about deflated floppy images
     add [rb + images], 0, [rb + image]
