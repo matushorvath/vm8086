@@ -2,14 +2,14 @@
 
 version: 2
 updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
   - package-ecosystem: "npm"
     directories:
       - test-cpu
       - tools/monitor
       - tools/import-cleanup
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "github-actions"
-    directory: "/"
     schedule:
       interval: "weekly"
