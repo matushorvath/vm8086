@@ -91,39 +91,39 @@ $(OBJDIR)/freedos-simple.img: blobs/freedos-simple.img.xz
 	mdeltree -i $@ FSEVEN~1 || true
 
 $(OBJDIR)/freedos.img: blobs/freedos.zip
-	7zz -y e $< -r 144m/x86BOOT.img -so > $@
+	7z -y e $< -r 144m/x86BOOT.img -so > $@
 	mdel -i $@ FDAUTO.BAT FDCONFIG.SYS SETUP.BAT
 	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
 	mcopy -D o -i $@ config-freedos.sys ::CONFIG.SYS
 
 $(OBJDIR)/pcdos1.img: blobs/pcdos1.7z
-	7zz -y e $< -r Disk01.img -so > $@
+	7z -y e $< -r Disk01.img -so > $@
 
 $(OBJDIR)/pcdos2.img: blobs/pcdos2.7z
-	7zz -y e $< -r Disk01.img -so > $@
+	7z -y e $< -r Disk01.img -so > $@
 
 $(OBJDIR)/msdos3.img: blobs/msdos3.7z
-	7zz -y e $< -r Disk1.img -so > $@
+	7z -y e $< -r Disk1.img -so > $@
 
 $(OBJDIR)/msdos5.img: blobs/msdos5.7z
-	7zz -y e $< -r disk01.img -so > $@
+	7z -y e $< -r disk01.img -so > $@
 	mdel -i $@ DOS50.ZIP AUTOEXEC.BAT CONFIG.SYS SETUP.* PKUNZIP.EXE
 	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
 
 $(OBJDIR)/msdos6.img: blobs/msdos6.7z
-	7zz -y e $< -r Disk1.img -so > $@
+	7z -y e $< -r Disk1.img -so > $@
 	mdel -i $@ *.??_ AUTOEXEC.BAT CONFIG.SYS COUNTRY.* DEFRAG.* DOSSETUP.INI DRVSPACE.BIN \
 		EXPAND.EXE MSCDEX.EXE NETWORKS.TXT PACKING.LST SCANDISK.* SETUP.*
 	mcopy -D o -i $@ /dev/null ::AUTOEXEC.BAT
 
 $(OBJDIR)/win104-disk%.img: blobs/win104.7z
-	7zz -y e $< -r D$(*F)_*.img -so > $@
+	7z -y e $< -r D$(*F)_*.img -so > $@
 
 $(OBJDIR)/win203-disk%.img: blobs/win203.7z
-	7zz -y e $< -r disk$(*F).img -so > $@
+	7z -y e $< -r disk$(*F).img -so > $@
 
 $(OBJDIR)/win211-disk%.img: blobs/win211.7z
-	7zz -y e $< -r Disk$(*F).img -so > $@
+	7z -y e $< -r Disk$(*F).img -so > $@
 
 $(FORMATS:%=$(OBJDIR)/empty-%.img): $(OBJDIR)/empty-%.img:
 	mformat -i $@ -f $(*F) -C
@@ -217,7 +217,7 @@ $(OBJDIR)/%-poweroff.img: $(OBJDIR)/%.img autoexec-poweroff.bat
 $(OBJDIR)/%-nc.img: $(OBJDIR)/%.img blobs/nc.7z autoexec-nc.bat nc.ini
 	rm -rf $(OBJDIR)/NC
 	mkdir -p $(OBJDIR)/NC
-	7zz -y x blobs/nc.7z -o$(OBJDIR)/NC
+	7z -y x blobs/nc.7z -o$(OBJDIR)/NC
 	cp $< $@
 	mcopy -D o -s -i $@ $(OBJDIR)/NC ::NC
 	rm -rf $(OBJDIR)/NC
@@ -227,7 +227,7 @@ $(OBJDIR)/%-nc.img: $(OBJDIR)/%.img blobs/nc.7z autoexec-nc.bat nc.ini
 $(OBJDIR)/%-t602-1.img: $(OBJDIR)/%.img blobs/t602-1.zip autoexec-t602-1.bat
 	rm -rf $(OBJDIR)/T602-1
 	mkdir -p $(OBJDIR)/T602-1
-	7zz -y x blobs/t602-1.zip -o$(OBJDIR)/T602-1
+	7z -y x blobs/t602-1.zip -o$(OBJDIR)/T602-1
 	cp $< $@
 	mcopy -D o -s -i $@ $(OBJDIR)/T602-1/t602 ::T602
 	rm -rf $(OBJDIR)/T602-1
@@ -236,7 +236,7 @@ $(OBJDIR)/%-t602-1.img: $(OBJDIR)/%.img blobs/t602-1.zip autoexec-t602-1.bat
 $(OBJDIR)/%-t602-3.img: $(OBJDIR)/%.img blobs/t602-3.zip autoexec-t602-3.bat
 	rm -rf $(OBJDIR)/T602-3
 	mkdir -p $(OBJDIR)/T602-3
-	7zz -y x blobs/t602-3.zip -o$(OBJDIR)/T602-3
+	7z -y x blobs/t602-3.zip -o$(OBJDIR)/T602-3
 	rm $(OBJDIR)/T602-3/T602/K602.EXE $(OBJDIR)/T602-3/T602/K602.HLP $(OBJDIR)/T602-3/T602/CESKY.SLO
 	cp $(OBJDIR)/T602-3/T602/T602.EXE $(OBJDIR)/T602.EXE.tmp
 	xdelta3 -d -f -s $(OBJDIR)/T602.EXE.tmp t602-3.xdelta3 $(OBJDIR)/T602-3/T602/T602.EXE
@@ -249,7 +249,7 @@ $(OBJDIR)/%-t602-3.img: $(OBJDIR)/%.img blobs/t602-3.zip autoexec-t602-3.bat
 $(OBJDIR)/%-av.img: $(OBJDIR)/%.img blobs/av.zip autoexec-av.bat
 	rm -rf $(OBJDIR)/AV
 	mkdir -p $(OBJDIR)/AV
-	7zz -y x blobs/av.zip -o$(OBJDIR)/AV
+	7z -y x blobs/av.zip -o$(OBJDIR)/AV
 	cp $< $@
 	mcopy -D o -s -i $@ $(OBJDIR)/AV ::AV
 	rm -rf $(OBJDIR)/AV
@@ -258,7 +258,7 @@ $(OBJDIR)/%-av.img: $(OBJDIR)/%.img blobs/av.zip autoexec-av.bat
 $(OBJDIR)/%-prince.img: $(OBJDIR)/%.img blobs/prince.zip autoexec-prince.bat
 	rm -rf $(OBJDIR)/PRINCE
 	mkdir -p $(OBJDIR)/PRINCE
-	7zz -y x blobs/prince.zip -o$(OBJDIR)/PRINCE
+	7z -y x blobs/prince.zip -o$(OBJDIR)/PRINCE
 	cp $< $@
 	mcopy -D o -s -i $@ $(OBJDIR)/PRINCE/PoP1 ::PRINCE
 	rm -rf $(OBJDIR)/PRINCE
