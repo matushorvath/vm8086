@@ -8,6 +8,8 @@ include $(ICDIR)/intcode.mk
 BINDIR ?= $(VMDIR)/bin
 OBJDIR ?= $(VMDIR)/obj/software
 
+CHECKSUM_ROM ?= $(abspath $(VMDIR)/tools/checksum-rom/checksum-rom)
+
 FORMATS=160 180 320 360 720 1200 1440 2880
 
 .PHONY: build
@@ -18,7 +20,7 @@ build-prep:
 	mkdir -p "$(BINDIR)" "$(OBJDIR)"
 
 .PHONY: roms
-roms: bios-xt pcxtbios phoenix
+roms: bios-xt pcxtbios phoenix ide-xt ide-xtl
 
 .PHONY: empty
 empty: $(addprefix $(OBJDIR)/,empty-360.o empty-720.o empty-1200.o empty-1440.o)
@@ -64,7 +66,7 @@ win211: $(patsubst %,$(OBJDIR)/win211-disk%.o,1 2 3 4)
 
 # ROM images
 .PHONY: bios-xt
-bios-xt: $(OBJDIR)/bios-xt.o $(OBJDIR)/bios-xt_header.o $(OBJDIR)/ide-xt.o $(OBJDIR)/ide-xt_header.o
+bios-xt: $(OBJDIR)/bios-xt.o $(OBJDIR)/bios-xt_header.o
 
 .PHONY: pcxtbios
 pcxtbios: $(OBJDIR)/pcxtbios.o $(OBJDIR)/pcxtbios_header.o \
@@ -73,6 +75,16 @@ pcxtbios: $(OBJDIR)/pcxtbios.o $(OBJDIR)/pcxtbios_header.o \
 
 .PHONY: phoenix
 phoenix: $(OBJDIR)/phoenix-2.51.o $(OBJDIR)/phoenix-2.51_header.o
+
+.PHONY: ide-xt
+ide-xt: $(OBJDIR)/ide-xt.o $(OBJDIR)/ide-xt_header.o
+
+.PHONY: ide-xtl
+ide-xtl: $(OBJDIR)/ide-xtl.o $(OBJDIR)/ide-xtl_header.o
+
+$(OBJDIR)/%.rom: blobs/%.rom-bin.xz $(CHECKSUM_ROM)
+	xz -dkfc $< > $@
+	$(CHECKSUM_ROM) $@ || rm $@
 
 $(OBJDIR)/%.rom: blobs/%.rom.xz
 	xz -dkfc $< > $@
