@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdint.h>
 
+// TODO Rewrite this in intcode
+
 int read_rom(FILE *f, uint8_t *checksum, long *rom_size) {
     *checksum = 0;
     *rom_size = 0;
@@ -34,9 +36,7 @@ int read_rom(FILE *f, uint8_t *checksum, long *rom_size) {
     *checksum -= (uint8_t)ch;
     *rom_size = (long)ch * 0x200;
 
-    int lastCh;
     while ((ch = fgetc(f)) != EOF) {
-        lastCh = ch;
         *checksum -= (uint8_t)ch;
     }
 
