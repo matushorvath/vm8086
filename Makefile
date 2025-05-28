@@ -5,7 +5,7 @@ BINDIR ?= bin
 OBJDIR ?= obj
 
 SRCDIRS = util cga cpu dev fdc img vm
-TOOLSDIR = tools/import-cleanup tools/monitor
+TOOLSDIR = tools/checksum-rom tools/import-cleanup tools/monitor
 TESTDIRS = test-bochs test-cpu
 
 # Build VM

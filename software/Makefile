@@ -8,7 +8,7 @@ include $(ICDIR)/intcode.mk
 BINDIR ?= $(VMDIR)/bin
 OBJDIR ?= $(VMDIR)/obj/software
 
-CHECKSUM_ROM ?= $(abspath $(VMDIR)/tools/checksum-rom/checksum-rom)
+CHECKSUM_ROM ?= $(VMDIR)/tools/checksum-rom/checksum-rom
 
 FORMATS=160 180 320 360 720 1200 1440 2880
 
@@ -82,7 +82,7 @@ ide-xt: $(OBJDIR)/ide-xt.o $(OBJDIR)/ide-xt_header.o
 .PHONY: ide-xtl
 ide-xtl: $(OBJDIR)/ide-xtl.o $(OBJDIR)/ide-xtl_header.o
 
-$(OBJDIR)/%.rom: blobs/%.rom-bin.xz $(CHECKSUM_ROM)
+$(OBJDIR)/%.rom: blobs/%.rom-bin.xz checksum-rom
 	xz -dkfc $< > $@
 	$(CHECKSUM_ROM) $@ || rm $@
 
@@ -284,6 +284,10 @@ $(OBJDIR)/%-xtidecfg.img: $(OBJDIR)/%.img blobs/xtidecfg.com.xz
 $(OBJDIR)/%.o: $(OBJDIR)/%.img
 	$(eval BIN2OBJ_NAME = img_$(subst -,_,$(basename $(notdir $@))))
 	$(run-intcode-bin2obj)
+
+.PHONY: checksum-rom
+checksum-rom:
+	make -C $(VMDIR)/tools/checksum-rom
 
 .PHONY: clean
 clean:
