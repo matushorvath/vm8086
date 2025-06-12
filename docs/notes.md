@@ -343,7 +343,7 @@ Booting A»A
 
 search for: ; XT and XT+ Build default settings ;
 default mode for ide_xt.bin is DEVICE_8BIT_XTCF_PIO8 (XTCF PIO)
-- ideal is probably DEVICE_8BIT_ATA
+- ideal is probably DEVICE_8BIT_ATA, but DEVICE_8BIT_XTCF_PIO8 looks very similar
 - it can be changed in the BIOS binary if needed
 default port 300h
 
@@ -365,12 +365,16 @@ Initialize_AndDetectDrives
         Device_IdentifyToBufferInESSIwithDriveSelectByteInBH
           IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH
             (create fake DPT)
-            IdeWait_PollStatusFlagInBLwithTimeoutInBH waiting for FLG_STATUS_BSY
+            IdeWait_PollStatusFlagInBLwithTimeoutInBH waiting for FLG_STATUS_BSY, so waits util BSY is clear
               IdeIO_InputStatusRegisterToAL
-                IdeIO_InputToALfromIdeRegisterInDL with DL = STATUS_REGISTER_in (7)
-                  .InputToALfromRegisterInDX because AL = DEVICE_8BIT_ATA
+                IdeIO_InputToALfromIdeRegisterInDL with DL = STATUS_REGISTER_in (7) (does IN AL, 00DL = IN AL, 007h)
+                  .InputToALfromRegisterInDX because AL = DEVICE_8BIT_XTCF_PIO8 which is < DEVICE_8BIT_JRIDE_ISA
               PollBsyOnly (because AH = FLG_STATUS_BSY)
-            AH9h_Enable8bitModeForDevice8bitAta
+            AH9h_Enable8bitModeForDevice8bitAta does nothing since device is not DEVICE_8BIT_ATA
+            AH1Eh_GetCurrentXTCFmodeToAX
+            AH9h_SetModeFromALtoXTCF
+              AccessDPT_IsThisDeviceXTCF
+              AccessDPT_SetXTCFmodeInDPTwithModeInAL
             Idepack_StoreNonExtParametersAndIssueCommandFromAL with COMMAND_IDENTIFY_DEVICE
 
         (currently prints g_szNotFound because CF is set after ^)
