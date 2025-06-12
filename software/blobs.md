@@ -2,9 +2,13 @@ ROMS
 ====
 
 - https://github.com/skiselev/8088_bios.git
-  binaries/bios-xt.bin, xtide_r625/ide_xt-cf-lite_300h.bin.bin
+  binaries/bios-xt.bin -> bios-xt.rom
 - https://github.com/virtualxt/pcxtbios
-  eproms/2764/pcxtbios.rom eproms/2764/basicf*.rom
+  eproms/2764/pcxtbios.rom -> pcxtbios.rom
+  eproms/2764/basicf*.rom -> basicf*.rom
+- https://www.xtideuniversalbios.org/binaries/r631/ide_xt.bin -> ide-xt.rom-bin
+  https://www.xtideuniversalbios.org/binaries/r631/xtidecfg.com -> xtidecfg.com
+  The ROM as downloaded does not contain padding and checksum, that's why the extension is .rom-bin
 - phoenix-2.51.rom, TODO find URL
 
 DISKS

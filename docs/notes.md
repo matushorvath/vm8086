@@ -319,3 +319,63 @@ PC AT https://retrocmp.de/ibm/cards/hdcfdc/16bit-at.htm
 https://winworldpc.com/product/ibm-pc-at-fixed-disk-diskette-drive-adapter-test/100
 
 https://xtideuniversalbios.org/
+
+sudo apt instal git-svn
+git svn clone https://xtideuniversalbios.org/svn/xtideuniversalbios
+
+ICVM_TYPE=c-ext make run ROMS=bios-xt,ide-xt DISKS=msdos3-xtidecfg
+
+XT IDE Notes
+------------
+
+printout:
+```
+-=XTIDE Universal BIOS (XT)=- @ F000h
+r631 (2025-02-01)
+Released under GNU GPL v2
+
+Master at 300h: not found
+Slave  at 300h: not found
+Booting C»C
+Error 1h!
+Booting A»A
+```
+
+search for: ; XT and XT+ Build default settings ;
+default mode for ide_xt.bin is DEVICE_8BIT_XTCF_PIO8 (XTCF PIO)
+- ideal is probably DEVICE_8BIT_ATA, but DEVICE_8BIT_XTCF_PIO8 looks very similar
+- it can be changed in the BIOS binary if needed
+default port 300h
+
+calculate checksum for the downloaded ROM:
+
+EEPROM_GenerateChecksum
+- 8 bit checksum (add each byte to an 8-bit register), then neg [al], then write the byte at the end of the ROM
+BiosFile_SaveFile
+
+boot initialization:
+
+Initialize_AndDetectDrives
+  DetectDrives_FromAllIDEControllers
+    StartDetectionWithDriveSelectByteInBHandStringInCX
+      DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP
+      - port is IDEVARS.wBasePort
+      - prints "Master at 300h:"
+      .ReadAtaInfoFromHardDisk
+        Device_IdentifyToBufferInESSIwithDriveSelectByteInBH
+          IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH
+            (create fake DPT)
+            IdeWait_PollStatusFlagInBLwithTimeoutInBH waiting for FLG_STATUS_BSY, so waits util BSY is clear
+              IdeIO_InputStatusRegisterToAL
+                IdeIO_InputToALfromIdeRegisterInDL with DL = STATUS_REGISTER_in (7) (does IN AL, 00DL = IN AL, 007h)
+                  .InputToALfromRegisterInDX because AL = DEVICE_8BIT_XTCF_PIO8 which is < DEVICE_8BIT_JRIDE_ISA
+              PollBsyOnly (because AH = FLG_STATUS_BSY)
+            AH9h_Enable8bitModeForDevice8bitAta does nothing since device is not DEVICE_8BIT_ATA
+            AH1Eh_GetCurrentXTCFmodeToAX
+            AH9h_SetModeFromALtoXTCF
+              AccessDPT_IsThisDeviceXTCF
+              AccessDPT_SetXTCFmodeInDPTwithModeInAL
+            Idepack_StoreNonExtParametersAndIssueCommandFromAL with COMMAND_IDENTIFY_DEVICE
+
+        (currently prints g_szNotFound because CF is set after ^)
+        CreateBiosTablesForHardDisk
