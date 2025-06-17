@@ -8,7 +8,7 @@
         "eslint": "eslint ."
     },
     "devDependencies": {
-        "eslint": "^9.28.0"
+        "eslint": "^9.29.0"
     },
     "dependencies": {
         "dotgitignore": "^2.1.0"
