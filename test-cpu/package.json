@@ -14,6 +14,6 @@
     "dependencies": {
         "chalk": "^5.4.1",
         "multi-progress-bars": "^5.0.3",
-        "piscina": "^5.0.0"
+        "piscina": "^5.1.0"
     }
 }
