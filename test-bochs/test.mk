@@ -10,6 +10,8 @@ COMMON_DIR ?= $(abspath ../common)
 COMMON_OBJDIR ?= $(abspath ../common/obj)
 COMMON_BINDIR ?= $(abspath ../common/bin)
 
+CHECKSUM_ROM ?= $(VMDIR)/tools/checksum-rom/checksum-rom
+
 ifndef TESTLOG
 	TESTLOG := $(shell mktemp)
 endif
@@ -122,10 +124,10 @@ $(RESDIR)/%.bochs.data: $(OBJDIR)/%.bochs.bin FORCE
 	@$(passed)
 
 # Build the binaries
-$(OBJDIR)/%.bochs.bin: %.asm $(wildcard *.inc) $(wildcard $(COMMON_DIR)/*.inc) $(COMMON_BINDIR)/checksum
+$(OBJDIR)/%.bochs.bin: %.asm $(wildcard *.inc) $(wildcard $(COMMON_DIR)/*.inc) checksum-rom
 	printf '$(NAME): [bochs] assembling ' >> $(TESTLOG)
 	nasm -i $(COMMON_DIR) -d BOCHS -f bin $< -o $@ || $(failed)
-	$(COMMON_BINDIR)/checksum $@ || rm $@
+	$(CHECKSUM_ROM) $@ || rm $@
 	# hexdump -C $@ ; true
 	[ "$$(wc -c < $@)" -eq 90112 ] || $(failed)
 	@$(passed)
@@ -146,6 +148,10 @@ $(COMMON_OBJDIR)/%.o: $(COMMON_DIR)/%.c
 
 $(COMMON_OBJDIR)/%.o: $(COMMON_DIR)/%.s
 	$(run-intcode-as)
+
+.PHONY: checksum-rom
+checksum-rom:
+	make -C $(VMDIR)/tools/checksum-rom
 
 # Clean
 .PHONY: clean

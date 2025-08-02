@@ -42,13 +42,6 @@ init:
     call initialize
 
 
-%ifdef BOCHS
-; dummy section to make sure the image is exactly rom_size bytes long
-section image_end start=(rom_addr + rom_size - 1)
-    db  0
-%endif
-
-
 %ifdef VM8086
 boot_addr   equ 0xffff0
 
