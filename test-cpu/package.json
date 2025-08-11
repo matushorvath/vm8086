@@ -9,7 +9,7 @@
         "eslint": "eslint ."
     },
     "devDependencies": {
-        "eslint": "^9.32.0"
+        "eslint": "^9.33.0"
     },
     "dependencies": {
         "chalk": "^5.5.0",
