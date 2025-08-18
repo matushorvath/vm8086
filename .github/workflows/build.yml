@@ -22,12 +22,12 @@ jobs:
 
     steps:
       - name: Checkout vm8086
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: vm8086
 
       - name: Checkout xzintbit
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: matushorvath/xzintbit
           path: xzintbit
@@ -39,7 +39,7 @@ jobs:
         run: make build-vm
 
       - name: Checkout 8088_bios
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: skiselev/8088_bios
           path: 8088_bios
