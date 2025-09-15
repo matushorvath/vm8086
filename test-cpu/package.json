@@ -12,7 +12,7 @@
         "eslint": "^9.35.0"
     },
     "dependencies": {
-        "chalk": "^5.6.0",
+        "chalk": "^5.6.2",
         "multi-progress-bars": "^5.0.3",
         "piscina": "^5.1.3"
     }
