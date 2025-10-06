@@ -28,7 +28,8 @@
     mov bh, 0b_01010101
     mov byte [data], 0b_11001101
     clearf
-    test bh, byte [data]                ; TEST REG8, MEM8
+    ;test bh, byte [data]               ; nasm on ubuntu 24 refuses to compile this
+    test byte [data], bh                ; TEST REG8, MEM8
     pushf
 
     dump_state
