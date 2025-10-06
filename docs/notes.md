@@ -379,3 +379,24 @@ Initialize_AndDetectDrives
 
         (currently prints g_szNotFound because CF is set after ^)
         CreateBiosTablesForHardDisk
+
+Bitwise Test Error
+==================
+
+printf 'bitwise: [bochs] assembling ' >> /home/runner/work/vm8086/vm8086/vm8086/test-bochs/test.log
+nasm -i /home/runner/work/vm8086/vm8086/vm8086/test-bochs/common -d BOCHS -f bin bitwise.asm -o obj/bitwise.bochs.bin || 	( echo "$(tput setaf 1)"FAILED"$(tput sgr0)" ; false ) >> /home/runner/work/vm8086/vm8086/vm8086/test-bochs/test.log
+test_b.inc:31: error: invalid combination of opcode and operands
+test_w.inc:31: error: invalid combination of opcode and operands
+make[2]: *** [../test.mk:129: obj/bitwise.bochs.bin] Error 1
+
+    mov bh, 0b_01010101
+    mov byte [data], 0b_11001101
+    clearf
+>>> test bh, byte [data]                ; TEST REG8, MEM8
+    pushf
+
+    mov dx, 0b_01010101_11001101
+    mov word [data], 0b_11001100_01010101
+    clearf
+>>> test dx, word [data]                ; TEST REG16, MEM16
+    pushf

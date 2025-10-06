@@ -5,6 +5,7 @@ else
 endif
 
 TARGET := checksum-rom$(EXE)
+CFLAGS ?= -O2 -Wall -Wextra -Werror
 
 .PHONY: all
 all: $(TARGET)
