@@ -28,7 +28,8 @@
     mov dx, 0b_01010101_11001101
     mov word [data], 0b_11001100_01010101
     clearf
-    test dx, word [data]                ; TEST REG16, MEM16
+    ;test dx, word [data]               ; nasm on ubuntu 24 refuses to compile this
+    test word [data], dx                ; TEST REG16, MEM16
     pushf
 
     dump_state

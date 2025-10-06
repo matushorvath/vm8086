@@ -12,6 +12,8 @@ COMMON_BINDIR ?= $(abspath ../common/bin)
 
 CHECKSUM_ROM ?= $(VMDIR)/tools/checksum-rom/checksum-rom
 
+CFLAGS ?= -O2 -Wall -Wextra -Werror
+
 ifndef TESTLOG
 	TESTLOG := $(shell mktemp)
 endif

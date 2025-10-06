@@ -10,7 +10,7 @@ int read_rom(FILE *f, uint8_t *checksum, long *rom_size) {
     int ch;
 
     if ((ch = fgetc(f)) == EOF) {
-        fprintf(stderr, "Missing ROM signature, byte 0\n", ch);
+        fprintf(stderr, "Missing ROM signature, byte 0\n");
         return -1;
     }
     if (ch != 0x55) {
@@ -20,7 +20,7 @@ int read_rom(FILE *f, uint8_t *checksum, long *rom_size) {
     *checksum -= (uint8_t)ch;
 
     if ((ch = fgetc(f)) == EOF) {
-        fprintf(stderr, "Missing ROM signature, byte 1\n", ch);
+        fprintf(stderr, "Missing ROM signature, byte 1\n");
         return -1;
     }
     if (ch != 0xaa) {
@@ -30,7 +30,7 @@ int read_rom(FILE *f, uint8_t *checksum, long *rom_size) {
     *checksum -= (uint8_t)ch;
 
     if ((ch = fgetc(f)) == EOF) {
-        fprintf(stderr, "Missing ROM size\n", ch);
+        fprintf(stderr, "Missing ROM size\n");
         return -1;
     }
     *checksum -= (uint8_t)ch;
@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
 
     int file_size = ftell(f);
     if (file_size >= rom_size) {
-        fprintf(stderr, "File size must be smaller than ROM size in header: file size %d bytes, ROM size %d bytes\n", file_size, rom_size);
+        fprintf(stderr, "File size must be smaller than ROM size in header: file size %d bytes, ROM size %ld bytes\n", file_size, rom_size);
         fclose(f);
         return 1;
     }
