@@ -3,4 +3,4 @@
 IBM PC Emulator Written in IntCode
 ----------------------------------
 
-[![Watch the video](https://img.youtube.com/vi/dMscehPZrQQ/default.jpg)](https://youtu.be/dMscehPZrQQ)
+[![Watch the video](https://i3.ytimg.com/vi/dMscehPZrQQ/maxresdefault.jpg)](https://youtu.be/dMscehPZrQQ)
