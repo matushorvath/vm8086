@@ -3,6 +3,6 @@
 IBM PC Emulator Written in IntCode
 ----------------------------------
 
-YouTube [video](https://youtu.be/dMscehPZrQQ) of installing and running Windows 2.03, running on top of a IntCode VM:
+YouTube [video](https://youtu.be/dMscehPZrQQ) of installing and running Windows 2.03, executed on top of an IntCode VM:
 
 [![Watch the video](https://i3.ytimg.com/vi/dMscehPZrQQ/maxresdefault.jpg)](https://youtu.be/dMscehPZrQQ)
