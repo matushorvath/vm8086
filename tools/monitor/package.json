@@ -8,7 +8,9 @@
         "eslint": "eslint ."
     },
     "devDependencies": {
-        "eslint": "^9.39.2"
+        "@eslint/js": "^10.0.1",
+        "eslint": "^10.0.0",
+        "globals": "^17.3.0"
     },
     "dependencies": {
         "@ungap/with-resolvers": "^0.1.0"
