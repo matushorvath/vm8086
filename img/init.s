@@ -1,5 +1,10 @@
 .EXPORT init_images
 
+# From floppy.s
+.IMPORT floppy_count
+.IMPORT floppy_data
+.IMPORT floppy_size
+
 # From images.s
 .IMPORT image_count
 .IMPORT image_data
@@ -9,11 +14,6 @@
 .IMPORT deflated_size
 .IMPORT inflate_image
 .IMPORT move_memory_reverse
-
-# From floppy.s
-.IMPORT floppy_count
-.IMPORT floppy_data
-.IMPORT floppy_size
 
 # From cpu/state.s
 .IMPORT mem
