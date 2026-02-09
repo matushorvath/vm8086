@@ -246,7 +246,7 @@ const runTests = async (variant, file, tests, filtered) => {
     mpb?.addTask(`${variant}/${file}`, { type: 'percentage' });
 
     let passed = [], failed = [];
-    const runOneTest = async (test, i) => {
+    const runOneTest = async (test) => {
         let error, actual;
         if (options['single-thread']) {
             [error, actual] = await worker({ test, options });
@@ -271,20 +271,20 @@ const runTests = async (variant, file, tests, filtered) => {
         }
 
         const message = formatPassedFailed(passed.length, failed.length, tests.length, filtered);
-        mpb?.updateTask(`${variant}/${file}`, { percentage: i / tests.length, message });
+        mpb?.updateTask(`${variant}/${file}`, { percentage: (passed.length + failed.length) / tests.length, message });
 
         return error === undefined;
     };
 
     if (options['single-thread']) {
-        for (let i = 0; i < tests.length; i++) {
-            const success = await runOneTest(tests[i], i);
+        for (const test of tests) {
+            const success = await runOneTest(test);
             if (options.break && !success) {
                 break;
             }
         }
     } else {
-        const promises = tests.map(async (test, i) => runOneTest(test, i));
+        const promises = tests.map(async test => runOneTest(test));
         const results = await Promise.allSettled(promises);
 
         const errors = results.filter(r => r.status === 'rejected').map(r => r.reason);
