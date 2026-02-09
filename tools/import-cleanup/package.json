@@ -8,7 +8,9 @@
         "eslint": "eslint ."
     },
     "devDependencies": {
-        "eslint": "^10.0.0"
+        "@eslint/js": "^10.0.1",
+        "eslint": "^10.0.0",
+        "globals": "^17.3.0"
     },
     "dependencies": {
         "dotgitignore": "^2.1.0"
