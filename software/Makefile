@@ -27,8 +27,8 @@ empty: $(addprefix $(OBJDIR)/,empty-360.o empty-720.o empty-1200.o empty-1440.o)
 
 .PHONY: freedos
 freedos: freedos-min $(addprefix $(OBJDIR)/,freedos-simple.o freedos.o freedos-poweroff.o \
-	freedos-nc.o freedos-t602-1.o freedos-min-1440-t602-3.o freedos-av.o freedos-prince.o \
-	freedos-xtidecfg.o)
+	freedos-nc.o freedos-t602-1.o freedos-min-1440-t602-3.o freedos-av.o freedos-cycles.o \
+	freedos-prince.o freedos-xtidecfg.o)
 
 .PHONY: freedos-min
 freedos-min: $(addprefix $(OBJDIR)/,freedos-min-360.o freedos-min-720.o freedos-min-1200.o \
@@ -36,21 +36,21 @@ freedos-min: $(addprefix $(OBJDIR)/,freedos-min-360.o freedos-min-720.o freedos-
 
 .PHONY: msdos3
 msdos3: msdos3-min $(addprefix $(OBJDIR)/,msdos3.o msdos3-nc.o msdos3-t602-1.o msdos3-min-1440-t602-3.o \
-	msdos3-av.o msdos3-prince.o msdos3-xtidecfg.o)
+	msdos3-av.o msdos3-prince.o msdos3-cycles.o msdos3-xtidecfg.o)
 
 .PHONY: msdos3-min
 msdos3-min: $(addprefix $(OBJDIR)/,msdos3-min-360.o msdos3-min-720.o msdos3-min-1200.o msdos3-min-1440.o)
 
 .PHONY: msdos5
 msdos5: msdos5-min $(addprefix $(OBJDIR)/,msdos5.o msdos5-nc.o msdos5-t602-1.o msdos5-min-1440-t602-3.o \
-	msdos5-av.o msdos5-prince.o msdos5-xtidecfg.o)
+	msdos5-av.o msdos5-prince.o msdos5-cycles.o msdos5-xtidecfg.o)
 
 .PHONY: msdos5-min
 msdos5-min: $(addprefix $(OBJDIR)/,msdos5-min-360.o msdos5-min-720.o msdos5-min-1200.o msdos5-min-1440.o)
 
 .PHONY: msdos6
 msdos6: msdos6-min $(addprefix $(OBJDIR)/,msdos6.o msdos6-nc.o msdos6-t602-1.o msdos6-min-1440-t602-3.o \
-	msdos6-av.o msdos6-prince.o msdos6-xtidecfg.o)
+	msdos6-av.o msdos6-prince.o msdos6-cycles.o msdos6-xtidecfg.o)
 
 .PHONY: msdos6-min
 msdos6-min: $(addprefix $(OBJDIR)/,msdos6-min-360.o msdos6-min-720.o msdos6-min-1200.o msdos6-min-1440.o)
@@ -266,6 +266,15 @@ $(OBJDIR)/%-av.img: $(OBJDIR)/%.img blobs/av.zip autoexec-av.bat
 	mcopy -D o -s -i $@ $(OBJDIR)/AV ::AV
 	rm -rf $(OBJDIR)/AV
 	mcopy -D o -i $@ autoexec-av.bat ::AUTOEXEC.BAT
+
+$(OBJDIR)/%-cycles.img: $(OBJDIR)/%.img blobs/cycles.zip autoexec-cycles.bat
+	rm -rf $(OBJDIR)/CYCLES
+	mkdir -p $(OBJDIR)/CYCLES
+	7z -y x blobs/cycles.zip -o$(OBJDIR)/CYCLES
+	cp $< $@
+	mcopy -D o -s -i $@ $(OBJDIR)/CYCLES/cycles-international-grand-prix-racing ::CYCLES
+	rm -rf $(OBJDIR)/CYCLES
+	mcopy -D o -i $@ autoexec-cycles.bat ::AUTOEXEC.BAT
 
 $(OBJDIR)/%-prince.img: $(OBJDIR)/%.img blobs/prince.zip autoexec-prince.bat
 	rm -rf $(OBJDIR)/PRINCE

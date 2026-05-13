@@ -28,3 +28,4 @@ DISKS
  - https://winworldpc.com/download/c38fc38d-68c2-bbe2-80a6-4b11c3a4c2ac -> msdos6.7z
  - https://winworldpc.com/download/0474c84d-d5c4-11eb-9de1-0200008a0da4 -> win203.7z
  - https://winworldpc.com/download/c396c3b1-e280-a65d-e280-b06211c3a4ef -> win211.7z
+ - https://www.myabandonware.com/game/the-cycles-international-grand-prix-racing-mm -> cycles.zip
