@@ -10,6 +10,7 @@ ROMS
   https://www.xtideuniversalbios.org/binaries/r631/xtidecfg.com -> xtidecfg.com
   The ROM as downloaded does not contain padding and checksum, that's why the extension is .rom-bin
 - phoenix-2.51.rom, TODO find URL
+- pp06.rom read from a physical chip
 
 DISKS
 =====
