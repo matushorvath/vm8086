@@ -20,7 +20,7 @@ build-prep:
 	mkdir -p "$(BINDIR)" "$(OBJDIR)"
 
 .PHONY: roms
-roms: bios-xt pcxtbios phoenix ide-xt ide-xtl
+roms: bios-xt pcxtbios phoenix pp06 ide-xt ide-xtl
 
 .PHONY: empty
 empty: $(addprefix $(OBJDIR)/,empty-360.o empty-720.o empty-1200.o empty-1440.o)
@@ -75,6 +75,9 @@ pcxtbios: $(OBJDIR)/pcxtbios.o $(OBJDIR)/pcxtbios_header.o \
 
 .PHONY: phoenix
 phoenix: $(OBJDIR)/phoenix-2.51.o $(OBJDIR)/phoenix-2.51_header.o
+
+.PHONY: pp06
+pp06: $(OBJDIR)/pp06.o $(OBJDIR)/pp06_header.o
 
 .PHONY: ide-xt
 ide-xt: $(OBJDIR)/ide-xt.o $(OBJDIR)/ide-xt_header.o
