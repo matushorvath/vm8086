@@ -20,7 +20,7 @@ build-prep:
 	mkdir -p "$(BINDIR)" "$(OBJDIR)"
 
 .PHONY: roms
-roms: bios-xt pcxtbios phoenix ide-xt ide-xtl
+roms: bios-xt pcxtbios phoenix ide-xt # ide-xtl TODO what is ide-xtl?
 
 .PHONY: empty
 empty: $(addprefix $(OBJDIR)/,empty-360.o empty-720.o empty-1200.o empty-1440.o)
