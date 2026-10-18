@@ -1,4 +1,4 @@
-# apt install 7zip mtools wget xdelta3 xz-utils
+# apt install 7zip mtools wget xdelta3 xz-utils zstd
 
 VMDIR = $(abspath ..)
 
@@ -83,11 +83,18 @@ ide-xt: $(OBJDIR)/ide-xt.o $(OBJDIR)/ide-xt_header.o
 ide-xtl: $(OBJDIR)/ide-xtl.o $(OBJDIR)/ide-xtl_header.o
 
 $(OBJDIR)/%.rom: blobs/%.rom-bin.xz checksum-rom
-	xz -dkfc $< > $@
+	xzcat $< > $@
+	$(CHECKSUM_ROM) $@ || rm $@
+
+$(OBJDIR)/%.rom: blobs/%.rom-bin.zst checksum-rom
+	zstdcat $< > $@
 	$(CHECKSUM_ROM) $@ || rm $@
 
 $(OBJDIR)/%.rom: blobs/%.rom.xz
-	xz -dkfc $< > $@
+	xzcat $< > $@
+
+$(OBJDIR)/%.rom: blobs/%.rom.zst
+	zstdcat $< > $@
 
 $(OBJDIR)/%.o: $(OBJDIR)/%.rom
 	$(eval BIN2OBJ_NAME = rom_$(subst -,_,$(basename $(notdir $@))))
@@ -98,7 +105,7 @@ $(OBJDIR)/%.o: %.s
 
 # a boot disk we can boot in CI/CD, without mtools
 $(OBJDIR)/freedos-simple.img: blobs/freedos-simple.img.xz
-	xz -dkfc $< > $@
+	xzcat $< > $@
 	# ignore errors, since this is just cosmetic and CI/CD has no mtools
 	mdeltree -i $@ FSEVEN~1 || true
 
@@ -286,7 +293,7 @@ $(OBJDIR)/%-prince.img: $(OBJDIR)/%.img blobs/prince.zip autoexec-prince.bat
 	mcopy -D o -i $@ autoexec-prince.bat ::AUTOEXEC.BAT
 
 $(OBJDIR)/%-xtidecfg.img: $(OBJDIR)/%.img blobs/xtidecfg.com.xz
-	xz -dkfc blobs/xtidecfg.com.xz > $(OBJDIR)/xtidecfg.com
+	xzcat blobs/xtidecfg.com.xz > $(OBJDIR)/xtidecfg.com
 	cp $< $@
 	mcopy -D o -s -i $@ $(OBJDIR)/xtidecfg.com ::
 
