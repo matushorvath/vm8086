@@ -50,6 +50,12 @@ register_port:
 .FRAME port_lo, port_hi, read_callback, write_callback; table, ptr
     arb -2
 
+    # Do nothing if both callbacks are zero
+    jnz [rb + read_callback], .have_callback
+    jnz [rb + write_callback], .have_callback
+    jz  0, .done
+
+.have_callback:
     # Is there any table at all?
     jnz [device_ports], .have_first_table
 
@@ -97,6 +103,7 @@ register_port:
     add [rb + table], [rb + ptr], [ip + 3]
     add [rb + write_callback], 0, [0]
 
+.done:
     arb 2
     ret 4
 .ENDFRAME

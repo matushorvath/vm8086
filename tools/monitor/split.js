@@ -3,7 +3,7 @@
 
 // Usage:
 // - Open two terminals, one for stdout, one for stderr.
-// - On the stderr terminal, run `ls /proc/self/fd/1` to determine which device is it connected to.
+// - On the stderr terminal, run `ls -l /proc/self/fd/1` to determine which device is it connected to.
 // - On the stdout terminal, run `npm run | ./monitor/split 2> /dev/pts/<stderr-device>
 
 // Make some test input:

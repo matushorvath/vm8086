@@ -6,6 +6,7 @@
 .EXPORT config_de_fault_as_286
 .EXPORT config_boot_80x25
 .EXPORT config_cga_hide_cursor
+.EXPORT config_dram_refresh
 
 .EXPORT config_log_cga_debug
 .EXPORT config_log_cga_trace
@@ -73,6 +74,10 @@ config_boot_80x25:
 # You can show the cursor again by running "tput cnorm"
 config_cga_hide_cursor:
     db  1
+
+# Emulate just enough of DRAM refresh to make IBM BIOS boot
+config_dram_refresh:
+    db  0
 
 # Logging configuration
 config_log_cga_debug:

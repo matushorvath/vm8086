@@ -400,3 +400,63 @@ make[2]: *** [../test.mk:129: obj/bitwise.bochs.bin] Error 1
     clearf
 >>> test dx, word [data]                ; TEST REG16, MEM16
     pushf
+
+IBM XT BIOS 1982-11-08
+======================
+
+https://github.com/gawlas/IBM-PC-BIOS for BIOS source code
+
+- Jumps to RESET f000:e05b
+  - Jumps to ROS_CHECKSUM f000:f8f2
+    - Loop to calc checksum
+      f000:f8f7 ADD REG8, REG8/MEM8(02) 07 43 e2
+      f000:f8f9 INC BX(43)
+      f000:f8fa LOOP SHORT-LABEL(e2) fb
+    - RET
+  - Back in RESET f000:e0d7
+  - Verify timer 1
+    - Search for "IN AL" to find it in the trace, XTBIOS.ASM line 416
+    - OUT 40h -> port 43h
+    - Looks like an endless loop at label C14
+      C11:
+        f000:e0d7 JNZ SHORT-LABEL(75) d4
+        f000:e0d9 MOV AL, IMMED8(b0) 02
+        f000:e0db OUT AL, IMMED8(e6) 60
+        f000:e0dd MOV AL, IMMED8(b0) 04
+        f000:e0df OUT AL, IMMED8(e6) 08
+        f000:e0e1 MOV AL, IMMED8(b0) 54
+        f000:e0e3 OUT AL, IMMED8(e6) 43
+        f000:e0e5 MOV REG8, REG8/MEM8(8a) c1 e6 41
+        f000:e0e7 OUT AL, IMMED8(e6) 41
+      C12:
+        f000:e0e9 MOV AL, IMMED8(b0) 40
+        f000:e0eb OUT AL, IMMED8(e6) 43
+        f000:e0ed ADD/OR/ADC/SBB/AND/SUB/XOR/CMP REG8/MEM8, IMMED8(80) fb ff 74 07
+        f000:e0f0 JZ SHORT-LABEL(74) 07
+        f000:e0f2 IN AL, IMMED8(e4) 41
+        f000:e0f4 OR REG8, REG8/MEM8(0a) d8 e2 f1
+        f000:e0f6 LOOP SHORT-LABEL(e2) f1
+      C12:
+        f000:e0e9 MOV AL, IMMED8(b0) 40
+        f000:e0eb OUT AL, IMMED8(e6) 43
+        f000:e0ed ADD/OR/ADC/SBB/AND/SUB/XOR/CMP REG8/MEM8, IMMED8(80) fb ff 74 07
+        f000:e0f0 JZ SHORT-LABEL(74) 07
+      C13:
+        f000:e0f9 MOV REG8, REG8/MEM8(8a) c3 2b c9
+        f000:e0fb SUB REG16, REG16/MEM16(2b) c9 e6 41
+        f000:e0fd OUT AL, IMMED8(e6) 41
+      C14:
+        f000:e0ff MOV AL, IMMED8(b0) 40
+        f000:e101 OUT AL, IMMED8(e6) 43
+        f000:e103 NOP(90)
+        f000:e104 NOP(90)
+        f000:e105 IN AL, IMMED8(e4) 41
+        f000:e107 AND REG8, REG8/MEM8(22) d8 74 03
+        f000:e109 JZ SHORT-LABEL(74) 03
+        f000:e10b LOOP SHORT-LABEL(e2) f2
+      -> Need to support more of PIT Channel 1 for DRAM refresh
+
+    - Worked around by introducing dev/pit_8253_ch1.s to better emulate PIT Channel 1
+      It counts down from 0xff to 0x7e and then continues on label C15.
+      - Source code: above INITIALIZE AND START DMA FOR MEMORY REFRESH. f000:e116
+      -> Need to support more of DMA Channel 0 for DRAM refresh
