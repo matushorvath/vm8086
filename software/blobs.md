@@ -9,8 +9,11 @@ ROMS
 - https://www.xtideuniversalbios.org/binaries/r631/ide_xt.bin -> ide-xt.rom-bin
   https://www.xtideuniversalbios.org/binaries/r631/xtidecfg.com -> xtidecfg.com
   The ROM as downloaded does not contain padding and checksum, that's why the extension is .rom-bin
-- phoenix-2.51.rom, TODO find URL
-- pp06.rom read from a physical chip
+- http://www.hampa.ch/pce/download.html
+  -> ibm-xt-1982-11-08.rom
+  -> phoenix-2.51.rom
+- pp06-1985-11-01.rom read from a physical chip
+  Identical to ibm-xt-1982-11-08.rom with a changed copyright message and date
 
 DISKS
 =====
