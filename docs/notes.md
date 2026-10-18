@@ -406,6 +406,8 @@ IBM XT BIOS 1982-11-08
 
 https://github.com/gawlas/IBM-PC-BIOS for BIOS source code
 
+Don't forget to set config_dram_refresh to 1, otherwise the PIT will not initialize and the BIOS will HLT.
+
 - Jumps to RESET f000:e05b
   - Jumps to ROS_CHECKSUM f000:f8f2
     - Loop to calc checksum
@@ -479,7 +481,7 @@ https://github.com/gawlas/IBM-PC-BIOS for BIOS source code
         - OK Refactor DMA to have channel-generic code for dma_address and dma_count.The rest of refactoring is in the copy pasta code.
         - OK Add separate 8-bit store for the address and count registers in addition to the 16-bit store.
         - OK Refactor DMA to store values both in new 8-bit and old 16-bit locations.
-        - Add read port capability to DMA code.
+        - OK Add read port capability to DMA code.
           - At this stage we have the ugly hack mentioned above but the IBM BIOS issue is fixed.
         - Refactor FDC to use the new 8-bit locations, remove the old 16-bit locations since they are no longer used.
           - This removes the ugly hack, since the 8-bit locations now store correct values.
@@ -506,3 +508,75 @@ make: *** [Makefile:17: vm] Error 2
 The bug seems to be isolated to the C ICVM, golang ICVM is able to link the 8086 VM successfully.
 Maybe the C ICVM is not able to allocate such a large contiguous memory block?
 One built with the golang ICVM, the binary will run with the c-ext ICVM.
+
+
+Currently IBM BIOS crashes after a LONG time when tracing, but in the end it does a HLT:
+
+f000:f294 POP BX(5b)
+f000:f295 RETN(c3)
+f000:f209 MOV REG16, REG16/MEM16(8b) c8 03 0e
+f000:f20b ADD REG16, REG16/MEM16(03) 0e 4e 00
+f000:f20f ROL/ROR/RCL/RCR/SHL/SHR/SAR REG16/MEM16, 1(d1) f9 b4 0e
+f000:f211 MOV AH, IMMED8(b4) 0e
+f000:f213 CALL NEAR-PROC(e8) c2 ff
+f000:f1d8 MOV REG16, REG16/MEM16(8b) 16 63 00
+f000:f1dc MOV REG8, REG8/MEM8(8a) c4 ee 42
+f000:f1de OUT AL, DX(ee)
+f000:f1df INC DX(42)
+f000:f1e0 MOV REG8, REG8/MEM8(8a) c5 ee 4a
+f000:f1e2 OUT AL, DX(ee)
+f000:f1e3 DEC DX(4a)
+f000:f1e4 MOV REG8, REG8/MEM8(8a) c4 fe c0
+f000:f1e6 INC/DEC REG8/MEM8(fe) c0 ee 42
+f000:f1e8 OUT AL, DX(ee)
+f000:f1e9 INC DX(42)
+f000:f1ea MOV REG8, REG8/MEM8(8a) c1 ee c3
+f000:f1ec OUT AL, DX(ee)
+f000:f1ed RETN(c3)
+f000:f216 RETN(c3)
+f000:f204 JMP SHORT-LABEL(eb) bf
+f000:f1c5 POP DI(5f)
+f000:f1c6 POP SI(5e)
+f000:f1c7 POP BX(5b)
+f000:f1c8 POP CX(59)
+f000:f1c9 POP DX(5a)
+f000:f1ca POP DS(1f)
+f000:f1cb POP ES(07)
+f000:f1cc IRET(cf)
+f000:f76f POP AX(58)
+f000:f770 JMP NEAR-LABEL(e9) 52 fa
+f000:f1c5 POP DI(5f)
+f000:f1c6 POP SI(5e)
+f000:f1c7 POP BX(5b)
+f000:f1c8 POP CX(59)
+f000:f1c9 POP DX(5a)
+f000:f1ca POP DS(1f)
+f000:f1cb POP ES(07)
+f000:f1cc IRET(cf)
+f000:f9a2 RETN(c3)
+f000:f9d2 POP AX(58)
+f000:f9d3 CMP AL, IMMED8(3c) 0a
+f000:f9d5 JNZ SHORT-LABEL(75) f3
+f000:f9d7 RETN(c3)                      ; from P_MSG back to E_MSG
+f000:f9ae PUSH DS(1e)
+f000:f9af CALL NEAR-PROC(e8) a7 00      ; call DDS
+f000:fa59 PUSH AX(50)
+f000:fa5a MOV AX, IMMED16(b8) 40 00
+f000:fa5d MOV SEGREG, REG16/MEM16(8e) d8 58 c3
+f000:fa5f POP AX(58)
+f000:fa60 RETN(c3)                      ; from DDS back to E_MSG
+f000:f9b2 MOV AL, MEM8(a0) 10 00
+f000:f9b5 AND AL, IMMED8(24) 01
+f000:f9b7 JNZ SHORT-LABEL(75) 0f
+f000:f9b9 CLI(fa)
+f000:f9ba MOV AL, IMMED8(b0) 89
+f000:f9bc OUT AL, IMMED8(e6) 63
+f000:f9be MOV AL, IMMED8(b0) 85
+f000:f9c0 OUT AL, IMMED8(e6) 61
+f000:f9c2 MOV AL, MEM8(a0) 15 00
+f000:f9c5 OUT AL, IMMED8(e6) 60
+f000:f9c7 HLT(f4)
+
+Looks like it's calling E_MSG at the end, and it prints "101" to the console.
+
+101 = either the 8259 Interrupt Controller or the 8253/8254 Programmable Interval Timer chips fail their initial diagnostics
