@@ -83,18 +83,18 @@ ide-xt: $(OBJDIR)/ide-xt.o $(OBJDIR)/ide-xt_header.o
 ide-xtl: $(OBJDIR)/ide-xtl.o $(OBJDIR)/ide-xtl_header.o
 
 $(OBJDIR)/%.rom: blobs/%.rom-bin.xz checksum-rom
-	xzcat $< > $@
+	xz -dcf $< > $@
 	$(CHECKSUM_ROM) $@ || rm $@
 
 $(OBJDIR)/%.rom: blobs/%.rom-bin.zst checksum-rom
-	zstdcat $< > $@
+	zstd -dcf $< > $@
 	$(CHECKSUM_ROM) $@ || rm $@
 
 $(OBJDIR)/%.rom: blobs/%.rom.xz
-	xzcat $< > $@
+	xz -dcf $< > $@
 
 $(OBJDIR)/%.rom: blobs/%.rom.zst
-	zstdcat $< > $@
+	zstd -dcf $< > $@
 
 $(OBJDIR)/%.o: $(OBJDIR)/%.rom
 	$(eval BIN2OBJ_NAME = rom_$(subst -,_,$(basename $(notdir $@))))
@@ -105,7 +105,7 @@ $(OBJDIR)/%.o: %.s
 
 # a boot disk we can boot in CI/CD, without mtools
 $(OBJDIR)/freedos-simple.img: blobs/freedos-simple.img.xz
-	xzcat $< > $@
+	xz -dcf $< > $@
 	# ignore errors, since this is just cosmetic and CI/CD has no mtools
 	mdeltree -i $@ FSEVEN~1 || true
 
@@ -293,7 +293,7 @@ $(OBJDIR)/%-prince.img: $(OBJDIR)/%.img blobs/prince.zip autoexec-prince.bat
 	mcopy -D o -i $@ autoexec-prince.bat ::AUTOEXEC.BAT
 
 $(OBJDIR)/%-xtidecfg.img: $(OBJDIR)/%.img blobs/xtidecfg.com.xz
-	xzcat blobs/xtidecfg.com.xz > $(OBJDIR)/xtidecfg.com
+	xz -dcf blobs/xtidecfg.com.xz > $(OBJDIR)/xtidecfg.com
 	cp $< $@
 	mcopy -D o -s -i $@ $(OBJDIR)/xtidecfg.com ::
 
