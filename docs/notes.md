@@ -476,14 +476,33 @@ https://github.com/gawlas/IBM-PC-BIOS for BIOS source code
 
         Probably the correct solution is to bite the bullet and do the refactoring to store the numbers as two bytes,
         just like it is done everywhere else in the VM:
-        - Refactor DMA to have channel-generic code for dma_address and dma_count.The rest of refactoring is in the copy pasta code.
-        - Add separate 8-bit store for the address and count registers in addition to the 16-bit store.
-        - Refactor DMA to store values both in new 8-bit and old 16-bit locations.
+        - OK Refactor DMA to have channel-generic code for dma_address and dma_count.The rest of refactoring is in the copy pasta code.
+        - OK Add separate 8-bit store for the address and count registers in addition to the 16-bit store.
+        - OK Refactor DMA to store values both in new 8-bit and old 16-bit locations.
         - Add read port capability to DMA code.
-          - At this stage we have the ugly hack mentioned above and the BIOS issue is fixed.
+          - At this stage we have the ugly hack mentioned above but the IBM BIOS issue is fixed.
         - Refactor FDC to use the new 8-bit locations, remove the old 16-bit locations since they are no longer used.
           - This removes the ugly hack, since the 8-bit locations now store correct values.
           - This also requires handling e.g. underflow (count = -1 is used to tell FDC code the transfer is finished)
         - Cleanup:
+          - Fix linking with c-ext ICVM
           - Can we remove the _ch? global variable labels?
           - Should we split the source file?
+
+Note: The design is probably OK, but there's some kind of bug in the linker and it runs out of memory when linking the 8086 VM
+once I add the new 8-bit variables for address and count. Adding one global byte triggers the bug, removing it fixes it.
+
+$ ICVM_TYPE=c-ext make ROMS=pcxtbios DISKS=msdos3-prince
+
+make[1]: Entering directory '/home/horvathm/intcode/vm8086/vm'
+mkdir -p "/home/horvathm/intcode/vm8086/bin" "/home/horvathm/intcode/vm8086/obj/vm"
+echo .$ | cat /home/horvathm/intcode/vm8086/obj/vm/main.o /home/horvathm/intcode/vm8086/obj/vm/callback.o /home/horvathm/intcode/vm8086/obj/vm/config.o /home/horvathm/intcode/vm8086/obj/vm/menu.o /home/horvathm/intcode/vm8086/obj/vm/vm_ports.o /home/horvathm/intcode/vm8086/bin/libcga.a /home/horvathm/intcode/vm8086/bin/libcpu.a /home/horvathm/intcode/vm8086/bin/libdev.a /home/horvathm/intcode/vm8086/bin/libfdc.a /home/horvathm/intcode/vm8086/bin/libimg.a /home/horvathm/intcode/vm8086/bin/libutil.a /home/horvathm/intcode/xzintbit/bin/libxib.a /home/horvathm/intcode/vm8086/obj/vm/headers.o /home/horvathm/intcode/vm8086/obj/software/pcxtbios_header.o /home/horvathm/intcode/vm8086/obj/vm/images.o /home/horvathm/intcode/vm8086/obj/software/pcxtbios.o /home/horvathm/intcode/vm8086/obj/software/msdos3-prince.o - | /home/horvathm/intcode/xzintbit/vms/c-ext/ic /home/horvathm/intcode/xzintbit/bin/ld.input > /home/horvathm/intcode/vm8086/bin/vm.pcxtbios.msdos3-prince.input || ( cat /home/horvathm/intcode/vm8086/bin/vm.pcxtbios.msdos3-prince.input ; false )
+no more inputs
+Error: Invalid memory address (line 4264, column 1)
+make[1]: *** [Makefile:39: /home/horvathm/intcode/vm8086/bin/vm.pcxtbios.msdos3-prince.input] Error 1
+make[1]: Leaving directory '/home/horvathm/intcode/vm8086/vm'
+make: *** [Makefile:17: vm] Error 2
+
+The bug seems to be isolated to the C ICVM, golang ICVM is able to link the 8086 VM successfully.
+Maybe the C ICVM is not able to allocate such a large contiguous memory block?
+One built with the golang ICVM, the binary will run with the c-ext ICVM.

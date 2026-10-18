@@ -38,6 +38,8 @@
 
 ##########
 dma_ports:
+    db  0x00, 0x00, 0, dma_address_ch0_write                # start address register channel 0
+    db  0x01, 0x00, 0, dma_count_ch0_write                  # count register channel 0
     db  0x02, 0x00, 0, dma_address_ch1_write                # start address register channel 1
     db  0x03, 0x00, 0, dma_count_ch1_write                  # count register channel 1
     db  0x04, 0x00, 0, dma_address_ch2_write                # start address register channel 2
@@ -449,20 +451,34 @@ dma_address_ch3_write:
     jz  0, dma_address_write_common
 
 dma_address_write_common:
-    # Clear the register if we are writing the lo byte
-    add dma_address_channels, [rb + channel], [ip + 5]
-    add dma_address_channels, [rb + channel], [ip + 3]
-    mul [0], [dma_flip_flop], [0]
+    jz  [dma_flip_flop], .low_byte
 
-    # Shift the value left by 8 if we are writing the hi byte
-    mul 0xff, [dma_flip_flop], [rb + tmp]
-    add [rb + tmp], 1, [rb + tmp]
-    mul [rb + value], [rb + tmp], [rb + value]
+    # Store the high byte
+    add dma_address_hi_channels, [rb + channel], [ip + 3]
+    add [rb + value], 0, [0]
 
-    # Add the value to the register
-    add dma_address_channels, [rb + channel], [ip + 5]
+    jz  0, .after_set_value
+
+.low_byte:
+    # Store the low byte
+    add dma_address_lo_channels, [rb + channel], [ip + 3]
+    add [rb + value], 0, [0]
+
+    # When storing the low byte, clear the high byte as well
+    add dma_address_hi_channels, [rb + channel], [ip + 3]
+    add 0, 0, [0]
+
+.after_set_value:
+    # Store the 16-bit value as well
+    # TODO refactor and remove
+    add dma_address_hi_channels, [rb + channel], [ip + 1]
+    mul [0], 0x100, [rb + tmp]
+    add dma_address_lo_channels, [rb + channel], [ip + 1]
+    add [0], [rb + tmp], [rb + tmp]
     add dma_address_channels, [rb + channel], [ip + 3]
-    add [0], [rb + value], [0]
+    add [rb + tmp], 0, [0]
+
+    # Flip the flip flop
     eq  [dma_flip_flop], 0, [dma_flip_flop]
 
     # Floppy controller logging
@@ -525,20 +541,34 @@ dma_count_ch3_write:
     jz  0, dma_count_write_common
 
 dma_count_write_common:
-    # Clear the register if we are writing the lo byte
-    add dma_count_channels, [rb + channel], [ip + 5]
-    add dma_count_channels, [rb + channel], [ip + 3]
-    mul [0], [dma_flip_flop], [0]
+    jz  [dma_flip_flop], .low_byte
 
-    # Shift the value left by 8 if we are writing the hi byte
-    mul 0xff, [dma_flip_flop], [rb + tmp]
-    add [rb + tmp], 1, [rb + tmp]
-    mul [rb + value], [rb + tmp], [rb + value]
+    # Store the high byte
+    add dma_count_hi_channels, [rb + channel], [ip + 3]
+    add [rb + value], 0, [0]
 
-    # Add the value to the register
-    add dma_count_channels, [rb + channel], [ip + 5]
+    jz  0, .after_set_value
+
+.low_byte:
+    # Store the low byte
+    add dma_count_lo_channels, [rb + channel], [ip + 3]
+    add [rb + value], 0, [0]
+
+    # When storing the low byte, clear the high byte as well
+    add dma_count_hi_channels, [rb + channel], [ip + 3]
+    add 0, 0, [0]
+
+.after_set_value:
+    # Store the 16-bit value as well
+    # TODO refactor and remove
+    add dma_count_hi_channels, [rb + channel], [ip + 1]
+    mul [0], 0x100, [rb + tmp]
+    add dma_count_lo_channels, [rb + channel], [ip + 1]
+    add [0], [rb + tmp], [rb + tmp]
     add dma_count_channels, [rb + channel], [ip + 3]
-    add [0], [rb + value], [0]
+    add [rb + tmp], 0, [0]
+
+    # Flip the flip flop
     eq  [dma_flip_flop], 0, [dma_flip_flop]
 
     # Floppy controller logging
@@ -713,6 +743,7 @@ dma_decrement_ch2:
 dma_decrement_ch3:
     db  0
 
+# TODO refactor and remove, use the lo and hi bytes
 dma_address_channels:
 dma_address_ch0:
     db  0
@@ -723,6 +754,27 @@ dma_address_ch2:
 dma_address_ch3:
     db  0
 
+dma_address_lo_channels:
+dma_address_lo_ch0:
+    db  0
+dma_address_lo_ch1:
+    db  0
+dma_address_lo_ch2:
+    db  0
+dma_address_lo_ch3:
+    db  0
+
+dma_address_hi_channels:
+dma_address_hi_ch0:
+    db  0
+dma_address_hi_ch1:
+    db  0
+dma_address_hi_ch2:
+    db  0
+dma_address_hi_ch3:
+    db  0
+
+# TODO refactor and remove, use the lo and hi bytes
 dma_count_channels:
 dma_count_ch0:
     db  0
@@ -731,6 +783,26 @@ dma_count_ch1:
 dma_count_ch2:
     db  0
 dma_count_ch3:
+    db  0
+
+dma_count_lo_channels:
+dma_count_lo_ch0:
+    db  0
+dma_count_lo_ch1:
+    db  0
+dma_count_lo_ch2:
+    db  0
+dma_count_lo_ch3:
+    db  0
+
+dma_count_hi_channels:
+dma_count_hi_ch0:
+    db  0
+dma_count_hi_ch1:
+    db  0
+dma_count_hi_ch2:
+    db  0
+dma_count_hi_ch3:
     db  0
 
 dma_page_channels:
