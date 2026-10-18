@@ -460,3 +460,27 @@ https://github.com/gawlas/IBM-PC-BIOS for BIOS source code
       It counts down from 0xff to 0x7e and then continues on label C15.
       - Source code: above INITIALIZE AND START DMA FOR MEMORY REFRESH. f000:e116
       -> Need to support more of DMA Channel 0 for DRAM refresh
+
+      - Problem: BIOS writes various patterns to DMA ports 0-8 and expects to read them back.
+        However, we have the ports as read-only, and we store their contents as 16 bit numbers.
+        Floppy controller code also wants them as 16 bit numbers.
+        To be able to read back the ports, we would have to store (and update) them as two 8-bit numbers,
+        because we are not able to split a 16-bit number to bytes. That is a significant refactoring of DMA and FDC code.
+        Alternate solution is to just hack it and remember the two bytes written and return them on next read,
+        without properly updating the numbers from FDC code. That should be enough for the IBM BIOS, but it's ugly.
+        We also need this for first 8 DMA ports, not just for the DRAM channel.
+        We should also refactor the DMA code to use an include to reduce copy pasta for the four channels, especially
+        if we make the channels implementation more complex for IBM BIOS.
+        Another option is to use the DIV16 algorithm to read the ports, which is incredibly slow but perhaps allows
+        us to store the numbers as 16-bit. Although, does it really, because it still expects inputs as 8 bit numbers...
+
+        Probably the correct solution is to bite the bullet and do the refactoring to store the numbers as two bytes,
+        just like it is done everywhere else in the VM:
+        - Refactor DMA to use an include to reduce copy pasta, just like the PIT. The rest of refactoring is in the copy pasta code.
+        - Add separate 8-bit store for the address and count registers in addition to the 16-bit store.
+        - Refactor DMA to store values both in new 8-bit and old 16-bit locations.
+        - Add read port capability to DMA code.
+          - At this stage we have the ugly hack mentioned above and the BIOS issue is fixed.
+        - Refactor FDC to use the new 8-bit locations, remove the old 16-bit locations since they are no longer used.
+          - This removes the ugly hack, since the 8-bit locations now store correct values.
+          - This also requires handling e.g. underflow (count = -1 is used to tell FDC code the transfer is finished)
