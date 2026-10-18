@@ -28,6 +28,14 @@ build-tools: $(TOOLSDIR)
 $(TOOLSDIR):
 	make -C $@
 
+# Build software images
+.PHONY: build-software
+build-software: software
+
+.PHONY: software
+software:
+	make -C $@
+
 # Build tests
 BUILD_TESTS_TARGETS = $(addprefix build-,$(TESTDIRS))
 
