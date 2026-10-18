@@ -476,7 +476,7 @@ https://github.com/gawlas/IBM-PC-BIOS for BIOS source code
 
         Probably the correct solution is to bite the bullet and do the refactoring to store the numbers as two bytes,
         just like it is done everywhere else in the VM:
-        - Refactor DMA to use an include to reduce copy pasta, just like the PIT. The rest of refactoring is in the copy pasta code.
+        - Refactor DMA to have channel-generic code for dma_address and dma_count.The rest of refactoring is in the copy pasta code.
         - Add separate 8-bit store for the address and count registers in addition to the 16-bit store.
         - Refactor DMA to store values both in new 8-bit and old 16-bit locations.
         - Add read port capability to DMA code.
@@ -484,3 +484,6 @@ https://github.com/gawlas/IBM-PC-BIOS for BIOS source code
         - Refactor FDC to use the new 8-bit locations, remove the old 16-bit locations since they are no longer used.
           - This removes the ugly hack, since the 8-bit locations now store correct values.
           - This also requires handling e.g. underflow (count = -1 is used to tell FDC code the transfer is finished)
+        - Cleanup:
+          - Can we remove the _ch? global variable labels?
+          - Should we split the source file?

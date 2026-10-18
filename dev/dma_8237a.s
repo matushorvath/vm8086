@@ -425,33 +425,34 @@ dma_mask_reset_write:
 .ENDFRAME
 
 ##########
+.FRAME addr, value; channel, tmp
+    # Function with multiple entry points
+
+dma_address_ch0_write:
+    arb -2
+    add 0, 0, [rb + channel]
+    jz  0, dma_address_write_common
+
 dma_address_ch1_write:
-.FRAME addr, value; tmp
-    arb -1
+    arb -2
+    add 1, 0, [rb + channel]
+    jz  0, dma_address_write_common
 
-    # Clear the register if we are writing the lo byte
-    mul [dma_address_ch1], [dma_flip_flop], [dma_address_ch1]
-
-    # Shift the value left by 8 if we are writing the hi byte
-    mul 0xff, [dma_flip_flop], [rb + tmp]
-    add [rb + tmp], 1, [rb + tmp]
-    mul [rb + value], [rb + tmp], [rb + value]
-
-    # Add the value to the register
-    add [dma_address_ch1], [rb + value], [dma_address_ch1]
-    eq  [dma_flip_flop], 0, [dma_flip_flop]
-
-    arb 1
-    ret 2
-.ENDFRAME
-
-##########
 dma_address_ch2_write:
-.FRAME addr, value; tmp
-    arb -1
+    arb -2
+    add 2, 0, [rb + channel]
+    jz  0, dma_address_write_common
 
+dma_address_ch3_write:
+    arb -2
+    add 3, 0, [rb + channel]
+    jz  0, dma_address_write_common
+
+dma_address_write_common:
     # Clear the register if we are writing the lo byte
-    mul [dma_address_ch2], [dma_flip_flop], [dma_address_ch2]
+    add dma_address_channels, [rb + channel], [ip + 5]
+    add dma_address_channels, [rb + channel], [ip + 3]
+    mul [0], [dma_flip_flop], [0]
 
     # Shift the value left by 8 if we are writing the hi byte
     mul 0xff, [dma_flip_flop], [rb + tmp]
@@ -459,16 +460,19 @@ dma_address_ch2_write:
     mul [rb + value], [rb + tmp], [rb + value]
 
     # Add the value to the register
-    add [dma_address_ch2], [rb + value], [dma_address_ch2]
+    add dma_address_channels, [rb + channel], [ip + 5]
+    add dma_address_channels, [rb + channel], [ip + 3]
+    add [0], [rb + value], [0]
+    eq  [dma_flip_flop], 0, [dma_flip_flop]
 
     # Floppy controller logging
-    jz  [config_log_fdc], .after_log_fdc
+    jz  [config_log_fdc], .done
+    eq  [rb + channel], 2, [rb + tmp]
+    jz  [rb + tmp], .done
     call dma_address_ch2_write_log_fdc
 
-.after_log_fdc:
-    eq  [dma_flip_flop], 0, [dma_flip_flop]
-
-    arb 1
+.done:
+    arb 2
     ret 2
 .ENDFRAME
 
@@ -497,54 +501,34 @@ dma_address_ch2_write_log_fdc:
 .ENDFRAME
 
 ##########
-dma_address_ch3_write:
-.FRAME addr, value; tmp
-    arb -1
+.FRAME addr, value; channel, tmp
+    # Function with multiple entry points
 
-    # Clear the register if we are writing the lo byte
-    mul [dma_address_ch3], [dma_flip_flop], [dma_address_ch3]
+dma_count_ch0_write:
+    arb -2
+    add 0, 0, [rb + channel]
+    jz  0, dma_count_write_common
 
-    # Shift the value left by 8 if we are writing the hi byte
-    mul 0xff, [dma_flip_flop], [rb + tmp]
-    add [rb + tmp], 1, [rb + tmp]
-    mul [rb + value], [rb + tmp], [rb + value]
-
-    # Add the value to the register
-    add [dma_address_ch3], [rb + value], [dma_address_ch3]
-    eq  [dma_flip_flop], 0, [dma_flip_flop]
-
-    arb 1
-    ret 2
-.ENDFRAME
-
-##########
 dma_count_ch1_write:
-.FRAME addr, value; tmp
-    arb -1
+    arb -2
+    add 1, 0, [rb + channel]
+    jz  0, dma_count_write_common
 
-    # Clear the register if we are writing the lo byte
-    mul [dma_count_ch1], [dma_flip_flop], [dma_count_ch1]
-
-    # Shift the value left by 8 if we are writing the hi byte
-    mul 0xff, [dma_flip_flop], [rb + tmp]
-    add [rb + tmp], 1, [rb + tmp]
-    mul [rb + value], [rb + tmp], [rb + value]
-
-    # Add the value to the register
-    add [dma_count_ch1], [rb + value], [dma_count_ch1]
-    eq  [dma_flip_flop], 0, [dma_flip_flop]
-
-    arb 1
-    ret 2
-.ENDFRAME
-
-##########
 dma_count_ch2_write:
-.FRAME addr, value; tmp
-    arb -1
+    arb -2
+    add 2, 0, [rb + channel]
+    jz  0, dma_count_write_common
 
+dma_count_ch3_write:
+    arb -2
+    add 3, 0, [rb + channel]
+    jz  0, dma_count_write_common
+
+dma_count_write_common:
     # Clear the register if we are writing the lo byte
-    mul [dma_count_ch2], [dma_flip_flop], [dma_count_ch2]
+    add dma_count_channels, [rb + channel], [ip + 5]
+    add dma_count_channels, [rb + channel], [ip + 3]
+    mul [0], [dma_flip_flop], [0]
 
     # Shift the value left by 8 if we are writing the hi byte
     mul 0xff, [dma_flip_flop], [rb + tmp]
@@ -552,16 +536,19 @@ dma_count_ch2_write:
     mul [rb + value], [rb + tmp], [rb + value]
 
     # Add the value to the register
-    add [dma_count_ch2], [rb + value], [dma_count_ch2]
+    add dma_count_channels, [rb + channel], [ip + 5]
+    add dma_count_channels, [rb + channel], [ip + 3]
+    add [0], [rb + value], [0]
+    eq  [dma_flip_flop], 0, [dma_flip_flop]
 
     # Floppy controller logging
-    jz  [config_log_fdc], .after_log_fdc
+    jz  [config_log_fdc], .done
+    eq  [rb + channel], 2, [rb + tmp]
+    jz  [rb + tmp], .done
     call dma_count_ch2_write_log_fdc
 
-.after_log_fdc:
-    eq  [dma_flip_flop], 0, [dma_flip_flop]
-
-    arb 1
+.done:
+    arb 2
     ret 2
 .ENDFRAME
 
@@ -587,27 +574,6 @@ dma_count_ch2_write_log_fdc:
 
 .msg:
     db  "dma ch02, write count ", 0
-.ENDFRAME
-
-##########
-dma_count_ch3_write:
-.FRAME addr, value; tmp
-    arb -1
-
-    # Clear the register if we are writing the lo byte
-    mul [dma_count_ch3], [dma_flip_flop], [dma_count_ch3]
-
-    # Shift the value left by 8 if we are writing the hi byte
-    mul 0xff, [dma_flip_flop], [rb + tmp]
-    add [rb + tmp], 1, [rb + tmp]
-    mul [rb + value], [rb + tmp], [rb + value]
-
-    # Add the value to the register
-    add [dma_count_ch3], [rb + value], [dma_count_ch3]
-    eq  [dma_flip_flop], 0, [dma_flip_flop]
-
-    arb 1
-    ret 2
 .ENDFRAME
 
 ##########
