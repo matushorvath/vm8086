@@ -494,22 +494,6 @@ Don't forget to set config_dram_refresh to 1, otherwise the PIT will not initial
 Note: The design is probably OK, but there's some kind of bug in the linker and it runs out of memory when linking the 8086 VM
 once I add the new 8-bit variables for address and count. Adding one global byte triggers the bug, removing it fixes it.
 
-$ ICVM_TYPE=c-ext make ROMS=pcxtbios DISKS=msdos3-prince
-
-make[1]: Entering directory '/home/horvathm/intcode/vm8086/vm'
-mkdir -p "/home/horvathm/intcode/vm8086/bin" "/home/horvathm/intcode/vm8086/obj/vm"
-echo .$ | cat /home/horvathm/intcode/vm8086/obj/vm/main.o /home/horvathm/intcode/vm8086/obj/vm/callback.o /home/horvathm/intcode/vm8086/obj/vm/config.o /home/horvathm/intcode/vm8086/obj/vm/menu.o /home/horvathm/intcode/vm8086/obj/vm/vm_ports.o /home/horvathm/intcode/vm8086/bin/libcga.a /home/horvathm/intcode/vm8086/bin/libcpu.a /home/horvathm/intcode/vm8086/bin/libdev.a /home/horvathm/intcode/vm8086/bin/libfdc.a /home/horvathm/intcode/vm8086/bin/libimg.a /home/horvathm/intcode/vm8086/bin/libutil.a /home/horvathm/intcode/xzintbit/bin/libxib.a /home/horvathm/intcode/vm8086/obj/vm/headers.o /home/horvathm/intcode/vm8086/obj/software/pcxtbios_header.o /home/horvathm/intcode/vm8086/obj/vm/images.o /home/horvathm/intcode/vm8086/obj/software/pcxtbios.o /home/horvathm/intcode/vm8086/obj/software/msdos3-prince.o - | /home/horvathm/intcode/xzintbit/vms/c-ext/ic /home/horvathm/intcode/xzintbit/bin/ld.input > /home/horvathm/intcode/vm8086/bin/vm.pcxtbios.msdos3-prince.input || ( cat /home/horvathm/intcode/vm8086/bin/vm.pcxtbios.msdos3-prince.input ; false )
-no more inputs
-Error: Invalid memory address (line 4264, column 1)
-make[1]: *** [Makefile:39: /home/horvathm/intcode/vm8086/bin/vm.pcxtbios.msdos3-prince.input] Error 1
-make[1]: Leaving directory '/home/horvathm/intcode/vm8086/vm'
-make: *** [Makefile:17: vm] Error 2
-
-The bug seems to be isolated to the C ICVM, golang ICVM is able to link the 8086 VM successfully.
-Maybe the C ICVM is not able to allocate such a large contiguous memory block?
-One built with the golang ICVM, the binary will run with the c-ext ICVM.
-
-
 Currently IBM BIOS crashes after a LONG time when tracing, but in the end it does a HLT:
 
 f000:f294 POP BX(5b)
@@ -580,3 +564,118 @@ f000:f9c7 HLT(f4)
 Looks like it's calling E_MSG at the end, and it prints "101" to the console.
 
 101 = either the 8259 Interrupt Controller or the 8253/8254 Programmable Interval Timer chips fail their initial diagnostics
+
+Difference in msdos3-prince.o
+=============================
+
+TODO finish analyzing and fixing this issue
+it doesn't manifest as a bug, but the built images should be identical between different ICVMs
+
+This was discovered as part of analyzing the Invalid memory address issue below, but does not seem related to it.
+
+Comparing between c ICVM and golang ICVM:
+
+- obj/software/msdos3-prince.o is different
+  - has 60 differences, all of them one byte differences 199 vs 161
+  - some at the beginning, some in the middle, some towards the end (of valid data)
+  c has:
+  199
+  go has:
+  161
+  - the differences seem to be in directory entries on the floppy, which is strange as an ICVM or xzintbit error
+    - hypotheses:
+    - obvious one is, there is a bug somewhere
+    - but maybe also, it's something related to mtools? maybe we do something different with mtools for golang?
+0
+0
+0
+0
+65 <- this string is AUTOEXECBAT, all the differences are in entries that look like this (different file names)
+85
+84
+79
+69
+88
+69
+67
+66
+65
+84
+32
+0
+0
+199 <- diff
+72
+86
+93
+86
+93
+0
+0
+199 <- diff
+72
+86
+93
+199
+9
+
+  -> validate against other VMs (e.g. js, rust)
+
+Error: Invalid memory address
+=============================
+
+$ ICVM_TYPE=c-ext make ROMS=pcxtbios DISKS=msdos3-prince
+
+make[1]: Entering directory '/home/horvathm/intcode/vm8086/vm'
+mkdir -p "/home/horvathm/intcode/vm8086/bin" "/home/horvathm/intcode/vm8086/obj/vm"
+echo .$ | cat /home/horvathm/intcode/vm8086/obj/vm/main.o /home/horvathm/intcode/vm8086/obj/vm/callback.o /home/horvathm/intcode/vm8086/obj/vm/config.o /home/horvathm/intcode/vm8086/obj/vm/menu.o /home/horvathm/intcode/vm8086/obj/vm/vm_ports.o /home/horvathm/intcode/vm8086/bin/libcga.a /home/horvathm/intcode/vm8086/bin/libcpu.a /home/horvathm/intcode/vm8086/bin/libdev.a /home/horvathm/intcode/vm8086/bin/libfdc.a /home/horvathm/intcode/vm8086/bin/libimg.a /home/horvathm/intcode/vm8086/bin/libutil.a /home/horvathm/intcode/xzintbit/bin/libxib.a /home/horvathm/intcode/vm8086/obj/vm/headers.o /home/horvathm/intcode/vm8086/obj/software/pcxtbios_header.o /home/horvathm/intcode/vm8086/obj/vm/images.o /home/horvathm/intcode/vm8086/obj/software/pcxtbios.o /home/horvathm/intcode/vm8086/obj/software/msdos3-prince.o - | /home/horvathm/intcode/xzintbit/vms/c-ext/ic /home/horvathm/intcode/xzintbit/bin/ld.input > /home/horvathm/intcode/vm8086/bin/vm.pcxtbios.msdos3-prince.input || ( cat /home/horvathm/intcode/vm8086/bin/vm.pcxtbios.msdos3-prince.input ; false )
+no more inputs
+Error: Invalid memory address (line 4264, column 1)
+make[1]: *** [Makefile:39: /home/horvathm/intcode/vm8086/bin/vm.pcxtbios.msdos3-prince.input] Error 1
+make[1]: Leaving directory '/home/horvathm/intcode/vm8086/vm'
+make: *** [Makefile:17: vm] Error 2
+
+The bug seems to be isolated to the C ICVM, golang ICVM is able to link the 8086 VM successfully.
+Maybe the C ICVM is not able to allocate such a large contiguous memory block?
+One built with the golang ICVM, the binary will run with the c-ext ICVM.
+
+New info (Oct 22):
+- The same issue happens with ICVM_TYPE=c
+  make clean ; ICVM_TYPE=c make ROMS=pcxtbios DISKS=msdos3-prince
+- The same issue happens with ICVM_TYPE=js or ICVM_TYPE=go if I don't run a make clean before
+  -> The issue already exists in the .o files most likely, linker is just the first to notice it
+  Hypothesis:
+  - c or c-ext VM builds the .o files with invalid contents
+  - then linker on any ICVM encounters the invalid contents and fails with an error
+  -> validate: compare the .o files when built with c ICVM or golang ICVM
+  -> validate: delete .o files one by one until the error goes away? but comparing is easier
+  - also, the error likely isn't in the floppy image .o, since it appears when I increase the VM size by adding more code
+  -> this also means it would be possible to debug the linker to see e.g. stack trace, since the linker itself 
+  isn't running out of memory (but it also means it wouldn't help much)
+
+Results from compare c vs go:
+- bin/libdev.a is different
+  - the .R record differs
+    -> THAT'S IT!
+    c has:
+    ...146,132,831449,1469,1532...
+    go has:
+    ...146,132,83,1449,1469,1532...
+    -> there is a comma missing in c, now the question is how does using a different ICVM remove the comma
+    - it's the only difference in bin/libdev.a
+    - the error already exists in .o, see below
+
+- obj/dev/dma_8237a.o is different
+  - same error that's visible in libdev.a
+  c has:
+  ...146,132,831449,1469,1532...
+  go has:
+  ...146,132,83,1449,1469,1532...
+  - it's the only difference in dma_8237a.o
+
+-> next steps:
+  - create a minimal test case based on dma_8237a.o
+    - delete from dma_8237a.o until the difference goes away
+  - maybe look at compiler sources, outputting the .R section, to see why it would omit the comma
+    - but the minimal test case is probably easier
+  - consider that the difference is in the ICVM, so it won't be something trivial or visible from the xzintbit or 86VM source code...
