@@ -679,3 +679,94 @@ Results from compare c vs go:
   - maybe look at compiler sources, outputting the .R section, to see why it would omit the comma
     - but the minimal test case is probably easier
   - consider that the difference is in the ICVM, so it won't be something trivial or visible from the xzintbit or 86VM source code...
+
+Minimal test case:
+
+cat  dev/dma_8237a.s | /home/horvathm/intcode/xzintbit/vms/c/ic /home/horvathm/intcode/xzintbit/bin/as.input > delme.dma_8237a.c.o
+cat  dev/dma_8237a.s | /home/horvathm/intcode/xzintbit/vms/go/ic /home/horvathm/intcode/xzintbit/bin/as.input > delme.dma_8237a.go.o
+
+check differences:
+#!/bin/sh
+
+cat /home/horvathm/intcode/vm8086/min.dma_8237a.s | /home/horvathm/intcode/xzintbit/vms/c/ic /home/horvathm/intcode/xzintbit/bin/as.input | tr , '\n' > delme.dma_8237a.c.o
+cat /home/horvathm/intcode/vm8086/min.dma_8237a.s | /home/horvathm/intcode/xzintbit/vms/go/ic /home/horvathm/intcode/xzintbit/bin/as.input | tr , '\n' > delme.dma_8237a.go.o
+
+diff --binary delme.dma_8237a.c.o delme.dma_8237a.go.o
+
+minimalized:
+.FRAME
+add 0, 0, [ip + 0]
+.ENDFRAME
+
+A:
+...33 labels total
+
+.EOF
+
+This generates:
+.C
+1101
+0
+0
+4
+.R
+3.I
+.E
+.S
+g:4
+...
+
+(missing new line between 3 and .I)
+3 is relocation for ip
+
+or
+
+add A, 0, [ip + 0]
+
+.C
+1101
+4
+0
+4
+.R
+31
+.I
+.E
+.S
+g:4
+...
+
+(missing new line between 3 and 1)
+3 is relocation for ip
+1 is relocation for A
+
+more ip references:
+add [ip + 1], A, [ip + 0]
+.C
+1001
+5
+4
+4
+.R
+3
+12
+.I
+.E
+.S
+g:4
+missing nl between 1 and 2
+3 is relocation for [ip + 0]
+1 is relocation for [ip + 1]
+2 is relocation for A
+
+-> hypothesis: missing comma after all ip relocations
+- still the question is, why is it different for different ICVMs
+- also, why is it controlled by number of labels after (33), maybe an off-by one error?
+- add one label, error still exists, remove one label, the error is gone
+- also, it's not depending on length of generated text, number of labels is important, not length of the labels
+- the labels can be moved around, before the .FRAME or inside it and the error remains
+- the error goes away if I add "add 0, 0, [B]" after the [ip] instruction
+  - this is interesting, because in the real source the [ip] instruction isn't last
+
+think about how to debug the VM, debug if the out ',' is executed and VM fails to print it, or if the out ',' is not even executed
+think about the IC code in compiler, if there is anything suspicious near the out ',' after relocations for [ip]
