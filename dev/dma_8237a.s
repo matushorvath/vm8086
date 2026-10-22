@@ -38,12 +38,14 @@
 
 ##########
 dma_ports:
-    db  0x02, 0x00, 0, dma_address_ch1_write                # start address register channel 1
-    db  0x03, 0x00, 0, dma_count_ch1_write                  # count register channel 1
-    db  0x04, 0x00, 0, dma_address_ch2_write                # start address register channel 2
-    db  0x05, 0x00, 0, dma_count_ch2_write                  # count register channel 2
-    db  0x06, 0x00, 0, dma_address_ch3_write                # start address register channel 3
-    db  0x07, 0x00, 0, dma_count_ch3_write                  # count register channel 3
+    db  0x00, 0x00, dma_address_ch0_read, dma_address_ch0_write                 # start address register channel 0
+    db  0x01, 0x00, dma_count_ch0_read, dma_count_ch0_write                     # count register channel 0
+    db  0x02, 0x00, dma_address_ch1_read, dma_address_ch1_write                 # start address register channel 1
+    db  0x03, 0x00, dma_count_ch1_read, dma_count_ch1_write                     # count register channel 1
+    db  0x04, 0x00, dma_address_ch2_read, dma_address_ch2_write                 # start address register channel 2
+    db  0x05, 0x00, dma_count_ch2_read, dma_count_ch2_write                     # count register channel 2
+    db  0x06, 0x00, dma_address_ch3_read, dma_address_ch3_write                 # start address register channel 3
+    db  0x07, 0x00, dma_count_ch3_read, dma_count_ch3_write                     # count register channel 3
 
     db  0x08, 0x00, dma_status_read, dma_command_write      # status register, command register
     db  0x0a, 0x00, 0, dma_single_channel_mask_write        # single channel mask register
@@ -425,50 +427,114 @@ dma_mask_reset_write:
 .ENDFRAME
 
 ##########
-dma_address_ch1_write:
-.FRAME addr, value; tmp
-    arb -1
+.FRAME addr; value, channel, tmp                            # returns value
+    # Function with multiple entry points
 
-    # Clear the register if we are writing the lo byte
-    mul [dma_address_ch1], [dma_flip_flop], [dma_address_ch1]
+dma_address_ch0_read:
+    arb -3
+    add 0, 0, [rb + channel]
+    jz  0, dma_address_read_common
 
-    # Shift the value left by 8 if we are writing the hi byte
-    mul 0xff, [dma_flip_flop], [rb + tmp]
-    add [rb + tmp], 1, [rb + tmp]
-    mul [rb + value], [rb + tmp], [rb + value]
+dma_address_ch1_read:
+    arb -3
+    add 1, 0, [rb + channel]
+    jz  0, dma_address_read_common
 
-    # Add the value to the register
-    add [dma_address_ch1], [rb + value], [dma_address_ch1]
+dma_address_ch2_read:
+    arb -3
+    add 2, 0, [rb + channel]
+    jz  0, dma_address_read_common
+
+dma_address_ch3_read:
+    arb -3
+    add 3, 0, [rb + channel]
+    jz  0, dma_address_read_common
+
+dma_address_read_common:
+    jz  [dma_flip_flop], .low_byte
+
+    # Load the high byte
+    add dma_address_hi_channels, [rb + channel], [ip + 1]
+    add [0], 0, [rb + value]
+
+    jz  0, .after_load_value
+
+.low_byte:
+    # Load the low byte
+    add dma_address_lo_channels, [rb + channel], [ip + 1]
+    add [0], 0, [rb + value]
+
+.after_load_value:
+    # Flip the flip flop
     eq  [dma_flip_flop], 0, [dma_flip_flop]
 
-    arb 1
-    ret 2
+    arb 3
+    ret 1
 .ENDFRAME
 
 ##########
+.FRAME addr, value; channel, tmp
+    # Function with multiple entry points
+
+dma_address_ch0_write:
+    arb -2
+    add 0, 0, [rb + channel]
+    jz  0, dma_address_write_common
+
+dma_address_ch1_write:
+    arb -2
+    add 1, 0, [rb + channel]
+    jz  0, dma_address_write_common
+
 dma_address_ch2_write:
-.FRAME addr, value; tmp
-    arb -1
+    arb -2
+    add 2, 0, [rb + channel]
+    jz  0, dma_address_write_common
 
-    # Clear the register if we are writing the lo byte
-    mul [dma_address_ch2], [dma_flip_flop], [dma_address_ch2]
+dma_address_ch3_write:
+    arb -2
+    add 3, 0, [rb + channel]
+    jz  0, dma_address_write_common
 
-    # Shift the value left by 8 if we are writing the hi byte
-    mul 0xff, [dma_flip_flop], [rb + tmp]
-    add [rb + tmp], 1, [rb + tmp]
-    mul [rb + value], [rb + tmp], [rb + value]
+dma_address_write_common:
+    jz  [dma_flip_flop], .low_byte
 
-    # Add the value to the register
-    add [dma_address_ch2], [rb + value], [dma_address_ch2]
+    # Store the high byte
+    add dma_address_hi_channels, [rb + channel], [ip + 3]
+    add [rb + value], 0, [0]
 
-    # Floppy controller logging
-    jz  [config_log_fdc], .after_log_fdc
-    call dma_address_ch2_write_log_fdc
+    jz  0, .after_store_value
 
-.after_log_fdc:
+.low_byte:
+    # Store the low byte
+    add dma_address_lo_channels, [rb + channel], [ip + 3]
+    add [rb + value], 0, [0]
+
+    # When storing the low byte, clear the high byte as well
+    add dma_address_hi_channels, [rb + channel], [ip + 3]
+    add 0, 0, [0]
+
+.after_store_value:
+    # Store the 16-bit value as well
+    # TODO refactor and remove
+    add dma_address_hi_channels, [rb + channel], [ip + 1]
+    mul [0], 0x100, [rb + tmp]
+    add dma_address_lo_channels, [rb + channel], [ip + 1]
+    add [0], [rb + tmp], [rb + tmp]
+    add dma_address_channels, [rb + channel], [ip + 3]
+    add [rb + tmp], 0, [0]
+
+    # Flip the flip flop
     eq  [dma_flip_flop], 0, [dma_flip_flop]
 
-    arb 1
+    # Floppy controller logging
+    jz  [config_log_fdc], .done
+    eq  [rb + channel], 2, [rb + tmp]
+    jz  [rb + tmp], .done
+    call dma_address_ch2_write_log_fdc
+
+.done:
+    arb 2
     ret 2
 .ENDFRAME
 
@@ -497,71 +563,114 @@ dma_address_ch2_write_log_fdc:
 .ENDFRAME
 
 ##########
-dma_address_ch3_write:
-.FRAME addr, value; tmp
-    arb -1
+.FRAME addr; value, channel, tmp                            # returns value
+    # Function with multiple entry points
 
-    # Clear the register if we are writing the lo byte
-    mul [dma_address_ch3], [dma_flip_flop], [dma_address_ch3]
+dma_count_ch0_read:
+    arb -3
+    add 0, 0, [rb + channel]
+    jz  0, dma_count_read_common
 
-    # Shift the value left by 8 if we are writing the hi byte
-    mul 0xff, [dma_flip_flop], [rb + tmp]
-    add [rb + tmp], 1, [rb + tmp]
-    mul [rb + value], [rb + tmp], [rb + value]
+dma_count_ch1_read:
+    arb -3
+    add 1, 0, [rb + channel]
+    jz  0, dma_count_read_common
 
-    # Add the value to the register
-    add [dma_address_ch3], [rb + value], [dma_address_ch3]
+dma_count_ch2_read:
+    arb -3
+    add 2, 0, [rb + channel]
+    jz  0, dma_count_read_common
+
+dma_count_ch3_read:
+    arb -3
+    add 3, 0, [rb + channel]
+    jz  0, dma_count_read_common
+
+dma_count_read_common:
+    jz  [dma_flip_flop], .low_byte
+
+    # Load the high byte
+    add dma_count_hi_channels, [rb + channel], [ip + 1]
+    add [0], 0, [rb + value]
+
+    jz  0, .after_load_value
+
+.low_byte:
+    # Load the low byte
+    add dma_count_lo_channels, [rb + channel], [ip + 1]
+    add [0], 0, [rb + value]
+
+.after_load_value:
+    # Flip the flip flop
     eq  [dma_flip_flop], 0, [dma_flip_flop]
 
-    arb 1
-    ret 2
+    arb 3
+    ret 1
 .ENDFRAME
 
 ##########
+.FRAME addr, value; channel, tmp
+    # Function with multiple entry points
+
+dma_count_ch0_write:
+    arb -2
+    add 0, 0, [rb + channel]
+    jz  0, dma_count_write_common
+
 dma_count_ch1_write:
-.FRAME addr, value; tmp
-    arb -1
+    arb -2
+    add 1, 0, [rb + channel]
+    jz  0, dma_count_write_common
 
-    # Clear the register if we are writing the lo byte
-    mul [dma_count_ch1], [dma_flip_flop], [dma_count_ch1]
-
-    # Shift the value left by 8 if we are writing the hi byte
-    mul 0xff, [dma_flip_flop], [rb + tmp]
-    add [rb + tmp], 1, [rb + tmp]
-    mul [rb + value], [rb + tmp], [rb + value]
-
-    # Add the value to the register
-    add [dma_count_ch1], [rb + value], [dma_count_ch1]
-    eq  [dma_flip_flop], 0, [dma_flip_flop]
-
-    arb 1
-    ret 2
-.ENDFRAME
-
-##########
 dma_count_ch2_write:
-.FRAME addr, value; tmp
-    arb -1
+    arb -2
+    add 2, 0, [rb + channel]
+    jz  0, dma_count_write_common
 
-    # Clear the register if we are writing the lo byte
-    mul [dma_count_ch2], [dma_flip_flop], [dma_count_ch2]
+dma_count_ch3_write:
+    arb -2
+    add 3, 0, [rb + channel]
+    jz  0, dma_count_write_common
 
-    # Shift the value left by 8 if we are writing the hi byte
-    mul 0xff, [dma_flip_flop], [rb + tmp]
-    add [rb + tmp], 1, [rb + tmp]
-    mul [rb + value], [rb + tmp], [rb + value]
+dma_count_write_common:
+    jz  [dma_flip_flop], .low_byte
 
-    # Add the value to the register
-    add [dma_count_ch2], [rb + value], [dma_count_ch2]
+    # Store the high byte
+    add dma_count_hi_channels, [rb + channel], [ip + 3]
+    add [rb + value], 0, [0]
+
+    jz  0, .after_store_value
+
+.low_byte:
+    # Store the low byte
+    add dma_count_lo_channels, [rb + channel], [ip + 3]
+    add [rb + value], 0, [0]
+
+    # When storing the low byte, clear the high byte as well
+    add dma_count_hi_channels, [rb + channel], [ip + 3]
+    add 0, 0, [0]
+
+.after_store_value:
+    # Store the 16-bit value as well
+    # TODO refactor and remove
+    add dma_count_hi_channels, [rb + channel], [ip + 1]
+    mul [0], 0x100, [rb + tmp]
+    add dma_count_lo_channels, [rb + channel], [ip + 1]
+    add [0], [rb + tmp], [rb + tmp]
+    add dma_count_channels, [rb + channel], [ip + 3]
+    add [rb + tmp], 0, [0]
+
+    # Flip the flip flop
+    eq  [dma_flip_flop], 0, [dma_flip_flop]
 
     # Floppy controller logging
-    jz  [config_log_fdc], .after_log_fdc
+    jz  [config_log_fdc], .done
+    eq  [rb + channel], 2, [rb + tmp]
+    jz  [rb + tmp], .done
     call dma_count_ch2_write_log_fdc
 
-.after_log_fdc:
-    eq  [dma_flip_flop], 0, [dma_flip_flop]
-
-    arb 1
+.done:
+    arb 2
     ret 2
 .ENDFRAME
 
@@ -587,27 +696,6 @@ dma_count_ch2_write_log_fdc:
 
 .msg:
     db  "dma ch02, write count ", 0
-.ENDFRAME
-
-##########
-dma_count_ch3_write:
-.FRAME addr, value; tmp
-    arb -1
-
-    # Clear the register if we are writing the lo byte
-    mul [dma_count_ch3], [dma_flip_flop], [dma_count_ch3]
-
-    # Shift the value left by 8 if we are writing the hi byte
-    mul 0xff, [dma_flip_flop], [rb + tmp]
-    add [rb + tmp], 1, [rb + tmp]
-    mul [rb + value], [rb + tmp], [rb + value]
-
-    # Add the value to the register
-    add [dma_count_ch3], [rb + value], [dma_count_ch3]
-    eq  [dma_flip_flop], 0, [dma_flip_flop]
-
-    arb 1
-    ret 2
 .ENDFRAME
 
 ##########
@@ -747,6 +835,7 @@ dma_decrement_ch2:
 dma_decrement_ch3:
     db  0
 
+# TODO refactor and remove, use the lo and hi bytes
 dma_address_channels:
 dma_address_ch0:
     db  0
@@ -757,6 +846,27 @@ dma_address_ch2:
 dma_address_ch3:
     db  0
 
+dma_address_lo_channels:
+dma_address_lo_ch0:
+    db  0
+dma_address_lo_ch1:
+    db  0
+dma_address_lo_ch2:
+    db  0
+dma_address_lo_ch3:
+    db  0
+
+dma_address_hi_channels:
+dma_address_hi_ch0:
+    db  0
+dma_address_hi_ch1:
+    db  0
+dma_address_hi_ch2:
+    db  0
+dma_address_hi_ch3:
+    db  0
+
+# TODO refactor and remove, use the lo and hi bytes
 dma_count_channels:
 dma_count_ch0:
     db  0
@@ -765,6 +875,26 @@ dma_count_ch1:
 dma_count_ch2:
     db  0
 dma_count_ch3:
+    db  0
+
+dma_count_lo_channels:
+dma_count_lo_ch0:
+    db  0
+dma_count_lo_ch1:
+    db  0
+dma_count_lo_ch2:
+    db  0
+dma_count_lo_ch3:
+    db  0
+
+dma_count_hi_channels:
+dma_count_hi_ch0:
+    db  0
+dma_count_hi_ch1:
+    db  0
+dma_count_hi_ch2:
+    db  0
+dma_count_hi_ch3:
     db  0
 
 dma_page_channels:

@@ -400,3 +400,373 @@ make[2]: *** [../test.mk:129: obj/bitwise.bochs.bin] Error 1
     clearf
 >>> test dx, word [data]                ; TEST REG16, MEM16
     pushf
+
+IBM XT BIOS 1982-11-08
+======================
+
+https://github.com/gawlas/IBM-PC-BIOS for BIOS source code
+
+Don't forget to set config_dram_refresh to 1, otherwise the PIT will not initialize and the BIOS will HLT.
+
+- Jumps to RESET f000:e05b
+  - Jumps to ROS_CHECKSUM f000:f8f2
+    - Loop to calc checksum
+      f000:f8f7 ADD REG8, REG8/MEM8(02) 07 43 e2
+      f000:f8f9 INC BX(43)
+      f000:f8fa LOOP SHORT-LABEL(e2) fb
+    - RET
+  - Back in RESET f000:e0d7
+  - Verify timer 1
+    - Search for "IN AL" to find it in the trace, XTBIOS.ASM line 416
+    - OUT 40h -> port 43h
+    - Looks like an endless loop at label C14
+      C11:
+        f000:e0d7 JNZ SHORT-LABEL(75) d4
+        f000:e0d9 MOV AL, IMMED8(b0) 02
+        f000:e0db OUT AL, IMMED8(e6) 60
+        f000:e0dd MOV AL, IMMED8(b0) 04
+        f000:e0df OUT AL, IMMED8(e6) 08
+        f000:e0e1 MOV AL, IMMED8(b0) 54
+        f000:e0e3 OUT AL, IMMED8(e6) 43
+        f000:e0e5 MOV REG8, REG8/MEM8(8a) c1 e6 41
+        f000:e0e7 OUT AL, IMMED8(e6) 41
+      C12:
+        f000:e0e9 MOV AL, IMMED8(b0) 40
+        f000:e0eb OUT AL, IMMED8(e6) 43
+        f000:e0ed ADD/OR/ADC/SBB/AND/SUB/XOR/CMP REG8/MEM8, IMMED8(80) fb ff 74 07
+        f000:e0f0 JZ SHORT-LABEL(74) 07
+        f000:e0f2 IN AL, IMMED8(e4) 41
+        f000:e0f4 OR REG8, REG8/MEM8(0a) d8 e2 f1
+        f000:e0f6 LOOP SHORT-LABEL(e2) f1
+      C12:
+        f000:e0e9 MOV AL, IMMED8(b0) 40
+        f000:e0eb OUT AL, IMMED8(e6) 43
+        f000:e0ed ADD/OR/ADC/SBB/AND/SUB/XOR/CMP REG8/MEM8, IMMED8(80) fb ff 74 07
+        f000:e0f0 JZ SHORT-LABEL(74) 07
+      C13:
+        f000:e0f9 MOV REG8, REG8/MEM8(8a) c3 2b c9
+        f000:e0fb SUB REG16, REG16/MEM16(2b) c9 e6 41
+        f000:e0fd OUT AL, IMMED8(e6) 41
+      C14:
+        f000:e0ff MOV AL, IMMED8(b0) 40
+        f000:e101 OUT AL, IMMED8(e6) 43
+        f000:e103 NOP(90)
+        f000:e104 NOP(90)
+        f000:e105 IN AL, IMMED8(e4) 41
+        f000:e107 AND REG8, REG8/MEM8(22) d8 74 03
+        f000:e109 JZ SHORT-LABEL(74) 03
+        f000:e10b LOOP SHORT-LABEL(e2) f2
+      -> Need to support more of PIT Channel 1 for DRAM refresh
+
+    - Worked around by introducing dev/pit_8253_ch1.s to better emulate PIT Channel 1
+      It counts down from 0xff to 0x7e and then continues on label C15.
+      - Source code: above INITIALIZE AND START DMA FOR MEMORY REFRESH. f000:e116
+      -> Need to support more of DMA Channel 0 for DRAM refresh
+
+      - Problem: BIOS writes various patterns to DMA ports 0-8 and expects to read them back.
+        However, we have the ports as read-only, and we store their contents as 16 bit numbers.
+        Floppy controller code also wants them as 16 bit numbers.
+        To be able to read back the ports, we would have to store (and update) them as two 8-bit numbers,
+        because we are not able to split a 16-bit number to bytes. That is a significant refactoring of DMA and FDC code.
+        Alternate solution is to just hack it and remember the two bytes written and return them on next read,
+        without properly updating the numbers from FDC code. That should be enough for the IBM BIOS, but it's ugly.
+        We also need this for first 8 DMA ports, not just for the DRAM channel.
+        We should also refactor the DMA code to use an include to reduce copy pasta for the four channels, especially
+        if we make the channels implementation more complex for IBM BIOS.
+        Another option is to use the DIV16 algorithm to read the ports, which is incredibly slow but perhaps allows
+        us to store the numbers as 16-bit. Although, does it really, because it still expects inputs as 8 bit numbers...
+
+        Probably the correct solution is to bite the bullet and do the refactoring to store the numbers as two bytes,
+        just like it is done everywhere else in the VM:
+        - OK Refactor DMA to have channel-generic code for dma_address and dma_count.The rest of refactoring is in the copy pasta code.
+        - OK Add separate 8-bit store for the address and count registers in addition to the 16-bit store.
+        - OK Refactor DMA to store values both in new 8-bit and old 16-bit locations.
+        - OK Add read port capability to DMA code.
+          - At this stage we have the ugly hack mentioned above but the IBM BIOS issue is fixed.
+        - Refactor FDC to use the new 8-bit locations, remove the old 16-bit locations since they are no longer used.
+          - This removes the ugly hack, since the 8-bit locations now store correct values.
+          - This also requires handling e.g. underflow (count = -1 is used to tell FDC code the transfer is finished)
+        - Cleanup:
+          - Fix linking with c-ext ICVM
+          - Can we remove the _ch? global variable labels?
+          - Should we split the source file?
+
+Note: The design is probably OK, but there's some kind of bug in the linker and it runs out of memory when linking the 8086 VM
+once I add the new 8-bit variables for address and count. Adding one global byte triggers the bug, removing it fixes it.
+
+Currently IBM BIOS crashes after a LONG time when tracing, but in the end it does a HLT:
+
+f000:f294 POP BX(5b)
+f000:f295 RETN(c3)
+f000:f209 MOV REG16, REG16/MEM16(8b) c8 03 0e
+f000:f20b ADD REG16, REG16/MEM16(03) 0e 4e 00
+f000:f20f ROL/ROR/RCL/RCR/SHL/SHR/SAR REG16/MEM16, 1(d1) f9 b4 0e
+f000:f211 MOV AH, IMMED8(b4) 0e
+f000:f213 CALL NEAR-PROC(e8) c2 ff
+f000:f1d8 MOV REG16, REG16/MEM16(8b) 16 63 00
+f000:f1dc MOV REG8, REG8/MEM8(8a) c4 ee 42
+f000:f1de OUT AL, DX(ee)
+f000:f1df INC DX(42)
+f000:f1e0 MOV REG8, REG8/MEM8(8a) c5 ee 4a
+f000:f1e2 OUT AL, DX(ee)
+f000:f1e3 DEC DX(4a)
+f000:f1e4 MOV REG8, REG8/MEM8(8a) c4 fe c0
+f000:f1e6 INC/DEC REG8/MEM8(fe) c0 ee 42
+f000:f1e8 OUT AL, DX(ee)
+f000:f1e9 INC DX(42)
+f000:f1ea MOV REG8, REG8/MEM8(8a) c1 ee c3
+f000:f1ec OUT AL, DX(ee)
+f000:f1ed RETN(c3)
+f000:f216 RETN(c3)
+f000:f204 JMP SHORT-LABEL(eb) bf
+f000:f1c5 POP DI(5f)
+f000:f1c6 POP SI(5e)
+f000:f1c7 POP BX(5b)
+f000:f1c8 POP CX(59)
+f000:f1c9 POP DX(5a)
+f000:f1ca POP DS(1f)
+f000:f1cb POP ES(07)
+f000:f1cc IRET(cf)
+f000:f76f POP AX(58)
+f000:f770 JMP NEAR-LABEL(e9) 52 fa
+f000:f1c5 POP DI(5f)
+f000:f1c6 POP SI(5e)
+f000:f1c7 POP BX(5b)
+f000:f1c8 POP CX(59)
+f000:f1c9 POP DX(5a)
+f000:f1ca POP DS(1f)
+f000:f1cb POP ES(07)
+f000:f1cc IRET(cf)
+f000:f9a2 RETN(c3)
+f000:f9d2 POP AX(58)
+f000:f9d3 CMP AL, IMMED8(3c) 0a
+f000:f9d5 JNZ SHORT-LABEL(75) f3
+f000:f9d7 RETN(c3)                      ; from P_MSG back to E_MSG
+f000:f9ae PUSH DS(1e)
+f000:f9af CALL NEAR-PROC(e8) a7 00      ; call DDS
+f000:fa59 PUSH AX(50)
+f000:fa5a MOV AX, IMMED16(b8) 40 00
+f000:fa5d MOV SEGREG, REG16/MEM16(8e) d8 58 c3
+f000:fa5f POP AX(58)
+f000:fa60 RETN(c3)                      ; from DDS back to E_MSG
+f000:f9b2 MOV AL, MEM8(a0) 10 00
+f000:f9b5 AND AL, IMMED8(24) 01
+f000:f9b7 JNZ SHORT-LABEL(75) 0f
+f000:f9b9 CLI(fa)
+f000:f9ba MOV AL, IMMED8(b0) 89
+f000:f9bc OUT AL, IMMED8(e6) 63
+f000:f9be MOV AL, IMMED8(b0) 85
+f000:f9c0 OUT AL, IMMED8(e6) 61
+f000:f9c2 MOV AL, MEM8(a0) 15 00
+f000:f9c5 OUT AL, IMMED8(e6) 60
+f000:f9c7 HLT(f4)
+
+Looks like it's calling E_MSG at the end, and it prints "101" to the console.
+
+101 = either the 8259 Interrupt Controller or the 8253/8254 Programmable Interval Timer chips fail their initial diagnostics
+
+Difference in msdos3-prince.o
+=============================
+
+TODO finish analyzing and fixing this issue
+it doesn't manifest as a bug, but the built images should be identical between different ICVMs
+
+This was discovered as part of analyzing the Invalid memory address issue below, but does not seem related to it.
+
+Comparing between c ICVM and golang ICVM:
+
+- obj/software/msdos3-prince.o is different
+  - has 60 differences, all of them one byte differences 199 vs 161
+  - some at the beginning, some in the middle, some towards the end (of valid data)
+  c has:
+  199
+  go has:
+  161
+  - the differences seem to be in directory entries on the floppy, which is strange as an ICVM or xzintbit error
+    - hypotheses:
+    - obvious one is, there is a bug somewhere
+    - but maybe also, it's something related to mtools? maybe we do something different with mtools for golang?
+0
+0
+0
+0
+65 <- this string is AUTOEXECBAT, all the differences are in entries that look like this (different file names)
+85
+84
+79
+69
+88
+69
+67
+66
+65
+84
+32
+0
+0
+199 <- diff
+72
+86
+93
+86
+93
+0
+0
+199 <- diff
+72
+86
+93
+199
+9
+
+  -> validate against other VMs (e.g. js, rust)
+
+Error: Invalid memory address
+=============================
+
+$ ICVM_TYPE=c-ext make ROMS=pcxtbios DISKS=msdos3-prince
+
+make[1]: Entering directory '/home/horvathm/intcode/vm8086/vm'
+mkdir -p "/home/horvathm/intcode/vm8086/bin" "/home/horvathm/intcode/vm8086/obj/vm"
+echo .$ | cat /home/horvathm/intcode/vm8086/obj/vm/main.o /home/horvathm/intcode/vm8086/obj/vm/callback.o /home/horvathm/intcode/vm8086/obj/vm/config.o /home/horvathm/intcode/vm8086/obj/vm/menu.o /home/horvathm/intcode/vm8086/obj/vm/vm_ports.o /home/horvathm/intcode/vm8086/bin/libcga.a /home/horvathm/intcode/vm8086/bin/libcpu.a /home/horvathm/intcode/vm8086/bin/libdev.a /home/horvathm/intcode/vm8086/bin/libfdc.a /home/horvathm/intcode/vm8086/bin/libimg.a /home/horvathm/intcode/vm8086/bin/libutil.a /home/horvathm/intcode/xzintbit/bin/libxib.a /home/horvathm/intcode/vm8086/obj/vm/headers.o /home/horvathm/intcode/vm8086/obj/software/pcxtbios_header.o /home/horvathm/intcode/vm8086/obj/vm/images.o /home/horvathm/intcode/vm8086/obj/software/pcxtbios.o /home/horvathm/intcode/vm8086/obj/software/msdos3-prince.o - | /home/horvathm/intcode/xzintbit/vms/c-ext/ic /home/horvathm/intcode/xzintbit/bin/ld.input > /home/horvathm/intcode/vm8086/bin/vm.pcxtbios.msdos3-prince.input || ( cat /home/horvathm/intcode/vm8086/bin/vm.pcxtbios.msdos3-prince.input ; false )
+no more inputs
+Error: Invalid memory address (line 4264, column 1)
+make[1]: *** [Makefile:39: /home/horvathm/intcode/vm8086/bin/vm.pcxtbios.msdos3-prince.input] Error 1
+make[1]: Leaving directory '/home/horvathm/intcode/vm8086/vm'
+make: *** [Makefile:17: vm] Error 2
+
+The bug seems to be isolated to the C ICVM, golang ICVM is able to link the 8086 VM successfully.
+Maybe the C ICVM is not able to allocate such a large contiguous memory block?
+One built with the golang ICVM, the binary will run with the c-ext ICVM.
+
+New info (Oct 22):
+- The same issue happens with ICVM_TYPE=c
+  make clean ; ICVM_TYPE=c make ROMS=pcxtbios DISKS=msdos3-prince
+- The same issue happens with ICVM_TYPE=js or ICVM_TYPE=go if I don't run a make clean before
+  -> The issue already exists in the .o files most likely, linker is just the first to notice it
+  Hypothesis:
+  - c or c-ext VM builds the .o files with invalid contents
+  - then linker on any ICVM encounters the invalid contents and fails with an error
+  -> validate: compare the .o files when built with c ICVM or golang ICVM
+  -> validate: delete .o files one by one until the error goes away? but comparing is easier
+  - also, the error likely isn't in the floppy image .o, since it appears when I increase the VM size by adding more code
+  -> this also means it would be possible to debug the linker to see e.g. stack trace, since the linker itself 
+  isn't running out of memory (but it also means it wouldn't help much)
+
+Results from compare c vs go:
+- bin/libdev.a is different
+  - the .R record differs
+    -> THAT'S IT!
+    c has:
+    ...146,132,831449,1469,1532...
+    go has:
+    ...146,132,83,1449,1469,1532...
+    -> there is a comma missing in c, now the question is how does using a different ICVM remove the comma
+    - it's the only difference in bin/libdev.a
+    - the error already exists in .o, see below
+
+- obj/dev/dma_8237a.o is different
+  - same error that's visible in libdev.a
+  c has:
+  ...146,132,831449,1469,1532...
+  go has:
+  ...146,132,83,1449,1469,1532...
+  - it's the only difference in dma_8237a.o
+
+-> next steps:
+  - create a minimal test case based on dma_8237a.o
+    - delete from dma_8237a.o until the difference goes away
+  - maybe look at compiler sources, outputting the .R section, to see why it would omit the comma
+    - but the minimal test case is probably easier
+  - consider that the difference is in the ICVM, so it won't be something trivial or visible from the xzintbit or 86VM source code...
+
+Minimal test case:
+
+cat  dev/dma_8237a.s | /home/horvathm/intcode/xzintbit/vms/c/ic /home/horvathm/intcode/xzintbit/bin/as.input > delme.dma_8237a.c.o
+cat  dev/dma_8237a.s | /home/horvathm/intcode/xzintbit/vms/go/ic /home/horvathm/intcode/xzintbit/bin/as.input > delme.dma_8237a.go.o
+
+check differences:
+#!/bin/sh
+
+cat /home/horvathm/intcode/vm8086/min.dma_8237a.s | /home/horvathm/intcode/xzintbit/vms/c/ic /home/horvathm/intcode/xzintbit/bin/as.input | tr , '\n' > delme.dma_8237a.c.o
+cat /home/horvathm/intcode/vm8086/min.dma_8237a.s | /home/horvathm/intcode/xzintbit/vms/go/ic /home/horvathm/intcode/xzintbit/bin/as.input | tr , '\n' > delme.dma_8237a.go.o
+
+diff --binary delme.dma_8237a.c.o delme.dma_8237a.go.o
+
+minimalized:
+.FRAME
+add 0, 0, [ip + 0]
+.ENDFRAME
+
+A:
+...33 labels total
+
+.EOF
+
+This generates:
+.C
+1101
+0
+0
+4
+.R
+3.I
+.E
+.S
+g:4
+...
+
+(missing new line between 3 and .I)
+3 is relocation for ip
+
+or
+
+add A, 0, [ip + 0]
+
+.C
+1101
+4
+0
+4
+.R
+31
+.I
+.E
+.S
+g:4
+...
+
+(missing new line between 3 and 1)
+3 is relocation for ip
+1 is relocation for A
+
+more ip references:
+add [ip + 1], A, [ip + 0]
+.C
+1001
+5
+4
+4
+.R
+3
+12
+.I
+.E
+.S
+g:4
+missing nl between 1 and 2
+3 is relocation for [ip + 0]
+1 is relocation for [ip + 1]
+2 is relocation for A
+
+-> hypothesis: missing comma after all ip relocations
+- still the question is, why is it different for different ICVMs
+- also, why is it controlled by number of labels after (33), maybe an off-by one error?
+- add one label, error still exists, remove one label, the error is gone
+- also, it's not depending on length of generated text, number of labels is important, not length of the labels
+- the labels can be moved around, before the .FRAME or inside it and the error remains
+- the error goes away if I add "add 0, 0, [B]" after the [ip] instruction
+  - this is interesting, because in the real source the [ip] instruction isn't last
+
+think about how to debug the VM, debug if the out ',' is executed and VM fails to print it, or if the out ',' is not even executed
+think about the IC code in compiler, if there is anything suspicious near the out ',' after relocations for [ip]

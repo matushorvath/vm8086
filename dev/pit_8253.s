@@ -1,9 +1,17 @@
 .EXPORT init_pit_8253
 
+# From the config file
+.IMPORT config_dram_refresh
+
 # From pit_8253_ch0.s
 .IMPORT pit_data_read_ch0
 .IMPORT pit_data_write_ch0
 .IMPORT pit_mode_command_write_ch0
+
+# From pit_8253_ch1.s
+.IMPORT pit_data_read_ch1
+.IMPORT pit_data_write_ch1
+.IMPORT pit_mode_command_write_ch1
 
 # From pit_8253_ch2.s
 .IMPORT pit_data_read_ch2
@@ -46,6 +54,7 @@
 ##########
 pit_ports:
     db  0x40, 0x00, pit_data_read_ch0, pit_data_write_ch0   # Channel 0 data
+    db  0x41, 0x00, 0, 0                                    # Channel 1 data, ignored by default
     db  0x42, 0x00, pit_data_read_ch2, pit_data_write_ch2   # Channel 2 data
     db  0x43, 0x00, 0, pit_mode_command_write               # Mode/Command register
 
@@ -54,6 +63,16 @@ pit_ports:
 ##########
 init_pit_8253:
 .FRAME
+    # Set up channel 1 if we need to emulate DRAM refresh
+    jz [config_dram_refresh], .after_dram_refresh
+
+    add pit_ports, 6, [ip + 3]
+    add pit_data_read_ch1, 0, [0]
+
+    add pit_ports, 7, [ip + 3]
+    add pit_data_write_ch1, 0, [0]
+
+.after_dram_refresh:
     # Register I/O ports
     add pit_ports, 0, [rb - 1]
     arb -1
@@ -89,13 +108,6 @@ pit_mode_command_write:
     db  pit_mode_command_write_ch1
     db  pit_mode_command_write_ch2
     db  pit_mode_command_write_read_back
-.ENDFRAME
-
-##########
-pit_mode_command_write_ch1:
-.FRAME
-    # Channel 1 is silently ignored
-    ret 1
 .ENDFRAME
 
 ##########

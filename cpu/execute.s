@@ -44,6 +44,9 @@
 # From util/error.s
 .IMPORT report_error
 
+# From libxib.a
+.IMPORT print_str
+
 ##########
 execute:
 .FRAME tmp, op, tracing_triggered
@@ -199,18 +202,28 @@ execute_esc:
 ##########
 execute_hlt:
 .FRAME
-    # This is a nop for now
+    add .hlt_message, 0, [rb - 1]
+    arb -1
+    call print_str
+
+    # Shut down the VM
+    add 1, 0, [halt]
+
+.done:
     ret 0
+
+.hlt_message:
+    db  10, 13, "vm8086: HLT instruction executed, shutting down", 10, 13, 10, 13, 0
 .ENDFRAME
 
 ##########
 invalid_opcode:
 .FRAME
-    add invalid_opcode_message, 0, [rb - 1]
+    add .invalid_opcode_message, 0, [rb - 1]
     arb -1
     call report_error
 
-invalid_opcode_message:
+.invalid_opcode_message:
     db  "invalid opcode", 0
 .ENDFRAME
 
